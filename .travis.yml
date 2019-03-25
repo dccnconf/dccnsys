@@ -16,11 +16,11 @@ script:
 deploy:
   - provider: script
     skip_cleanup: true
-    script: fab update --envtype=staging
+    script: fab2 update --envtype=staging
     on:
       branch: master
   - provider: script
     skip_cleanup: true
-    script: fab update --envtype=production
+    script: fab2 update --envtype=production
     on:
       branch: release
