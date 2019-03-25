@@ -1,0 +1,6 @@
+# Template variables:
+# - SITENAME: e.g., example.com (without "wwww" !)
+server {
+    server_name www.SITENAME;
+    return 301 https://SITENAME$request_uri;
+}

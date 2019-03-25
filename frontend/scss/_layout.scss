@@ -1,0 +1,223 @@
+.user-main {
+  background-color: #DFDBD0;
+}
+
+.dccn-panel {
+  border: 1px solid #aaa;
+  background-color: $white;
+  padding: 5px 15px;
+  border-radius: 3px;
+
+  .dccn-panel-title {
+    font-size: 2.2rem;
+    font-weight: 200;
+    margin: 15px 0 10px 0;
+    text-align: center;
+  }
+
+  .dccn-panel-toolbar {
+    margin: 30px 0 15px 0;
+    padding: 0;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+
+    .dccn-panel-form-label {
+      font-size: 0.9rem;
+      font-weight: 200;
+    }
+  }
+
+  .row {
+    div {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+  }
+
+}
+
+.dccn-left-panel-md {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 15px;
+  margin-right: 0;
+  flex: 1;
+
+  @include media-breakpoint-up(md) {
+    display: block;
+    margin-bottom: 0;
+    margin-right: 15px;
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// WORK AREA
+/////////////////////////////////////////////////////////////////////////////
+.dccn-layout-col {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+@each $klass in ('sm', 'md', 'lg', 'xl') {
+  .dccn-layout-row-#{$klass}-col {
+    @extend .dccn-layout-col;
+
+    @include media-breakpoint-up($klass) {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// USER PANEL
+/////////////////////////////////////////////////////////////////////////////
+.dccn-panel-user {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 15px;
+  margin-right: 0;
+  flex: 1;
+
+  @include media-breakpoint-up(lg) {
+    display: block;
+    margin-bottom: 0;
+    margin-right: 15px;
+    min-width: 200px;
+  }
+
+  .dccn-title {
+    font-size: 1.2rem;
+    font-weight: normal;
+    text-align: center;
+    padding: 0 !important;
+    margin: 10px 0 5px !important;
+
+    @include media-breakpoint-down(md) {
+      text-align: left;
+    }
+  }
+
+  .dccn-text {
+    font-size: 0.9rem;
+    font-weight: 200;
+    text-align: center;
+    padding: 0;
+    margin: 0 0 1px 0;
+
+    @include media-breakpoint-down(md) {
+      text-align: left;
+    }
+  }
+
+  a.dccn-link {
+    font-size: 0.9rem;
+    color: $secondary;
+    font-weight: 100;
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// NAVIGATION PANEL
+// THis panel is placed on the left on large enough screens, and becomes
+// collapsed in a row on small screens.
+//////////////////////////////////////////////////////////////////////////////
+.dccn-panel-nav {
+  padding: 0 !important;  // we need this to put nav close to border
+  min-width: 260px;
+  margin-right: 10px;
+
+  .dccn-panel-head {
+    padding: 10px 15px;
+  }
+
+  ul.dccn-nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li.dccn-nav-list-item {
+      @extend .dccn-text;
+      margin: 0;
+      border: 1px solid #eee;
+      border-bottom: none;
+
+      a.dccn-nav-link {
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+        padding: 10px 15px;
+        margin: 0;
+        color: inherit !important;
+      }
+
+      a.dccn-nav-link:hover {
+        text-decoration: none;
+      }
+    }
+
+    li.dccn-nav-list-item.active {
+      color: white !important;
+      background-color: theme-color-level("dark", -1) !important;
+      border: 1px solid theme-color-level("dark", -2) !important;
+    }
+
+    li.dccn-nav-list-item:last-child {
+      border-bottom: 1px solid #eee;
+    }
+
+    li.dccn-nav-list-item:hover {
+      background-color: #eee;
+      cursor: pointer;
+    }
+  }
+}
+
+@each $sz in ('sm', 'md', 'lg', 'xl') {
+  @include media-breakpoint-down($sz) {
+    .dccn-panel-nav-#{$sz} {
+      width: 100% !important;
+      margin-bottom: 10px;
+    }
+  }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// SCREEN PANELS
+.dccn-panel.dccn-panel-screen {
+
+  .dccn-panel-header {
+    display: flex;
+    align-items: center;
+    margin: 10px;
+
+    a.dccn-panel-close-btn {
+      padding: 0;
+      margin-left: auto;
+      font-weight: lighter;
+      color: $secondary;
+      display: inline-block;
+      transform: rotate(0deg);
+      transition: .3s;
+    }
+    a.dccn-panel-close-btn:hover {
+      transform: rotate(90deg);
+      transition: .3s;
+      text-decoration: none;
+      -webkit-animation: rotate-btn .5s linear 3;
+    }
+  }
+
+  .dccn-panel-body {
+    margin: 10px 10px;
+  }
+
+  .dccn-panel-status-row {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}

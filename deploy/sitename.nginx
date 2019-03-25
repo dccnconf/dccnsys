@@ -1,0 +1,26 @@
+# Template variables:
+# - MAX_BODY_SIZE: e.g., 20M
+# - SITENAME: e.g., example.com (without "wwww" !)
+# - YEAR: we expected certificates look like example.com-2019.crt
+server {
+    client_max_body_size MAX_BODY_SIZE;
+    listen 443;
+
+    ssl on;
+    ssl_certificate /etc/ssl/certs/SITENAME-YEAR.crt;
+    ssl_certificate_key /etc/ssl/private/SITENAME-YEAR.key;
+
+    server_name SITENAME;
+
+    location / {
+        proxy_set_header Host $host;
+        proxy_pass http://unix:/tmp/SITENAME.socket;
+    }
+}
+
+server {
+    client_max_body_size MAX_BODY_SIZE;
+    listen 80;
+    server_name SITENAME;
+    return 301 https://SITENAME$request_uri;
+}

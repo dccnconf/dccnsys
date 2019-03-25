@@ -1,0 +1,188 @@
+.dccn-cards-view {
+  display: flex;
+  flex-wrap: wrap;
+
+  .dccn-card {
+    margin-bottom: 20px;
+  }
+
+  @include media-breakpoint-up(md) {
+    .dccn-card {
+      margin-left: 15px !important;
+      margin-right: 15px !important;
+    }
+  }
+}
+
+@include media-breakpoint-down(sm) {
+  .dccn-cards-view {
+    flex-direction: column;
+    align-items: stretch;
+
+    .dccn-card {
+      margin: 8px auto;
+    }
+  }
+}
+
+/*
+ * CARD BOX
+ */
+.dccn-card {
+  // background-color: theme-color-level("light", 0);
+  padding: ($spacer * 0.1) ($spacer * 0.75) ($spacer * 0.5) ($spacer * 0.75);
+  font-size: 0.85rem;
+  font-weight: lighter;
+  border-color: theme-color-level("light", 4);
+
+  hr {
+    margin: 10px 0 2px 0;
+  }
+}
+
+/*
+ * CARD SECTIONS
+ */
+.dccn-card-row {
+  display: flex;
+  flex-wrap: wrap;
+  padding: ($spacer * .5) 0 0 0;
+
+  >p, >a {
+    margin-bottom: 0 !important;
+  }
+  .dccn-link {
+    margin-left: auto;
+  }
+}
+
+.dccn-card-title {
+  font-size: 1.0rem;
+  font-weight: lighter !important;
+  >a {
+    color: inherit;
+  }
+}
+
+.dccn-card-authors {
+  text-align: right;
+  font-style: italic;
+  color: theme-color-level("dark", -3);
+}
+
+.dccn-card-id {
+  font-size: 0.75rem;
+  color: theme-color-level("dark", -3);
+}
+
+/*
+ * CARD OPTIONS
+ */
+.dccn-card-options {
+  margin-top: 5px;
+  .dccn-card-options-title {
+    margin-bottom: ($spacer * .25) !important;
+  }
+  ul, ol {
+    margin-top: 0 !important;
+    margin-bottom: 5px !important;
+    font-size: 0.8rem;
+    font-weight: lighter;
+    list-style: circle;
+    .dccn-card-options-list-item {
+    }
+  }
+  .dccn-card-option {
+    display: flex;
+    flex-wrap: wrap;
+    .dccn-text {
+      padding: 0 !important;
+      margin-bottom: 0 !important;
+    }
+    .dccn-link {
+      display: block;
+      margin-left: auto;
+    }
+  }
+}
+
+/*
+ * CARD WARNINGS
+ */
+.dccn-card-warnings {
+  padding: ($spacer * .5) 0 0 0;
+  >ul {
+    margin-bottom: 0 !important;
+  }
+  .dccn-card-warning {
+    display: flex;
+    flex-wrap: wrap;
+    .dccn-text {
+      padding: 0 !important;
+      margin-bottom: 0 !important;
+      color: $danger;
+    }
+    .dccn-link {
+      display: block;
+      margin-left: auto;
+    }
+  }
+}
+
+.dccn-card-checklist {
+  padding: ($spacer * .5) 0 0 0;
+  >ul {
+    margin-bottom: 0 !important;
+  }
+  .dccn-card-check {
+    display: flex;
+    flex-wrap: wrap;
+    .dccn-text {
+      padding: 0 !important;
+      margin-bottom: 0 !important;
+    }
+    .dccn-link {
+      display: block;
+      margin-left: auto;
+    }
+  }
+  .dccn-card-check-complete {
+    color: $success;
+  }
+  .dccn-card-check-incomplete {
+    color: $danger;
+  }
+}
+
+/*
+ * SUBMISSION CARDS SPECIFIC PROPERTIES
+ */
+.dccn-submission-card {
+  min-width: 320px;
+  max-width: 320px;
+}
+@include media-breakpoint-down(sm) {
+  .dccn-submission-card {
+    min-width: 300px;
+    max-width: 90%;
+    // margin-left: 20px;
+  }
+}
+@include media-breakpoint-only(md) {
+  .dccn-submission-card {
+    min-width: 310px;
+    max-width: 310px;
+  }
+}
+@include media-breakpoint-only(lg) {
+  .dccn-submission-card {
+    min-width: 280px;
+    max-width: 280px;
+  }
+}
+@include media-breakpoint-up(xl) {
+  .dccn-submission-card {
+    min-width: 340px;
+    max-width: 340px;
+  }
+}

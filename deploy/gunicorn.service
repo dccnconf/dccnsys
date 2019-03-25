@@ -1,0 +1,16 @@
+# Template variables used here:
+# - SITENAME (e.g., example.com)
+# - USERNAME (e.g., webadmin - user who is owner of the site)
+# - PROJNAME - here we assume that Django project is NOT at the root, so it is actual Django project name (ubio here)
+[Unit]
+Description=Gunicorn Server for SITENAME
+
+[Service]
+Restart=on-failure
+User=USERNAME
+WorkingDirectory=/home/USERNAME/sites/SITENAME/PROJNAME
+EnvironmentFile=/home/USERNAME/sites/SITENAME/.env
+ExecStart=/home/USERNAME/sites/SITENAME/.venv/bin/gunicorn --bind unix:/tmp/SITENAME.socket PROJNAME.wsgi:application
+
+[Install]
+WantedBy=multi-user.target

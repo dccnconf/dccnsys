@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>DCCN Registration System</title>
+  <link rel="stylesheet" href="{% static 'css/dccn-ui.css' %}">
+  <style>
+    main {
+      background-image: url("{% static 'images/construction.jpg' %}");
+      background-attachment: fixed;
+      background-size: cover;
+      position: relative;
+      min-height: 100vh;
+    }
+
+    .dark-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      height: 100%;
+      width: 100%;
+    }
+
+    @media(max-width: 575.98px) {
+      h1 {
+        font-size: 2.0rem !important;
+      }
+      h2 {
+        font-size: 1.6rem !important;
+      }
+      p {
+        font-size: 1.0rem !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="">
+    <div class="dark-overlay">
+        
+      <div class="container">
+        <div class="row mt-5">
+          <h1 class="display-4 text-center text-light mx-auto py-5 mt-5">DCCN Registration System</h1>
+        </div>
+        <div class="row mt-3">
+          <h2 class="text-light text-center mx-auto font-weight-light">Site is under construction</h2>
+        </div>
+        <div class="row mt-3">
+          <p class="text-center h2 font-weight-light text-light text-center mx-auto">Open date: <span class="text-danger">26 March 2019</span></p>
+        </div>
+      </div>
+        
+    </div>
+  </main>
+
+  <script src="{% static 'scripts/jquery.min.js' %}"></script>
+  <script src="{% static 'scripts/popper.min.js' %}"></script>
+  <script src="{% static 'scripts/bootstrap.min.js' %}"></script>
+</body>
+</html>
