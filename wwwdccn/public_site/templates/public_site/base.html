@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/dccn-ui.css' %}">
+  {% block css %}
+  {% endblock %}
+</head>
+
+<body>
+  {% block header %}
+  <header>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+      <a href="{% url 'home' %}" class="navbar-brand"><img src="{% static 'images/dccn_logo.png' %}" width="30" alt=""></a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item"><a href="{% url 'public_index' %}#sectionAbout" class="nav-link">About the Conference</a></li>
+          <li class="nav-item"><a href="{% url 'public_index' %}#sectionProceedings" class="nav-link">Proceedings</a></li>
+          <li class="nav-item"><a href="{% url 'public_index' %}#sectionPreviousEvents" class="nav-link">Previous events</a></li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle" id="languageDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Language</a>
+            <div class="dropdown-menu" aria-labelledby="languageDropdown">
+              <a href="#" class="dropdown-item active">English</a>
+              <a href="#" class="dropdown-item">Русский</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+  {% endblock %}
+
+  {% block body %}
+  {% endblock %}
+
+  {% block footer %}
+  {% endblock %}
+
+  <script src="{% static 'scripts/jquery.min.js' %}"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  <script src="{% static 'scripts/bootstrap.min.js' %}"></script>
+  <script src="{% static 'scripts/Chart.bundle.min.js' %}"></script>
+  <script src="{% static 'scripts/dccn-ui.js' %}"></script>
+
+  {% block js %}
+  {% endblock %}
+</body>
+
+</html>
