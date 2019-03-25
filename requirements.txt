@@ -12,6 +12,7 @@ django-anymail==6.0
 django-bootstrap4==0.0.8
 django-storages==1.7.1
 fabric2==2.4.0
+gunicorn==19.9.0
 idna==2.8
 invoke==1.2.0
 ipython==7.4.0
