@@ -1,64 +1,249 @@
-<!DOCTYPE html>
+{% extends 'public_site/base.html' %}
+
 {% load static %}
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>DCCN Registration System</title>
-  <link rel="stylesheet" href="{% static 'css/dccn-ui.css' %}">
-  <style>
-    main {
-      background-image: url("{% static 'images/construction.jpg' %}");
-      background-attachment: fixed;
-      background-size: cover;
-      position: relative;
-      min-height: 100vh;
-    }
 
-    .dark-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      background-color: rgba(0, 0, 0, 0.8);
-      height: 100%;
-      width: 100%;
-    }
+{% block title %}Welcome to DCCN Registration System{% endblock %}
 
-    @media(max-width: 575.98px) {
-      h1 {
-        font-size: 2.0rem !important;
-      }
-      h2 {
-        font-size: 1.6rem !important;
-      }
-      p {
-        font-size: 1.0rem !important;
-      }
-    }
-  </style>
-</head>
-<body>
-  <main class="">
-    <div class="dark-overlay">
-        
-      <div class="container">
-        <div class="row mt-5">
-          <h1 class="display-4 text-center text-light mx-auto py-5 mt-5">DCCN Registration System</h1>
+{% block body %}
+<main>
+  <section class="container-fluid bg-dark py-4 text-light">
+    <div class="container my-3">
+      <div class="row">
+        <!-- Left-side: logo, title and brief info-->
+        <div class="col-lg-8 col-md-7 col-12">
+          <div class="container">
+            <div class="row">
+              <div class="col-md-5 col-lg-4 col-xl-3 align-center align-self-center mx-auto text-center">
+                <img style="max-width: 140px;" src="{% static 'images/dccn_logo.png' %}" alt="DCCN Logo Image" class="img-fluid">
+              </div>
+              <div class="col d-none d-md-block">
+                <h1 class="text-center display-4">Welcome to DCCN Registration System</h1>
+              </div>
+            </div>
+
+            <div class="row mt-5">
+              <div class="col">
+                <p class="lead d-none d-md-block">For information about DCCN'2019 topics of interest, deadlines and registration fees please visit <a href="http://2019.dccn.ru">http://2019.dccn.ru</a></p>
+                <div class="dccn-countdown-box my-5 border rounded border-secondary p-3 dccn-text-2-light" data-deadline="18 April 2019 23:59:59 +0300">
+                  <span class="dccn-countdown-days"></span> days <span class="dccn-countdown-hours"></span> hours <span class="dccn-countdown-minutes"></span> minutes before <a href="http://2019.dccn.ru" class="text-light">DCCN'2019 submission deadline</a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="row mt-3">
-          <h2 class="text-light text-center mx-auto font-weight-light">Site is under construction</h2>
-        </div>
-        <div class="row mt-3">
-          <p class="text-center h2 font-weight-light text-light text-center mx-auto">Open date: <span class="text-danger">26 March 2019</span></p>
+        <!-- Right-side: Sign-In and Sign-Up -->
+        <div class="col">
+          <!-- Sign in card -->
+          <div class="card bg-dark">
+            <div class="card-header">
+              <h3 class="text-center">Sign In</h3>
+            </div>
+            <div class="card-body">
+              <form action="">
+                <div class="form-group">
+                  <label for="userInputEmail">Email address</label>
+                  <input type="email" class="form-control form-control-lg" id="userInputEmail" placeholder="Email">
+                </div>
+                <div class="form-group mb-4">
+                  <label for="userInputPassword">Password</label>
+                  <input type="password" class="form-control form-control-lg" id="userInputPassword" placeholder="Password">
+                </div>
+                <a class="btn btn-success btn-lg btn-block" href="#">Sign in</a>
+              </form>
+            </div>
+            <div class="card-footer">
+              <p class="text-center my-0">
+                <a href="#" class="text-center">Forgot password?</a>
+              </p>
+            </div>
+          </div>
+          <!-- Sign up card -->
+          <div class="card mt-4 bg-dark">
+            <div class="card-body py-1">
+              <p class="my-0 text-center">Need an account?</p>
+              <p class="mt-2 text-center">
+                <a class="btn btn-outline-primary" href="#">Sign up now!</a>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-        
     </div>
-  </main>
+  </section>
 
-  <script src="{% static 'scripts/jquery.min.js' %}"></script>
-  <script src="{% static 'scripts/popper.min.js' %}"></script>
-  <script src="{% static 'scripts/bootstrap.min.js' %}"></script>
-</body>
-</html>
+  <!-- Section "About DCCN" -->
+  <section id="sectionAbout" class="container-fluid my-5 py-3">
+    <div class="container">
+      <div class="row my-4">
+        <div class="col">
+          <h2 class="text-center">About the Conference</h2>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-5 col-md-4 col-lg-3 col-xl-2 align-self-center image-fluid text-center">
+          <img src="{% static 'images/people_globe.svg' %}" alt="" style="max-width: 150px;">
+        </div>
+        <div class="col pl-5">
+          <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Accusantium aspernatur sint unde saepe mollitia cum similique, maxime atque, fuga eligendi dolor soluta veritatis dolorem eius! Aliquid deleniti nulla eaque beatae expedita? Nemo, iste id ducimus asperiores quaerat fugiat ea porro iusto exercitationem saepe provident blanditiis quae quisquam odio voluptatibus, obcaecati ipsum vitae itaque repellendus labore adipisci rem in! Voluptas temporibus error eum, dolor odit explicabo possimus dicta? Dolore inventore dicta voluptatem neque alias est accusantium a perferendis delectus mollitia ipsum voluptatibus veritatis esse eligendi cupiditate cum nesciunt id, officia at cumque dolorum reiciendis odit voluptate? Tenetur, quam! Obcaecati, qui vitae.</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="text-center">
+            <a class="btn btn-lg btn-outline-primary" href="http://2019.dccn.ru">
+              Learn more about DCCN'2019 <span class="fas fa-arrow-right"></span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sectionProceedings" class="container-fluid my-5 py-3">
+    <div class="container">
+      <div class="row my-4">
+        <div class="col">
+          <h2 class="text-center">Conference Proceedings</h2>
+        </div>
+      </div>
+      <div class="row align-items-start">
+        <div class="col align-self-start">
+          <p>
+            Traditionally, the accepted and presented DCCN papers are published in the Conference Proceedings volume (included into the Russian Science Citation Index).
+            The revised selected submissions in English, recommended by the Program Committee, also appear as a stand-alone volume of selected extended papers published by Springer
+            (indexed in Scopus and Web of Science).
+            Starting from 2013 the DCCN Revised Selected Papers are published by Springer on a regular basis.
+          </p>
+        </div>
+        <div class="col-md-12 col-lg-7 col-xl-6 align-self-center image-fluid text-center">
+          <div class="d-flex justify-content-center">
+            <canvas class="dccn-springer-stats" style="max-width: 370px;"></canvas>
+          </div>
+          <img src="{% static 'images/springer_full_logotype.png' %}" alt="" style="max-width: 250px;">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 align-self-center image-fluid text-center">
+
+
+{#          #}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sectionPreviousEvents" class="container-fluid my-5 py-3">
+    <div class="container">
+      <div class="row my-4">
+        <div class="col">
+          <h2 class="text-center">Previous Events</h2>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-5 col-md-4 col-lg-3 col-xl-2 align-self-center image-fluid text-center">
+          <img src="{% static '/images/world.svg' %}" alt="" style="max-width: 150px;">
+        </div>
+        <div class="col">
+          <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Eius cupiditate porro quasi, minus inventore eveniet reiciendis nobis provident, sapiente et libero molestias at natus cumque quas blanditiis perspiciatis deleniti ad sequi? Quis dolor aspernatur expedita numquam odio quibusdam esse sequi, explicabo, reiciendis sapiente quasi provident omnis doloremque consequuntur, sint corporis itaque eveniet! Autem vitae soluta nisi a qui dolorem earum laborum voluptatum voluptatem sequi perferendis reprehenderit distinctio, voluptatibus iusto ea blanditiis itaque, voluptates corporis! Debitis doloribus illum, soluta facilis asperiores modi magni mollitia amet exercitationem possimus dolore qui repellendus ut earum, consequuntur aspernatur inventore repudiandae voluptas incidunt facere quaerat assumenda!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer bg-dark text-light pt-5 pb-2">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-3">
+        <h5 class="text-uppercase"><a href="#" class="text-light">DCCN Conference</a></h5>
+      </div>
+      <div class="col-md-3">
+        <h5 class="text-uppercase">DCCN 2019</h5>
+        <ul class="list-unstyled">
+          <li class="py-1"><a href="http://2019.dccn.ru" class="text-secondary" target="_blank">About</a></li>
+          <li class="py-1"><a href="http://2019.dccn.ru" class="text-secondary" target="_blank">Call for papers</a></li>
+          <li class="py-1"><a href="http://2019.dccn.ru" class="text-secondary" target="_blank">Deadlines</a></li>
+          <li class="py-1"><a href="http://2019.dccn.ru" class="text-secondary" target="_blank">Fees</a></li>
+          <li class="py-1"><a href="http://2019.dccn.ru" class="text-secondary" target="_blank">Venue</a></li>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <ul class="list-unstyled">
+          <h5 class="text-uppercase">Contribute</h5>
+          <li class="py-1"><a href="#" class="text-secondary">Create user account</a></li>
+          <li class="py-1"><a href="#" class="text-secondary">Sign in</a></li>
+          <li class="py-1"><a href="#" class="text-secondary">Terms and conditions</a></li>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <h5 class="text-uppercase">Contacts</h5>
+        <ul class="list-unstyled">
+          <li class="py-1"><a href="#" class="text-secondary"><span class="fab fa-facebook"></span> facebook.com/dccnconf</a></li>
+          <li class="py-1"><a href="#" class="text-secondary"><span class="fab fa-vk"></span> vk.com/dccnconf</a></li>
+          <li class="py-1"><a href="#" class="text-secondary"><span class="fab fa-twitter"></span> twitter.com/dccnconf</a></li>
+          <li class="py-1"><a href="https://github.com/dccnconf/" class="text-secondary"><span class="fab fa-github"></span> github.com/dccnconf</a></li>
+          <li class="py-1"><a href="mailto:org@dccn.ru" class="text-secondary"><span class="far fa-envelope"></span> Contact Us</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</footer>
+{% endblock %}
+
+{% block js %}
+<script>
+$(document).ready(() => {
+  $('.dccn-springer-stats').each((index, elem) => {
+    var ctx = elem;
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['2013', '2015', '2016', '2017', '2018'],
+        datasets: [{
+          label: 'Number of downloads',
+          data: [10400, 14400, 23200, 15500, 12800]
+        }]
+      }
+    });
+  });
+
+  // Based on icl7126 answer from StackOverflow:
+  // https://stackoverflow.com/questions/13903897/javascript-return-number-of-days-hours-minutes-seconds-between-two-dates
+  var timeUnitsBetween = function (startDate, endDate) {
+    let delta = {
+      value: Math.abs(endDate - startDate) / 1000
+    };
+    const isNegative = startDate > endDate ? -1 : 1;
+    return [
+      ['days', 24 * 60 * 60],
+      ['hours', 60 * 60],
+      ['minutes', 60],
+      ['seconds', 1]
+    ].reduce((acc, [key, value]) => {
+      acc[key] = Math.floor(delta.value / value) * isNegative;
+      delta.value -= acc[key] * value;
+      return acc;
+    }, {});
+  };
+
+  var displayCountdown = function (box) {
+    var tu = timeUnitsBetween(new Date(), new Date(box.attr('data-deadline')));
+    box.find('.dccn-countdown-days').text(tu.days);
+    box.find('.dccn-countdown-hours').text(tu.hours);
+    box.find('.dccn-countdown-minutes').text(tu.minutes);
+    box.find('.dccn-countdown-seconds').text(tu.seconds);
+  };
+
+  var countdowns = $('.dccn-countdown-box');
+    countdowns.each((index, elem) => {
+      displayCountdown($(elem));
+    });
+
+  setInterval(() => {
+    countdowns.each((index, elem) => {
+      displayCountdown($(elem));
+    });
+  }, 10000);
+});
+</script>
+{% endblock %}
