@@ -30,7 +30,7 @@ class SignUpView(FormView):
         html = render_to_string('auth_app/email/welcome.html', context)
         text = strip_tags(html)
         send_mail(
-            'Welcome to uBio!',
+            'Welcome to DCCN Conference Registration System!',
             message=text,
             html_message=html,
             recipient_list=[user.email],
