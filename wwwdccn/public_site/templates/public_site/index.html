@@ -43,11 +43,11 @@
                 {% csrf_token %}
                 <div class="form-group">
                   <label for="email">Email address</label>
-                  <input type="email" class="form-control form-control-lg" id="loginEmail" placeholder="Email" name="username">
+                  <input type="email" class="form-control form-control-lg" id="loginEmail" placeholder="Email" name="username" autocomplete="username">
                 </div>
                 <div class="form-group mb-4">
                   <label for="password">Password</label>
-                  <input type="password" class="form-control form-control-lg" id="loginPassword" placeholder="Password" name="password">
+                  <input type="password" class="form-control form-control-lg" id="loginPassword" placeholder="Password" name="password" autocomplete="current-password">
                 </div>
                 <button type="submit" class="btn btn-success btn-lg btn-block">Sign In</button>
               </form>

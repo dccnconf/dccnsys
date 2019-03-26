@@ -8,7 +8,7 @@ class PersonalForm(ModelForm):
         model = Profile
         fields = (
             'first_name', 'last_name', 'first_name_rus', 'middle_name_rus',
-            'last_name_rus', 'country', 'city', 'birthday'
+            'last_name_rus', 'country', 'city', 'birthday', 'preferred_language'
         )
         widgets = {
             'birthday': TextInput(attrs={'class': 'datepicker'})
