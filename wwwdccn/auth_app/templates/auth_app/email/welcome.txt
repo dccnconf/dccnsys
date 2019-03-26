@@ -1,8 +1,6 @@
-Someone asked for password reset for email {{ email }}.
+Thank you for registering at DCCN Conference!
 
-To reset your password, follow this link: {{ protocol}}://{{ domain }}{% url 'password_reset_confirm' uidb64=uid token=token %}.
-
-Please ignore this message if you didn't request password reset.
+You can sign into your account via {{ protocol }}://{{ domain }}{% url 'login' %}.
 
 Happy conferencing,
 DCCN Organization Committee

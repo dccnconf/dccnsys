@@ -28,7 +28,7 @@ class SignUpView(FormView):
             'domain': self.request.get_host(),
         }
         html = render_to_string('auth_app/email/welcome.html', context)
-        text = strip_tags(html)
+        text = render_to_string('auth_app/email/welcome.txt', context)
         send_mail(
             'Welcome to DCCN Conference Registration System!',
             message=text,
