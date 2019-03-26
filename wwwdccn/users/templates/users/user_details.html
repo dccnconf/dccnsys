@@ -6,7 +6,11 @@
 </head>
 <body>
 
-<p>{{ user.pk }}: {{ user.email }}</p>
+<ul>
+  {% for key, value in data.items %}
+    <li>{{ key }}: {{ value }}</li>
+  {% endfor %}
+</ul>
 <p><a href="{% url 'logout' %}">Logout</a></p>
 </body>
 </html>

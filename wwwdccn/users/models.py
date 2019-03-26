@@ -27,6 +27,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=True
     )
 
+    has_finished_registration = models.BooleanField(
+        default=False
+    )
+
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
@@ -108,17 +112,20 @@ class Profile(models.Model):
         max_length=100, verbose_name=_("Last Name in English")
     )
     first_name_rus = models.CharField(
-        max_length=100, default="", verbose_name=_("First Name in Russian")
+        max_length=100, default="", verbose_name=_("First Name in Russian",),
+        blank=True,
     )
     middle_name_rus = models.CharField(
-        max_length=100, default="", verbose_name=_("Middle Name in Russian")
+        max_length=100, default="", verbose_name=_("Middle Name in Russian"),
+        blank = True,
     )
     last_name_rus = models.CharField(
-        max_length=100, default="", verbose_name=_("Last Name in Russian")
+        max_length=100, default="", verbose_name=_("Last Name in Russian"),
+        blank=True,
     )
     avatar = models.ImageField(upload_to=get_avatar_full_path, blank=True)
     country = CountryField(null=True, verbose_name=_("Country"))
-    city = models.CharField(max_length=100, verbose_name=_("City"))
+    city = models.CharField(max_length=100, verbose_name=_("City in English"))
     birthday = models.DateField(verbose_name=_("Birthday"), null=True)
     affiliation = models.CharField(
         max_length=100, verbose_name=_("Name of your organization in English"),
