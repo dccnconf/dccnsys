@@ -3,9 +3,8 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth import get_user_model, login
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
-from django.utils.html import strip_tags
 from django.views.generic import FormView
-from django.core.mail import send_mail, EmailMultiAlternatives
+from django.core.mail import send_mail
 
 from .forms import SignUpForm
 

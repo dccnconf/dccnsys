@@ -55,8 +55,9 @@ INSTALLED_APPS = [
 
     # Application defined in this project:
     'users',
-    'public_site',
     'auth_app',
+    'public_site',
+    'user_site'
 ]
 
 MIDDLEWARE = [
