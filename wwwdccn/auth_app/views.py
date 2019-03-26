@@ -37,7 +37,7 @@ class SignUpView(FormView):
             from_email=settings.DEFAULT_FROM_EMAIL,
             fail_silently=False,
         )
-        return redirect('home')
+        return redirect('register')
 
 
 class PasswordResetDoneView(auth_views.PasswordResetDoneView):

@@ -80,6 +80,10 @@ label, .col-form-label, .form-label, .form-check-label {
   font-weight: 200;
 }
 
+label.control-label {
+  padding-top: 5px !important;
+}
+
 input.form-control {
   font-size: 0.9rem;
   font-weight: 200;
@@ -107,12 +111,20 @@ input.custom-control-input {
   height: 22px;
 }
 
+.form-group.required .control-label:before {
+  content: "* ";
+  color: red;
+  font-weight: bold;
+  //vertical-align: -10%;
+}
+
 .input-group-text {
   background: theme-color-level("light", -1);
   height: 32px;
 }
 
-select.custom-select {
+select.custom-select,
+select.form-control {
   font-size: 0.9rem;
   font-weight: 200;
   height: 32px;

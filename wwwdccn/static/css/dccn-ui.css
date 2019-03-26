@@ -20607,6 +20607,10 @@ label,
   font-weight: 200;
 }
 
+label.control-label {
+  padding-top: 5px !important;
+}
+
 input.form-control {
   font-size: 0.9rem;
   font-weight: 200;
@@ -20632,12 +20636,19 @@ input.custom-control-input {
   height: 22px;
 }
 
+.form-group.required .control-label:before {
+  content: "* ";
+  color: red;
+  font-weight: bold;
+}
+
 .input-group-text {
   background: #f9f9fa;
   height: 32px;
 }
 
-select.custom-select {
+select.custom-select,
+select.form-control {
   font-size: 0.9rem;
   font-weight: 200;
   height: 32px;

@@ -1,0 +1,44 @@
+{% extends "registration/base.html" %}
+{% load bootstrap4 %}
+
+{% block css %}
+{% endblock %}
+
+{% block title %}
+  Account setup (1/2) | DCCN
+{% endblock %}
+
+{% block h1 %}
+  Account Setup
+{% endblock %}
+
+{% block h2 %}
+  Step 1/2: Enter your personal data
+{% endblock %}
+
+{% block dialogCard %}
+  <form action="" method="POST" class="py-3 px-5 m-3 text-dark" novalidate>
+    {% csrf_token %}
+    {% bootstrap_form form layout="horizontal" label_class='control-label col-md-4 col-lg-3 text-md-right text-left pr-0 pr-md-4' horizontal_field_class='col-md-8 col-lg-9' %}
+
+    <div class="form-group row mt-5">
+      <button type="submit" class="btn btn-primary ml-auto">
+        Next <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </form>
+{% endblock %}
+
+{% block script %}
+  <script type="text/javascript">
+    $(function () {
+      $('input[name="birthday"]').datepicker({
+        {#dateFormat: "dd MM yy",#}
+        dateFormat: "yy-mm-dd",
+        defaultDate: "1980-01-01",
+        changeYear: true,
+        changeMonth: true,
+      });
+    });
+  </script>
+{% endblock %}

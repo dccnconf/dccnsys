@@ -11,9 +11,9 @@ Sign In
 
 {% block dialogCard %}
   <form action="" method="POST" class="pb-3" novalidate>
+    {% csrf_token %}
     {% bootstrap_messages %}
     {% bootstrap_form form %}
-    {% csrf_token %}
     <input type="submit" class="btn btn-success btn-block" value="Sign In">
   </form>
 {% endblock %}

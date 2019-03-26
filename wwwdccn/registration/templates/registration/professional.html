@@ -1,0 +1,29 @@
+{% extends "registration/base.html" %}
+{% load bootstrap4 %}
+
+{% block title %}
+  Account setup (2/2) | DCCN
+{% endblock %}
+
+{% block h1 %}
+  Account Setup
+{% endblock %}
+
+{% block h2 %}
+  Step 1/2: Enter your professional data
+{% endblock %}
+
+{% block dialogCard %}
+  <form action="" method="POST" class="py-3 px-5 m-3 text-dark" novalidate>
+    {% csrf_token %}
+    {% bootstrap_javascript jquery=True %}
+    {% bootstrap_messages %}
+    {% bootstrap_form form label_class='control-label' %}
+
+    <div class="form-group row mt-5">
+      <button type="submit" class="btn btn-primary ml-auto">
+        Finish
+      </button>
+    </div>
+</form>
+{% endblock %}

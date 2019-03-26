@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'bootstrap4',
     'anymail',
     'storages',
+    'django_countries',
+    'registration',
 
     # Application defined in this project:
     'users',
@@ -248,3 +250,8 @@ if os.environ.get('EMAIL_PROVIDER', '') == 'mailgun':
     }
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+BOOTSTRAP4 = {
+    'required_css_class': 'required',
+}
