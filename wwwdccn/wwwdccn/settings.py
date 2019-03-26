@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'bootstrap4',
     'anymail',
     'storages',
+    'django_countries',
 
     # Application defined in this project:
     'users',
