@@ -1,0 +1,29 @@
+{% extends "auth_app/base.html" %}
+{% load bootstrap4 %}
+
+{% block title %}
+Sign Up
+{% endblock %}
+
+{% block header %}
+Sign Up
+{% endblock %}
+
+{% block dialogCard %}
+  <form action="{% url 'signup' %}" method="POST" class="pb-3" novalidate>
+    {% csrf_token %}
+    {% bootstrap_messages %}
+    {% bootstrap_field form.email placeholder="Enter your valid email" %}
+    {% bootstrap_field form.password1 placeholder="Enter a password" %}
+    {% bootstrap_field form.password2 placeholder="Repeat your password" %}
+    <input type="submit" class="btn btn-success btn-block" id="signUpBtn" value="Sign Up">
+  </form>
+{% endblock %}
+
+{% block dialogFooter %}
+  <div class="dccn-panel mt-3 py-2">
+    <p class="text-center dccn-text">
+      <a href="{% url 'login' %}" class="dccn-link">Sign In</a> if you already have an account
+    </p>
+  </div>
+{% endblock %}

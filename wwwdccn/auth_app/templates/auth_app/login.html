@@ -1,0 +1,30 @@
+{% extends 'auth_app/base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}
+Sign In
+{% endblock %}
+
+{% block header %}
+Sign In
+{% endblock %}
+
+{% block dialogCard %}
+  <form action="" method="POST" class="pb-3" novalidate>
+    {% bootstrap_messages %}
+    {% bootstrap_form form %}
+    {% csrf_token %}
+    <input type="submit" class="btn btn-success btn-block" value="Sign In">
+  </form>
+{% endblock %}
+
+{% block dialogFooter %}
+  <div class="dccn-panel mt-3">
+    <p class="text-center dccn-text pt-2">
+      <a href="{% url 'signup' %}" class="dccn-link">Sign Up</a> if you do not have an account yet
+    </p>
+    <p class="text-center dccn-text my-2">
+      <a class="dccn-link" href="{% url 'password_reset' %}">Forgot Password?</a>
+    </p>
+  </div>
+{% endblock %}

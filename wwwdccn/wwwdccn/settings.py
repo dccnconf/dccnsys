@@ -40,7 +40,6 @@ else:
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -55,6 +54,7 @@ INSTALLED_APPS = [
     # Application defined in this project:
     'users',
     'public_site',
+    'auth_app',
 ]
 
 MIDDLEWARE = [
