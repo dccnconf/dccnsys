@@ -1,0 +1,19 @@
+{% extends 'auth_app/email/email_base.html' %}
+
+{% block title %}
+  Welcome to DCCN
+{% endblock %}
+
+{% block subject %}
+  Welcome to DCCN Registration System!
+{% endblock %}
+
+{% block body %}
+<p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
+  Thank you for registering at DCCN Conference!
+</p>
+
+<p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
+  You can sign into your account via <a href="{{ protocol }}://{{ domain }}{% url 'login' %}">{{ protocol }}://{{ domain }}{% url 'login' %}</a>.
+</p>
+{% endblock %}

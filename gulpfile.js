@@ -33,7 +33,7 @@ const paths = {
     externalScripts: [
         'node_modules/jquery/dist/jquery.min.js',
         'node_modules/popper.js/dist/popper.min.js',
-        'node_modules/bootstrap/dist/js/bootstrap.min.js',
+        'node_modules/bootstrap/dist/js/bootstrap.bundle.js',
         'node_modules/sweetalert2/dist/sweetalert2.min.js',
         'node_modules/math/math.js',
         'node_modules/chart.js/dist/Chart.bundle.min.js'
