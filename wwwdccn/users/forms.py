@@ -2,7 +2,7 @@ from django import forms
 from django.forms import Form
 from django.utils.translation import ugettext_lazy as _
 
-from users.models import Profile, User
+from users.models import Profile, User, Subscriptions
 
 
 class PersonalForm(forms.ModelForm):
@@ -39,8 +39,8 @@ class ProfessionalForm(forms.ModelForm):
 
 class NotificationsForm(forms.ModelForm):
     class Meta:
-        model = Profile
-        fields = ('agree_to_receive_emails',)
+        model = Subscriptions
+        fields = ('trans_email', 'info_email')
 
 
 class PasswordProtectedForm(Form):

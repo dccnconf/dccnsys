@@ -28,7 +28,7 @@ def profile_overview(request):
 @login_required
 @require_GET
 def profile_account(request):
-    notifications_form = NotificationsForm(instance=request.user.profile)
+    notifications_form = NotificationsForm(instance=request.user.subscriptions)
     delete_user_form = DeleteUserForm(user=request.user)
     return render(request, 'user_site/profile_account.html', {
         'notifications_form': notifications_form,
@@ -71,7 +71,7 @@ def user_delete(request):
 
 @require_POST
 def profile_update_notifications(request):
-    form = NotificationsForm(request.POST, instance=request.user.profile)
+    form = NotificationsForm(request.POST, instance=request.user.subscriptions)
     if form.is_valid():
         form.save()
         messages.success(request, _('Notifications settings updated'))

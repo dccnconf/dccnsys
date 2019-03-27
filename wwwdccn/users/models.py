@@ -147,11 +147,6 @@ class Profile(models.Model):
         choices=LANGUAGES, max_length=3, default='ENG'
     )
 
-    agree_to_receive_emails = models.BooleanField(
-        verbose_name=_('I agree to receive emails from DCCN Registration System'),
-        default=False
-    )
-
     @property
     def email(self):
         return self.user.email
@@ -190,12 +185,32 @@ def generate_avatar(profile):
     return img_content
 
 
+class Subscriptions(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    trans_email = models.BooleanField(
+        default=False,
+        verbose_name=_('I agree to receive transactional emails from DCCN '
+                       'Registration System corresponding to actions related '
+                       'to me (e.g., submission status update, adding me as '
+                       'a co-author, invitations for review, etc.)')
+    )
+
+    info_email = models.BooleanField(
+        default=False,
+        verbose_name=_('I agree to receive informational emails related to '
+                       'DCCN 2019 and future DCCN events')
+    )
+
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
+        Subscriptions.objects.create(user=instance)
 
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
+    instance.subscriptions.save()
