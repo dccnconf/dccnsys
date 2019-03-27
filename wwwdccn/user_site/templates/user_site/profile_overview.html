@@ -20,14 +20,25 @@
         <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start">
           <!-- AVATAR -->
           <div>
-            <img src="{{ user.profile.avatar.url }}" alt="avatar" class="mt-3 align-self-center d-block mr-3 mx-lg-auto rounded-circle" style="width: 120px;">
-            <form action="{% url 'profile-overview' %}" class="dccn-avatar-update-form mt-2" method="GET" data-target="{% url 'user-avatar' %}">
+
+            <div class="dccn-avatar-preview mt-3 mr-3" id="avatarPreview">
+              <img src="{{ user.profile.avatar.url }}" alt="avatar" class="align-self-center d-block mx-lg-auto rounded-circle" style="width: 120px;">
+            </div>
+
+            <form action="" class="dccn-avatar-update-form mt-3" method="GET"
+                  data-target="{% url 'user-avatar' %}" data-preview="#avatarPreview">
               {% csrf_token %}
-              <button class="btn btn-sm btn-outline-secondary dccn-file-input">
+              <button class="btn btn-sm btn-outline-secondary dccn-file-input" style="min-width: 120px;">
                 Change image
                 <input type="file" value="Choose file..." accept="image/*">
               </button>
             </form>
+
+            <form action="{% url 'user-avatar-delete' %}" method="POST" class="mt-2">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-warning btn-sm" style="min-width: 120px;">Delete image</button>
+            </form>
+
           </div>
 
           <!-- DATA -->

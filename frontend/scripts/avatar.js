@@ -1,5 +1,6 @@
 (function ($) {
   //////////////////////////////
+  // TODO: update documentation (we don't submit form anymore, rather do location.reload and add load status
   // Avatar plugin
   //
   // To make things work, a <form> element which action is set to GET (e.g. the page where it is put),
@@ -55,11 +56,21 @@
                 var req = new XMLHttpRequest();
                 req.open("POST", form.attr('data-target'), true);
                 req.onload = function (xe) {
-                  form.submit();
+                  location.reload();
                 };
                 data.append('avatar', re.target.result);
                 data.append('csrfmiddlewaretoken', $('[name=csrfmiddlewaretoken]').val());
                 req.send(data);
+
+                // Display progress
+                var preview = $(form.attr('data-preview'));
+                preview.html(
+                  '<div style="width: 120px; height: 120px; padding: 30px; margin: 0;">' +
+                  '<div class="spinner-border dccn-loading-progress" ' +
+                       'style="margin: 0; padding: 0; width: 60px; height: 60px;" role="status">' +
+                  '<span class="sr-only">Loading...</span>' +
+                  '</div></div>'
+                )
               } else {
                 $(input).val('');
               }

@@ -51,7 +51,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 def get_avatar_full_path(instance, filename):
     ext = filename.split('.')[-1]
-    return f'{settings.MEDIA_PUBLIC_ROOT}/avatars/{instance.pk}.{ext}'
+    path = f'{settings.MEDIA_PUBLIC_ROOT}/avatars'
+    name = f'{instance.pk}_{instance.avatar_version:04d}'
+    return f'{path}/{name}.{ext}'
 
 
 class Profile(models.Model):
@@ -124,7 +126,6 @@ class Profile(models.Model):
         max_length=100, default="", verbose_name=_("Last Name in Russian"),
         blank=True,
     )
-    avatar = models.ImageField(upload_to=get_avatar_full_path, blank=True)
     country = CountryField(null=True, verbose_name=_("Country"))
     city = models.CharField(max_length=100, verbose_name=_("City in English"))
     birthday = models.DateField(verbose_name=_("Birthday"), null=True)
@@ -146,6 +147,9 @@ class Profile(models.Model):
     preferred_language = models.CharField(
         choices=LANGUAGES, max_length=3, default='ENG'
     )
+
+    avatar = models.ImageField(upload_to=get_avatar_full_path, blank=True)
+    avatar_version = models.IntegerField(default=0, blank=True, editable=False)
 
     @property
     def email(self):
@@ -183,6 +187,15 @@ def generate_avatar(profile):
     avatar.generate().save(img_io, format='PNG', quality=100)
     img_content = ContentFile(img_io.getvalue(), f'{profile.pk}.png')
     return img_content
+
+
+def update_avatar(profile, image_file):
+    if profile.avatar:
+        profile.avatar.delete()
+    profile.avatar_version += 1
+    profile.avatar = image_file
+    profile.save()
+    return profile
 
 
 class Subscriptions(models.Model):

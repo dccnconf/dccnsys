@@ -10,7 +10,8 @@ from django.views.decorators.http import require_GET, require_POST
 from django.utils.translation import ugettext_lazy as _
 
 from users.forms import PersonalForm, ProfessionalForm, UpdateEmailForm, \
-    SubscriptionsForm, DeleteUserForm
+    SubscriptionsForm, DeleteUserForm, DeleteAvatarForm
+from users.models import update_avatar
 
 User = get_user_model()
 
@@ -86,7 +87,7 @@ def profile_update_notifications(request):
 
 @login_required
 @require_POST
-def update_avatar(request):
+def profile_update_avatar(request):
     profile = request.user.profile
     # Received base64 string starts with 'data:image/jpeg;base64,........'
     # We need to use 'jpeg' as an extension and everything after base64,
@@ -96,11 +97,16 @@ def update_avatar(request):
     if ext == 'svg+xml':
         ext = 'svg'
     img = ContentFile(base64.b64decode(imgstr), name=f'{profile.pk}.{ext}')
-    if profile.avatar:
-        profile.avatar.delete()
-    profile.avatar = img
-    profile.save()
+    update_avatar(request.user.profile, img)
     return redirect('profile-account')
+
+
+@login_required
+@require_POST
+def delete_avatar(request):
+    form = DeleteAvatarForm(request.POST, instance=request.user.profile)
+    form.save()
+    return redirect('profile-overview')
 
 
 @login_required

@@ -2,7 +2,7 @@ from django import forms
 from django.forms import Form
 from django.utils.translation import ugettext_lazy as _
 
-from users.models import Profile, User, Subscriptions
+from users.models import Profile, User, Subscriptions, generate_avatar
 
 
 class PersonalForm(forms.ModelForm):
@@ -81,3 +81,16 @@ class UpdateEmailForm(PasswordProtectedForm):
     def save(self):
         self.user.email = self.cleaned_data['email']
         self.user.save()
+
+
+class DeleteAvatarForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ()
+
+    def save(self, commit=True):
+        if self.instance.avatar:
+            self.instance.avatar.delete()
+            self.instance.avatar_version += 1
+            self.instance.avatar = generate_avatar(self.instance)
+        return super().save(commit)
