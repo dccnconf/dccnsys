@@ -33,3 +33,17 @@
 
 </main>
 {% endblock %}
+
+{% block script %}
+  <script type="text/javascript">
+    $(function () {
+      $('input[name="birthday"]').datepicker({
+        {#dateFormat: "dd MM yy",#}
+        dateFormat: "yy-mm-dd",
+        defaultDate: "1980-01-01",
+        changeYear: true,
+        changeMonth: true,
+      });
+    });
+  </script>
+{% endblock %}
