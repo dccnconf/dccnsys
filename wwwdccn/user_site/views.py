@@ -10,7 +10,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django.utils.translation import ugettext_lazy as _
 
 from users.forms import PersonalForm, ProfessionalForm, UpdateEmailForm, \
-    NotificationsForm, DeleteUserForm
+    SubscriptionsForm, DeleteUserForm
 
 User = get_user_model()
 
@@ -28,7 +28,7 @@ def profile_overview(request):
 @login_required
 @require_GET
 def profile_account(request):
-    notifications_form = NotificationsForm(instance=request.user.subscriptions)
+    notifications_form = SubscriptionsForm(instance=request.user.subscriptions)
     delete_user_form = DeleteUserForm(user=request.user)
     return render(request, 'user_site/profile_account.html', {
         'notifications_form': notifications_form,
@@ -36,6 +36,7 @@ def profile_account(request):
     })
 
 
+@login_required
 @require_POST
 def user_update_email(request):
     form = UpdateEmailForm(request.user, request.POST)
@@ -47,6 +48,7 @@ def user_update_email(request):
     return redirect('profile-account')
 
 
+@login_required
 @require_POST
 def user_update_password(request):
     form = PasswordChangeForm(request.user, request.POST)
@@ -58,6 +60,7 @@ def user_update_password(request):
     return redirect('profile-account')
 
 
+@login_required
 @require_POST
 def user_delete(request):
     form = DeleteUserForm(request.user, request.POST)
@@ -69,9 +72,10 @@ def user_delete(request):
     return redirect('profile-account')
 
 
+@login_required
 @require_POST
 def profile_update_notifications(request):
-    form = NotificationsForm(request.POST, instance=request.user.subscriptions)
+    form = SubscriptionsForm(request.POST, instance=request.user.subscriptions)
     if form.is_valid():
         form.save()
         messages.success(request, _('Notifications settings updated'))
@@ -80,6 +84,7 @@ def profile_update_notifications(request):
     return redirect('profile-account')
 
 
+@login_required
 @require_POST
 def update_avatar(request):
     profile = request.user.profile

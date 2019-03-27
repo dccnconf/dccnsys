@@ -37,7 +37,7 @@ class ProfessionalForm(forms.ModelForm):
         fields = ('affiliation', 'degree', 'role', 'ieee_member')
 
 
-class NotificationsForm(forms.ModelForm):
+class SubscriptionsForm(forms.ModelForm):
     class Meta:
         model = Subscriptions
         fields = ('trans_email', 'info_email')
