@@ -1,4 +1,5 @@
 import io
+from datetime import date
 
 import pyavagen
 from django.conf import settings
@@ -160,6 +161,17 @@ class Profile(models.Model):
 
     def get_full_name(self):
         return f'{self.first_name} {self.last_name}'
+
+    def get_full_name_rus(self):
+        return ' '.join(
+            (self.first_name_rus, self.middle_name_rus, self.last_name_rus)
+        )
+
+    def age(self):
+        today = date.today()
+        born = self.birthday
+        rest = 1 if (today.month, today.day) < (born.month, born.day) else 0
+        return today.year - born.year - rest
 
     def __str__(self):
         return self.get_full_name()

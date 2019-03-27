@@ -1,0 +1,22 @@
+{# =========================================================================#}
+{# CONTEXT:                                                                 #}
+{#                                                                          #}
+{# * active: 'overview', 'account', 'personal', 'professional', 'reviewer'  #}
+{# =========================================================================#}
+<ul class="nav nav-pills justify-content-start">
+  <li class="nav-item">
+    <a href="{% url 'profile-overview' %}" class="nav-link {% if active == 'overview' %}active{% endif %}">Overview</a>
+  </li>
+  <li class="nav-item">
+    <a href="{% url 'profile-account' %}" class="nav-link {% if active == 'account' %}active{% endif %}">Account</a>
+  </li>
+  <li class="nav-item">
+    <a href="{% url 'profile-personal' %}" class="nav-link {% if active == 'personal' %}active{% endif %}">Personal</a>
+  </li>
+  <li class="nav-item">
+    <a href="{% url 'profile-professional' %}" class="nav-link {% if active == 'professional' %}active{% endif %}">Professional</a>
+  </li>
+  <li class="nav-item">
+    <a href="{% url 'profile-reviewer' %}" class="nav-link {% if active == 'reviewer' %}active{% endif %}">Reviewer</a>
+  </li>
+</ul>

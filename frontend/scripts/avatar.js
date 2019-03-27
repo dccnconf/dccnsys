@@ -1,108 +1,80 @@
-//
-// Original code was taken from https://github.com/Foliotek/Croppie/blob/master/demo/demo.js
-//
 (function ($) {
-  $.fn.dccnAvatar = function(action, options) {
-    var $wrap = this.find('.dccn-upload-wrap');
-    var $msg = this.find('.dccn-upload-msg');
-    var $frame = $wrap.find('.dccn-upload-frame');
-    var $input = this.find('.dccn-file-input input');
-    var $controls = this.find('.dccn-upload-control');
-
-    // Define a default action - popup an image in a separate window.
-    // In real world, here we will send an AJAX POST.
-    var popupImage = function (src) {
-      swal({
-        title: '',
-        content: { element: 'img', attributes: { 'src': src } },
-        allowOutsideClick: true
-      });
-    };
-
-    // This function loads data from the file input into the croppie frame.
-    var readFile = function (input) {
+  //////////////////////////////
+  // Avatar plugin
+  //
+  // To make things work, a <form> element which action is set to GET (e.g. the page where it is put),
+  // must have a class `.dccn-avatar-update-form` and have an attribute `data-target`, which stores a
+  // URL for avatar update.
+  //
+  // The form must also have an <input type="file"> element.
+  //
+  // Example:
+  //
+  // <form class="dccn-avatar-update-form" action="/profile" method="GET" data-target="/avatar/update">
+  //   <input type="file" value="Choose file...">
+  // </form>
+  //
+  $.fn.dccnAvatarUpdateForm = function () {
+    var form = this;  // `this` will point an `<input>` element below
+    form.find('input[type="file"]').change(function (event) {
+      // `this` is an <input type="file"> (not a jQuery object, plain DOM!)
+      var input = this;
       if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-          if (!$wrap.hasClass('ready')) {
-            $wrap.addClass('ready');
-          }
-          if (!$msg.hasClass('hidden')) {
-            $msg.addClass('hidden');
-          }
-          $frame.croppie('bind', {
-            url: e.target.result
-          }).then(function() {
-            console.log('jQuery bind complete');
+        var sizeKb = (input.files[0].size / 1024).toFixed(4);
+        if (sizeKb > 500) {
+          Swal.fire({
+            type: 'warning',
+            text: `Profile image size must be under 500KB, your file is ${sizeKb}KB`,
+            customClass: {
+              confirmButton: 'btn btn-outline-secondary mx-2',
+            },
+            buttonsStyling: false
           });
-        };
-        reader.readAsDataURL(input.files[0]);
-      } else {
-        console.log("Sorry - you're browser doesn't support the FileReader API");
+        } else {
+          var data = new FormData(form.get(0));
+          var reader = new FileReader();
+          reader.onload = function (re) {
+            Swal.fire({
+              text: 'Use this as your profile picture?',
+              imageUrl: re.target.result,
+              imageWidth: 240,
+              imageHeight: 240,
+              imageAlt: 'new profile picture',
+              animation: false,
+              showCancelButton: true,
+              cancelButtonText: 'No',
+              confirmButtonText: 'Yes',
+              customClass: {
+                image: 'img-fluid rounded-circle',
+                confirmButton: 'btn btn-success mx-2',
+                cancelButton: 'btn btn-outline-secondary mx-2',
+              },
+              buttonsStyling: false
+            }).then(result => {
+              if (result.value) {
+                var req = new XMLHttpRequest();
+                req.open("POST", form.attr('data-target'), true);
+                req.onload = function (xe) {
+                  form.submit();
+                };
+                data.append('avatar', re.target.result);
+                data.append('csrfmiddlewaretoken', $('[name=csrfmiddlewaretoken]').val());
+                req.send(data);
+              } else {
+                $(input).val('');
+              }
+            });
+          };
+          reader.readAsDataURL(input.files[0]);
+        }
       }
-    };
-
-    var attach = function ($el, settings) {
-      var $result = $controls.filter('.dccn-upload-control-result');
-      var $rotateLeftCtrl = $controls.filter('.dccn-upload-control-rotate-left');
-      var $rotateRightCtrl = $controls.filter('.dccn-upload-control-rotate-right');
-
-      $frame.croppie({
-        viewport: {
-          width: settings.intSize,
-          height: settings.intSize,
-          type: 'circle'
-        },
-        boundary: {
-          width: settings.extSize,
-          height: settings.extSize
-        },
-        enableOrientation: true
-      });
-
-      $input.on('change', function() {
-        readFile(this);
-      });
-
-      $result.on('click', function(ev) {
-        $frame.croppie('result', {
-          type: 'canvas',
-          size: 'viewport'
-        }).then(settings.fn);
-      });
-
-      $rotateLeftCtrl.on('click', function () {
-        $frame.croppie('rotate', 90);
-      });
-      $rotateRightCtrl.on('click', function () {
-        $frame.croppie('rotate', -90);
-      });
-    };
-
-    var detach = function () {
-      $wrap.removeClass('ready');
-      $msg.removeClass('hidden');
-      $frame.croppie('destroy');
-      $controls.off('click');
-      $input.val("");  // !! otherwise no reaction whenever loading same avatar
-    };
-
-    //
-    // --- main function ---
-    //
-    var settings = $.extend({
-      extSize: 300,
-      intSize: 250,
-      fn: popupImage
-    }, options);
-
-    if (!action || (action === 'attach')) {
-      attach(this, settings);
-    }
-    else if (action === 'detach') {
-      detach();
-    }
-
-    return this;
+      event.preventDefault();
+    });
   };
+
+  //////////////////////////////
+  // Associating the plugins
+  $('.dccn-avatar-update-form').dccnAvatarUpdateForm();
+  console.log('Registered Avatar update form plugin!');
 }(jQuery));
+

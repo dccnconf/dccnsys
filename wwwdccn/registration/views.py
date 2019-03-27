@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 
 from users.models import generate_avatar
-from .forms import PersonalForm, ProfessionalForm
+from users.forms import PersonalForm, ProfessionalForm
 
 User = get_user_model()
 
