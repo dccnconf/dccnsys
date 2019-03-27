@@ -6,4 +6,4 @@ def home(request):
         return render(request, 'public_site/index.html')
     elif not request.user.has_finished_registration:
         return redirect('register')
-    return redirect('user-details')
+    return redirect('submissions')

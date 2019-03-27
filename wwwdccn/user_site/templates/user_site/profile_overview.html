@@ -26,7 +26,7 @@
             </div>
 
             <form action="" class="dccn-avatar-update-form mt-3" method="GET"
-                  data-target="{% url 'user-avatar' %}" data-preview="#avatarPreview">
+                  data-target="{% url 'profile-update-avatar' %}" data-preview="#avatarPreview">
               {% csrf_token %}
               <button class="btn btn-sm btn-outline-secondary dccn-file-input" style="min-width: 120px;">
                 Change image
@@ -34,7 +34,7 @@
               </button>
             </form>
 
-            <form action="{% url 'user-avatar-delete' %}" method="POST" class="mt-2">
+            <form action="{% url 'profile-delete-avatar' %}" method="POST" class="mt-2">
               {% csrf_token %}
               <button type="submit" class="btn btn-outline-warning btn-sm" style="min-width: 120px;">Delete image</button>
             </form>
@@ -50,7 +50,7 @@
                   <p class="dccn-title text-center text-md-left">{{ user.profile.get_full_name }}</p>
                 </div>
               </div>
-              {% if user.profile.get_full_name_rus %}
+              {% if user.profile.has_name_rus %}
               <div class="row">
                 <div class="col">
                   <p class="dccn-subtitle text-center text-md-left">(рус: {{ user.profile.get_full_name_rus }})</p>

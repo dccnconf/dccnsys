@@ -22,7 +22,7 @@
         {% bootstrap_messages %}
 
         <h2 class="dccn-subtitle mb-3">Update Email</h2>
-        <form action="{% url 'user-email' %}" method="POST" class="form-inline dccn-protected-form" id="updateEmailForm">
+        <form action="{% url 'profile-update-email' %}" method="POST" class="form-inline dccn-protected-form" id="updateEmailForm">
           {% csrf_token %}
           <input type="email" name="email" id="newEmailInput" class="form-control flex-fill" placeholder="Current email: {{ user.email }}">
           <button type="button" class="btn btn-outline-primary btn-sm ml-sm-2 mt-2 mt-sm-0" data-toggle="modal" data-target="#updateEmailConfirmDialog">Update</button>
@@ -30,16 +30,23 @@
         <hr>
 
         <h2 class="dccn-subtitle mb-3">Change Password</h2>
-        <form action="{% url 'user-password' %}" method="POST" class="form-inline dccn-protected-form" id="updatePasswordForm">
+        <form action="{% url 'profile-update-password' %}" method="POST" class="dccn-protected-form" id="updatePasswordForm">
           {% csrf_token %}
-          <input type="password" name="new_password1" id="password1" class="form-control flex-fill" placeholder="Enter new password">
-          <input type="password" name="new_password2" id="password2" class="form-control flex-fill ml-sm-2 mt-2 mt-sm-0" placeholder="Re-type your new password">
-          <button type="button" class="btn btn-outline-primary btn-sm ml-sm-2 mt-2 mt-sm-0" data-toggle="modal" data-target="#updatePasswordConfirmDialog">Update</button>
+          <div class="form-group">
+            <input type="password" name="new_password1" id="password1" class="form-control" placeholder="Enter new password">
+          </div>
+
+          <div class="form-group">
+            <input type="password" name="new_password2" id="password2" class="form-control" placeholder="Re-type your new password">
+            <div class="invalid-feedback">Passwords must match</div>
+          </div>
+
+          <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#updatePasswordConfirmDialog">Update</button>
         </form>
         <hr>
 
         <h2 class="dccn-subtitle mb-3">Notification Settings</h2>
-        <form action="{% url 'profile-notifications' %}" method="POST" id="notificationsSettingsForm">
+        <form action="{% url 'profile-update-subscriptions' %}" method="POST" id="notificationsSettingsForm">
           {% csrf_token %}
           {% bootstrap_form notifications_form %}
           <button type="submit" class="btn btn-outline-primary btn-sm">Update</button>
@@ -66,7 +73,7 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <form action="{% url 'user-delete' %}" method="POST">
+        <form action="{% url 'profile-delete' %}" method="POST">
           <div class="modal-body">
             {% csrf_token %}
             {% bootstrap_form delete_user_form %}
@@ -147,11 +154,29 @@ $(document).ready(() => {
       $(btn.attr('data-target')).focus();
       event.preventDefault();
       return false;
+    } else {
+      $(this).removeClass('is-invalid');
     }
   });
   $('.modal').on('shown.bs.modal', function() {
     $(this).find('input[type="password"]').focus();
   });
+
+  // Check that email fields match when clicking update button on change password dialog:
+  $('#updatePasswordForm button[data-toggle="modal"]').click(function (event) {
+    var form = $(this).closest('form');
+    var password1 = form.find('input[name="new_password1"]');
+    var password2 = form.find('input[name="new_password2"]');
+    if (password1.val() !== password2.val()) {
+      password2.addClass('is-invalid');
+      event.preventDefault();
+      return false;
+    } else {
+      password1.addClass('is-valid');
+      password2.addClass('is-valid');
+    }
+  });
+
 });
 </script>
 {% endblock %}

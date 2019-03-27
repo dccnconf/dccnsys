@@ -166,6 +166,9 @@ class Profile(models.Model):
             (self.first_name_rus, self.middle_name_rus, self.last_name_rus)
         )
 
+    def has_name_rus(self):
+        return bool(self.get_full_name_rus().strip())
+
     def age(self):
         today = date.today()
         born = self.birthday
@@ -189,7 +192,7 @@ def generate_avatar(profile):
     return img_content
 
 
-def update_avatar(profile, image_file):
+def change_avatar(profile, image_file):
     if profile.avatar:
         profile.avatar.delete()
     profile.avatar_version += 1

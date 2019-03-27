@@ -11,84 +11,21 @@ from django.utils.translation import ugettext_lazy as _
 
 from users.forms import PersonalForm, ProfessionalForm, UpdateEmailForm, \
     SubscriptionsForm, DeleteUserForm, DeleteAvatarForm
-from users.models import update_avatar
+from users.models import change_avatar
 
 
 User = get_user_model()
 
 
 @login_required
-def user_details(request):
-    return render(request, 'user_site/submissions.html')
-
-
-@login_required
-def profile_overview(request):
+@require_GET
+def overview_page(request):
     return render(request, 'user_site/profile_overview.html')
 
 
 @login_required
-@require_GET
-def profile_account(request):
-    notifications_form = SubscriptionsForm(instance=request.user.subscriptions)
-    delete_user_form = DeleteUserForm(user=request.user)
-    return render(request, 'user_site/profile_account.html', {
-        'notifications_form': notifications_form,
-        'delete_user_form': delete_user_form,
-    })
-
-
-@login_required
 @require_POST
-def user_update_email(request):
-    form = UpdateEmailForm(request.user, request.POST)
-    if form.is_valid():
-        form.save()
-        messages.success(request, _('Email was updated'))
-    else:
-        messages.error(request, _('Failed to update email'))
-    return redirect('profile-account')
-
-
-@login_required
-@require_POST
-def user_update_password(request):
-    form = PasswordChangeForm(request.user, request.POST)
-    if form.is_valid():
-        form.save()
-        messages.success(request, _('Password was updated'))
-    else:
-        messages.error(request, _('Failed to update password'))
-    return redirect('profile-account')
-
-
-@login_required
-@require_POST
-def user_delete(request):
-    form = DeleteUserForm(request.user, request.POST)
-    if form.is_valid():
-        form.save()
-        return redirect('home')
-
-    messages.error(request, _('Failed to delete account'))
-    return redirect('profile-account')
-
-
-@login_required
-@require_POST
-def profile_update_notifications(request):
-    form = SubscriptionsForm(request.POST, instance=request.user.subscriptions)
-    if form.is_valid():
-        form.save()
-        messages.success(request, _('Notifications settings updated'))
-    else:
-        messages.error(request, _('Failed to update notifications settings'))
-    return redirect('profile-account')
-
-
-@login_required
-@require_POST
-def profile_update_avatar(request):
+def update_avatar(request):
     profile = request.user.profile
     # Received base64 string starts with 'data:image/jpeg;base64,........'
     # We need to use 'jpeg' as an extension and everything after base64,
@@ -98,7 +35,7 @@ def profile_update_avatar(request):
     if ext == 'svg+xml':
         ext = 'svg'
     img = ContentFile(base64.b64decode(imgstr), name=f'{profile.pk}.{ext}')
-    update_avatar(request.user.profile, img)
+    change_avatar(request.user.profile, img)
     return redirect('profile-account')
 
 
@@ -111,7 +48,66 @@ def delete_avatar(request):
 
 
 @login_required
-def profile_personal(request):
+@require_GET
+def account_page(request):
+    notifications_form = SubscriptionsForm(instance=request.user.subscriptions)
+    delete_user_form = DeleteUserForm(user=request.user)
+    return render(request, 'user_site/profile_account.html', {
+        'notifications_form': notifications_form,
+        'delete_user_form': delete_user_form,
+    })
+
+
+@login_required
+@require_POST
+def update_email(request):
+    form = UpdateEmailForm(request.user, request.POST)
+    if form.is_valid():
+        form.save()
+        messages.success(request, _('Email was updated'))
+    else:
+        messages.error(request, _('Failed to update email'))
+    return redirect('profile-account')
+
+
+@login_required
+@require_POST
+def update_password(request):
+    form = PasswordChangeForm(request.user, request.POST)
+    if form.is_valid():
+        form.save()
+        messages.success(request, _('Password was updated'))
+    else:
+        messages.error(request, _('Failed to update password'))
+    return redirect('profile-account')
+
+
+@login_required
+@require_POST
+def update_subscriptions(request):
+    form = SubscriptionsForm(request.POST, instance=request.user.subscriptions)
+    if form.is_valid():
+        form.save()
+        messages.success(request, _('Notifications settings updated'))
+    else:
+        messages.error(request, _('Failed to update notifications settings'))
+    return redirect('profile-account')
+
+
+@login_required
+@require_POST
+def delete_account(request):
+    form = DeleteUserForm(request.user, request.POST)
+    if form.is_valid():
+        form.save()
+        return redirect('home')
+
+    messages.error(request, _('Failed to delete account'))
+    return redirect('profile-account')
+
+
+@login_required
+def personal_settings(request):
     profile = request.user.profile
     if request.method == 'POST':
         form = PersonalForm(request.POST, instance=profile)
@@ -127,7 +123,7 @@ def profile_personal(request):
 
 
 @login_required
-def profile_professional(request):
+def professional_settings(request):
     profile = request.user.profile
     if request.method == 'POST':
         form = ProfessionalForm(request.POST, instance=profile)
@@ -143,5 +139,5 @@ def profile_professional(request):
 
 
 @login_required
-def profile_reviewer(request):
+def reviewer_settings(request):
     return render(request, 'user_site/profile_reviewer.html')

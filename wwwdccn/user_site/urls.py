@@ -1,19 +1,20 @@
 from django.urls import path
 
-from . import views
+from .views import profile, submissions
 
 
 urlpatterns = [
-    path('', views.user_details, name='user-details'),
-    path('profile/overview/', views.profile_overview, name='profile-overview'),
-    path('profile/account/', views.profile_account, name='profile-account'),
-    path('profile/account/email/', views.user_update_email, name='user-email'),
-    path('profile/account/notifications/', views.profile_update_notifications, name='profile-notifications'),
-    path('profile/account/delete/', views.user_delete, name='user-delete'),
-    path('profile/account/password/', views.user_update_password, name='user-password'),
-    path('profile/account/avatar/', views.profile_update_avatar, name='user-avatar'),
-    path('profile/account/avatar/delete/', views.delete_avatar, name='user-avatar-delete'),
-    path('profile/personal/', views.profile_personal, name='profile-personal'),
-    path('profile/professional/', views.profile_professional, name='profile-professional'),
-    path('profile/reviewer/', views.profile_reviewer, name='profile-reviewer'),
+    path('', submissions.user_details, name='submissions'),
+
+    path('profile/overview/', profile.overview_page, name='profile-overview'),
+    path('profile/account/', profile.account_page, name='profile-account'),
+    path('profile/personal/', profile.personal_settings, name='profile-personal'),
+    path('profile/professional/', profile.professional_settings, name='profile-professional'),
+    path('profile/reviewer/', profile.reviewer_settings, name='profile-reviewer'),
+    path('profile/update/email/', profile.update_email, name='profile-update-email'),
+    path('profile/update/subscriptions/', profile.update_subscriptions, name='profile-update-subscriptions'),
+    path('profile/update/password/', profile.update_password, name='profile-update-password'),
+    path('profile/update/avatar/', profile.update_avatar, name='profile-update-avatar'),
+    path('profile/delete/', profile.delete_account, name='profile-delete'),
+    path('profile/delete/avatar/', profile.delete_avatar, name='profile-delete-avatar'),
 ]
