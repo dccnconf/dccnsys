@@ -35,7 +35,7 @@ def professional(request):
             form.save()
             request.user.has_finished_registration = True
             request.user.save()
-            return redirect('user-details', pk=request.user.pk)
+            return redirect('home')
     else:
         form = ProfessionalForm(instance=profile)
     return render(request, 'registration/professional.html', {
