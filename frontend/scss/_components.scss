@@ -82,6 +82,7 @@ label, .col-form-label, .form-label, .form-check-label {
 
 label.control-label {
   padding-top: 5px !important;
+  padding-left: 0 !important;
 }
 
 input.form-control {
@@ -135,6 +136,19 @@ select.form-control {
 a.disabled {
   color: gray;
   pointer-event: none;
+}
+
+.form-group.row {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+
+  .form-check {
+    margin-left: 20px;
+
+    .form-check-input {
+      margin-top: 6px;
+    }
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////

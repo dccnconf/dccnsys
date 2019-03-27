@@ -1,0 +1,49 @@
+{% extends "user_site/base.html" %}
+{% load bootstrap4 %}
+
+{% block title %}
+  Profile | DCCN
+{% endblock %}
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='profile' %}
+{% endblock %}
+
+{% block body %}
+<main class="container py-3">
+  <div class="dccn-layout-col">
+
+    <div class="dccn-panel w-100">
+      <h1 class="dccn-panel-title">Profile</h1>
+      {% include 'user_site/components/profile_navigation.html' with active='personal' %}
+
+      <div class="dccn-content p-4">
+        <form action="" method="POST" novalidate>
+          {% bootstrap_messages %}
+          {% csrf_token %}
+          {% bootstrap_form form layout="horizontal" label_class='control-label col-md-5 col-lg-4 text-md-right text-left pr-0 pr-md-4' horizontal_field_class='col-md-7 col-lg-8' %}
+          <div class="form-group row">
+            <button type='submit' class="btn btn-outline-primary btn-sm">Save changes</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+{% endblock %}
+
+{% block script %}
+  <script type="text/javascript">
+    $(function () {
+      $('input[name="birthday"]').datepicker({
+        {#dateFormat: "dd MM yy",#}
+        dateFormat: "yy-mm-dd",
+        defaultDate: "1980-01-01",
+        changeYear: true,
+        changeMonth: true,
+      });
+    });
+  </script>
+{% endblock %}

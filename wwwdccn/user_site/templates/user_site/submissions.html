@@ -1,0 +1,32 @@
+{% extends 'user_site/base.html' %}
+
+{% block title %}
+  Submissions | DCCN
+{% endblock %}
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='submissions' %}
+{% endblock %}
+
+{% block body %}
+<main class="container py-3">
+  <div class="dccn-layout-row-lg-col">
+
+    <!-- PROFILE BOX -->
+    {% include 'user_site/components/profile_panel.html' with user=user numSubmissions=0 numReviews=0 %}
+
+    <!-- SUBMISSIONS BOX -->
+    <div class="dccn-panel dccn-work-panel">
+      <h2 class="dccn-panel-title">Submissions</h2>
+
+      <div class="dccn-panel-toolbar">
+        <a href="#" class="btn btn-primary btn-sm btn-block btn-sm-normal mb-3 mb-lg-0"><i class="fas fa-plus pr-2"></i>New</a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JUST TO SEPARATE "GO TO INDEX" FOOTER: -->
+  <div style="min-height: 100px;"></div>
+</main>
+{% endblock %}

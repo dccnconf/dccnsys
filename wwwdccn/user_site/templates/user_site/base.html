@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{% block title %}Page Title{% endblock %}</title>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="{% static 'css/dccn-ui.css' %}">
+  {% block css %}
+  {% endblock %}
+</head>
+
+<body class="user-main">
+  {% block header %}
+  {% endblock %}
+
+  {% block body %}
+  {% endblock %}
+
+  {% block footer %}
+  {% endblock %}
+
+  <script src="{% static 'scripts/jquery.min.js' %}"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <script src="{% static 'scripts/Chart.bundle.min.js' %}"></script>
+  <script src="{% static 'scripts/math.js' %}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@8"></script>
+  <script src="{% static 'scripts/dccn-ui.js' %}"></script>
+
+  {% block script %}
+  {% endblock %}
+</body>
+
+</html>

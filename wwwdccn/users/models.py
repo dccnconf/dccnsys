@@ -1,4 +1,5 @@
 import io
+from datetime import date
 
 import pyavagen
 from django.conf import settings
@@ -50,7 +51,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 def get_avatar_full_path(instance, filename):
     ext = filename.split('.')[-1]
-    return f'{settings.MEDIA_PUBLIC_ROOT}/avatars/{instance.pk}.{ext}'
+    path = f'{settings.MEDIA_PUBLIC_ROOT}/avatars'
+    name = f'{instance.pk}_{instance.avatar_version:04d}'
+    return f'{path}/{name}.{ext}'
 
 
 class Profile(models.Model):
@@ -123,7 +126,6 @@ class Profile(models.Model):
         max_length=100, default="", verbose_name=_("Last Name in Russian"),
         blank=True,
     )
-    avatar = models.ImageField(upload_to=get_avatar_full_path, blank=True)
     country = CountryField(null=True, verbose_name=_("Country"))
     city = models.CharField(max_length=100, verbose_name=_("City in English"))
     birthday = models.DateField(verbose_name=_("Birthday"), null=True)
@@ -146,10 +148,8 @@ class Profile(models.Model):
         choices=LANGUAGES, max_length=3, default='ENG'
     )
 
-    agree_to_receive_emails = models.BooleanField(
-        verbose_name=_('I agree to receive emails from DCCN Registration System'),
-        default=False
-    )
+    avatar = models.ImageField(upload_to=get_avatar_full_path, blank=True)
+    avatar_version = models.IntegerField(default=0, blank=True, editable=False)
 
     @property
     def email(self):
@@ -160,6 +160,20 @@ class Profile(models.Model):
 
     def get_full_name(self):
         return f'{self.first_name} {self.last_name}'
+
+    def get_full_name_rus(self):
+        return ' '.join(
+            (self.first_name_rus, self.middle_name_rus, self.last_name_rus)
+        )
+
+    def has_name_rus(self):
+        return bool(self.get_full_name_rus().strip())
+
+    def age(self):
+        today = date.today()
+        born = self.birthday
+        rest = 1 if (today.month, today.day) < (born.month, born.day) else 0
+        return today.year - born.year - rest
 
     def __str__(self):
         return self.get_full_name()
@@ -178,12 +192,41 @@ def generate_avatar(profile):
     return img_content
 
 
+def change_avatar(profile, image_file):
+    if profile.avatar:
+        profile.avatar.delete()
+    profile.avatar_version += 1
+    profile.avatar = image_file
+    profile.save()
+    return profile
+
+
+class Subscriptions(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    trans_email = models.BooleanField(
+        default=False,
+        verbose_name=_('I agree to receive transactional emails from DCCN '
+                       'Registration System corresponding to actions related '
+                       'to me (e.g., submission status update, adding me as '
+                       'a co-author, invitations for review, etc.)')
+    )
+
+    info_email = models.BooleanField(
+        default=False,
+        verbose_name=_('I agree to receive informational emails related to '
+                       'DCCN 2019 and future DCCN events')
+    )
+
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
+        Subscriptions.objects.create(user=instance)
 
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
+    instance.subscriptions.save()

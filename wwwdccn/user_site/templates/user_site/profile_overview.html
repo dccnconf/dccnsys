@@ -1,0 +1,177 @@
+{% extends "user_site/base.html" %}
+
+{% block title %}
+  Profile | DCCN
+{% endblock %}
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='profile' %}
+{% endblock %}
+
+{% block body %}
+<main class="container py-3">
+  <div class="dccn-layout-col">
+
+    <div class="dccn-panel w-100">
+      <h1 class="dccn-panel-title">Profile</h1>
+      {% include 'user_site/components/profile_navigation.html' with active='overview' %}
+
+      <div class="dccn-content pb-4 px-4">
+        <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start">
+          <!-- AVATAR -->
+          <div>
+
+            <div class="dccn-avatar-preview mt-3 mr-3" id="avatarPreview">
+              <img src="{{ user.profile.avatar.url }}" alt="avatar" class="align-self-center d-block mx-lg-auto rounded-circle" style="width: 120px;">
+            </div>
+
+            <form action="" class="dccn-avatar-update-form mt-3" method="GET"
+                  data-target="{% url 'profile-update-avatar' %}" data-preview="#avatarPreview">
+              {% csrf_token %}
+              <button class="btn btn-sm btn-outline-secondary dccn-file-input" style="min-width: 120px;">
+                Change image
+                <input type="file" value="Choose file..." accept="image/*">
+              </button>
+            </form>
+
+            <form action="{% url 'profile-delete-avatar' %}" method="POST" class="mt-2">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-warning btn-sm" style="min-width: 120px;">Delete image</button>
+            </form>
+
+          </div>
+
+          <!-- DATA -->
+          <div class="ml-md-5 flex-fill">
+            <!-- Personal info -->
+            <div class="container">
+              <div class="row">
+                <div class="col">
+                  <p class="dccn-title text-center text-md-left">{{ user.profile.get_full_name }}</p>
+                </div>
+              </div>
+              {% if user.profile.has_name_rus %}
+              <div class="row">
+                <div class="col">
+                  <p class="dccn-subtitle text-center text-md-left">(рус: {{ user.profile.get_full_name_rus }})</p>
+                </div>
+              </div>
+              {% endif %}
+              <div class="row mt-3">
+                <div class="col-sm-4"><p class="dccn-text font-weight-normal">Country:</p></div>
+                <div class="col-sm-8"><p class="dccn-text">{{ user.profile.get_country_display }}</p></div>
+              </div>
+              <div class="row mt-1">
+                <div class="col-sm-4"><p class="dccn-text font-weight-normal">City:</p></div>
+                <div class="col-sm-8"><p class="dccn-text">{{ user.profile.city }}</p></div>
+              </div>
+              <div class="row mt-1">
+                <div class="col-sm-4"><p class="dccn-text font-weight-normal">Birthday:</p></div>
+                <div class="col-sm-8"><p class="dccn-text">{{ user.profile.birthday }} ({{ user.profile.age }} years)</p></div>
+              </div>
+              <div class="row mt-1">
+                <div class="col-sm-4"><p class="dccn-text font-weight-normal">Preferred language:</p></div>
+                <div class="col-sm-8"><p class="dccn-text">{{ user.profile.get_preferred_language_display }}</p></div>
+              </div>
+              <div class="row mt-3">
+                <a href="{% url 'profile-personal' %}" class="dccn-link"><i class="fas fa-edit"></i> Edit personal data</a>
+              </div>
+            </div>
+            <hr>
+            <!-- Account settings -->
+            <div class="container border-bottom mt-3">
+              <div class="row mt-1">
+                <div class="col-sm-4"><p class="dccn-text font-weight-normal">Email:</p></div>
+                <div class="col-sm-8"><p class="dccn-text">{{ user.profile.email }}</p></div>
+              </div>
+              <div class="row mt-1">
+                <div class="col-sm-4"><p class="dccn-text font-weight-normal">Receive emails notifications:</p></div>
+                <div class="col-sm-8"><p class="dccn-text">{{ user.subscriptions.trans_email|yesno }}</p></div>
+              </div>
+              <div class="row mt-1">
+                <div class="col-sm-4"><p class="dccn-text font-weight-normal">Subscribed to news:</p></div>
+                <div class="col-sm-8"><p class="dccn-text">{{ user.subscriptions.info_email|yesno }}</p></div>
+              </div>
+              <div class="row mt-3">
+                <a href="{% url 'profile-account' %}" class="dccn-link"><i class="fas fa-edit"></i> Edit account settings</a>
+              </div>
+            </div>
+            <!-- Professional info -->
+            <div class="container border-bottom mt-3">
+              <div class="row mt-1">
+                <div class="col-sm-4"><p class="dccn-text font-weight-normal">Affiliation:</p></div>
+                <div class="col-sm-8"><p class="dccn-text">{{ user.profile.affiliation }}</p></div>
+              </div>
+              <div class="row mt-1">
+                <div class="col-sm-4"><p class="dccn-text font-weight-normal">Education:</p></div>
+                <div class="col-sm-8"><p class="dccn-text">{{ user.profile.get_degree_display }}</p></div>
+              </div>
+              <div class="row mt-1">
+                <div class="col-sm-4"><p class="dccn-text font-weight-normal">Role:</p></div>
+                <div class="col-sm-8"><p class="dccn-text">{{ user.profile.get_role_display }}</p></div>
+              </div>
+              <div class="row mt-1">
+                <div class="col-sm-4"><p class="dccn-text font-weight-normal">IEEE Member:</p></div>
+                <div class="col-sm-8"><p class="dccn-text">{{ user.profile.ieee_member|yesno }}</p></div>
+              </div>
+              <div class="row mt-3">
+                <a href="{% url 'profile-professional' %}" class="dccn-link"><i class="fas fa-edit"></i> Edit professional data</a>
+              </div>
+            </div>
+            <!-- Reviewer info -->
+            <div class="container mt-3">
+{#              <div class="row mt-1">#}
+{#                <div class="col-sm-4"><p class="dccn-text font-weight-normal">Reviewer at:</p></div>#}
+{#                <div class="col-sm-8"><p class="dccn-text">DCCN'19</p></div>#}
+{#              </div>#}
+              <div class="row mt-1">
+                <div class="col-sm-4"><p class="dccn-text font-weight-normal">Invited to:</p></div>
+                <div class="col-sm-8"><p class="dccn-text font-italic">no unaccepted invitations</p></div>
+              </div>
+              <div class="row mt-3">
+                <a href="{% url 'profile-reviewer' %}" class="dccn-link"><i class="fas fa-edit"></i> Edit reviewer settings</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="uploadAvatarDialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5>Upload Avatar</h5>
+        </div>
+        <div class="modal-body">
+          <div class="container dccn-upload" style="min-height: 200px;">
+            <div class="dccn-upload-msg dccn-file-input">
+              <p>Upload a file to start cropping</p>
+              <input type="file" value="Choose file..." accept="image/*">
+            </div>
+            <div class="dccn-upload-wrap dccn-file-input">
+              <input type="file" value="Choose file..." accept="image/*">
+              <div class="dccn-upload-frame"></div>
+            </div>
+            <div class="d-flex flex-wrap mt-5">
+              <button class="btn btn-outline-info dccn-file-input mt-2 mt-sm-0">
+                <input type="file" value="Choose file..." accept="image/*">
+                <i class="far fa-file-image mr-1"></i> Upload...
+              </button>
+              <div class="ml-auto mt-2 mt-sm-0">
+                <button class="btn btn-outline-info dccn-upload-control dccn-upload-control-rotate-left mr-1"><i class="fas fa-undo"></i></button>
+                <button class="btn btn-outline-info dccn-upload-control dccn-upload-control-rotate-right"><i class="fas fa-redo"></i></button>
+              </div>
+            </div>
+            <div class="d-flex mt-3">
+              <button class="btn btn-primary dccn-upload-control dccn-upload-control-result"><i class="far fa-save mr-1"></i> Save avatar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+{% endblock %}

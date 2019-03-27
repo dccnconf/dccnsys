@@ -1,0 +1,40 @@
+{# ==================================================#}
+{# CONTEXT:                                          #}
+{#                                                   #}
+{# * active: 'submissions', 'reviews', 'conferences' #}
+{# ==================================================#}
+<nav class="navbar navbar-expand-md navbar-dark bg-dark">
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a href="{% url 'submissions' %}" class="nav-link {% if active == 'submissions' %}active{% endif %}">
+          {% if active == 'submissions' %}<span class="text-secondary">|</span>{% endif %} Submissions
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link {% if active == 'reviews' %}active{% endif %}">
+          {% if active == 'reviews' %}<span class="text-secondary">|</span>{% endif %} Reviews
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link {% if active == 'conferences' %}active{% endif %}">
+          {% if active == 'conferences' %}<span class="text-secondary">|</span>{% endif %} Conferences
+        </a>
+      </li>
+    </ul>
+
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item dropdown">
+        <a href="#" class="nav-link dropdown-toggle" id="userMenuDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-user"></i></a>
+        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userMenuDropdown">
+          <a href="{% url 'profile-overview' %}" class="dropdown-item">Profile</a>
+          <a href="{% url 'logout' %}" class="dropdown-item">Sign out</a>
+        </div>
+      </li>
+    </ul>
+  </div>
+</nav>

@@ -80,13 +80,14 @@
   justify-content: flex-start;
   margin-bottom: 15px;
   margin-right: 0;
+  padding-bottom: 25px;
   flex: 1;
 
   @include media-breakpoint-up(lg) {
     display: block;
     margin-bottom: 0;
     margin-right: 15px;
-    min-width: 200px;
+    max-width: 240px !important;
   }
 
   .dccn-title {
@@ -117,6 +118,14 @@
     font-size: 0.9rem;
     color: $secondary;
     font-weight: 100;
+  }
+}
+
+.dccn-work-panel {
+  flex-grow: 0;
+
+  @include media-breakpoint-up(lg) {
+    flex-grow: 1;
   }
 }
 
