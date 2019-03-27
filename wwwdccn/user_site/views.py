@@ -13,6 +13,7 @@ from users.forms import PersonalForm, ProfessionalForm, UpdateEmailForm, \
     SubscriptionsForm, DeleteUserForm, DeleteAvatarForm
 from users.models import update_avatar
 
+
 User = get_user_model()
 
 
@@ -69,7 +70,7 @@ def user_delete(request):
         form.save()
         return redirect('home')
 
-    messages.error(request, _('Error deleting account'))
+    messages.error(request, _('Failed to delete account'))
     return redirect('profile-account')
 
 

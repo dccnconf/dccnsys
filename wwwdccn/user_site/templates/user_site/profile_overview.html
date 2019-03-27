@@ -85,8 +85,12 @@
                 <div class="col-sm-8"><p class="dccn-text">{{ user.profile.email }}</p></div>
               </div>
               <div class="row mt-1">
-                <div class="col-sm-4"><p class="dccn-text font-weight-normal">Receive email notifications:</p></div>
-                <div class="col-sm-8"><p class="dccn-text">{{ user.profile.agree_to_receive_emails|yesno }}</p></div>
+                <div class="col-sm-4"><p class="dccn-text font-weight-normal">Receive emails notifications:</p></div>
+                <div class="col-sm-8"><p class="dccn-text">{{ user.subscriptions.trans_email|yesno }}</p></div>
+              </div>
+              <div class="row mt-1">
+                <div class="col-sm-4"><p class="dccn-text font-weight-normal">Subscribed to news:</p></div>
+                <div class="col-sm-8"><p class="dccn-text">{{ user.subscriptions.info_email|yesno }}</p></div>
               </div>
               <div class="row mt-3">
                 <a href="{% url 'profile-account' %}" class="dccn-link"><i class="fas fa-edit"></i> Edit account settings</a>
