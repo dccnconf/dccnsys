@@ -83,15 +83,13 @@
 
         <!-- Submission Options section -->
 
-        <div class="d-flex">
-          <h3 class="dccn-title mt-3">Proceedings</h3>
+        <div class="d-flex align-items-center">
+          <h3 class="dccn-title">Proceedings</h3>
           {# TODO: change the following check to filter whether user is able to edit conference #}
           {% if user in conference.chairs.all %}
-            <div class="d-flex ml-auto mt-3">
-              <a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link ml-auto">
-                <i class="far fa-plus-square"></i> Add
-              </a>
-            </div>
+            <a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link ml-auto">
+              <i class="far fa-plus-square"></i> Add
+            </a>
           {% endif %}
         </div>
         {% for proc in conference.proceedingtype_set.all %}
@@ -107,15 +105,13 @@
 
         <!-- Submission Options section -->
 
-        <div class="d-flex">
+        <div class="d-flex align-items-center">
           <h3 class="dccn-title">Submission Types</h3>
           {# TODO: change the following check to filter whether user is able to edit conference #}
           {% if user in conference.chairs.all %}
-            <div class="d-flex ml-auto mt-3">
-              <a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link ml-auto">
-                <i class="far fa-plus-square"></i> Add
-              </a>
-            </div>
+            <a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link ml-auto">
+              <i class="far fa-plus-square"></i> Add
+            </a>
           {% endif %}
         </div>
         {% for st in conference.submissiontype_set.all %}
