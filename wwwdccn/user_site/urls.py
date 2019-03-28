@@ -20,5 +20,6 @@ urlpatterns = [
 
     path('conferences/', conferences.conferences_list, name='conferences-list'),
     path('conferences/new/', conferences.conference_create, name='conference-create'),
-    path('conferences/<int:pk>/', conferences.conference_edit, name='conference-edit'),
+    path('conferences/<int:pk>/', conferences.conference_details, name='conference-details'),
+    path('conferences/<int:pk>/settings/', conferences.conference_edit, name='conference-edit'),
 ]

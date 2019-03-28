@@ -55,6 +55,7 @@ INSTALLED_APPS = [
 
     # Application defined in this project:
     'users',
+    'gears',
     'auth_app',
     'conferences',
     'public_site',

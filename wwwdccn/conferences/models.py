@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -38,6 +39,12 @@ class Conference(models.Model):
     creator = models.ForeignKey(
         User, null=True, blank=True, on_delete=models.SET_NULL,
         related_name='created_conferences'
+    )
+
+    logotype = models.ImageField(
+        verbose_name=_("Conference logotype"),
+        upload_to=f'{settings.MEDIA_PUBLIC_ROOT}/conferences/logo/',
+        null=True, blank=True
     )
 
 
@@ -116,6 +123,10 @@ class SubmissionType(models.Model):
 
     max_num_pages = models.IntegerField(
         default=4, verbose_name=_('Maximum number of pages in submission')
+    )
+
+    blind_review = models.BooleanField(
+        default=False, verbose_name=_('Blind review')
     )
 
     possible_proceedings = models.ManyToManyField(ProceedingType)

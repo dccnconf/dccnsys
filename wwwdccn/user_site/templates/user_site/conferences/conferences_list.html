@@ -30,12 +30,14 @@
 
         {% for conference in conferences %}
           <div class="card card-body">
+            {% if conference.is_ieee %}
+              <p class="dccn-text-3-light text-muted text-center">IEEE International Conference on</p>
+            {% endif %}
             <h4 class="text-center card-title dccn-text-5">{{ conference.full_name }}</h4>
-            <h5 class="text-center text-muted dccn-text-1">({{ conference.short_name }} {{ conference.year }})</h5>
-            <div class="row mt-3">
-              {% if user in conference.chairs.all %}
-                <a href="{% url 'conference-edit' pk=conference.pk %}" class="ml-auto"><i class="far fa-edit"></i> Edit...</a>
-              {% endif %}
+            <h5 class="text-center text-muted dccn-text-4">({{ conference.short_name }} {{ conference.year }})</h5>
+            <p class="text-center dccn-text mt-2">{{ conference.start_date }} - {{ conference.close_date }}, {{ conference.city }}, {{ conference.get_country_display }}</p>
+            <div class="d-flex mt-4">
+              <a href="{% url 'conference-details' pk=conference.pk %}" class="ml-auto dccn-link"><i class="fas fa-bars"></i> View</a>
             </div>
           </div>
         {% endfor %}

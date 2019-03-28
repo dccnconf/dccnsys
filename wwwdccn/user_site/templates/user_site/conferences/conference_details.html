@@ -1,0 +1,177 @@
+{% extends 'user_site/base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}
+  Conference #{{ conference.pk }} | DCCN
+{% endblock %}
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='conferences' %}
+{% endblock %}
+
+{% block body %}
+  <main class="container py-3">
+    <div class="dccn-layout-row-lg-col">
+
+      <div class="dccn-panel dccn-work-panel px-4 pb-4">
+
+        <nav class="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'conferences-list' %}" class="dccn-link">Conferences</a></li>
+            <li class="breadcrumb-item active">
+              {{ conference.short_name }}
+            </li>
+          </ol>
+        </nav>
+
+        {% if conference.logotype %}
+          <div class="d-flex mb-3">
+            <img src="{{ conference.logotype.url }}" alt="Conference Logotype" class="mx-auto img-fluid" style="width: 120px; height: 120px;">
+          </div>
+        {% endif %}
+
+        {% if conference.is_ieee %}
+          <p class="dccn-text-3 text-muted text-center">IEEE International Conference on</p>
+        {% endif %}
+        <h1 class="dccn-text-large text-center my-1 py-0">{{ conference.full_name }}</h1>
+        <h2 class="dccn-text-3 text-muted text-center">({{ conference.short_name }})</h2>
+        <p class="text-center dccn-text mt-2">
+          {{ conference.start_date }} - {{ conference.close_date }}, {{ conference.city }}, {{ conference.get_country_display }}
+        </p>
+
+        {# TODO: change the following check to filter whether user is able to edit conference #}
+        {% if user in conference.chairs.all %}
+          <div class="d-flex ml-auto mt-3">
+            <a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link ml-auto">
+              <i class="far fa-edit"></i> Edit details
+            </a>
+          </div>
+        {% endif %}
+
+        <!-- Deadlines section -->
+
+        <h3 class="dccn-title mt-3 mb-2">Deadlines</h3>
+        <div class="row align-items-end">
+          <div class="col-4 dccn-text">
+            Paper submission{% if conference.submission_stage.end_date_description %}
+            ({{ conference.submission_stage.end_date_description }})
+          {% endif %}:
+          </div>
+          <div class="col-8 dccn-text">
+            {{ conference.submission_stage.end_date }}
+            {# TODO: change the following check to filter whether user is able to edit conference #}
+            {% if user in conference.chairs.all %}
+              <span class="ml-2">
+            (<a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link">Edit</a>)
+          </span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="row align-items-end">
+          <div class="col-4 dccn-text">Review ends: </div>
+          <div class="col-8 dccn-text">
+            {{ conference.review_stage.end_date }}
+            {# TODO: change the following check to filter whether user is able to edit conference #}
+            {% if user in conference.chairs.all %}
+              <span class="ml-2">
+            (<a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link">Edit</a>)
+          </span>
+            {% endif %}
+          </div>
+        </div>
+        <hr class="mb-0">
+
+        <!-- Submission Options section -->
+
+        <div class="d-flex">
+          <h3 class="dccn-title mt-3">Proceedings</h3>
+          {# TODO: change the following check to filter whether user is able to edit conference #}
+          {% if user in conference.chairs.all %}
+            <div class="d-flex ml-auto mt-3">
+              <a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link ml-auto">
+                <i class="far fa-plus-square"></i> Add
+              </a>
+            </div>
+          {% endif %}
+        </div>
+        {% for proc in conference.proceedingtype_set.all %}
+          <h4 class="dccn-text-2">{{ forloop.counter }}. {{ proc.name }}</h4>
+          <div class="row mt-2">
+            <div class="col-4 dccn-text">Final manuscript deadline:</div>
+            <div class="col-8 dccn-text">{{ proc.final_manuscript_deadline }}</div>
+          </div>
+          <p class="dccn-text-light mt-2">{{ proc.description }}</p>
+          <p class="dccn-text mt-2">Template: <a href="#"><i class="far fa-file-archive"></i> download</a></p>
+        {% endfor %}
+        <hr class="mb-0">
+
+        <!-- Submission Options section -->
+
+        <div class="d-flex">
+          <h3 class="dccn-title">Submission Types</h3>
+          {# TODO: change the following check to filter whether user is able to edit conference #}
+          {% if user in conference.chairs.all %}
+            <div class="d-flex ml-auto mt-3">
+              <a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link ml-auto">
+                <i class="far fa-plus-square"></i> Add
+              </a>
+            </div>
+          {% endif %}
+        </div>
+        {% for st in conference.submissiontype_set.all %}
+          <h4 class="dccn-text-2">{{ forloop.counter }}. {{ st.name }}</h4>
+          <p class="dccn-text-light mt-2">{{ st.description }}</p>
+          <p class="dccn-text mt-2">Template: <a href="#"><i class="far fa-file-archive"></i> download</a></p>
+
+          <h5 class="dccn-text-1 mt-2">Requirements:</h5>
+          <div class="row mt-2">
+            <div class="col-4 dccn-text">Language:</div>
+            <div class="col-8 dccn-text">{{ st.get_language_display }}</div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-4 dccn-text">Number of pages:</div>
+            <div class="col-8 dccn-text">{{ st.min_num_pages }} - {{ st.max_num_pages }}</div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-4 dccn-text">Blind review:</div>
+            <div class="col-8 dccn-text">{{ st.blind_review|yesno }}</div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-4 dccn-text">Number of reviews:</div>
+            <div class="col-8 dccn-text">{{ st.num_reviews }}</div>
+          </div>
+        {% endfor %}
+        <hr class="mb-0">
+
+        <!-- Administrators section -->
+
+        <h3 class="dccn-title">Administrators</h3>
+        {% for chair in conference.chairs.all %}
+          <div class="d-flex mt-2 align-items-center">
+            <img src="{{ chair.profile.avatar.url }}" alt="{{ chair.profile.get_full_name }} profile image"
+                 class="img-fluid rounded-circle" style="width: 48px; height: 48px;">
+            <div class="ml-3">
+              <p class="dccn-text-0-light">{{ chair.profile.get_full_name }}</p>
+              <p class="dccn-text-smaller text-muted">{{ chair.profile.affiliation }}</p>
+            </div>
+          </div>
+        {% endfor %}
+
+      </div>
+    </div>
+  </main>
+{% endblock %}
+
+{% block script %}
+  <script type="text/javascript">
+    $(function () {
+      $('input[name$="date"]').datepicker({
+        {#dateFormat: "dd MM yy",#}
+        dateFormat: "yy-mm-dd",
+        defaultDate: "2019-01-01",
+        changeYear: true,
+        changeMonth: true,
+      });
+    });
+  </script>
+{% endblock %}

@@ -16,7 +16,7 @@
       <div class="dccn-panel dccn-work-panel px-4 pb-4">
         <h1 class="dccn-panel-title">Edit Conference #{{ conference.pk }}</h1>
 
-        <form action="" method="POST" novalidate>
+        <form action="" method="POST" novalidate enctype="multipart/form-data">
           {% bootstrap_messages %}
           {% csrf_token %}
           {% bootstrap_form form %}

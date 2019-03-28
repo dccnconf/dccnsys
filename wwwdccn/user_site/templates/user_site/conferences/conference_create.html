@@ -16,7 +16,7 @@
       <div class="dccn-panel dccn-work-panel px-4 pb-4">
         <h1 class="dccn-panel-title">New Conference</h1>
 
-        <form action="" method="POST">
+        <form action="" method="POST" enctype="multipart/form-data">
           {% csrf_token %}
           {% bootstrap_form form %}
           <input type="submit" value="Create" class="btn btn-primary btn-sm">

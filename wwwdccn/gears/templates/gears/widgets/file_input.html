@@ -1,0 +1,10 @@
+<div class="dccn-file d-flex align-items-center">
+  <button class="btn {{ widget.attrs.btn_class }} dccn-file-input mt-2 mt-sm-0">
+    <input type="file" value="Choose file..." {% if widget.attrs.accept %}accept="{{ widget.attrs.accept }}"{% endif %}
+           name="{{ widget.name }}" {% include "django/forms/widgets/attrs.html" %}>
+    <i class="far fa-file-image mr-1"></i> Choose file
+  </button>
+  {% if widget.attrs.show_file_name %}
+    <p class="small text-muted dccn-file-name ml-2 py-0 my-0"></p>
+  {% endif %}
+</div>
