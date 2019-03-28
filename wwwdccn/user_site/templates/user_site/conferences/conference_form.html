@@ -14,15 +14,17 @@
     <div class="dccn-layout-row-lg-col">
 
       <div class="dccn-panel dccn-work-panel px-4 pb-4">
-        <h1 class="dccn-panel-title">Edit Conference #{{ conference.pk }}</h1>
-        <h2 class="dccn-panel-subtitle">{{ subtitle }}</h2>
+        <h1 class="dccn-panel-title">{{ title }}</h1>
+        {% if subtitle %}
+          <h2 class="dccn-panel-subtitle">{{ subtitle }}</h2>
+        {% endif %}
         <form action="" method="POST" novalidate enctype="multipart/form-data">
           {% bootstrap_messages %}
           {% csrf_token %}
           {% bootstrap_form form %}
           <div class="form-group row">
             <a href="{% url 'conference-details' pk=conference.pk %}" class="btn btn-outline-secondary btn-sm ml-auto mr-2">Cancel</a>
-            <input type="submit" value="Save" class="btn btn-primary btn-sm">
+            <input type="submit" value="{{ submit_button_text|default:'Save' }}" class="btn btn-primary btn-sm">
           </div>
         </form>
       </div>

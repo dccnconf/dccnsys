@@ -7,7 +7,6 @@ from conferences.decorators import chair_required
 from conferences.forms import ConferenceForm, SubmissionStageForm, \
     ReviewStageForm
 from conferences.models import Conference
-from user_site.utility import render_conference_form
 
 
 @login_required
@@ -38,7 +37,7 @@ def conference_create(request):
     else:
         form = ConferenceForm()
     return render(request, 'user_site/conferences/conference_create.html', {
-        'form': form
+        'form': form,
     })
 
 
@@ -56,9 +55,13 @@ def conference_edit(request, pk):
             return redirect('conference-details', pk=pk)
     else:
          form = ConferenceForm(instance=conference)
-    return render_conference_form(
-        request, conference, form, _('Settings')
-    )
+    return render(request, 'user_site/conferences/conference_form.html', {
+        'conference': conference,
+        'form': form,
+        'subtitle': 'Settings',
+        'title': f'Edit conference #{pk}',
+    })
+
 
 
 @chair_required
@@ -76,9 +79,12 @@ def conference_submission_stage(request, pk):
             return redirect('conference-details', pk=pk)
     else:
         form = SubmissionStageForm(instance=stage)
-    return render_conference_form(
-        request, conference, form, _('Submission Stage')
-    )
+    return render(request, 'user_site/conferences/conference_form.html', {
+        'conference': conference,
+        'form': form,
+        'subtitle': 'Submissions Stage',
+        'title': f'Edit conference #{pk}',
+    })
 
 
 @chair_required
@@ -96,6 +102,9 @@ def conference_review_stage(request, pk):
             return redirect('conference-details', pk=pk)
     else:
         form = ReviewStageForm(instance=stage)
-    return render_conference_form(
-        request, conference, form, _('Review Stage')
-    )
+    return render(request, 'user_site/conferences/conference_form.html', {
+        'conference': conference,
+        'form': form,
+        'subtitle': 'Reviews Stage',
+        'title': f'Edit conference #{pk}',
+    })
