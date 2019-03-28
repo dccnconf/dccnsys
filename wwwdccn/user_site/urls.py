@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import profile, submissions
+from .views import profile, submissions, conferences
 
 
 urlpatterns = [
@@ -17,4 +17,6 @@ urlpatterns = [
     path('profile/update/avatar/', profile.update_avatar, name='profile-update-avatar'),
     path('profile/delete/', profile.delete_account, name='profile-delete'),
     path('profile/delete/avatar/', profile.delete_avatar, name='profile-delete-avatar'),
+
+    path('conferences/', conferences.conferences_list, name='conferences-list'),
 ]
