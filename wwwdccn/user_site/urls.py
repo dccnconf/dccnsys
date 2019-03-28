@@ -43,4 +43,13 @@ urlpatterns = [
     path('conferences/<int:pk>/stages/reviews',
          conferences.conference_review_stage,
          name='conference-review-stage'),
+    path('conferences/<int:pk>/proceedings/new/',
+         conferences.proceedings_create,
+         name='conference-proceedings-create'),
+    path('conferences/<int:pk>/proceedings/<int:proc_pk>/',
+         conferences.proceedings_update,
+         name='conference-proceedings-update'),
+    path('conferences/<int:pk>/proceedings/<int:proc_pk>/delete/',
+         conferences.proceedings_delete,
+         name='conference-proceedings-delete'),
 ]

@@ -30,12 +30,17 @@
 
         {% for conference in conferences %}
           <div class="card card-body">
-            {% if conference.is_ieee %}
-              <p class="dccn-text-3-light text-muted text-center">IEEE International Conference on</p>
-            {% endif %}
-            <h4 class="text-center card-title dccn-text-5">{{ conference.full_name }}</h4>
-            <h5 class="text-center text-muted dccn-text-4">({{ conference.short_name }} {{ conference.year }})</h5>
-            <p class="text-center dccn-text mt-2">{{ conference.start_date }} - {{ conference.close_date }}, {{ conference.city }}, {{ conference.get_country_display }}</p>
+            <div class="d-flex">
+              <img src="{{ conference.logotype.url }}" alt="Conference logo" class="img-fluid d-none d-md-block" style="max-width: 120px; max-height: 120px; padding: 5px;">
+              <div class="">
+                {% if conference.is_ieee %}
+                  <p class="dccn-text-3-light text-muted text-center text-md-left">IEEE International Conference on</p>
+                {% endif %}
+                <h4 class="text-center text-md-left card-title dccn-text-5">{{ conference.full_name }}</h4>
+                <h5 class="text-center text-md-left text-muted dccn-text-4">({{ conference.short_name }} {{ conference.year }})</h5>
+                <p class="text-center text-md-left dccn-text mt-2">{{ conference.start_date }} - {{ conference.close_date }}, {{ conference.city }}, {{ conference.get_country_display }}</p>
+              </div>
+            </div>
             <div class="d-flex mt-4">
               <a href="{% url 'conference-details' pk=conference.pk %}" class="ml-auto dccn-link"><i class="fas fa-bars"></i> View</a>
             </div>

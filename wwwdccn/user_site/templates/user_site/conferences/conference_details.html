@@ -52,7 +52,9 @@
 
         <!-- Deadlines section -->
 
-        <h3 class="dccn-title mt-3 mb-2">Deadlines</h3>
+        <div class="d-flex bg-secondary text-light px-2 py-1 mt-4 mb-2">
+          <h3 class="dccn-title p-0 m-0">Deadlines</h3>
+        </div>
         <div class="row align-items-end">
           <div class="col-4 dccn-text">
             Paper submission{% if conference.submission_stage.end_date_description %}
@@ -81,34 +83,86 @@
             {% endif %}
           </div>
         </div>
-        <hr class="mb-0">
 
-        <!-- Submission Options section -->
+        <!-- Proceedings Options section -->
 
-        <div class="d-flex align-items-center">
-          <h3 class="dccn-title">Proceedings</h3>
+        <div class="d-flex align-items-center bg-secondary text-light px-2 py-1 mt-4 mb-2">
+          <h3 class="dccn-title p-0 m-0">Proceedings Volumes</h3>
           {# TODO: change the following check to filter whether user is able to edit conference #}
           {% if user in conference.chairs.all %}
-            <a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link ml-auto">
+            <a href="{% url 'conference-proceedings-create' pk=conference.pk %}" class="dccn-link ml-auto text-light">
               <i class="far fa-plus-square"></i> Add
             </a>
           {% endif %}
         </div>
-        {% for proc in conference.proceedingtype_set.all %}
-          <h4 class="dccn-text-2">{{ forloop.counter }}. {{ proc.name }}</h4>
-          <div class="row mt-2">
-            <div class="col-4 dccn-text">Final manuscript deadline:</div>
-            <div class="col-8 dccn-text">{{ proc.final_manuscript_deadline }}</div>
+        <div class="card-deck">
+
+          {% for proc in conference.proceedingtype_set.all %}
+          <div class="card mt-2" >
+            <div class="card-header bg-white">
+              <h4 class="card-title dccn-text-3">{{ proc.name }}</h4>
+            </div>
+            <div class="card-body" style="min-width: 200px;">
+              <div class="row align-items-end">
+                <div class="col-md-6 dccn-text-0">Final manuscript deadline:</div>
+                <div class="col-md-6 dccn-text-0-light">{{ proc.final_manuscript_deadline }}</div>
+              </div>
+              <div class="row align-items-end">
+                <div class="col-md-6 dccn-text-0">Number of pages:</div>
+                <div class="col-md-6 dccn-text-0-light">{{ proc.min_num_pages }} - {{ proc.max_num_pages }}</div>
+              </div>
+              {% if proc.final_latex_template %}
+              <div class="row align-items-end">
+                <div class="col-md-6 dccn-text-0">Template:</div>
+                <div class="col-md-6 dccn-text-0-light">
+                  <a href="{{ proc.final_latex_template.url }}"><i class="far fa-file-archive"></i> Download</a>
+                </div>
+              </div>
+              {% endif %}
+              <p class="dccn-text-small-light mt-3 text-justify">{{ proc.description }}</p>
+            </div>
+            <div class="card-footer bg-white d-flex align-items-center">
+              {# TODO: change the following check to filter whether user is able to edit conference #}
+              {% if user in conference.chairs.all %}
+                <a href="{% url 'conference-proceedings-update' pk=conference.pk proc_pk=proc.pk %}" class="dccn-link">
+                  <i class="far fa-edit"></i> Edit
+                </a>
+                <button class="btn btn-link dccn-link text-danger ml-3" data-toggle="modal" data-target="#deleteProceedings-{{ proc.pk }}">
+                  <i class="far fa-trash-alt"></i> Delete
+                </button>
+              {% endif %}
+            </div>
           </div>
-          <p class="dccn-text-light mt-2">{{ proc.description }}</p>
-          <p class="dccn-text mt-2">Template: <a href="#"><i class="far fa-file-archive"></i> download</a></p>
-        {% endfor %}
-        <hr class="mb-0">
+
+            <div class="modal" id="deleteProceedings-{{ proc.pk }}">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header bg-danger text-light">
+                    <div class="modal-title">Confirm delete proceedings volume</div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <p class="dccn-text-0-light">Are you sure you want to delete proceedings volume #{{ proc.pk }} "{{ proc.name }}"?</p>
+                  </div>
+                  <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                    <form action="{% url 'conference-proceedings-delete' pk=conference.pk proc_pk=proc.pk %}" method="POST">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
 
         <!-- Submission Options section -->
 
-        <div class="d-flex align-items-center">
-          <h3 class="dccn-title">Submission Types</h3>
+        <div class="d-flex align-items-center bg-secondary text-light px-2 py-1 mt-4 mb-2">
+          <h3 class="dccn-title p-0 m-0">Submission Types</h3>
           {# TODO: change the following check to filter whether user is able to edit conference #}
           {% if user in conference.chairs.all %}
             <a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link ml-auto">

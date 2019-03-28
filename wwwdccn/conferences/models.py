@@ -85,8 +85,17 @@ class ProceedingType(models.Model):
         null=True, verbose_name=_('Deadline for final manuscript submission')
     )
 
+    min_num_pages = models.IntegerField(
+        default=4, verbose_name=_('Minimum number of pages in submission')
+    )
+
+    max_num_pages = models.IntegerField(
+        default=4, verbose_name=_('Maximum number of pages in submission')
+    )
+
     final_latex_template = models.FileField(
-        null=True, verbose_name=_('LaTeX template for final manuscript')
+        null=True, blank=True,
+        verbose_name=_('LaTeX template for final manuscript')
     )
 
 
