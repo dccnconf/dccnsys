@@ -123,17 +123,17 @@
                 {% endif %}
                 <p class="dccn-text-small-light mt-3 text-justify">{{ proc.description }}</p>
               </div>
-              <div class="card-footer bg-white d-flex align-items-center">
-                {# TODO: change the following check to filter whether user is able to edit conference #}
-                {% if user in conference.chairs.all %}
+              {# TODO: change the following check to filter whether user is able to edit conference #}
+              {% if user in conference.chairs.all %}
+                <div class="card-footer bg-white d-flex align-items-center">
                   <a href="{% url 'conference-proceedings-update' pk=conference.pk proc_pk=proc.pk %}" class="dccn-link">
                     <i class="far fa-edit"></i> Edit
                   </a>
                   <button class="btn btn-link dccn-link text-danger ml-3" data-toggle="modal" data-target="#deleteProceedings-{{ proc.pk }}">
                     <i class="far fa-trash-alt"></i> Delete
                   </button>
-                {% endif %}
-              </div>
+                </div>
+              {% endif %}
             </div>
 
             <div class="modal" id="deleteProceedings-{{ proc.pk }}">
@@ -194,7 +194,7 @@
                 <div class="row align-items-end">
                   <div class="col-md-6 dccn-text-0">Template:</div>
                   <div class="col-md-6 dccn-text-0-light">
-                    <a href="#" class="dccn-link"><i class="far fa-file-archive"></i> download</a>
+                    <a href="{{ st.latex_template.url }}" class="dccn-link"><i class="far fa-file-archive"></i> download</a>
                   </div>
                 </div>
                 <p class="dccn-text-small-light mt-3 text-justify">{{ st.description }}</p>
@@ -210,17 +210,17 @@
                 </ul>
                 <p class="text-small text-muted mt-1">NOTE: acceptance to any volume depends on the review result.</p>
               </div>
-              <div class="card-footer bg-white d-flex align-items-center">
-                {# TODO: change the following check to filter whether user is able to edit conference #}
-                {% if user in conference.chairs.all %}
+              {# TODO: change the following check to filter whether user is able to edit conference #}
+              {% if user in conference.chairs.all %}
+                <div class="card-footer bg-white d-flex align-items-center">
                   <a href="{% url 'conference-submissiontype-update' pk=conference.pk sub_pk=st.pk %}" class="dccn-link">
                     <i class="far fa-edit"></i> Edit
                   </a>
                   <button class="btn btn-link dccn-link text-danger ml-3" data-toggle="modal" data-target="#deleteSubmissionType-{{ st.pk }}">
                     <i class="far fa-trash-alt"></i> Delete
                   </button>
-                {% endif %}
-              </div>
+                </div>
+              {% endif %}
             </div>
 
             <div class="modal" id="deleteSubmissionType-{{ st.pk }}">
