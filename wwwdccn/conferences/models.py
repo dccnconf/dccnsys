@@ -1,8 +1,12 @@
+from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 
 # Create your models here.
 from django_countries.fields import CountryField
+
+
+User = get_user_model()
 
 
 class Conference(models.Model):
@@ -28,6 +32,13 @@ class Conference(models.Model):
 
     start_date = models.DateField(null=True, verbose_name=_('Opens at'))
     close_date = models.DateField(null=True, verbose_name=_('Closes at'))
+
+    chairs = models.ManyToManyField(User, related_name='chaired_conferences')
+
+    creator = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='created_conferences'
+    )
 
 
 class SubmissionStage(models.Model):
