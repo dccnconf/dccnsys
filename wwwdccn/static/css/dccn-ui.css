@@ -20662,16 +20662,16 @@ a.disabled {
   pointer-event: none;
 }
 
-.form-group.row {
+.row {
   margin-left: 0 !important;
   margin-right: 0 !important;
 }
 
-.form-group.row .form-check {
+.row .form-check {
   margin-left: 20px;
 }
 
-.form-group.row .form-check .form-check-input {
+.row .form-check .form-check-input {
   margin-top: 6px;
 }
 
@@ -20707,6 +20707,16 @@ a.disabled {
   color: white !important;
   background-color: #444a4f !important;
   border: 1px solid #545a5f !important;
+}
+
+nav.breadcrumb {
+  margin: 10px 0;
+  padding: 2px 10px;
+}
+
+nav.breadcrumb ol.breadcrumb {
+  margin: 2px;
+  padding: 0;
 }
 
 .dccn-feed-item {
@@ -20999,6 +21009,13 @@ ul.dccn-authors-editor-list > li:hover {
   font-size: 2.2rem;
   font-weight: 200;
   margin: 15px 0 10px 0;
+  text-align: center;
+}
+
+.dccn-panel .dccn-panel-subtitle {
+  font-size: 1.8rem;
+  font-weight: 200;
+  margin: 5px 0 10px 0;
   text-align: center;
 }
 

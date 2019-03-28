@@ -23,6 +23,7 @@ urlpatterns = [
     path('user/', include('user_site.urls')),
     path('auth/', include('auth_app.urls')),
     path('registration/', include('registration.urls')),
+    path('conferences/', include('conferences.urls')),
 ]
 
 if settings.USE_LOCAL_MEDIA:
