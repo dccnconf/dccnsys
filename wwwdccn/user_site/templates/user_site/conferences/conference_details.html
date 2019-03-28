@@ -24,6 +24,8 @@
           </ol>
         </nav>
 
+        {% bootstrap_messages %}
+
         {% if conference.logotype %}
           <div class="d-flex mb-3">
             <img src="{{ conference.logotype.url }}" alt="Conference Logotype" class="mx-auto img-fluid" style="width: 120px; height: 120px;">
@@ -62,7 +64,7 @@
             {# TODO: change the following check to filter whether user is able to edit conference #}
             {% if user in conference.chairs.all %}
               <span class="ml-2">
-            (<a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link">Edit</a>)
+            (<a href="{% url 'conference-submission-stage' pk=conference.pk %}" class="dccn-link">Edit</a>)
           </span>
             {% endif %}
           </div>
@@ -74,7 +76,7 @@
             {# TODO: change the following check to filter whether user is able to edit conference #}
             {% if user in conference.chairs.all %}
               <span class="ml-2">
-            (<a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link">Edit</a>)
+            (<a href="{% url 'conference-review-stage' pk=conference.pk %}" class="dccn-link">Edit</a>)
           </span>
             {% endif %}
           </div>

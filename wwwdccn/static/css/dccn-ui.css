@@ -21012,6 +21012,13 @@ ul.dccn-authors-editor-list > li:hover {
   text-align: center;
 }
 
+.dccn-panel .dccn-panel-subtitle {
+  font-size: 1.8rem;
+  font-weight: 200;
+  margin: 5px 0 10px 0;
+  text-align: center;
+}
+
 .dccn-panel .dccn-panel-toolbar {
   margin: 30px 0 15px 0;
   padding: 0;

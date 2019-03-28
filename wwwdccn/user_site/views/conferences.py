@@ -1,10 +1,13 @@
+from django.utils.translation import ugettext_lazy as _
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 
 from conferences.decorators import chair_required
-from conferences.forms import ConferenceForm
+from conferences.forms import ConferenceForm, SubmissionStageForm, \
+    ReviewStageForm
 from conferences.models import Conference
+from user_site.utility import render_conference_form
 
 
 @login_required
@@ -53,7 +56,46 @@ def conference_edit(request, pk):
             return redirect('conference-details', pk=pk)
     else:
          form = ConferenceForm(instance=conference)
-    return render(request, 'user_site/conferences/conference_edit.html', {
-        'conference': conference,
-        'form': form,
-    })
+    return render_conference_form(
+        request, conference, form, _('Settings')
+    )
+
+
+@chair_required
+def conference_submission_stage(request, pk):
+    conference = get_object_or_404(Conference, pk=pk)
+    stage = conference.submission_stage
+    if request.method == 'POST':
+        form = SubmissionStageForm(request.POST, instance=stage)
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request,
+                f'Conference #{pk} submission stage settings were updated'
+            )
+            return redirect('conference-details', pk=pk)
+    else:
+        form = SubmissionStageForm(instance=stage)
+    return render_conference_form(
+        request, conference, form, _('Submission Stage')
+    )
+
+
+@chair_required
+def conference_review_stage(request, pk):
+    conference = get_object_or_404(Conference, pk=pk)
+    stage = conference.review_stage
+    if request.method == 'POST':
+        form = ReviewStageForm(request.POST, instance=stage)
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request,
+                f'Conference #{pk} review stage settings were updated'
+            )
+            return redirect('conference-details', pk=pk)
+    else:
+        form = ReviewStageForm(instance=stage)
+    return render_conference_form(
+        request, conference, form, _('Review Stage')
+    )
