@@ -1,4 +1,6 @@
 from django.contrib.auth import get_user_model
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 
@@ -17,8 +19,6 @@ class Conference(models.Model):
     short_name = models.CharField(
         max_length=30, verbose_name=_('Short name of the conference')
     )
-
-    year = models.IntegerField(default=2019)
 
     is_ieee = models.BooleanField(
         default=False, verbose_name=_('The conference is supported by IEEE')
@@ -42,7 +42,9 @@ class Conference(models.Model):
 
 
 class SubmissionStage(models.Model):
-    conference = models.OneToOneField(Conference, on_delete=models.CASCADE)
+    conference = models.OneToOneField(
+        Conference, on_delete=models.CASCADE, related_name='submission_stage'
+    )
 
     end_date = models.DateField(
         null=True, verbose_name=_('Deadline for submissions')
@@ -52,7 +54,9 @@ class SubmissionStage(models.Model):
 
 
 class ReviewStage(models.Model):
-    conference = models.OneToOneField(Conference, on_delete=models.CASCADE)
+    conference = models.OneToOneField(
+        Conference, on_delete=models.CASCADE, related_name='review_stage'
+    )
 
     end_date = models.DateField(
         null=True, verbose_name=_('End of review')
@@ -121,3 +125,16 @@ class Topic(models.Model):
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
 
     name = models.CharField(max_length=50, verbose_name=_('Topic name'))
+
+
+@receiver(post_save, sender=Conference)
+def create_conference_stages(sender, instance, created, **kwargs):
+    if created:
+        SubmissionStage.objects.create(conference=instance)
+        ReviewStage.objects.create(conference=instance)
+
+
+@receiver(post_save, sender=Conference)
+def save_conference_stages(sender, instance, **kwargs):
+    instance.submission_stage.save()
+    instance.review_stage.save()

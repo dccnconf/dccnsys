@@ -1,0 +1,46 @@
+{% extends 'user_site/base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}
+  Edit Conference | DCCN
+{% endblock %}
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='conferences' %}
+{% endblock %}
+
+{% block body %}
+  <main class="container py-3">
+    <div class="dccn-layout-row-lg-col">
+
+      <div class="dccn-panel dccn-work-panel px-4 pb-4">
+        <h1 class="dccn-panel-title">Edit Conference #{{ conference.pk }}</h1>
+
+        <form action="" method="POST" novalidate>
+          {% bootstrap_messages %}
+          {% csrf_token %}
+          {% bootstrap_form form %}
+          <div class="form-group row">
+            <a href="{% url 'conferences-list' %}" class="btn btn-outline-secondary btn-sm ml-auto mr-2">Cancel</a>
+            <input type="submit" value="Save" class="btn btn-primary btn-sm">
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </main>
+{% endblock %}
+
+{% block script %}
+  <script type="text/javascript">
+    $(function () {
+      $('input[name$="date"]').datepicker({
+        {#dateFormat: "dd MM yy",#}
+        dateFormat: "yy-mm-dd",
+        defaultDate: "2019-01-01",
+        changeYear: true,
+        changeMonth: true,
+      });
+    });
+  </script>
+{% endblock %}

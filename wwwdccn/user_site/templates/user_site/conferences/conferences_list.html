@@ -1,7 +1,8 @@
 {% extends 'user_site/base.html' %}
+{% load bootstrap4 %}
 
 {% block title %}
-  Profile | DCCN
+  Conferences | DCCN
 {% endblock %}
 
 {% block header %}
@@ -21,14 +22,21 @@
 
         {% if user.is_superuser %}
           <div class="dccn-panel-toolbar">
-            <a href="#" class="btn btn-primary btn-sm btn-block btn-sm-normal mb-3 mb-lg-0"><i class="fas fa-plus pr-2"></i>New</a>
+            <a href="{% url 'conference-create' %}" class="btn btn-primary btn-sm btn-block btn-sm-normal mb-3 mb-lg-0"><i class="fas fa-plus pr-2"></i>New</a>
           </div>
         {% endif %}
 
+        {% bootstrap_messages %}
+
         {% for conference in conferences %}
           <div class="card card-body">
-            <h4 class="text-center card-title">{{ conference.long_name }}</h4>
-            <h5 class="text-center text-muted">({{ conference.short_name }} {{ conference.year }})</h5>
+            <h4 class="text-center card-title dccn-text-5">{{ conference.full_name }}</h4>
+            <h5 class="text-center text-muted dccn-text-1">({{ conference.short_name }} {{ conference.year }})</h5>
+            <div class="row mt-3">
+              {% if user in conference.chairs.all %}
+                <a href="{% url 'conference-edit' pk=conference.pk %}" class="ml-auto"><i class="far fa-edit"></i> Edit...</a>
+              {% endif %}
+            </div>
           </div>
         {% endfor %}
 
