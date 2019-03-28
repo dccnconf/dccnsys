@@ -98,6 +98,9 @@ class ProceedingType(models.Model):
         verbose_name=_('LaTeX template for final manuscript')
     )
 
+    def __str__(self):
+        return self.name
+
 
 class SubmissionType(models.Model):
     LANGUAGES = (

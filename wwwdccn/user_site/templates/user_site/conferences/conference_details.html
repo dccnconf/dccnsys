@@ -88,51 +88,53 @@
 
         <div class="d-flex align-items-center bg-secondary text-light px-2 py-1 mt-4 mb-2">
           <h3 class="dccn-title p-0 m-0">Proceedings Volumes</h3>
+
           {# TODO: change the following check to filter whether user is able to edit conference #}
           {% if user in conference.chairs.all %}
             <a href="{% url 'conference-proceedings-create' pk=conference.pk %}" class="dccn-link ml-auto text-light">
               <i class="far fa-plus-square"></i> Add
             </a>
           {% endif %}
+
         </div>
         <div class="card-deck">
 
           {% for proc in conference.proceedingtype_set.all %}
-          <div class="card mt-2" >
-            <div class="card-header bg-white">
-              <h4 class="card-title dccn-text-3">{{ proc.name }}</h4>
-            </div>
-            <div class="card-body" style="min-width: 200px;">
-              <div class="row align-items-end">
-                <div class="col-md-6 dccn-text-0">Final manuscript deadline:</div>
-                <div class="col-md-6 dccn-text-0-light">{{ proc.final_manuscript_deadline }}</div>
+            <div class="card mt-2" >
+              <div class="card-header bg-white">
+                <h4 class="card-title dccn-text-3">{{ proc.name }}</h4>
               </div>
-              <div class="row align-items-end">
-                <div class="col-md-6 dccn-text-0">Number of pages:</div>
-                <div class="col-md-6 dccn-text-0-light">{{ proc.min_num_pages }} - {{ proc.max_num_pages }}</div>
-              </div>
-              {% if proc.final_latex_template %}
-              <div class="row align-items-end">
-                <div class="col-md-6 dccn-text-0">Template:</div>
-                <div class="col-md-6 dccn-text-0-light">
-                  <a href="{{ proc.final_latex_template.url }}"><i class="far fa-file-archive"></i> Download</a>
+              <div class="card-body" style="min-width: 200px;">
+                <div class="row align-items-end">
+                  <div class="col-md-6 dccn-text-0">Final manuscript deadline:</div>
+                  <div class="col-md-6 dccn-text-0-light">{{ proc.final_manuscript_deadline }}</div>
                 </div>
+                <div class="row align-items-end">
+                  <div class="col-md-6 dccn-text-0">Number of pages:</div>
+                  <div class="col-md-6 dccn-text-0-light">{{ proc.min_num_pages }} - {{ proc.max_num_pages }}</div>
+                </div>
+                {% if proc.final_latex_template %}
+                  <div class="row align-items-end">
+                    <div class="col-md-6 dccn-text-0">Template:</div>
+                    <div class="col-md-6 dccn-text-0-light">
+                      <a href="{{ proc.final_latex_template.url }}" class="dccn-link"><i class="far fa-file-archive"></i> Download</a>
+                    </div>
+                  </div>
+                {% endif %}
+                <p class="dccn-text-small-light mt-3 text-justify">{{ proc.description }}</p>
               </div>
-              {% endif %}
-              <p class="dccn-text-small-light mt-3 text-justify">{{ proc.description }}</p>
+              <div class="card-footer bg-white d-flex align-items-center">
+                {# TODO: change the following check to filter whether user is able to edit conference #}
+                {% if user in conference.chairs.all %}
+                  <a href="{% url 'conference-proceedings-update' pk=conference.pk proc_pk=proc.pk %}" class="dccn-link">
+                    <i class="far fa-edit"></i> Edit
+                  </a>
+                  <button class="btn btn-link dccn-link text-danger ml-3" data-toggle="modal" data-target="#deleteProceedings-{{ proc.pk }}">
+                    <i class="far fa-trash-alt"></i> Delete
+                  </button>
+                {% endif %}
+              </div>
             </div>
-            <div class="card-footer bg-white d-flex align-items-center">
-              {# TODO: change the following check to filter whether user is able to edit conference #}
-              {% if user in conference.chairs.all %}
-                <a href="{% url 'conference-proceedings-update' pk=conference.pk proc_pk=proc.pk %}" class="dccn-link">
-                  <i class="far fa-edit"></i> Edit
-                </a>
-                <button class="btn btn-link dccn-link text-danger ml-3" data-toggle="modal" data-target="#deleteProceedings-{{ proc.pk }}">
-                  <i class="far fa-trash-alt"></i> Delete
-                </button>
-              {% endif %}
-            </div>
-          </div>
 
             <div class="modal" id="deleteProceedings-{{ proc.pk }}">
               <div class="modal-dialog">
@@ -162,37 +164,83 @@
         <!-- Submission Options section -->
 
         <div class="d-flex align-items-center bg-secondary text-light px-2 py-1 mt-4 mb-2">
-          <h3 class="dccn-title p-0 m-0">Submission Types</h3>
+          <h3 class="dccn-title p-0 m-0">Proceedings Volumes</h3>
+
           {# TODO: change the following check to filter whether user is able to edit conference #}
           {% if user in conference.chairs.all %}
-            <a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link ml-auto">
+            <a href="{% url 'conference-submissiontype-create' pk=conference.pk %}" class="dccn-link ml-auto text-light">
               <i class="far fa-plus-square"></i> Add
             </a>
           {% endif %}
-        </div>
-        {% for st in conference.submissiontype_set.all %}
-          <h4 class="dccn-text-2">{{ forloop.counter }}. {{ st.name }}</h4>
-          <p class="dccn-text-light mt-2">{{ st.description }}</p>
-          <p class="dccn-text mt-2">Template: <a href="#"><i class="far fa-file-archive"></i> download</a></p>
 
-          <h5 class="dccn-text-1 mt-2">Requirements:</h5>
-          <div class="row mt-2">
-            <div class="col-4 dccn-text">Language:</div>
-            <div class="col-8 dccn-text">{{ st.get_language_display }}</div>
-          </div>
-          <div class="row mt-2">
-            <div class="col-4 dccn-text">Number of pages:</div>
-            <div class="col-8 dccn-text">{{ st.min_num_pages }} - {{ st.max_num_pages }}</div>
-          </div>
-          <div class="row mt-2">
-            <div class="col-4 dccn-text">Blind review:</div>
-            <div class="col-8 dccn-text">{{ st.blind_review|yesno }}</div>
-          </div>
-          <div class="row mt-2">
-            <div class="col-4 dccn-text">Number of reviews:</div>
-            <div class="col-8 dccn-text">{{ st.num_reviews }}</div>
-          </div>
-        {% endfor %}
+        </div>
+        <div class="card-deck">
+
+          {% for st in conference.submissiontype_set.all %}
+            <div class="card mt-2">
+              <div class="card-header bg-white">
+                <h4 class="card-title dccn-text-3">{{ st.name }}</h4>
+              </div>
+              <div class="card-body">
+                <h5 class="dccn-text-1 mt-2">Requirements:</h5>
+                <div class="row align-items-end">
+                  <div class="col-md-6 dccn-text-0">Language:</div>
+                  <div class="col-md-6 dccn-text-0-light">{{ st.get_language_display }}</div>
+                </div>
+                <div class="row align-items-end">
+                  <div class="col-md-6 dccn-text-0">Number of pages:</div>
+                  <div class="col-md-6 dccn-text-0-light">{{ st.min_num_pages }} - {{ st.max_num_pages }}</div>
+                </div>
+                <div class="row align-items-end">
+                  <div class="col-md-6 dccn-text-0">Template:</div>
+                  <div class="col-md-6 dccn-text-0-light">
+                    <a href="#" class="dccn-link"><i class="far fa-file-archive"></i> download</a>
+                  </div>
+                </div>
+                <p class="dccn-text-small-light mt-3 text-justify">{{ st.description }}</p>
+                <h5 class="dccn-text-1 mt-3">Review:</h5>
+                <p class="dccn-text-small-light mt-1">
+                  {% if st.blind_review %}Blind, {% endif %}{{ st.num_reviews }} reviews per submission
+                </p>
+              </div>
+              <div class="card-footer">
+                {# TODO: change the following check to filter whether user is able to edit conference #}
+                {% if user in conference.chairs.all %}
+                  <a href="{% url 'conference-submissiontype-update' pk=conference.pk sub_pk=st.pk %}" class="dccn-link">
+                    <i class="far fa-edit"></i> Edit
+                  </a>
+                  <button class="btn btn-link dccn-link text-danger ml-3" data-toggle="modal" data-target="#deleteSubmissionType-{{ st.pk }}">
+                    <i class="far fa-trash-alt"></i> Delete
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="modal" id="deleteSubmissionType-{{ st.pk }}">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header bg-danger text-light">
+                    <div class="modal-title">Confirm delete submission type</div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <p class="dccn-text-0-light">Are you sure you want to delete submission type #{{ st.pk }} "{{ st.name }}"?</p>
+                  </div>
+                  <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                    <form action="{% url 'conference-submissiontype-delete' pk=conference.pk sub_pk=st.pk %}" method="POST">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+
+        </div>
         <hr class="mb-0">
 
         <!-- Administrators section -->

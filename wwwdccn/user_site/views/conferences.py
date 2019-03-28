@@ -7,8 +7,8 @@ from django.views.decorators.http import require_POST
 
 from conferences.decorators import chair_required
 from conferences.forms import ConferenceForm, SubmissionStageForm, \
-    ReviewStageForm, ProceedingTypeForm, ProceedingsDeleteForm
-from conferences.models import Conference, ProceedingType
+    ReviewStageForm, ProceedingTypeForm, DeleteForm, SubmissionTypeForm
+from conferences.models import Conference, ProceedingType, SubmissionType
 
 
 @login_required
@@ -116,7 +116,7 @@ def conference_review_stage(request, pk):
 def proceedings_create(request, pk):
     conference = get_object_or_404(Conference, pk=pk)
     if request.method == 'POST':
-        form = ProceedingTypeForm(request.POST)
+        form = ProceedingTypeForm(request.POST, request.FILES)
         if form.is_valid():
             proceedings = form.save(commit=False)
             proceedings.conference = conference
@@ -163,10 +163,65 @@ def proceedings_update(request, pk, proc_pk):
 @require_POST
 def proceedings_delete(request, pk, proc_pk):
     proceedings = get_object_or_404(ProceedingType, pk=proc_pk)
-    form = ProceedingsDeleteForm(proceedings, request.POST)
-    if form.is_valid():
-        form.save()
-        messages.success(request, f'Deleted proceedings')
+    form = DeleteForm(proceedings, request.POST)
+    form.save()
+    messages.success(request, f'Deleted proceedings')
+    return redirect('conference-details', pk=pk)
+
+
+@chair_required
+def submission_type_create(request, pk):
+    conference = get_object_or_404(Conference, pk=pk)
+    if request.method == 'POST':
+        form = SubmissionTypeForm(request.POST, request.FILES)
+        if form.is_valid():
+            stype = form.save(commit=False)
+            stype.conference = conference
+            stype.save()
+            messages.success(
+                request, f'Submission type #{stype.pk} was created'
+            )
+            return redirect('conference-details', pk=pk)
+        else:
+            print(form.cleaned_data)
+            print(form.errors)
     else:
-        messages.error(request, f'Failed to delete proceedings')
+        form = SubmissionTypeForm()
+    return render(request, 'user_site/conferences/conference_form.html', {
+        'conference': conference,
+        'form': form,
+        'subtitle': 'Define New Submission Type',
+        'title': f'{conference.short_name} Conference',
+    })
+
+
+@chair_required
+def submission_type_update(request, pk, sub_pk):
+    stype = get_object_or_404(SubmissionType, pk=sub_pk)
+    conference = stype.conference
+    if conference.pk != pk:
+        raise Http404
+    if request.method == 'POST':
+        form = SubmissionTypeForm(request.POST, request.FILES, instance=stype)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'{stype.name} updated')
+            return redirect('conference-details', pk=pk)
+    else:
+        form = SubmissionTypeForm(instance=stype)
+    return render(request, 'user_site/conferences/conference_form.html', {
+        'conference': conference,
+        'form': form,
+        'subtitle': f'Edit Submission Type',
+        'title': f'{conference.short_name} Conference',
+    })
+
+
+@chair_required
+@require_POST
+def submission_type_delete(request, pk, sub_pk):
+    stype = get_object_or_404(SubmissionType, pk=sub_pk)
+    form = DeleteForm(stype, request.POST)
+    form.save()
+    messages.success(request, f'Deleted submission type')
     return redirect('conference-details', pk=pk)

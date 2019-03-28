@@ -1,7 +1,8 @@
 from django import forms
 
 from gears.widgets import CustomFileInput
-from .models import Conference, SubmissionStage, ReviewStage, ProceedingType
+from .models import Conference, SubmissionStage, ReviewStage, ProceedingType, \
+    SubmissionType
 
 
 class ConferenceForm(forms.ModelForm):
@@ -38,12 +39,26 @@ class ProceedingTypeForm(forms.ModelForm):
             'final_latex_template': CustomFileInput(attrs={
                 'accept': '.zip',
                 'show_file_name': True,
-                'btn_class': 'btn-outline-secondary',
+                'btn_class': 'btn-outline-secondary btn-sm',
             })
         }
 
 
-class ProceedingsDeleteForm(forms.Form):
+class SubmissionTypeForm(forms.ModelForm):
+    class Meta:
+        model = SubmissionType
+        exclude = ['conference']
+        widgets = {
+            'description': forms.Textarea(),
+            'latex_template': CustomFileInput(attrs={
+                'accept': '.zip',
+                'show_file_name': True,
+                'btn_class': 'btn-outline-secondary btn-sm',
+            })
+        }
+
+
+class DeleteForm(forms.Form):
     def __init__(self, target, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.target = target
