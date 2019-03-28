@@ -164,7 +164,7 @@
         <!-- Submission Options section -->
 
         <div class="d-flex align-items-center bg-secondary text-light px-2 py-1 mt-4 mb-2">
-          <h3 class="dccn-title p-0 m-0">Proceedings Volumes</h3>
+          <h3 class="dccn-title p-0 m-0">Submission Types</h3>
 
           {# TODO: change the following check to filter whether user is able to edit conference #}
           {% if user in conference.chairs.all %}
@@ -202,8 +202,15 @@
                 <p class="dccn-text-small-light mt-1">
                   {% if st.blind_review %}Blind, {% endif %}{{ st.num_reviews }} reviews per submission
                 </p>
+                <h5 class="dccn-text-1 mt-3">Volumes:</h5>
+                <ul class="my-0">
+                  {% for volume in st.possible_proceedings.all %}
+                    <li class="dccn-text-small-light my-0">{{ volume }}</li>
+                  {% endfor %}
+                </ul>
+                <p class="text-small text-muted mt-1">NOTE: acceptance to any volume depends on the review result.</p>
               </div>
-              <div class="card-footer">
+              <div class="card-footer bg-white d-flex align-items-center">
                 {# TODO: change the following check to filter whether user is able to edit conference #}
                 {% if user in conference.chairs.all %}
                   <a href="{% url 'conference-submissiontype-update' pk=conference.pk sub_pk=st.pk %}" class="dccn-link">
