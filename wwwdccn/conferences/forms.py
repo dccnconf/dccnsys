@@ -33,7 +33,7 @@ class ReviewStageForm(forms.ModelForm):
 class ProceedingTypeForm(forms.ModelForm):
     class Meta:
         model = ProceedingType
-        exclude = ['conference']
+        exclude = ['conference', '_final_latex_template_version']
         widgets = {
             'description': forms.Textarea(),
             'final_latex_template': CustomFileInput(attrs={
@@ -47,7 +47,7 @@ class ProceedingTypeForm(forms.ModelForm):
 class SubmissionTypeForm(forms.ModelForm):
     class Meta:
         model = SubmissionType
-        exclude = ['conference']
+        exclude = ['conference', '_latex_template_version']
         widgets = {
             'description': forms.Textarea(),
             'latex_template': CustomFileInput(attrs={
