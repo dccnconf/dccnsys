@@ -96,8 +96,11 @@ class ProceedingType(models.Model):
 
     final_latex_template = models.FileField(
         null=True, blank=True,
-        verbose_name=_('LaTeX template for final manuscript')
+        verbose_name=_('LaTeX template for final manuscript'),
+        upload_to=f'{settings.MEDIA_PUBLIC_ROOT}/conferences/templates'
     )
+
+    _final_latex_template_version = models.IntegerField(default=1)
 
     def __str__(self):
         return self.name
@@ -123,8 +126,11 @@ class SubmissionType(models.Model):
     language = models.TextField(max_length=2, choices=LANGUAGES)
 
     latex_template = models.FileField(
-        null=True, verbose_name=_('LaTeX template')
+        null=True, verbose_name=_('LaTeX template'),
+        upload_to=f'{settings.MEDIA_PUBLIC_ROOT}/conferences/templates'
     )
+
+    _latex_template_version = models.IntegerField(default=1)
 
     num_reviews = models.IntegerField(
         default=2, verbose_name=_('Number of reviews per submission')

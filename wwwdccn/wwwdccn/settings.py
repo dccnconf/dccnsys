@@ -217,8 +217,8 @@ if os.environ.get('MEDIA_PROVIDER', '') == 'selcdn':
         'username': SELCDN_USERNAME,
         'password': SELCDN_PASSWORD,
     }
-    MEDIA_PUBLIC_ROOT = f'/{SELCDN_MEDIA_PUBLIC_BIN}/'
-    MEDIA_PRIVATE_ROOT = f'/{SELCDN_MEDIA_PRIVATE_BIN}/'
+    MEDIA_PUBLIC_ROOT = f'{SELCDN_MEDIA_PUBLIC_BIN}/'
+    MEDIA_PRIVATE_ROOT = f'{SELCDN_MEDIA_PRIVATE_BIN}/'
 else:
     USE_LOCAL_MEDIA = True
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
