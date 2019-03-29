@@ -3,12 +3,13 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 
 from conferences.decorators import chair_required
 from conferences.forms import ConferenceForm, SubmissionStageForm, \
-    ReviewStageForm, ProceedingTypeForm, DeleteForm, SubmissionTypeForm
-from conferences.models import Conference, ProceedingType, SubmissionType
+    ReviewStageForm, ProceedingTypeForm, DeleteForm, SubmissionTypeForm, \
+    TopicCreateForm
+from conferences.models import Conference, ProceedingType, SubmissionType, Topic
 
 
 @login_required
@@ -225,3 +226,34 @@ def submission_type_delete(request, pk, sub_pk):
     form.save()
     messages.success(request, f'Deleted submission type')
     return redirect('conference-details', pk=pk)
+
+
+################################
+# TOPICS
+
+@chair_required
+def topics_list(request, pk):
+    conference = get_object_or_404(Conference, pk=pk)
+    if request.method == 'POST':
+        form = TopicCreateForm(conference, request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('conference-topics', pk=pk)
+    else:
+        form = TopicCreateForm(conference)
+
+    return render(request, 'user_site/conferences/conference_topics.html', {
+        'conference': conference,
+        'form': form,
+    })
+
+
+# TODO: add guard
+@require_POST
+def topic_delete(request, pk):
+    topic = get_object_or_404(Topic, pk=pk)
+    conference = topic.conference
+    form = DeleteForm(topic, request.POST)
+    if form.is_valid():
+        form.save()
+    return redirect('conference-topics', pk=conference.pk)

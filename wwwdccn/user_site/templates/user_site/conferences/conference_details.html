@@ -63,26 +63,52 @@
           </div>
           <div class="col-8 dccn-text">
             {{ conference.submission_stage.end_date }}
+
             {# TODO: change the following check to filter whether user is able to edit conference #}
             {% if user in conference.chairs.all %}
               <span class="ml-2">
-            (<a href="{% url 'conference-submission-stage' pk=conference.pk %}" class="dccn-link">Edit</a>)
-          </span>
+                (<a href="{% url 'conference-submission-stage' pk=conference.pk %}" class="dccn-link">Edit</a>)
+              </span>
             {% endif %}
+
           </div>
         </div>
         <div class="row align-items-end">
           <div class="col-4 dccn-text">Review ends: </div>
           <div class="col-8 dccn-text">
             {{ conference.review_stage.end_date }}
+
             {# TODO: change the following check to filter whether user is able to edit conference #}
             {% if user in conference.chairs.all %}
               <span class="ml-2">
-            (<a href="{% url 'conference-review-stage' pk=conference.pk %}" class="dccn-link">Edit</a>)
-          </span>
+                (<a href="{% url 'conference-review-stage' pk=conference.pk %}" class="dccn-link">Edit</a>)
+              </span>
             {% endif %}
+
           </div>
         </div>
+
+        <!-- Topics section -->
+
+        <div class="d-flex align-items-center bg-secondary text-light px-2 py-1 mt-4 mb-2">
+          <h3 class="dccn-title p-0 m-0">Topics</h3>
+
+          {# TODO: change the following check to filter whether user is able to edit conference #}
+          {% if user in conference.chairs.all %}
+            <a href="{% url 'conference-topics' pk=conference.pk %}" class="dccn-link ml-auto text-light">
+              <i class="far fa-edit"></i> Edit
+            </a>
+          {% endif %}
+
+        </div>
+        <ul class="list-unstyled">
+          {% for topic in conference.topic_set.all %}
+            <li class="dccn-text-0">{{ topic.order }}. {{ topic.name }}</li>
+          {% empty %}
+            <li class="dccn-text-0 text-info text-center">No topics yet</li>
+          {% endfor %}
+        </ul>
+
 
         <!-- Proceedings Options section -->
 
