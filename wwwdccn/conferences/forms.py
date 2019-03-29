@@ -108,7 +108,6 @@ class TopicsReorderForm(forms.Form):
             lambda s: int(s),
             self.cleaned_data['topic_pks'].split(self.separator)
         ))
-        print('TopicReorderForm: pks=', pks)
 
         # 1) First we check that there are no duplicates in topic_pks field:
         if len(pks) != len(set(pks)):
@@ -136,3 +135,4 @@ class TopicsReorderForm(forms.Form):
         for index, pk in enumerate(self.cleaned_keys):
             topic = self.conference.topic_set.get(pk=pk)
             topic.order = index + 1
+            topic.save()

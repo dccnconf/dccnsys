@@ -86,6 +86,5 @@
   //////////////////////////////
   // Associating the plugins
   $('.dccn-avatar-update-form').dccnAvatarUpdateForm();
-  console.log('Registered Avatar update form plugin!');
 }(jQuery));
 

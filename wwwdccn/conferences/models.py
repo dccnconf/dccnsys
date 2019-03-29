@@ -152,6 +152,9 @@ class SubmissionType(models.Model):
 
 
 class Topic(models.Model):
+    class Meta:
+        ordering = ['order']
+
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
 
     name = models.CharField(max_length=50, verbose_name=_('Topic name'))

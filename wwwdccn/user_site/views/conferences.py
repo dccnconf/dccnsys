@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST, require_GET
 from conferences.decorators import chair_required
 from conferences.forms import ConferenceForm, SubmissionStageForm, \
     ReviewStageForm, ProceedingTypeForm, DeleteForm, SubmissionTypeForm, \
-    TopicCreateForm
+    TopicCreateForm, TopicsReorderForm
 from conferences.models import Conference, ProceedingType, SubmissionType, Topic
 
 
@@ -183,9 +183,6 @@ def submission_type_create(request, pk):
                 request, f'Submission type #{stype.pk} was created'
             )
             return redirect('conference-details', pk=pk)
-        else:
-            print(form.cleaned_data)
-            print(form.errors)
     else:
         form = SubmissionTypeForm()
     return render(request, 'user_site/conferences/conference_form.html', {
@@ -234,17 +231,20 @@ def submission_type_delete(request, pk, sub_pk):
 @chair_required
 def topics_list(request, pk):
     conference = get_object_or_404(Conference, pk=pk)
+    topics_reorder_form = TopicsReorderForm(conference, ',')
     if request.method == 'POST':
-        form = TopicCreateForm(conference, request.POST)
-        if form.is_valid():
-            form.save()
+        create_topic_form = TopicCreateForm(conference, request.POST)
+        if create_topic_form.is_valid():
+            create_topic_form.save()
             return redirect('conference-topics', pk=pk)
     else:
-        form = TopicCreateForm(conference)
+        create_topic_form = TopicCreateForm(conference)
+
 
     return render(request, 'user_site/conferences/conference_topics.html', {
         'conference': conference,
-        'form': form,
+        'form': create_topic_form,
+        'reorder_form': topics_reorder_form,
     })
 
 
@@ -257,3 +257,13 @@ def topic_delete(request, pk):
     if form.is_valid():
         form.save()
     return redirect('conference-topics', pk=conference.pk)
+
+
+@chair_required
+@require_POST
+def topics_reorder(request, pk):
+    conference = get_object_or_404(Conference, pk=pk)
+    form = TopicsReorderForm(conference, ',', request.POST)
+    if form.is_valid():
+        form.save()
+    return redirect('conference-topics', pk=pk)

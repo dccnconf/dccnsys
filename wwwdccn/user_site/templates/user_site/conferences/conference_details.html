@@ -234,7 +234,9 @@
                     <li class="dccn-text-small-light my-0">{{ volume }}</li>
                   {% endfor %}
                 </ul>
-                <p class="text-small text-muted mt-1">NOTE: acceptance to any volume depends on the review result.</p>
+                <p class="dccn-text-small-light text-muted mt-1">
+                  NOTE: acceptance to any volume depends on the score received from the reviewers.
+                </p>
               </div>
               {# TODO: change the following check to filter whether user is able to edit conference #}
               {% if user in conference.chairs.all %}

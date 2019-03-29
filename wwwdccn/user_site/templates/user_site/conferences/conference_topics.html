@@ -17,19 +17,25 @@
         <h1 class="dccn-panel-title">{{ conference.short_name }} Conference</h1>
         <h2 class="dccn-panel-subtitle">Edit Topics</h2>
 
-        <ul class="list-group mt-4">
-          {% for topic in conference.topic_set.all %}
-            <li class="dccn-text-0-light list-group-item bg-light px-2 py-1 mt-1 d-flex">
-              <span>{{ topic.order }}. {{ topic.name }}</span>
-              <form action="{% url 'conference-topic-delete' pk=topic.pk %}" method="POST" class="ml-auto" novalidate>
-                {% csrf_token %}
-                <button type="submit" class="btn btn-link dccn-link dccn-text-small-light">
-                  <i class="far fa-trash-alt"></i>
-                </button>
-              </form>
-            </li>
-          {% endfor %}
-        </ul>
+        <div class="dccn-reorder">
+          <ul class="list-group mt-4 dccn-reorder-list">
+            {% for topic in conference.topic_set.all %}
+              <li class="dccn-text-0-light list-group-item bg-light px-2 py-1 mt-1 d-flex dccn-reorder-list-item" data-id="{{ topic.pk }}">
+                <span>{{ topic.name }}</span>
+                <form action="{% url 'conference-topic-delete' pk=topic.pk %}" method="POST" class="ml-auto" novalidate>
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-link dccn-link dccn-text-small-light">
+                    <i class="far fa-trash-alt"></i>
+                  </button>
+                </form>
+              </li>
+            {% endfor %}
+          </ul>
+          <form action="{% url 'conference-topics-reorder' pk=conference.pk %}" method="POST" class="dccn-reorder-form" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="topic_pks" class="dccn-reorder-form-input">
+          </form>
+        </div>
 
         <h3 class="dccn-text-3-light mt-4">
           Add new topic
