@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Max
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
@@ -148,6 +149,10 @@ class Topic(models.Model):
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
 
     name = models.CharField(max_length=50, verbose_name=_('Topic name'))
+    order = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f'{self.order}: {self.name}'
 
 
 @receiver(post_save, sender=Conference)
