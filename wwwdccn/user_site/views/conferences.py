@@ -3,12 +3,13 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 
 from conferences.decorators import chair_required
 from conferences.forms import ConferenceForm, SubmissionStageForm, \
-    ReviewStageForm, ProceedingTypeForm, DeleteForm, SubmissionTypeForm
-from conferences.models import Conference, ProceedingType, SubmissionType
+    ReviewStageForm, ProceedingTypeForm, DeleteForm, SubmissionTypeForm, \
+    TopicCreateForm, TopicsReorderForm
+from conferences.models import Conference, ProceedingType, SubmissionType, Topic
 
 
 @login_required
@@ -182,9 +183,6 @@ def submission_type_create(request, pk):
                 request, f'Submission type #{stype.pk} was created'
             )
             return redirect('conference-details', pk=pk)
-        else:
-            print(form.cleaned_data)
-            print(form.errors)
     else:
         form = SubmissionTypeForm()
     return render(request, 'user_site/conferences/conference_form.html', {
@@ -225,3 +223,47 @@ def submission_type_delete(request, pk, sub_pk):
     form.save()
     messages.success(request, f'Deleted submission type')
     return redirect('conference-details', pk=pk)
+
+
+################################
+# TOPICS
+
+@chair_required
+def topics_list(request, pk):
+    conference = get_object_or_404(Conference, pk=pk)
+    topics_reorder_form = TopicsReorderForm(conference, ',')
+    if request.method == 'POST':
+        create_topic_form = TopicCreateForm(conference, request.POST)
+        if create_topic_form.is_valid():
+            create_topic_form.save()
+            return redirect('conference-topics', pk=pk)
+    else:
+        create_topic_form = TopicCreateForm(conference)
+
+
+    return render(request, 'user_site/conferences/conference_topics.html', {
+        'conference': conference,
+        'form': create_topic_form,
+        'reorder_form': topics_reorder_form,
+    })
+
+
+# TODO: add guard
+@require_POST
+def topic_delete(request, pk):
+    topic = get_object_or_404(Topic, pk=pk)
+    conference = topic.conference
+    form = DeleteForm(topic, request.POST)
+    if form.is_valid():
+        form.save()
+    return redirect('conference-topics', pk=conference.pk)
+
+
+@chair_required
+@require_POST
+def topics_reorder(request, pk):
+    conference = get_object_or_404(Conference, pk=pk)
+    form = TopicsReorderForm(conference, ',', request.POST)
+    if form.is_valid():
+        form.save()
+    return redirect('conference-topics', pk=pk)
