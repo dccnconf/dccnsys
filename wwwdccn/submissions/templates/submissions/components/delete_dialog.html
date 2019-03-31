@@ -1,0 +1,27 @@
+{######################################}
+{# CONTEXT:        #}
+{# * submission    #}
+{######################################}
+<div class="modal fade" id="deleteDialog-{{ submission.pk }}">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-light">
+        <h5 class="modal-title">Confirm delete submission</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="dccn-text-normal-light">Confirm you want to delete submission #{{ submission.pk }}</p>
+        <p class="dccn-text-0-light text-center mt-3">"{{ submission.title }}"</p>
+        <p class="dccn-text-normal mt-3"><span class="font-weight-bold text-danger">Danger:</span> if you proceed, data will be lost.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+        <form>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,97 @@
+{% extends "user_site/base.html" %}
+{% load bootstrap4 %}
+
+{% block title %}
+  Submission #{{ submission.pk }} | DCCN
+{% endblock %}
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='submissions' %}
+{% endblock %}
+
+{% block body %}
+  <main class="container py-3">
+    <div class="dccn-layout-row">
+
+      <!-- MAIN AREA -->
+      <div class="dccn-panel pb-4">
+        <h1 class="dccn-panel-title mb-4">Details</h1>
+
+        <form method="POST" action="" class="mt-3" novalidate>
+          {% bootstrap_messages %}
+          {% csrf_token %}
+          {% bootstrap_form form %}
+
+          <div id="stypeDisplay" class="d-none text-muted border rounded p-2">
+            <p id="stypeDescription" class="dccn-text-small-light"></p>
+            <p class="dccn-text-small-light pt-2"><span class="font-weight-bold">Language:</span> <span id="stypeLanguage"></span></p>
+            <p class="dccn-text-small-light pt-2">Possible volumes:</p>
+            <ul class="dccn-text-small-light pt-1 pl-3" id="stypeVolumesList"></ul>
+          </div>
+
+          <div class="dccn-saveform">
+            <a href="{% url 'submission-authors' pk=submission.pk %}" class="btn btn-outline-secondary ml-auto mr-1">Skip</a>
+            <button type="submit" class="btn btn-primary">Next <i class="fas fa-chevron-right"></i></button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </main>
+{% endblock %}
+
+
+{% block script %}
+<script>
+$(document).ready(() => {
+  const stypeElement = $('[name="stype"]');
+  const cache = {};
+  const displayBox = $('#stypeDisplay');
+
+  const displayDataFor = function (key) {
+    // 1) Show the box:
+    displayBox.removeClass('d-none');
+
+    // 2) Assign data:
+    const data = cache[key];
+    $('#stypeDescription').text(data.description);
+    $('#stypeLanguage').text(data.language);
+    $('#stypeVolumesList').html(
+      data.possible_proceedings.map(d => { return `<li>${d.name}</li>`; }).join('\n')
+    );
+  };
+
+  const cleanDisplay = function () {
+    if (!displayBox.hasClass('d-none')) displayBox.addClass('d-none');
+  };
+
+  const renderSubmissionType = function () {
+    const key = stypeElement.val();
+    if (key !== '') {
+      if (key in cache) {
+        displayDataFor(key);
+      } else {
+        fetch(`/conferences/ajax/stype/${key}/`)
+          .then(function (response) {
+            return response.json();
+          })
+          .then(function (data) {
+            cache[key] = data;
+            console.log(data);
+            displayDataFor(key);
+          });
+      }
+    } else {
+      cleanDisplay();
+    }
+  };
+
+  stypeElement.change(renderSubmissionType);
+
+  //
+  // MAIN
+  //
+  renderSubmissionType();
+});
+</script>
+{% endblock %}

@@ -1,4 +1,5 @@
 {% extends 'user_site/base.html' %}
+{% load submission_extras %}
 
 {% block title %}
   Submissions | DCCN
@@ -23,10 +24,14 @@
         <a href="{% url 'submission-create' %}" class="btn btn-primary btn-sm btn-block btn-sm-normal mb-3 mb-lg-0"><i class="fas fa-plus pr-2"></i>New</a>
       </div>
 
+      {% for submission in user|submissions %}
+        {% if submission.status == 'SUBMIT' %}
+          {% include 'submissions/components/card_submitted.html' with submission=submission %}
+        {% endif %}
+      {% endfor %}
+
     </div>
   </div>
 
-  <!-- JUST TO SEPARATE "GO TO INDEX" FOOTER: -->
-  <div style="min-height: 100px;"></div>
 </main>
 {% endblock %}

@@ -1,0 +1,37 @@
+{% extends "user_site/base.html" %}
+{% load bootstrap4 %}
+
+{% block title %}
+  Submission #{{ submission.pk }} | DCCN
+{% endblock %}
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='submissions' %}
+{% endblock %}
+
+{% block body %}
+  <main class="container py-3">
+    <div class="dccn-layout-row">
+
+      <!-- MAIN AREA -->
+      <div class="dccn-panel pb-4">
+        <h1 class="dccn-panel-title mb-4">Review Manuscript</h1>
+
+        <form method="POST" action="" class="mt-3" novalidate>
+          {% csrf_token %}
+{#          {% bootstrap_form form %}#}
+
+          <div class="dccn-saveform">
+            <a href="{% url 'submission-overview' pk=submission.pk %}" class="btn btn-outline-secondary ml-auto mr-1">Skip</a>
+            <button type="submit" class="btn btn-primary">Next <i class="fas fa-chevron-right"></i></button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </main>
+{% endblock %}
+
+
+{% block script %}
+{% endblock %}

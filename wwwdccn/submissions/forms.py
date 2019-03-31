@@ -25,7 +25,14 @@ class CreateSubmissionForm(forms.ModelForm):
 class SubmissionDetailsForm(forms.ModelForm):
     class Meta:
         model = Submission
-        fields = ['stype', 'title', 'abstract', 'topics']
+        fields = ['title', 'abstract', 'topics', 'stype']
+        widgets = {
+            'abstract': forms.Textarea(attrs={'rows': 4}),
+            'topics': forms.CheckboxSelectMultiple,
+        }
+
+    def clean_topics(self):
+        return self.cleaned_data['topics']
 
 
 class UploadReviewManuscriptForm(forms.ModelForm):

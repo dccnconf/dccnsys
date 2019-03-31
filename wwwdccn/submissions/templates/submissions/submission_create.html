@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block header %}
-  {% include 'user_site/components/navigation.html' with active='profile' %}
+  {% include 'user_site/components/navigation.html' with active='submissions' %}
 {% endblock %}
 
 {% block body %}
@@ -19,6 +19,7 @@
 
         <form method="POST" action="" class="mt-3" novalidate>
           {% csrf_token %}
+          {% bootstrap_messages %}
           {% bootstrap_field form.conference %}
 
           <div id="data">

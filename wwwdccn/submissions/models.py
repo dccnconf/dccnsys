@@ -94,6 +94,12 @@ class Submission(models.Model):
             title_prefix = f'"{self.title[:20]}"',
         return f'{self.pk}: {title_prefix}'
 
+    def can_edit_review_manuscript(self):
+        return self.status == 'SUBMIT'
+
+    def can_edit_details(self):
+        return self.status in {'SUBMIT', 'ACCEPT'}
+
 
 
 class Author(models.Model):
