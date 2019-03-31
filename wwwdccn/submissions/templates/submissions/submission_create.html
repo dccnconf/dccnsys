@@ -1,0 +1,187 @@
+{% extends "user_site/base.html" %}
+{% load bootstrap4 %}
+
+{% block title %}
+  New Submission | DCCN
+{% endblock %}
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='profile' %}
+{% endblock %}
+
+{% block body %}
+  <main class="container py-3">
+    <div class="dccn-layout-row">
+
+      <!-- MAIN AREA -->
+      <div class="dccn-panel pb-4">
+        <h1 class="dccn-panel-title mb-4">Create new submission</h1>
+
+        <form method="POST" action="" class="mt-3" novalidate>
+          {% csrf_token %}
+          {% bootstrap_field form.conference %}
+
+          <div id="data">
+            <div id="display" class="d-none">
+              <div class="d-flex flex-column flex-md-row align-items-center py-4">
+                <img src="" alt="" width="64" height="64" id="logotype" class="mr-md-4">
+                <div>
+                  <p class="dccn-text-small-light" id="details"></p>
+                  <p class="dccn-text-small-light" id="siteUrl">
+                    Conference site: <a href=""></a>
+                  </p>
+                  <div class="dccn-text-small-light d-flex align-items-start mt-2" id="deadlineBox">
+                    <div>
+                      <i class="far fa-clock mr-2"></i>
+                    </div>
+                    <div>
+                      <div id="deadline"></div>
+                      <div id="timeLeft"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {% bootstrap_field form.is_author %}
+              {% bootstrap_field form.agree_with_terms %}
+
+              <button type="submit" class="btn btn-primary">Proceed</button>
+              <span id="deadlinePassedNote" class="dccn-text-0 ml-4 text-danger d-none">Deadline is over</span>
+            </div>
+
+            <div id="notSelected">
+              <p class="dccn-text-0-light my-3 text-info text-center">No conference selected</p>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </main>
+{% endblock %}
+
+{% block script %}
+<script>
+$(document).ready(function () {
+  /*
+   * (1) First we bind getting data about the conference on selection change:
+   */
+  const dataDiv = $('#display');
+  const notSelectedDiv = $('#notSelected');
+  const conferenceSelect = $('select[name="conference"]');
+  const confData = {};
+  const deadlinePassedNote = $('#deadlinePassedNote');
+  const timeLeft = $('#timeLeft');
+  const deadlineBox = $('#deadlineBox');
+  const submitButton = $('[type="submit"]');
+  const ALERT_TIME_DELTA = 3 * 24 * 3600 * 1000;
+  const NOW = Date.now();
+  const ALERT_CLASS = 'text-warning-13';
+  const DANGER_CLASS = 'text-danger';
+
+  const addClass = function(elem, klass) {
+    if (!elem.hasClass(klass)) {
+      elem.addClass(klass);
+    }
+  };
+
+  const timeUnitsBetween = function(startDate, endDate) {
+    const delta = {
+      value: Math.abs(endDate - startDate) / 1000
+    };
+    const isNegative = startDate > endDate ? -1 : 1;
+    return [
+      ['days', 24 * 60 * 60],
+      ['hours', 60 * 60],
+      ['minutes', 60],
+      ['seconds', 1]
+    ].reduce((acc, [key, value]) => {
+      acc[key] = Math.floor(delta.value / value) * isNegative;
+      delta.value -= acc[key] * value;
+      return acc;
+    }, {});
+  };
+
+  const getTimeDeltaString = function(t1, t2) {
+    const dt = timeUnitsBetween(t1, t2);
+    let ret = "";
+    if (dt.days > 0) {
+      ret += dt.days + ' days ';
+    }
+    if (dt.hours > 0) {
+      ret += dt.hours + " hours ";
+    }
+    if (dt.minutes > 0) {
+      ret += dt.minutes + " minutes ";
+    }
+    return ret;
+  };
+
+
+  const setDisplayData = function (pk) {
+    data = confData[pk];
+    const deadline = new Date(data.submission_stage.end_date);
+
+    $('#details').text(data.full_name);
+    $('#siteUrl a').attr('href', data.site_url).text(data.site_url);
+    $('#logotype').attr('src', data.logotype);
+    $('#deadline').text(deadline);
+
+    // Prepare deadlineBox by removing all color classes:
+    deadlineBox.removeClass(ALERT_CLASS);
+    deadlineBox.removeClass(DANGER_CLASS);
+
+    if (deadline < NOW) {
+      deadlinePassedNote.removeClass('d-none');
+      addClass(deadlineBox, DANGER_CLASS);
+      submitButton.attr('disabled', true);
+    } else {
+      timeLeft.text(getTimeDeltaString(NOW, deadline));
+      addClass(deadlinePassedNote, 'd-none');
+      submitButton.attr('disabled', false);
+      if (deadline - NOW <= ALERT_TIME_DELTA) {
+        addClass(deadlineBox, ALERT_CLASS);
+      }
+    }
+  };
+
+  function renderConferenceDetails() {
+    const pk = conferenceSelect.val();
+    if (pk !== '') {
+      if (dataDiv.hasClass('d-none')) {
+        dataDiv.removeClass('d-none');
+        notSelectedDiv.addClass('d-none');
+      }
+      if (pk in confData) {
+        setDisplayData(pk);
+      } else {
+      fetch(`/conferences/ajax/${pk}/`)
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          confData[pk] = data;
+          setDisplayData(pk);
+        });
+      }
+    } else {
+      if (notSelectedDiv.hasClass('d-none')) {
+        notSelectedDiv.removeClass('d-none');
+        dataDiv.addClass('d-none');
+      }
+    }
+  }
+
+  conferenceSelect.change(renderConferenceDetails);
+  renderConferenceDetails();
+
+  /*
+   * (2) Disable 'Proceed' whenever the deadline is over
+   */
+
+
+
+});
+</script>
+{% endblock %}

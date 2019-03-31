@@ -48,13 +48,28 @@ class Conference(models.Model):
         null=True, blank=True
     )
 
+    description = models.TextField(
+        verbose_name=_('Medium length description of the conference'),
+        default="",
+        blank=True,
+    )
+
+    site_url = models.URLField(
+        verbose_name=_('Conference informational site'),
+        default="",
+        blank=True,
+    )
+
+    def __str__(self):
+        return f'{self.full_name} ({self.short_name})'
+
 
 class SubmissionStage(models.Model):
     conference = models.OneToOneField(
         Conference, on_delete=models.CASCADE, related_name='submission_stage'
     )
 
-    end_date = models.DateField(
+    end_date = models.DateTimeField(
         null=True, verbose_name=_('Deadline for submissions')
     )
 
@@ -149,6 +164,9 @@ class SubmissionType(models.Model):
     )
 
     possible_proceedings = models.ManyToManyField(ProceedingType)
+
+    def __str__(self):
+        return self.name
 
 
 class Topic(models.Model):

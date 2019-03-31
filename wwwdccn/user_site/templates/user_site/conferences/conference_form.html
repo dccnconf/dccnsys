@@ -1,6 +1,10 @@
 {% extends 'user_site/base.html' %}
 {% load bootstrap4 %}
 
+{% block css %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.min.css">
+{% endblock %}
+
 {% block title %}
   Conference #{{ conference.pk }} | DCCN
 {% endblock %}
@@ -33,11 +37,12 @@
 {% endblock %}
 
 {% block script %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js"></script>
   <script type="text/javascript">
     $(function () {
-      $('input[name$="date"],input[name$="deadline"]').datepicker({
+      $('input[name$="date"],input[name$="deadline"]').datetimepicker({
         {#dateFormat: "dd MM yy",#}
-        dateFormat: "yy-mm-dd",
+        format: 'Y-m-d H:i',
         defaultDate: "2019-01-01",
         changeYear: true,
         changeMonth: true,
