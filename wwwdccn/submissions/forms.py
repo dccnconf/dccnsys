@@ -7,6 +7,10 @@ from .models import Submission, Author
 
 
 class CreateSubmissionForm(forms.ModelForm):
+    class Meta:
+        model = Submission
+        fields = ['conference']
+
     is_author = forms.BooleanField(
         required=True,
         label=_('I confirm that I am an author of the submission')
@@ -18,15 +22,10 @@ class CreateSubmissionForm(forms.ModelForm):
     )
 
 
-    class Meta:
-        model = Submission
-        fields = ['conference']
-
-
 class SubmissionDetailsForm(forms.ModelForm):
     class Meta:
         model = Submission
-        fields = ['title', 'abstract', 'topics']
+        fields = ['stype', 'title', 'abstract', 'topics']
 
 
 class UploadReviewManuscriptForm(forms.ModelForm):

@@ -81,7 +81,7 @@ class ReviewStage(models.Model):
         Conference, on_delete=models.CASCADE, related_name='review_stage'
     )
 
-    end_date = models.DateField(
+    end_date = models.DateTimeField(
         null=True, verbose_name=_('End of review')
     )
 
@@ -97,7 +97,7 @@ class ProceedingType(models.Model):
         max_length=1000, verbose_name=_('Long description')
     )
 
-    final_manuscript_deadline = models.DateField(
+    final_manuscript_deadline = models.DateTimeField(
         null=True, verbose_name=_('Deadline for final manuscript submission')
     )
 
