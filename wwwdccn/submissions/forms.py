@@ -1,10 +1,11 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import Max
-from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 
+from conferences.models import Conference
 from gears.widgets import CustomFileInput
 from .models import Submission, Author
 
@@ -30,6 +31,18 @@ class CreateSubmissionForm(forms.ModelForm):
         label=_('I agree with terms and conditions of my paper processing')
     )
 
+    def clean_conference(self):
+        conference = self.cleaned_data['conference']
+        if conference.submission_stage.end_date < timezone.now():
+            raise ValidationError(
+                _('Submission impossible since deadline passed')
+            )
+        return self.cleaned_data['conference']
+
+    def save(self, commit=True):
+        return super().save(False)
+
+
 
 class SubmissionDetailsForm(forms.ModelForm):
     class Meta:
@@ -47,9 +60,7 @@ class SubmissionDetailsForm(forms.ModelForm):
         self.fields['topics'].required = False
 
     def clean_topics(self):
-        print('Hello!')
         num_topics = len(self.cleaned_data['topics'])
-        print(num_topics)
         if num_topics < MIN_TOPICS_REQUIRED:
             raise ValidationError(
                 _('At least %(min_topics)s topic must be selected'),
@@ -140,8 +151,6 @@ class AuthorsReorderForm(forms.Form):
             author.order = index + 1
             if commit:
                 author.save()
-        for author in self.submission.authors.all():
-            print(author)
 
 
 class AuthorCreateForm(forms.Form):
@@ -193,6 +202,5 @@ class AuthorDeleteForm(forms.Form):
         return self.cleaned_data['author_pk']
 
     def save(self, commit=True):
-        print(self.author)
         if commit:
             self.author.delete()

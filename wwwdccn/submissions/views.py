@@ -18,7 +18,6 @@ from submissions.models import Submission, Author
 @login_required
 def create_submission(request):
     if request.method == 'POST':
-        print(request.POST)
         form = CreateSubmissionForm(request.POST)
         if form.is_valid():
             submission = form.save()
@@ -176,8 +175,6 @@ def submission_author_create(request, pk):
     form = AuthorCreateForm(submission, request.POST)
     if form.is_valid():
         form.save()
-    else:
-        print(form.errors)
     return redirect('submission-authors', pk=pk)
 
 @login_required
