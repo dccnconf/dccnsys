@@ -96,7 +96,6 @@ def submission_manuscript_edit(request, pk):
                         submission.review_manuscript.storage.delete(
                             old_file.name
                         )
-                    messages.success(request, 'Submission manuscript updated!')
                     form.save()
                     return redirect('submission-overview', pk=pk)
                 else:
@@ -110,7 +109,6 @@ def submission_manuscript_edit(request, pk):
                     # value to both cleaned_data and note.document:
                     form.cleaned_data['review_manuscript'] = old_file
                     submission.review_manuscript.document = old_file
-                    messages.error(request, 'Errors during note update')
             else:
                 return HttpResponseForbidden()
         else:
@@ -161,9 +159,25 @@ def submission_manuscript_download(request, pk):
 @login_required
 def submission_overview(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
+    if submission.status == 'SUBMIT':
+        deadline = submission.conference.submission_stage.end_date
+    elif submission.status == 'REVIEW':
+        deadline = submission.conference.review_stage.end_date
+    else:
+        deadline = None
+
+    # If the overview page is visited for the first time, we display finish
+    # flag. For the following visits, show close:
+    show_finish = not submission.reached_overview
+    if show_finish:
+        submission.reached_overview = True
+        submission.save()
+
     if submission.is_viewable_by(request.user):
         return render(request, 'submissions/submission_overview.html', {
             'submission': submission,
+            'deadline': deadline,
+            'show_finish': show_finish,
         })
     return HttpResponseForbidden()
 

@@ -86,6 +86,10 @@ class Submission(models.Model):
         auto_now_add=True,
     )
 
+    reached_overview = models.BooleanField(
+        default=False,
+    )
+
     # Authors are filled from Author model
 
     def __str__(self):
@@ -131,6 +135,12 @@ class Submission(models.Model):
     def is_deletable_by(self, user):
         return ((self.is_chaired_by(user) or self.is_author(user))
                 and self.status != 'PUBLISH')
+
+    def get_authors_display(self):
+        return ', '.join(
+            author.user.profile.get_full_name()
+            for author in self.authors.order_by('order')
+        )
 
 
 class Author(models.Model):

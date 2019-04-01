@@ -34,15 +34,20 @@
 {#            {% endif %}#}
 
             {% if deadline %}
-              <p class="dccn-text-small mr-3" data-toggle="tooltip" title="Deadline">
+              <p class="dccn-text-small ml-auto mr-3" data-toggle="tooltip" title="Deadline">
                 <i class="far fa-clock"></i> {{ deadline }}
               </p>
             {% endif %}
+
 
 {#            <p class="dccn-text-small">#}
 {#              {{ submission.get_status_display }} <i class="fas fa-circle {{ _statusColor(status, warnings) }}"></i>#}
 {#            </p>#}
           </div>
+
+          <form>
+            {% bootstrap_messages %}
+          </form>
 
           <p class="text-center dccn-text-larger-light">{{ submission.title }}</p>
           <p class="text-center dccn-text-2-light mt-2">{{ submission.get_authors_display }}</p>
@@ -186,6 +191,15 @@
               <button class="btn btn-danger" data-toggle="modal" data-target="#deleteDialog-{{ submission.pk }}">
                 <i class="far fa-trash-alt"></i> Delete
               </button>
+              {% if show_finish %}
+              <a href="{% url 'home' %}" class="btn btn-success ml-auto">
+                <i class="fas fa-flag-checkered"></i> Finish
+              </a>
+              {% else %}
+              <a href="{% url 'home' %}" class="btn btn-outline-secondary ml-auto">
+                Close
+              </a>
+              {% endif %}
             </div>
 
             <!-- Delete submission dialog -->

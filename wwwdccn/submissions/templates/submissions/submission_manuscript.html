@@ -19,12 +19,12 @@
       <div class="dccn-panel flex-fill pb-4">
         <h1 class="dccn-panel-title mb-4">Review Manuscript</h1>
 
-          <p class="dccn-text mb-4">
+          <p class="dccn-text-0-light mb-4">
             Please upload your submission PDF file for the review. Make sure that its format and content fits
             <a href="#">the conference requirements</a>.
           </p>
-          <p class="dccn-text mb-4">
-            Please note that all uploaded papers are subject for double-blinded review.
+          <p class="dccn-text-0-light mb-4">
+            Please note that all uploaded papers are subject for double-blind review.
             It means that neither authors know the reviewers, nor the reviewers know whose papers they score.
             You need to remove all information that can be used to identify you or your co-authors
             from the manuscript.
@@ -54,10 +54,16 @@
             </div>
           </div>
 
-        <form method="POST" action="" class="mt-3" enctype="multipart/form-data" novalidate>
-          {% bootstrap_messages %}
+        <form method="POST" action="" class="mt-5" enctype="multipart/form-data" novalidate>
           {% csrf_token %}
-          {% bootstrap_form form %}
+          {% bootstrap_form_errors form type='non_fields' %}
+          {% bootstrap_field form.confirm_blind %}
+          {% bootstrap_field form.understand_blind_review %}
+          {% bootstrap_field form.review_manuscript %}
+
+          <p class="text-muted dccn-text-small-light" id="mustConfirmNote">
+            You need to confirm with blind review conditions before uploading the manuscript.
+          </p>
 
           <div class="dccn-saveform">
             <a href="{% url 'submission-overview' pk=submission.pk %}"
@@ -77,4 +83,38 @@
 
 
 {% block script %}
+<script>
+const state = {};
+const checkboxes = $('input[type="checkbox"]');
+const note = $('#mustConfirmNote');
+
+const updateFileInputStatus = function () {
+  const allChecked = Object.keys(state).reduce((prev, key) => { return prev && state[key]; });
+  const disabled = !allChecked;
+  $('.dccn-file-input').attr('disabled', disabled);
+  $('[name="review_manuscript"]').attr('disabled', disabled);
+  if (allChecked)
+    note.hide();
+  else
+    note.show();
+
+};
+
+checkboxes.change(function () {
+  state[$(this).attr('name')] = this.checked;
+  updateFileInputStatus();
+});
+
+
+//
+// MAIN
+//
+// 1) Init state:
+checkboxes.each((index, cb) => {
+  state[$(cb).attr('name')] = cb.checked;
+});
+// 2) Set initial status:
+updateFileInputStatus();
+
+</script>
 {% endblock %}

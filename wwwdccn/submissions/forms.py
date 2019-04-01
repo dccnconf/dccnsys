@@ -80,7 +80,7 @@ class SubmissionDetailsForm(forms.ModelForm):
 class UploadReviewManuscriptForm(forms.ModelForm):
     #TODO: this is hardcode! we will not need blind checkbox for submissions without blind review
     confirm_blind = forms.BooleanField(
-        required=True,
+        required=False,
         label=_('I confirm that the uploaded PDF is prepared for blind review. '
                 'It does not contain any information that can be used to '
                 'identify its authors. In particular, no authors names or '
@@ -89,7 +89,7 @@ class UploadReviewManuscriptForm(forms.ModelForm):
 
     #TODO: this is also hardcode!
     understand_blind_review = forms.BooleanField(
-        required=True,
+        required=False,
         label=_('I understand that the paper may be rejected during the review '
                 'if it names the authors in some way.')
     )
@@ -102,8 +102,31 @@ class UploadReviewManuscriptForm(forms.ModelForm):
                 'accept': '.pdf',
                 'show_file_name': True,
                 'btn_class': 'btn-outline-secondary',
+                'label': _('Review manuscript PDF file')
             })
         }
+
+    def has_manuscript(self):
+        return (bool(self.cleaned_data['review_manuscript']) or
+                bool(self.instance and self.instance.review_manuscript))
+
+    def clean(self):
+        confirmed_blind = self.cleaned_data.get('confirm_blind')
+        understand = self.cleaned_data.get('understand_blind_review')
+        if self.has_manuscript() and not (confirmed_blind and understand):
+            if not confirmed_blind:
+                self.add_error('confirm_blind', '')
+            if not understand:
+                self.add_error('understand_blind_review', '')
+        return self.cleaned_data
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        print(self.instance.review_manuscript)
+        if self.instance is not None and self.instance.review_manuscript:
+            self.fields['confirm_blind'].initial = 'True'
+            self.fields['understand_blind_review'].initial = True
+
 
 
 # TODO: refactor this - unify this form with TopicReorderForm
