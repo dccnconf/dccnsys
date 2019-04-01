@@ -60,7 +60,8 @@ INSTALLED_APPS = [
     'conferences',
     'submissions',
     'public_site',
-    'user_site'
+    'user_site',
+    'chair',
 ]
 
 MIDDLEWARE = [

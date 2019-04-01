@@ -26,6 +26,7 @@ urlpatterns = [
     path('registration/', include('registration.urls')),
     path('conferences/', include('conferences.urls')),
     path('submissions/', include('submissions.urls')),
+    path('chair/', include('chair.urls')),
 ]
 
 if settings.USE_LOCAL_MEDIA:
