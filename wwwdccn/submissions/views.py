@@ -172,6 +172,9 @@ def submission_overview(request, pk):
     if show_finish:
         submission.reached_overview = True
         submission.save()
+        messages.success(
+            request,
+            f'Submission #{pk} "{submission.title}" was successfully created!')
 
     if submission.is_viewable_by(request.user):
         return render(request, 'submissions/submission_overview.html', {
@@ -188,6 +191,8 @@ def submission_delete(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     if submission.is_deletable_by(request.user):
         # TODO: send letters to authors
+        if submission.review_manuscript:
+            submission.review_manuscript.delete()
         submission.delete()
         return redirect('home')
     return HttpResponseForbidden()

@@ -5,7 +5,17 @@ from submissions.models import Submission
 register = template.Library()
 
 
-#TODO: implement correctly!!
-@register.filter('submissions')
-def submissions(user):
-    return Submission.objects.all()
+@register.filter('statusclass')
+def statusclass(submission):
+    if submission.status == 'SUBMIT':
+        if submission.review_manuscript:
+            return 'text-success'
+        else:
+            return 'text-warning'
+    elif submission.status in {'REVIEW', 'PRINT', 'PUBLISH'}:
+        return 'text-info'
+    elif submission.status == 'ACCEPT':
+        return 'text-success'
+    elif submission.status == 'REJECT':
+        return 'text-danger'
+    return ''
