@@ -103,6 +103,9 @@ class Submission(models.Model):
 
 
 class Author(models.Model):
+    class Meta:
+        ordering = ['order']
+
     submission = models.ForeignKey(
         Submission,
         related_name='authors',
@@ -116,3 +119,7 @@ class Author(models.Model):
         related_name='authorship',
         on_delete=models.CASCADE
     )
+
+    def __str__(self):
+        return f'Author #{self.pk}: {self.user.profile.get_full_name()}, ' \
+            f'submission={self.submission.pk}, order={self.order}'

@@ -1,37 +1,39 @@
 /* jshint esversion: 6 */
 (function ($) {
   /* dummy data we use in search now */
-  const users = [{
-    id: 20,
-    firstName: 'Andrey',
-    lastName: 'Sidorov',
-    affiliation: 'Moscow State University',
-    avatar: '../images/avatar_man.svg'
-  }, {
-    id: 21,
-    firstName: 'Ivan',
-    lastName: 'Petrov',
-    affiliation: 'Moscow Institute of Physics and Technology',
-    avatar: '../images/avatar_man.svg'
-  }, {
-    id: 22,
-    firstName: 'Kate',
-    lastName: 'Petrova',
-    affiliation: 'Institute of Control Sciences',
-    avatar: '../images/avatar_woman.svg'
-  }, {
-    id: 23,
-    firstName: 'Maria',
-    lastName: 'Ivanova',
-    affiliation: 'Tomsk State University',
-    avatar: '../images/avatar_woman.svg'
-  }, {
-    id: 24,
-    firstName: 'Svetlana',
-    lastName: 'Sidorova',
-    affiliation: 'Ekaterinburg Politechnic Institute',
-    avatar: '../images/avatar_woman.svg'
-  }];
+  const users = {
+    users: [{
+      id: 20,
+      first_name: 'Andrey',
+      last_name: 'Sidorov',
+      affiliation: 'Moscow State University',
+      avatar: '../images/avatar_man.svg'
+    }, {
+      id: 21,
+      first_name: 'Ivan',
+      last_name: 'Petrov',
+      affiliation: 'Moscow Institute of Physics and Technology',
+      avatar: '../images/avatar_man.svg'
+    }, {
+      id: 22,
+      first_name: 'Kate',
+      last_name: 'Petrova',
+      affiliation: 'Institute of Control Sciences',
+      avatar: '../images/avatar_woman.svg'
+    }, {
+      id: 23,
+      first_name: 'Maria',
+      last_name: 'Ivanova',
+      affiliation: 'Tomsk State University',
+      avatar: '../images/avatar_woman.svg'
+    }, {
+      id: 24,
+      first_name: 'Svetlana',
+      last_name: 'Sidorova',
+      affiliation: 'Ekaterinburg Politechnic Institute',
+      avatar: '../images/avatar_woman.svg'
+    }]
+  };
   /* --- CUT TILL HERE --- */
 
 
@@ -53,13 +55,14 @@
     const settings = $.extend({
       // 'query()' returns a Promise:
       query: () => {
+        const term = input.val().toLowerCase();
         if (dataSource.trim() === "") {
+          console.log('here??');
           return new Promise((resolve, reject) => {
-            const term = input.val().toLowerCase();
             setTimeout(() => { 
               resolve(users.filter(user => {
-                return user.firstName.toLowerCase().includes(term) || 
-                  user.lastName.toLowerCase().includes(term) ||
+                return user.first_name.toLowerCase().includes(term) ||
+                  user.last_name.toLowerCase().includes(term) ||
                   user.affiliation.toLowerCase().includes(term) ||
                   String(user.id).includes(term);
               })); 
@@ -86,12 +89,10 @@
     };
 
     const confirmAddAuthor = (user) => {
-      const formInput = form.find('input[type="hidden"]');
+      const formInput = form.find('input[name="user_pk"]');
       formInput.val(String(user.id));
-      console.log("Going to POST: ", form.serialize());
-      // If the user confirmed adding author, we may require to
-      // reload this page.
-      // TODO: POST 'form' to /submissions/SID/ajax/add_author/UID
+      console.log(form.serialize());
+      form.submit();
     };
 
     const showAddAuthorDialog = (user) => {
@@ -110,10 +111,10 @@
         title: 'Confirm add author',
         html: `
 <div class="dccn-authors-search-modal-item" data-user--id="${user.id}">
-  <img src="${user.avatar}">
+  <img src="${user.avatar}" class="rounded-circle">
   <div>
     <h4 class="dccn-text-large-light">
-      ${user.firstName} ${user.lastName}
+      ${user.first_name} ${user.last_name}
     </h4>
     <p class="dccn-text-0-light text-muted">
       ${user.affiliation}
@@ -129,7 +130,7 @@
 
     const inputUpdateHandler = () => {
       const term = input.val().trim().toLowerCase();
-      console.log(term);
+      // console.log(term);
       if (term === '') {
         // Handle term is empty
         showPreviewScreen(placeholder);
@@ -138,20 +139,20 @@
 
         // Map matching users:
         settings.query().then(users => {
-          const formattedUsers = users.map(user => {
+          const formattedUsers = users.users.map(user => {
             // We store additional data in 'data-user--...' attributed to
             // make it easier to grab this data when displaying a modal. 
             return `
   <div class="dccn-authors-search-item" 
       data-user--id="${user.id}" 
-      data-user--first-name="${user.firstName}" 
-      data-user--last-name="${user.lastName}" 
+      data-user--first-name="${user.first_name}" 
+      data-user--last-name="${user.last_name}" 
       data-user--avatar="${user.avatar}" 
       data-user--affiliation="${user.affiliation}">
-    <img src="${user.avatar}">
+    <img src="${user.avatar}" class="rounded-circle">
     <div>
       <h4 class="dccn-text-2-light">
-        ${user.firstName} ${user.lastName}
+        ${user.first_name} ${user.last_name}
       </h4>
       <p class="dccn-text-small text-muted">
         ${user.affiliation}
@@ -172,8 +173,8 @@
               const item = event.currentTarget;
               showAddAuthorDialog({
                 id: $(item).attr('data-user--id'),
-                firstName: $(item).attr('data-user--first-name'),
-                lastName: $(item).attr('data-user--last-name'),
+                first_name: $(item).attr('data-user--first-name'),
+                last_name: $(item).attr('data-user--last-name'),
                 affiliation: $(item).attr('data-user--affiliation'),
                 avatar: $(item).attr('data-user--avatar'),
               });
@@ -198,35 +199,35 @@
 
 
 
-  /***********************************************************************
-   * Authors editor plugin.
-   * This plugin responds for authors re-ordering and deletion.
-   ***********************************************************************/
-  $.fn.authorsEditor = function (options) {
-    const $list = this.find('.dccn-authors-editor-list');
-    const $input = this.find('.dccn-hidden-form input[type="hidden"]');
-
-    $input.change(function () {
-      console.log($(this).val());  // Here we may send AJAX POST
-    });
-
-    const fillInput = () => {
-      const $items = this.find('.dccn-authors-editor-author');
-      const ids = $.map($items, item => { return $(item).attr('data-id'); });
-      $input.val(String(ids));
-      $input.trigger('change');
-    };
-
-    $list.sortable({
-      revert: true,
-      stop: fillInput,   /* update input only after dragging is over */
-      create: fillInput  /* we gurantee that input is always filled */
-    });
-  };
+  // /***********************************************************************
+  //  * Authors editor plugin.
+  //  * This plugin responds for authors re-ordering and deletion.
+  //  ***********************************************************************/
+  // $.fn.authorsEditor = function (options) {
+  //   const $list = this.find('.dccn-authors-editor-list');
+  //   const $input = this.find('.dccn-hidden-form input[type="hidden"]');
+  //
+  //   $input.change(function () {
+  //     console.log($(this).val());  // Here we may send AJAX POST
+  //   });
+  //
+  //   const fillInput = () => {
+  //     const $items = this.find('.dccn-authors-editor-author');
+  //     const ids = $.map($items, item => { return $(item).attr('data-id'); });
+  //     $input.val(String(ids));
+  //     $input.trigger('change');
+  //   };
+  //
+  //   $list.sortable({
+  //     revert: true,
+  //     stop: fillInput,   /* update input only after dragging is over */
+  //     create: fillInput  /* we gurantee that input is always filled */
+  //   });
+  // };
 
   /***********************************************************************
    * BINDING
    ***********************************************************************/
-  $('.dccn-authors-editor').authorsEditor();
+  // $('.dccn-authors-editor').authorsEditor();
   $('.dccn-authors-search').authorSearch();  
 })(jQuery);

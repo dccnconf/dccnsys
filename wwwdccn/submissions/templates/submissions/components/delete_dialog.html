@@ -18,8 +18,9 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
-        <form>
-          <button type="button" class="btn btn-danger" data-dismiss="modal">Delete</button>
+        <form action="{% url 'submission-delete' pk=submission.pk %}" method="POST">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Delete</button>
         </form>
       </div>
     </div>
