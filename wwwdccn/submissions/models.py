@@ -18,8 +18,7 @@ def get_review_manuscript_full_path(instance, filename):
     ext = filename.split('.')[-1]
     root = settings.MEDIA_PRIVATE_ROOT
     cpk = instance.conference.pk if instance.conference else 'unknown_conf'
-    tpk = instance.stype if instance.stype else 'unknown_type'
-    path = f'{root}/{cpk}/submissions/{tpk}'
+    path = f'{root}/{cpk}/submissions'
     name = f'SID{instance.pk:05d}'
     return f'{path}/{name}.{ext}'
 

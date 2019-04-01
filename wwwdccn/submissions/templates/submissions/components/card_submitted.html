@@ -6,7 +6,7 @@
   <div class="dccn-feed-item-top">
     <div class="dccn-feed-item-label dccn-feed-item-conf">{{ submission.conference.short_name }}</div>
     <div class="dccn-feed-item-label ml-auto mr-3" data-toggle="tooltip" title="Submission deadline">
-      <i class="far fa-clock"></i> <span class="font-weight-lighter">{{ submission.conference.review_stage.end_date }}</span>
+      <i class="far fa-clock"></i> <span class="font-weight-lighter">{{ submission.conference.submission_stage.end_date }}</span>
     </div>
     <div class="dccn-feed-item-label dccn-feed-item-status">
       Submitted <i class="fas fa-circle {% if not submission.review_manuscript %}text-warning{% else %}text-success{% endif %}"></i>
