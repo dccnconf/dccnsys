@@ -107,6 +107,31 @@ class Submission(models.Model):
             return os.path.basename(self.review_manuscript.file.name)
         return ''
 
+    def is_chaired_by(self, user):
+        return user in self.conference.chairs.all()
+
+    def is_author(self, user):
+        return bool(self.authors.filter(user=user)) or (self.created_by == user)
+
+    def details_editable_by(self, user):
+        return self.is_chaired_by(user) or (
+            self.is_author(user) and self.status in {'SUBMIT', 'ACCEPT'}
+        )
+
+    def authors_editable_by(self, user):
+        return self.is_chaired_by(user) or self.is_author(user)
+
+    def review_manuscript_editable_by(self, user):
+        return self.is_chaired_by(user) or (
+            self.is_author(user) and self.status == 'SUBMIT'
+        )
+
+    def is_viewable_by(self, user):
+        return self.is_chaired_by(user) or self.is_author(user)
+
+    def is_deletable_by(self, user):
+        return ((self.is_chaired_by(user) or self.is_author(user))
+                and self.status != 'PUBLISH')
 
 
 class Author(models.Model):
