@@ -25,7 +25,7 @@ class PersonalForm(forms.ModelForm):
             'middle_name_rus': 'пр.: Дмитриевич',
             'last_name_rus': 'пр.: Петров',
             'city': 'e.g.: Moscow',
-            'birthday': 'e.g.: 1 January 1980',
+            'birthday': 'e.g.: 1980-02-20',
         }
         for key, value in placeholders.items():
             self.fields[key].widget.attrs['placeholder'] = value
