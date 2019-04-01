@@ -136,11 +136,11 @@ $(document).ready(function () {
     if (deadline < NOW) {
       deadlinePassedNote.removeClass('d-none');
       addClass(deadlineBox, DANGER_CLASS);
-      submitButton.attr('disabled', true);
+      {#submitButton.attr('disabled', true);#}
     } else {
       timeLeft.text(getTimeDeltaString(NOW, deadline));
       addClass(deadlinePassedNote, 'd-none');
-      submitButton.attr('disabled', false);
+      {#submitButton.attr('disabled', false);#}
       if (deadline - NOW <= ALERT_TIME_DELTA) {
         addClass(deadlineBox, ALERT_CLASS);
       }

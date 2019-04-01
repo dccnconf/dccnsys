@@ -14,7 +14,7 @@
   <div class="dccn-layout-row-lg-col">
 
     <!-- PROFILE BOX -->
-    {% include 'user_site/components/profile_panel.html' with user=user numSubmissions=0 numReviews=0 %}
+    {% include 'user_site/components/profile_panel.html' with user=user numSubmissions=submissions|length numReviews=0 %}
 
     <!-- SUBMISSIONS BOX -->
     <div class="dccn-panel dccn-work-panel">
@@ -24,7 +24,7 @@
         <a href="{% url 'submission-create' %}" class="btn btn-primary btn-sm btn-block btn-sm-normal mb-3 mb-lg-0"><i class="fas fa-plus pr-2"></i>New</a>
       </div>
 
-      {% for submission in user|submissions %}
+      {% for submission in submissions %}
         {% if submission.status == 'SUBMIT' %}
           {% include 'submissions/components/card_submitted.html' with submission=submission %}
         {% endif %}
