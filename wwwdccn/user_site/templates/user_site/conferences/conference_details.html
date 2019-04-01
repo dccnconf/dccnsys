@@ -33,13 +33,16 @@
         {% endif %}
 
         {% if conference.is_ieee %}
-          <p class="dccn-text-3 text-muted text-center">IEEE International Conference on</p>
+{#          <p class="dccn-text-3 text-muted text-center">IEEE International Conference on</p>#}
         {% endif %}
         <h1 class="dccn-text-large text-center my-1 py-0">{{ conference.full_name }}</h1>
         <h2 class="dccn-text-3 text-muted text-center">({{ conference.short_name }})</h2>
         <p class="text-center dccn-text mt-2">
           {{ conference.start_date }} - {{ conference.close_date }}, {{ conference.city }}, {{ conference.get_country_display }}
         </p>
+        <div class="d-flex">
+          <a href="{% url 'submission-create' %}" class="btn btn-outline-primary mt-3 mx-auto">Submit paper</a>
+        </div>
 
         {# TODO: change the following check to filter whether user is able to edit conference #}
         {% if user in conference.chairs.all %}

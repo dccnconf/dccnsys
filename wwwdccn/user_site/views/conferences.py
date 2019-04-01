@@ -10,12 +10,14 @@ from conferences.forms import ConferenceForm, SubmissionStageForm, \
     ReviewStageForm, ProceedingTypeForm, DeleteForm, SubmissionTypeForm, \
     TopicCreateForm, TopicsReorderForm
 from conferences.models import Conference, ProceedingType, SubmissionType, Topic
+from submissions.models import Submission
 
 
 @login_required
 def conferences_list(request):
     return render(request, 'user_site/conferences/conferences_list.html', {
-        'conferences': Conference.objects.all()
+        'conferences': Conference.objects.all(),
+        'submissions': Submission.objects.filter(authors__user=request.user),
     })
 
 
