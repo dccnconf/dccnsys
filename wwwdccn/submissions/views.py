@@ -1,11 +1,15 @@
+import mimetypes
+import os
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 
 from submissions.forms import CreateSubmissionForm, SubmissionDetailsForm, \
-    AuthorCreateForm, AuthorsReorderForm, AuthorDeleteForm
+    AuthorCreateForm, AuthorsReorderForm, AuthorDeleteForm, \
+    UploadReviewManuscriptForm
 from submissions.models import Submission, Author
 
 # TODO: check in views that user has rights to view/edit given submission
@@ -63,11 +67,76 @@ def submission_authors(request, pk):
 
 
 @login_required
-def submission_manuscript(request, pk):
+def submission_manuscript_edit(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
+    if request.method == 'POST':
+        form = UploadReviewManuscriptForm(
+            request.POST,
+            request.FILES,
+            instance=submission
+        )
+        # We save current file (if any) for two reasons:
+        # 1) if this file is not empty and user uploaded a new file, we
+        #    are going to delete this old file (in case of valid form); and
+        # 2) it is going to be assigned instead of TemporaryUploadedFile
+        #    object in case of form validation error.
+        old_file = (submission.review_manuscript.file
+                    if submission.review_manuscript else None)
+        if form.is_valid():
+            # If the form is valid and user provided a new file, we delete
+            # original file first. Otherwise Django will add a random
+            # suffix which will break our storage strategy.
+            if old_file and request.FILES:
+                submission.review_manuscript.storage.delete(old_file.name)
+            messages.success(request, 'Submission manuscript updated!')
+            form.save()
+            return redirect('submission-overview', pk=pk)
+        else:
+            # If the form is invalid (e.g. title is not provided), but the
+            # user tried to upload a file, a new TemporaryUploadedFile
+            # object will be created and, which is more important, it will
+            # be assigned to `note.document` field. We want to avoid this
+            # to make sure that until the form is completely valid
+            # previous file is not re-written. To do it we assign the
+            # `old_file` value to both cleaned_data and note.document:
+            form.cleaned_data['review_manuscript'] = old_file
+            submission.review_manuscript.document = old_file
+            messages.error(request, 'Errors during note update')
+    else:
+        form = UploadReviewManuscriptForm(instance=submission)
     return render(request, 'submissions/submission_manuscript.html', {
         'submission': submission,
+        'form': form,
     })
+
+
+@login_required
+@require_POST
+def submission_manuscript_delete(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    file_name = submission.get_review_manuscript_name()
+    if submission.review_manuscript:
+        submission.review_manuscript.delete()
+    return render(request, 'submissions/components/file_deleted_message.html', {
+        'alert_class': 'warning',
+        'file_name': file_name,
+    })
+
+
+@login_required
+@require_GET
+def submission_manuscript_download(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    if submission.review_manuscript:
+        filename = submission.get_review_manuscript_name()
+        mtype = mimetypes.guess_type(filename)[0]
+        response = HttpResponse(
+            submission.review_manuscript.file,
+            content_type=mtype
+        )
+        response['Content-Disposition'] = f'filename={filename}'
+        return response
+    raise Http404
 
 
 @login_required

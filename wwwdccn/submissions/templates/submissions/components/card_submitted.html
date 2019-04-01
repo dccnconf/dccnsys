@@ -27,7 +27,7 @@
     <div class="dccn-feed-item-row">
       <div class="dccn-feed-item-message-text">
         <i class="fas fa-exclamation-triangle text-warning"></i> Manuscript not uploaded yet
-        (<a href="{% url 'submission-manuscript' pk=submission.pk %}" class="dccn-feed-item-message-link">upload...</a>)
+        (<a href="{% url 'submission-manuscript-edit' pk=submission.pk %}" class="dccn-feed-item-message-link">upload...</a>)
       </div>
     </div>
     {% endif %}

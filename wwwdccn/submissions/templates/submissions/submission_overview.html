@@ -66,7 +66,7 @@
                 <i class="far fa-file-pdf"></i> {{ submission.review_manuscript }}
               </a>
               {% if submission.can_edit_review_manuscript %}
-                (<a href="{% url 'submission-manuscript' pk=submission.pk %}" class="dccn-link">Change manuscript...</a>)
+                (<a href="{% url 'submission-manuscript-edit' pk=submission.pk %}" class="dccn-link">Change manuscript...</a>)
               {% endif %}
             </p>
             {% if not submission.can_edit_review_manuscript %}

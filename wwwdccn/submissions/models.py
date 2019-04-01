@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth import get_user_model
@@ -99,6 +101,11 @@ class Submission(models.Model):
 
     def can_edit_details(self):
         return self.status in {'SUBMIT', 'ACCEPT'}
+
+    def get_review_manuscript_name(self):
+        if self.review_manuscript:
+            return os.path.basename(self.review_manuscript.file.name)
+        return ''
 
 
 

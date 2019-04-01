@@ -67,6 +67,22 @@ class SubmissionDetailsForm(forms.ModelForm):
 
 
 class UploadReviewManuscriptForm(forms.ModelForm):
+    #TODO: this is hardcode! we will not need blind checkbox for submissions without blind review
+    confirm_blind = forms.BooleanField(
+        required=True,
+        label=_('I confirm that the uploaded PDF is prepared for blind review. '
+                'It does not contain any information that can be used to '
+                'identify its authors. In particular, no authors names or '
+                'references to funding sources is given.')
+    )
+
+    #TODO: this is also hardcode!
+    understand_blind_review = forms.BooleanField(
+        required=True,
+        label=_('I understand that the paper may be rejected during the review '
+                'if it names the authors in some way.')
+    )
+
     class Meta:
         model = Submission
         fields = ['review_manuscript']
@@ -144,12 +160,6 @@ class AuthorCreateForm(forms.Form):
                 raise ValidationError(f'Author already added')
         return self.cleaned_data['user_pk']
 
-    # def clean(self):
-    #     super().clean()
-    #     print(self.clean_user_pk())
-    #     print('cleaned data: ', self.cleaned_data)
-    #     return self.cleaned_data
-    #
     def save(self, commit=True):
         authors = self.submission.authors
         max_order = authors.aggregate(Max('order'))['order__max']
