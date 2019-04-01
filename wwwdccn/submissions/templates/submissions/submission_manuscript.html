@@ -11,10 +11,12 @@
 
 {% block body %}
   <main class="container py-3">
-    <div class="dccn-layout-row">
+    <div class="dccn-layout-row-md-col">
+
+      {% include 'submissions/components/submission_navigation.html' with active='manuscript' %}
 
       <!-- MAIN AREA -->
-      <div class="dccn-panel pb-4">
+      <div class="dccn-panel flex-fill pb-4">
         <h1 class="dccn-panel-title mb-4">Review Manuscript</h1>
 
           <p class="dccn-text mb-4">

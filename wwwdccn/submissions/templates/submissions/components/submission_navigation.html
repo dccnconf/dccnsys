@@ -11,13 +11,13 @@
   </div>
   <ul class="dccn-nav-list">
     <li class="dccn-nav-list-item {% if active == 'details' %}active{% endif %}">
-      <a href="#" class="dccn-nav-link">1. Details</a>
+      <a href="{% url 'submission-details' pk=submission.pk %}" class="dccn-nav-link">1. Details</a>
     </li>
     <li class="dccn-nav-list-item {% if active == 'authors' %}active{% endif %}">
-      <a href="#" class="dccn-nav-link">2. Authors</a>
+      <a href="{% url 'submission-authors' pk=submission.pk %}" class="dccn-nav-link">2. Authors</a>
     </li>
     <li class="dccn-nav-list-item {% if active == 'manuscript' %}active{% endif %}">
-      <a href="#" class="dccn-nav-link">3. Review Manuscript</a>
+      <a href="{% url 'submission-manuscript-edit' pk=submission.pk %}" class="dccn-nav-link">3. Review Manuscript</a>
     </li>
   </ul>
 </div>

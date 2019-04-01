@@ -50,7 +50,7 @@
 
           <p class="dccn-text-0 mt-3"><strong>Topics:</strong></p>
           <ul class="list-unstyled mt-0">
-            {% for topic in submission.topics %}
+            {% for topic in submission.topics.all %}
               <li class="dccn-text-0"><i class="far fa-check-square"></i> {{ topic.name }}</li>
             {% endfor %}
           </ul>
@@ -62,8 +62,8 @@
           {% if submission.review_manuscript %}
             <p class="dccn-text-0 mt-3">
               <strong>Review Manuscript: </strong>
-              <a href="{{ submission.review_manuscript.url }}" class="dccn-link">
-                <i class="far fa-file-pdf"></i> {{ submission.review_manuscript }}
+              <a href="{% url 'submission-manuscript-download' pk=submission.pk %}" class="dccn-link">
+                <i class="far fa-file-pdf"></i> {{ submission.get_review_manuscript_name }}
               </a>
               {% if submission.can_edit_review_manuscript %}
                 (<a href="{% url 'submission-manuscript-edit' pk=submission.pk %}" class="dccn-link">Change manuscript...</a>)

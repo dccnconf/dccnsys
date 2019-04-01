@@ -11,10 +11,12 @@
 
 {% block body %}
   <main class="container py-3">
-    <div class="dccn-layout-row">
+    <div class="dccn-layout-row-md-col">
+
+      {% include 'submissions/components/submission_navigation.html' with active='details' %}
 
       <!-- MAIN AREA -->
-      <div class="dccn-panel pb-4">
+      <div class="dccn-panel pb-4 flex-fill">
         <h1 class="dccn-panel-title mb-4">Details</h1>
 
         <form method="POST" action="" class="mt-3" novalidate>

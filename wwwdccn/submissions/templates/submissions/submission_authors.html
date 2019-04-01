@@ -11,10 +11,12 @@
 
 {% block body %}
   <main class="container py-3">
-    <div class="dccn-layout-row">
+    <div class="dccn-layout-row-md-col">
+
+      {% include 'submissions/components/submission_navigation.html' with active='authors' %}
 
       <!-- MAIN AREA -->
-      <div class="dccn-panel">
+      <div class="dccn-panel flex-fill">
         <h1 class="dccn-panel-title mb-4">Authors</h1>
         <p class="dccn-text mb-3">Add all the authors of your paper and put them in correct order using drag-and-drop. This list of authors will be used in program preparation, so if you miss some of your co-authors, they will not be listed in the program.</p>
 
@@ -171,8 +173,11 @@
           <a href="{% url 'submission-details' pk=submission.pk %}" class="btn btn-outline-secondary">
             <i class="fas fa-chevron-left"></i> Prev
           </a>
-          {# <a href="{{ prefix }}_submission_manuscript.html" class="btn btn-outline-secondary ml-auto mr-1">Skip</a> #}
-          <a href="{% url 'submission-manuscript-edit' pk=submission.pk %}" class="btn btn-primary ml-auto">
+           <a href="{% url 'submission-manuscript-edit' pk=submission.pk %}"
+              class="btn btn-outline-secondary ml-auto mr-1">
+             Skip
+           </a>
+          <a href="{% url 'submission-manuscript-edit' pk=submission.pk %}" class="btn btn-primary">
             Continue <i class="fas fa-chevron-right"></i>
           </a>
         </div>
