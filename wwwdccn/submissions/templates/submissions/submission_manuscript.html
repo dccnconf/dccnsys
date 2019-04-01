@@ -1,0 +1,80 @@
+{% extends "user_site/base.html" %}
+{% load bootstrap4 %}
+
+{% block title %}
+  Submission #{{ submission.pk }} | DCCN
+{% endblock %}
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='submissions' %}
+{% endblock %}
+
+{% block body %}
+  <main class="container py-3">
+    <div class="dccn-layout-row-md-col">
+
+      {% include 'submissions/components/submission_navigation.html' with active='manuscript' %}
+
+      <!-- MAIN AREA -->
+      <div class="dccn-panel flex-fill pb-4">
+        <h1 class="dccn-panel-title mb-4">Review Manuscript</h1>
+
+          <p class="dccn-text mb-4">
+            Please upload your submission PDF file for the review. Make sure that its format and content fits
+            <a href="#">the conference requirements</a>.
+          </p>
+          <p class="dccn-text mb-4">
+            Please note that all uploaded papers are subject for double-blinded review.
+            It means that neither authors know the reviewers, nor the reviewers know whose papers they score.
+            You need to remove all information that can be used to identify you or your co-authors
+            from the manuscript.
+            In particular, you should remove authors names, funding sources and any references
+            to your previous work.
+            You will be able to add this information in your final manuscript after the review.
+          </p>
+
+          <div class="dccn-file-vd">
+            <form action="{% url 'submission-manuscript-delete' pk=submission.pk %}" method="POST"
+                  class="dccn-file-vd-form" id="deleteManuscriptForm">
+              {% csrf_token %}
+            </form>
+            <div class="dccn-file-vd-box">
+              {% if submission.review_manuscript %}
+                <p class="my-1">Current document:
+                  <a href="{% url 'submission-manuscript-download' pk=submission.pk %}" target="_blank">
+                    <i class="far fa-file-pdf"></i> {{ submission.get_review_manuscript_name }}
+                  </a>
+                </p>
+                <p class="my-1">
+                  <button type="submit" class="btn btn-link p-0 m-0 text-danger" form="deleteManuscriptForm">
+                    <i class="far fa-trash-alt"></i> Delete
+                  </button>
+                </p>
+              {% endif %}
+            </div>
+          </div>
+
+        <form method="POST" action="" class="mt-3" enctype="multipart/form-data" novalidate>
+          {% bootstrap_messages %}
+          {% csrf_token %}
+          {% bootstrap_form form %}
+
+          <div class="dccn-saveform">
+            <a href="{% url 'submission-overview' pk=submission.pk %}"
+               class="btn btn-outline-secondary ml-auto mr-1">
+              Skip
+            </a>
+            <button type="submit" class="btn btn-primary">
+              Next <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </main>
+{% endblock %}
+
+
+{% block script %}
+{% endblock %}

@@ -1,0 +1,45 @@
+{######################################}
+{# CONTEXT:        #}
+{# * submission    #}
+{######################################}
+<div class="dccn-feed-item">
+  <div class="dccn-feed-item-top">
+    <div class="dccn-feed-item-label dccn-feed-item-conf">{{ submission.conference.short_name }}</div>
+    <div class="dccn-feed-item-label ml-auto mr-3" data-toggle="tooltip" title="Submission deadline">
+      <i class="far fa-clock"></i> <span class="font-weight-lighter">{{ submission.conference.review_stage.end_date }}</span>
+    </div>
+    <div class="dccn-feed-item-label dccn-feed-item-status">
+      Submitted <i class="fas fa-circle {% if not submission.review_manuscript %}text-warning{% else %}text-success{% endif %}"></i>
+    </div>
+  </div>
+  <p class="dccn-feed-item-title">
+    <a href="{% url 'submission-overview' pk=submission.pk %}">
+      {{ submission.title }}
+    </a>
+  </p>
+  <div class="dccn-feed-item-row">
+    <div class="dccn-feed-item-authors">
+      {{ submission.get_authors_display }}
+    </div>
+  </div>
+  <div class="dccn-feed-item-messages">
+    {% if not submission.review_manuscript %}
+    <div class="dccn-feed-item-row">
+      <div class="dccn-feed-item-message-text">
+        <i class="fas fa-exclamation-triangle text-warning"></i> Manuscript not uploaded yet
+        (<a href="{% url 'submission-manuscript-edit' pk=submission.pk %}" class="dccn-feed-item-message-link">upload...</a>)
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div class="dccn-feed-item-footer">
+    <a href="{% url 'submission-overview' pk=submission.pk %}" class="dccn-feed-item-link"><i class="fas fa-align-justify"></i> View</a>
+    <a href="{% url 'submission-details' pk=submission.pk %}" class="dccn-feed-item-link"><i class="far fa-edit"></i> Edit</a>
+    <button class="btn btn-link dccn-feed-item-link" data-toggle="modal" data-target="#deleteDialog-{{ submission.pk }}">
+      <i class="far fa-trash-alt"></i> Delete
+    </button>
+    <div class="dccn-feed-item-id ml-auto">#{{ submission.pk }}</div>
+  </div>
+
+  {% include 'submissions/components/delete_dialog.html' with submission=submission %}
+</div>

@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'gears',
     'auth_app',
     'conferences',
+    'submissions',
     'public_site',
     'user_site'
 ]

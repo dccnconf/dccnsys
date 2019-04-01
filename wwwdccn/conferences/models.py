@@ -48,13 +48,28 @@ class Conference(models.Model):
         null=True, blank=True
     )
 
+    description = models.TextField(
+        verbose_name=_('Medium length description of the conference'),
+        default="",
+        blank=True,
+    )
+
+    site_url = models.URLField(
+        verbose_name=_('Conference informational site'),
+        default="",
+        blank=True,
+    )
+
+    def __str__(self):
+        return f'{self.full_name} ({self.short_name})'
+
 
 class SubmissionStage(models.Model):
     conference = models.OneToOneField(
         Conference, on_delete=models.CASCADE, related_name='submission_stage'
     )
 
-    end_date = models.DateField(
+    end_date = models.DateTimeField(
         null=True, verbose_name=_('Deadline for submissions')
     )
 
@@ -66,7 +81,7 @@ class ReviewStage(models.Model):
         Conference, on_delete=models.CASCADE, related_name='review_stage'
     )
 
-    end_date = models.DateField(
+    end_date = models.DateTimeField(
         null=True, verbose_name=_('End of review')
     )
 
@@ -82,7 +97,7 @@ class ProceedingType(models.Model):
         max_length=1000, verbose_name=_('Long description')
     )
 
-    final_manuscript_deadline = models.DateField(
+    final_manuscript_deadline = models.DateTimeField(
         null=True, verbose_name=_('Deadline for final manuscript submission')
     )
 
@@ -150,6 +165,9 @@ class SubmissionType(models.Model):
 
     possible_proceedings = models.ManyToManyField(ProceedingType)
 
+    def __str__(self):
+        return self.name
+
 
 class Topic(models.Model):
     class Meta:
@@ -161,7 +179,7 @@ class Topic(models.Model):
     order = models.IntegerField(default=0)
 
     def __str__(self):
-        return f'{self.order}: {self.name}'
+        return f'{self.name}'
 
 
 @receiver(post_save, sender=Conference)
