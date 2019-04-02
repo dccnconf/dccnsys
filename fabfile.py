@@ -411,7 +411,7 @@ def write_env(c, env):
         'DB_PASSWORD': env.DB_PASS,
         'DB_HOST': env.DB_HOST,
         'DB_PORT': env.DB_PORT,
-        'RECAPTCHA_SITE_KEY': env.RECAPTCHA_SECRET_KEY,
+        'RECAPTCHA_SITE_KEY': env.RECAPTCHA_SITE_KEY,
         'RECAPTCHA_SECRET_KEY': env.RECAPTCHA_SECRET_KEY,
     }
 
