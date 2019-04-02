@@ -76,6 +76,8 @@ class Environment:
         self.MAILGUN_TOKEN = self.env('MAILGUN_TOKEN')
         self.MAILGUN_API_URL = self.env('MAILGUN_API_URL')
         self.SECRET_KEY = self.env('SECRET_KEY')
+        self.RECAPTCHA_SITE_KEY = self.env('RECAPTCHA_SITE_KEY')
+        self.RECAPTCHA_SECRET_KEY = self.env('RECAPTCHA_SECRET_KEY')
 
         # Derivatives and constants:
         self.DOMAIN = '.'.join(self.SITENAME.split('.')[-2:])
@@ -409,6 +411,8 @@ def write_env(c, env):
         'DB_PASSWORD': env.DB_PASS,
         'DB_HOST': env.DB_HOST,
         'DB_PORT': env.DB_PORT,
+        'RECAPTCHA_SITE_KEY': env.RECAPTCHA_SECRET_KEY,
+        'RECAPTCHA_SECRET_KEY': env.RECAPTCHA_SECRET_KEY,
     }
 
     with c.cd(f'/home/{env.VM_USER_NAME}/sites/{env.SITENAME}'):
