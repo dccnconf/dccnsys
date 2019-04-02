@@ -260,3 +260,13 @@ else:
 BOOTSTRAP4 = {
     'required_css_class': 'required',
 }
+
+
+#######################
+# NOCAPTCHA-RECAPTCHA
+if REMOTE_DEPLOY:
+    RECAPTCHA_SITE_KEY = os.environ['RECAPTCHA_SITE_KEY']
+    RECAPTCHA_SECRET_KEY = os.environ['RECAPTCHA_SECRET_KEY']
+else:
+    RECAPTCHA_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+    RECAPTCHA_SECRET_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
