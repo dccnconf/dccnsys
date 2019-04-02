@@ -22,7 +22,7 @@
       var input = this;
       if (input.files && input.files[0]) {
         var sizeKb = (input.files[0].size / 1024).toFixed(4);
-        if (sizeKb > 500) {
+        if (sizeKb > 1000) {
           Swal.fire({
             type: 'warning',
             text: `Profile image size must be under 500KB, your file is ${sizeKb}KB`,
