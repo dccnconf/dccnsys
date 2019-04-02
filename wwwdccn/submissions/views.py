@@ -47,6 +47,8 @@ def submission_details(request, pk):
                 form = SubmissionDetailsForm(request.POST, instance=submission)
                 if form.is_valid():
                     form.save()
+                    if submission.reached_overview:
+                        return redirect('submission-overview', pk=pk)
                     return redirect('submission-authors', pk=pk)
             else:
                 return HttpResponseForbidden()
@@ -191,6 +193,10 @@ def submission_delete(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     if submission.is_deletable_by(request.user):
         # TODO: send letters to authors
+        messages.warning(
+            request,
+            f'Submission #{pk} "{submission.title}" was deleted'
+        )
         if submission.review_manuscript:
             submission.review_manuscript.delete()
         submission.delete()

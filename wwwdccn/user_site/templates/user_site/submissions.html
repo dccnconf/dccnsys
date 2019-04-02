@@ -1,5 +1,6 @@
 {% extends 'user_site/base.html' %}
 {% load submission_extras %}
+{% load bootstrap4 %}
 
 {% block title %}
   Submissions | DCCN
@@ -19,6 +20,8 @@
     <!-- SUBMISSIONS BOX -->
     <div class="dccn-panel dccn-work-panel" style="min-height: 90vh;">
       <h2 class="dccn-panel-title">Submissions</h2>
+
+      {% bootstrap_messages %}
 
       <div class="dccn-panel-toolbar">
         <a href="{% url 'submission-create' %}" class="btn btn-primary btn-sm btn-block btn-sm-normal mb-3 mb-lg-0"><i class="fas fa-plus pr-2"></i>New</a>

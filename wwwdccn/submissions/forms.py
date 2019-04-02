@@ -26,11 +26,6 @@ class CreateSubmissionForm(forms.ModelForm):
         label=_('I confirm that I am an author of the submission')
     )
 
-    agree_with_terms = forms.BooleanField(
-        required=True,
-        label=_('I agree with terms and conditions of my paper processing')
-    )
-
     def clean_conference(self):
         conference = self.cleaned_data['conference']
         if conference.submission_stage.end_date < timezone.now():
@@ -75,6 +70,12 @@ class SubmissionDetailsForm(forms.ModelForm):
             )
         return self.cleaned_data['topics']
 
+    def save(self, commit=True):
+        submission = super().save(commit=commit)
+        if commit and not submission.filled_details:
+            submission.filled_details = True
+            submission.save()
+        return submission
 
 
 class UploadReviewManuscriptForm(forms.ModelForm):

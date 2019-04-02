@@ -13,7 +13,7 @@
   <main class="container py-3">
     <div class="dccn-layout-row-md-col">
 
-      {% include 'submissions/components/submission_navigation.html' with active='manuscript' %}
+      {% include 'submissions/components/submission_navigation.html' with active='manuscript' enabled=True %}
 
       <!-- MAIN AREA -->
       <div class="dccn-panel flex-fill pb-4">
@@ -26,10 +26,8 @@
           <p class="dccn-text-0-light mb-4">
             Please note that all uploaded papers are subject for double-blind review.
             It means that neither authors know the reviewers, nor the reviewers know whose papers they score.
-            You need to remove all information that can be used to identify you or your co-authors
-            from the manuscript.
-            In particular, you should remove authors names, funding sources and any references
-            to your previous work.
+            You need to remove all information that can be used to identify you or your co-authors from the manuscript.
+            In particular, you should remove authors names, funding sources and any references to your previous work.
             You will be able to add this information in your final manuscript after the review.
           </p>
 
@@ -66,13 +64,25 @@
           </p>
 
           <div class="dccn-saveform">
-            <a href="{% url 'submission-overview' pk=submission.pk %}"
-               class="btn btn-outline-secondary ml-auto mr-1">
-              Skip
-            </a>
-            <button type="submit" class="btn btn-primary">
-              Next <i class="fas fa-chevron-right"></i>
-            </button>
+            {% if submission.reached_overview %}
+              <a href="{% url 'home' %}" class="btn btn-outline-secondary ml-auto mr-2">
+                <i class="fas fa-home"></i> Close
+              </a>
+              <button type="submit" class="btn btn-outline-primary">
+                Save <i class="fas fa-save"></i>
+              </button>
+            {% else %}
+              <a href="{% url 'submission-authors' pk=submission.pk %}" class="btn btn-outline-secondary">
+                <i class="fas fa-chevron-left"></i> Prev
+              </a>
+              <a href="{% url 'submission-overview' pk=submission.pk %}"
+                 class="btn btn-outline-secondary ml-auto mr-1">
+                Skip
+              </a>
+              <button type="submit" class="btn btn-primary">
+                Next <i class="fas fa-chevron-right"></i>
+              </button>
+            {% endif %}
           </div>
         </form>
       </div>

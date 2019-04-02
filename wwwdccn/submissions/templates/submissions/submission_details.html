@@ -13,7 +13,7 @@
   <main class="container py-3">
     <div class="dccn-layout-row-md-col">
 
-      {% include 'submissions/components/submission_navigation.html' with active='details' %}
+      {% include 'submissions/components/submission_navigation.html' with active='details' enabled=submission.reached_overview %}
 
       <!-- MAIN AREA -->
       <div class="dccn-panel pb-4 flex-fill">
@@ -31,9 +31,24 @@
             <ul class="dccn-text-small-light pt-1 pl-3" id="stypeVolumesList"></ul>
           </div>
 
-          <div class="dccn-saveform">
-            <a href="{% url 'submission-authors' pk=submission.pk %}" class="btn btn-outline-secondary ml-auto mr-1">Skip</a>
-            <button type="submit" class="btn btn-primary">Next <i class="fas fa-chevron-right"></i></button>
+          <div class="dccn-saveform align-items-center">
+            {% if submission.reached_overview %}
+              <a href="{% url 'home' %}" class="btn btn-outline-secondary ml-auto mr-2">
+                <i class="fas fa-home"></i> Close</a>
+              <button type="submit" class="btn btn-outline-primary"><i class="far fa-save"></i> Save</button>
+            {% else %}
+              {% if submission.filled_details %}
+                <a href="{% url 'submission-authors' pk=submission.pk %}"
+                   class="btn btn-outline-secondary ml-auto">
+                  Skip
+                </a>
+              {% else %}
+                <span class="btn btn-outline-secondary ml-auto disabled" data-toggle="tooltip" title="Please, fill details first">Skip</span>
+              {% endif %}
+              <button type="submit" class="btn btn-primary ml-2">
+                Next <i class="fas fa-chevron-right"></i>
+              </button>
+            {% endif %}
           </div>
         </form>
       </div>

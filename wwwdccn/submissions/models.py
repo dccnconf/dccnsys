@@ -86,9 +86,8 @@ class Submission(models.Model):
         auto_now_add=True,
     )
 
-    reached_overview = models.BooleanField(
-        default=False,
-    )
+    reached_overview = models.BooleanField(default=False)
+    filled_details = models.BooleanField(default=False)
 
     # Authors are filled from Author model
 

@@ -13,7 +13,7 @@
   <main class="container py-3">
     <div class="dccn-layout-row-md-col">
 
-      {% include 'submissions/components/submission_navigation.html' with active='authors' %}
+      {% include 'submissions/components/submission_navigation.html' with active='authors' enabled=True %}
 
       <!-- MAIN AREA -->
       <div class="dccn-panel flex-fill">
@@ -170,16 +170,21 @@
         </div>
 
         <div class="dccn-saveform">
-          <a href="{% url 'submission-details' pk=submission.pk %}" class="btn btn-outline-secondary">
-            <i class="fas fa-chevron-left"></i> Prev
-          </a>
-           <a href="{% url 'submission-manuscript-edit' pk=submission.pk %}"
-              class="btn btn-outline-secondary ml-auto mr-1">
-             Skip
-           </a>
-          <a href="{% url 'submission-manuscript-edit' pk=submission.pk %}" class="btn btn-primary">
-            Continue <i class="fas fa-chevron-right"></i>
-          </a>
+          {% if submission.reached_overview %}
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary ml-auto mr-2">
+              <i class="fas fa-home"></i> Close
+            </a>
+            <a href="{% url 'submission-overview' pk=submission.pk %}" class="btn btn-outline-primary">
+              <i class="far fa-eye"></i> View
+            </a>
+          {% else %}
+            <a href="{% url 'submission-details' pk=submission.pk %}" class="btn btn-outline-secondary">
+              <i class="fas fa-chevron-left"></i> Prev
+            </a>
+            <a href="{% url 'submission-manuscript-edit' pk=submission.pk %}"  class="btn btn-primary ml-auto">
+              Next <i class="fas fa-chevron-right"></i>
+            </a>
+          {% endif %}
         </div>
       </div>
 
