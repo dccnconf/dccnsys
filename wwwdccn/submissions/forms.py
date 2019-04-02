@@ -1,11 +1,13 @@
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
 from django.db.models import Max
+from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 
-from conferences.models import Conference
 from gears.widgets import CustomFileInput
 from .models import Submission, Author
 
@@ -228,3 +230,30 @@ class AuthorDeleteForm(forms.Form):
     def save(self, commit=True):
         if commit:
             self.author.delete()
+
+
+class InviteAuthorForm(forms.Form):
+    email = forms.EmailField(required=True)
+    first_name = forms.CharField(required=True)
+    last_name = forms.CharField(required=True)
+
+    def save(self, request, submission):
+        context = {
+            'email': self.cleaned_data['email'],
+            'sender': request.user,
+            'first_name': self.cleaned_data['first_name'],
+            'last_name': self.cleaned_data['last_name'],
+            'submission': submission,
+            'protocol': 'https' if request.is_secure() else "http",
+            'domain': request.get_host(),
+        }
+        html = render_to_string('submissions/email/invitation.html', context)
+        text = render_to_string('submissions/email/invitation.txt', context)
+        send_mail(
+            'Invitation to DCCN Conference Registration System',
+            message=text,
+            html_message=html,
+            recipient_list=[self.cleaned_data['email']],
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            fail_silently=False,
+        )

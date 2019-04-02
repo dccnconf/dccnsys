@@ -28,4 +28,7 @@ urlpatterns = [
     path('<int:pk>/authors/reorder/',
          views.submission_authors_reorder,
          name='submission-authors-reorder'),
+    path('<int:pk>/authors/invite/',
+         views.send_invitation,
+         name='submission-authors-invite'),
 ]

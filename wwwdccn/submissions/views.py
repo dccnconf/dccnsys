@@ -1,6 +1,7 @@
 import mimetypes
 
 from django.contrib import messages
+from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
@@ -8,7 +9,7 @@ from django.views.decorators.http import require_POST, require_GET
 
 from submissions.forms import CreateSubmissionForm, SubmissionDetailsForm, \
     AuthorCreateForm, AuthorsReorderForm, AuthorDeleteForm, \
-    UploadReviewManuscriptForm
+    UploadReviewManuscriptForm, InviteAuthorForm
 from submissions.models import Submission, Author
 
 
@@ -176,7 +177,8 @@ def submission_overview(request, pk):
         submission.save()
         messages.success(
             request,
-            f'Submission #{pk} "{submission.title}" was successfully created!')
+            f'Submission #{pk} "{submission.title}" was successfully created!'
+        )
 
     if submission.is_viewable_by(request.user):
         return render(request, 'submissions/submission_overview.html', {
@@ -239,5 +241,20 @@ def submission_authors_reorder(request, pk):
         form = AuthorsReorderForm(submission, ',', request.POST)
         if form.is_valid():
             form.save()
+        return redirect('submission-authors', pk=pk)
+    return HttpResponseForbidden()
+
+
+@login_required
+@require_POST
+def send_invitation(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    if submission.authors_editable_by(request.user):
+        form = InviteAuthorForm(request.POST)
+        if form.is_valid():
+            form.save(request, submission)
+            messages.success(request, _('Invitation sent'))
+        else:
+            messages.warning(request, _('Errors while sending invitation'))
         return redirect('submission-authors', pk=pk)
     return HttpResponseForbidden()

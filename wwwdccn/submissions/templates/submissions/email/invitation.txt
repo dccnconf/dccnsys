@@ -1,0 +1,16 @@
+Dear {{ first_name }} {{ last_name }},
+
+your colleague {{ sender.profile.get_full_name }} wants invite you to
+DCCN conference and to add you as a co-author of the submission #{{ submission.pk }} "{{ submission.title }}".
+
+You can create an account via {{ protocol }}://{{ domain }}{% url 'signup' %}.
+
+If you already have an account, please just log in: {{ protocol }}://{{ domain }}{% url 'login' %}.
+
+Happy conferencing,
+DCCN Organization Committee
+Contact us: org@dccn.ru
+
+--
+This email was generated automatically due to actions performed at {{ protocol }}://{{ domain }}.
+If you received this email unintentionally, please contact us at org@dccn.ru and delete this email.

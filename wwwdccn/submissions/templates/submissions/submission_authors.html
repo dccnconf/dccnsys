@@ -18,9 +18,10 @@
       <!-- MAIN AREA -->
       <div class="dccn-panel flex-fill">
         <h1 class="dccn-panel-title mb-4">Authors</h1>
+        {% bootstrap_messages %}
         <p class="dccn-text mb-3">Add all the authors of your paper and put them in correct order using drag-and-drop. This list of authors will be used in program preparation, so if you miss some of your co-authors, they will not be listed in the program.</p>
 
-        <p class="dccn-text mb-4">Please note that you MUST be a co-author to add a paper. If you are not an author, please <a href="#">remove this submission</a> and ask one of the authors to register and upload the paper instead of you.</p>
+        <p class="dccn-text mb-4">Please note that you MUST be a co-author to add a paper. If you are not an author, please <button class="btn btn-link dccn-link py-0 align-baseline" data-toggle="modal" data-target="#deleteDialog-{{ submission.pk }}">remove this submission</button> and ask one of the authors to register and upload the paper instead of you.</p>
 
         <div class="dccn-authors-editor dccn-reorder" id="authorsEditor">
           <ul class="dccn-authors-editor-list dccn-reorder-list" id="authorsList">
@@ -141,7 +142,8 @@
                 </button>
               </div>
               <div class="modal-body">
-                <form>
+                <form action="{% url 'submission-authors-invite' pk=submission.pk %}" method="POST">
+                  {% csrf_token %}
                   <div class="form-group">
                     <label for="email">Enter user email:</label>
                     <input type="email" name="email" class="form-control form-control-lg"
@@ -149,17 +151,17 @@
                   </div>
                   <div class="form-row form-group">
                     <div class="col-md-6">
-                      <label for="firstName">First name (in Enlish):</label>
-                      <input type="text" name="firstName" class="form-control form-control-lg" id="firstName">
+                      <label for="first_name">First name (in Enlish):</label>
+                      <input type="text" name="first_name" class="form-control form-control-lg" id="first_name">
                     </div>
                     <div class="col-md-6">
-                      <label for="lastName">Last name (in Enlish):</label>
-                      <input type="text" name="firstName" class="form-control form-control-lg" id="lastName">
+                      <label for="last_name">Last name (in Enlish):</label>
+                      <input type="text" name="last_name" class="form-control form-control-lg" id="last_name">
                     </div>
                   </div>
                   <div class="form-row mt-4">
                     <div class="mx-auto">
-                      <button class="btn btn-success btn-lg">Invite</button>
+                      <button type="submit" class="btn btn-success btn-lg">Invite</button>
                       <button class="btn btn-outline-secondary btn-lg" data-dismiss="modal">Cancel</button>
                     </div>
                   </div>
@@ -187,6 +189,10 @@
           {% endif %}
         </div>
       </div>
+
+      <!-- Delete submission dialog -->
+      {% include 'submissions/components/delete_dialog.html' with submission=submission %}
+
 
     </div>
   </main>
