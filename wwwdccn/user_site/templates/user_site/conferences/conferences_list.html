@@ -20,18 +20,18 @@
       <div class="dccn-panel dccn-work-panel" style="min-height: 90vh;">
         <h2 class="dccn-panel-title">Conferences</h2>
 
+        {% bootstrap_messages %}
+
         {% if user.is_superuser %}
           <div class="dccn-panel-toolbar">
             <a href="{% url 'conference-create' %}" class="btn btn-primary btn-sm btn-block btn-sm-normal mb-3 mb-lg-0"><i class="fas fa-plus pr-2"></i>New</a>
           </div>
         {% endif %}
 
-        {% bootstrap_messages %}
-
         {% for conference in conferences %}
-          <div class="card card-body">
+          <div class="">
             <div class="d-flex align-items-center">
-              <a href="{% url 'conference-details' pk=conference.pk %}"><img src="{{ conference.logotype.url }}" alt="Conference logo" class="img-fluid d-none d-md-block" style="max-width: 120px; max-height: 120px; padding: 5px;"></a>
+              <a href="{% url 'conference-details' pk=conference.pk %}"><img src="{{ conference.logotype.url }}" alt="Conference logo" class="img-fluid d-none d-md-block mr-3" style="max-width: 120px; max-height: 120px; padding: 5px;"></a>
               <div class="">
                 {% if conference.is_ieee %}
 {#                  <p class="dccn-text-3-light text-muted text-center text-md-left">IEEE International Conference on</p>#}
