@@ -3,10 +3,10 @@ from django.contrib.auth.views import LoginView, LogoutView, \
     PasswordResetView, PasswordResetConfirmView, PasswordResetCompleteView, \
     PasswordResetDoneView
 
-from .views import SignUpView
+from .views import signup
 
 urlpatterns = [
-    path('signup/', SignUpView.as_view(), name='signup'),
+    path('signup/', signup, name='signup'),
 
     path('login/', LoginView.as_view(
         redirect_authenticated_user=True,

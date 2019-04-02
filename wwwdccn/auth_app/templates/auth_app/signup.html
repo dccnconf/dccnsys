@@ -10,13 +10,13 @@ Sign Up
 {% endblock %}
 
 {% block dialogCard %}
-  <form action="{% url 'signup' %}" method="POST" class="pb-3" novalidate>
+  <form action="{% url 'signup' %}" method="POST" class="pb-3" id="signUpForm" novalidate>
     {% csrf_token %}
     {% bootstrap_messages %}
     {% bootstrap_field form.email placeholder="Enter your valid email" %}
     {% bootstrap_field form.password1 placeholder="Enter a password" %}
-    {% bootstrap_field form.password2 placeholder="Repeat your password" %}
-    <input type="submit" class="btn btn-success btn-block" id="signUpBtn" value="Sign Up">
+    {% bootstrap_field form.password2 placeholder="Re-type a password" %}
+    <button type="button" class="g-recaptcha btn btn-success btn-block" data-sitekey="{{ site_key }}" data-callback='onSubmit' id="signUpBtn">Submit</button>
   </form>
 {% endblock %}
 
@@ -26,4 +26,18 @@ Sign Up
       <a href="{% url 'login' %}" class="dccn-link">Sign In</a> if you already have an account
     </p>
   </div>
+{% endblock %}
+
+{% block script %}
+  <!--suppress JSUnresolvedLibraryURL -->
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script>
+function onSubmit(token) {
+  document.getElementById("signUpForm").submit();
+}
+
+function addClass(elem, klass) {
+  if (!elem.hasClass(klass)) elem.addClass(klass);
+}
+</script>
 {% endblock %}
