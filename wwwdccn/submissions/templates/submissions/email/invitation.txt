@@ -1,7 +1,7 @@
 Dear {{ first_name }} {{ last_name }},
 
-your colleague {{ sender.profile.get_full_name }} wants invite you to
-DCCN conference and to add you as a co-author of the submission #{{ submission.pk }} "{{ submission.title }}".
+your colleague {{ sender.profile.get_full_name }} wants to invite you to take part in {{ conference.short_name }}
+conference and to add you as a co-author of the submission #{{ submission.pk }} "{{ submission.title }}".
 
 You can create an account via {{ protocol }}://{{ domain }}{% url 'signup' %}.
 

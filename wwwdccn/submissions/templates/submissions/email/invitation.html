@@ -14,8 +14,7 @@
 </p>
 
 <p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
-  your colleague {{ sender.profile.get_full_name }} wants invite you to
-  DCCN conference and to add you as a co-author of the submission #{{ submission.pk }} "{{ submission.title }}".
+  your colleague {{ sender.profile.get_full_name }} wants to invite you to take part in {{ conference.short_name }} conference and to add you as a co-author of the submission #{{ submission.pk }} "{{ submission.title }}".
 </p>
 
 <p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
@@ -23,7 +22,7 @@
 </p>
 
 <p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
-  If you already have an account, please just <a href="{{ protocol }}://{{ domain }}{% url 'login' %}">{{ protocol }}://{{ domain }}{% url 'login' %}</a>.
+  If you already have an account, please <a href="{{ protocol }}://{{ domain }}{% url 'login' %}">login</a>.
 </p>
 
 {% endblock %}

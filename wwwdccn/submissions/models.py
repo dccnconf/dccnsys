@@ -11,7 +11,7 @@ User = get_user_model()
 
 
 TITLE_MAX_LENGTH = 250
-ABSTRACT_MAX_LENGTH = 2500
+ABSTRACT_MAX_LENGTH = 2500  # 250 words
 
 
 def get_review_manuscript_full_path(instance, filename):
