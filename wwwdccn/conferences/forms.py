@@ -86,6 +86,7 @@ class TopicCreateForm(forms.ModelForm):
         topic.conference = self.conference
         if commit:
             super().save(commit=True)
+        return topic
 
 
 class TopicEditForm(forms.ModelForm):

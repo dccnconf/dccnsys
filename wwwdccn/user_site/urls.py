@@ -63,8 +63,10 @@ urlpatterns = [
          name='conference-submissiontype-delete'),
     path('conferences/<int:pk>/topics/', conferences.topics_list,
          name='conference-topics'),
-    path('conferences/topics/<int:pk>/delete/', conferences.topic_delete,
+    path('conferences/<int:pk>/topics/<int:topic_pk>/delete/', conferences.topic_delete,
          name='conference-topic-delete'),
+    path('conferences/<int:pk>/topics/<int:topic_pk>/', conferences.topic_update,
+         name='conference-topic-update'),
     path('conference/<int:pk>/topics/reorder/', conferences.topics_reorder,
          name='conference-topics-reorder'),
 ]
