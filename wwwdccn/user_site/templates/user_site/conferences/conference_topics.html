@@ -22,12 +22,32 @@
             {% for topic in conference.topic_set.all %}
               <li class="dccn-text-0-light list-group-item bg-light px-2 py-1 mt-1 d-flex dccn-reorder-list-item" data-id="{{ topic.pk }}">
                 <span>{{ topic.name }}</span>
-                <form action="{% url 'conference-topic-delete' pk=topic.pk %}" method="POST" class="ml-auto" novalidate>
+                <button class="ml-auto mr-1 btn btn-link dccn-link dccn-text-small-light" data-toggle="modal" data-target="#editTopic-{{ topic.pk }}"><i class="far fa-edit"></i></button>
+                <form action="{% url 'conference-topic-delete' pk=topic.pk %}" method="POST" novalidate>
                   {% csrf_token %}
                   <button type="submit" class="btn btn-link dccn-link dccn-text-small-light">
                     <i class="far fa-trash-alt"></i>
                   </button>
                 </form>
+
+                <div class="modal fade" id="editTopic-{{ topic.pk }}">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-body">
+                        <form action="" method="get" class="form-inline">
+                          {% csrf_token %}
+                          <div class="form-group flex-fill">
+                            <label for="editTopic-{{ topic.pk }}-name"></label>
+                            <input type="text" class="form-control flex-fill" name="name" value="{{ topic.name }}" id="editTopic-{{ topic.pk }}-name">
+                          </div>
+                          <button type="submit" class="btn btn-success btn-sm mx-1">Save</button>
+                          <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </li>
             {% endfor %}
           </ul>
@@ -57,12 +77,8 @@
 {% block script %}
   <script type="text/javascript">
     $(function () {
-      $('input[name$="date"],input[name$="deadline"]').datepicker({
-        {#dateFormat: "dd MM yy",#}
-        dateFormat: "yy-mm-dd",
-        defaultDate: "2019-01-01",
-        changeYear: true,
-        changeMonth: true,
+      $('.modal').on('shown.bs.modal', function () {
+
       });
     });
   </script>
