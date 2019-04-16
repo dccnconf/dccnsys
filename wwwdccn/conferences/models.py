@@ -175,7 +175,7 @@ class Topic(models.Model):
 
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
 
-    name = models.CharField(max_length=200, verbose_name=_('Topic name'))
+    name = models.CharField(max_length=250, verbose_name=_('Topic name'))
     order = models.IntegerField(default=0)
 
     def __str__(self):
