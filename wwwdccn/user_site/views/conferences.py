@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST, require_GET
 from conferences.decorators import chair_required
 from conferences.forms import ConferenceForm, SubmissionStageForm, \
     ReviewStageForm, ProceedingTypeForm, DeleteForm, SubmissionTypeForm, \
-    TopicCreateForm, TopicsReorderForm
+    TopicCreateForm, TopicsReorderForm, TopicEditForm
 from conferences.models import Conference, ProceedingType, SubmissionType, Topic
 from submissions.models import Submission
 
@@ -237,7 +237,8 @@ def topics_list(request, pk):
     if request.method == 'POST':
         create_topic_form = TopicCreateForm(conference, request.POST)
         if create_topic_form.is_valid():
-            create_topic_form.save()
+            topic = create_topic_form.save()
+            messages.success(request, f'Added new topic "{topic.name}"')
             return redirect('conference-topics', pk=pk)
     else:
         create_topic_form = TopicCreateForm(conference)
@@ -250,13 +251,31 @@ def topics_list(request, pk):
     })
 
 
-# TODO: add guard
+@chair_required
 @require_POST
-def topic_delete(request, pk):
-    topic = get_object_or_404(Topic, pk=pk)
-    conference = topic.conference
+def topic_delete(request, pk, topic_pk):
+    topic = get_object_or_404(Topic, pk=topic_pk)
+    conference = get_object_or_404(Conference, pk=pk)
+    if conference.pk != topic.conference.pk:
+        raise Http404
+    name = topic.name
     form = DeleteForm(topic, request.POST)
     if form.is_valid():
+        messages.warning(request, f'Topic "{name}" was deleted')
+        form.save()
+    return redirect('conference-topics', pk=conference.pk)
+
+
+@chair_required
+@require_POST
+def topic_update(request, pk, topic_pk):
+    topic = get_object_or_404(Topic, pk=topic_pk)
+    conference = get_object_or_404(Conference, pk=pk)
+    if conference.pk != topic.conference.pk:
+        raise Http404
+    form = TopicEditForm(request.POST, instance=topic)
+    if form.is_valid():
+        messages.success(request, f'Topic "{topic.name}" was updated')
         form.save()
     return redirect('conference-topics', pk=conference.pk)
 

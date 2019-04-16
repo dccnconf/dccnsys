@@ -17,13 +17,15 @@
         <h1 class="dccn-panel-title">{{ conference.short_name }} Conference</h1>
         <h2 class="dccn-panel-subtitle">Edit Topics</h2>
 
+        {% bootstrap_messages %}
+
         <div class="dccn-reorder">
           <ul class="list-group mt-4 dccn-reorder-list">
             {% for topic in conference.topic_set.all %}
               <li class="dccn-text-0-light list-group-item bg-light px-2 py-1 mt-1 d-flex dccn-reorder-list-item" data-id="{{ topic.pk }}">
                 <span>{{ topic.name }}</span>
                 <button class="ml-auto mr-1 btn btn-link dccn-link dccn-text-small-light" data-toggle="modal" data-target="#editTopic-{{ topic.pk }}"><i class="far fa-edit"></i></button>
-                <form action="{% url 'conference-topic-delete' pk=topic.pk %}" method="POST" novalidate>
+                <form action="{% url 'conference-topic-delete' pk=conference.pk topic_pk=topic.pk %}" method="POST" novalidate>
                   {% csrf_token %}
                   <button type="submit" class="btn btn-link dccn-link dccn-text-small-light">
                     <i class="far fa-trash-alt"></i>
@@ -34,7 +36,7 @@
                   <div class="modal-dialog">
                     <div class="modal-content">
                       <div class="modal-body">
-                        <form action="" method="get" class="form-inline">
+                        <form action="{% url 'conference-topic-update' pk=conference.pk topic_pk=topic.pk %}" method="POST" class="form-inline">
                           {% csrf_token %}
                           <div class="form-group flex-fill">
                             <label for="editTopic-{{ topic.pk }}-name"></label>
@@ -61,7 +63,6 @@
           Add new topic
         </h3>
         <form action="" method="POST" class="mt-3" novalidate>
-          {% bootstrap_messages %}
           {% csrf_token %}
           {% bootstrap_form form show_label=False %}
           <div class="form-group row">
