@@ -24,7 +24,7 @@ DEFAULTS = {
     'DB_USER': 'dccndbadm',
     'DB_HOST': 'localhost',
     'DB_PORT': '',
-    'CERT_YEAR': '2018',
+    'CERT_YEAR': '2019',
     'MAX_BODY_SIZE': '15M',
     'EMAIL_PROVIDER': 'mailgun',
 
