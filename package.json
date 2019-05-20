@@ -24,24 +24,25 @@
   },
   "homepage": "https://github.com/dccnconf/dccnsys#readme",
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^5.8.1",
+    "@fortawesome/fontawesome-free": "^5.8.2",
     "bootstrap": "^4.3.1",
     "bootstrap4": "0.0.1-security",
-    "del": "^4.0.0",
-    "gulp": "^4.0.0",
+    "del": "^4.1.1",
+    "gulp": "^4.0.2",
     "gulp-concat": "^2.6.1",
     "gulp-concat-css": "^3.1.0",
     "gulp-sass": "^4.0.2",
     "gulp-uglify-es": "^1.0.4",
     "jquery": "^3.4.1",
     "jquery-ui": "^1.12.1",
-    "popper.js": "^1.14.7",
-    "yargs": "^13.2.2"
+    "popper.js": "^1.15.0",
+    "yargs": "^13.2.4"
   },
   "devDependencies": {
     "browser-sync": "^2.26.5",
     "chart.js": "^2.8.0",
     "math": "0.0.3",
-    "sweetalert2": "^8.6.0"
+    "sweetalert2": "^8.11.1",
+    "tar": ">=4.4.2"
   }
 }
