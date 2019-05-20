@@ -310,7 +310,7 @@ def update_repo(c, env):
         c.run(f'git checkout --force {env.BRANCH}', echo=True)
         c.run(f'git reset --hard `git log --all -n 1 --format=%H {env.BRANCH}`',
               echo=True)
-        c.run(f'.venv/bin/pip install --upgrade pip', echo=True)
+        # c.run(f'.venv/bin/pip install --upgrade pip', echo=True)
         c.run(f'.venv/bin/pip install -r requirements.txt', echo=True)
         with c.cd(env.DJANGO_PROJECT_NAME):
             manage = '../.venv/bin/python manage.py'
