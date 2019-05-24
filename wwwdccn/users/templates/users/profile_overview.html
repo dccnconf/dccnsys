@@ -1,4 +1,4 @@
-{% extends "private_base.html" %}
+{% extends "user_site/base.html" %}
 
 {% block title %}
   Profile | DCCN
@@ -14,7 +14,7 @@
 
     <div class="dccn-panel w-100">
       <h1 class="dccn-panel-title">Profile</h1>
-      {% include 'user_site/components/profile_navigation.html' with active='overview' %}
+      {% include 'users/components/profile_navigation.html' with active='overview' %}
 
       <div class="dccn-content pb-4 px-4">
         <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start">
@@ -26,7 +26,7 @@
             </div>
 
             <form action="" class="dccn-avatar-update-form mt-3" method="GET"
-                  data-target="{% url 'profile-update-avatar' %}" data-preview="#avatarPreview">
+                  data-target="{% url 'users:update-avatar' %}" data-preview="#avatarPreview">
               {% csrf_token %}
               <button type="button" class="btn btn-sm btn-outline-secondary dccn-file-input" style="min-width: 120px;">
                 Change image
@@ -34,7 +34,7 @@
               </button>
             </form>
 
-            <form action="{% url 'profile-delete-avatar' %}" method="POST" class="mt-2">
+            <form action="{% url 'users:delete-avatar' %}" method="POST" class="mt-2">
               {% csrf_token %}
               <button type="submit" class="btn btn-outline-warning btn-sm" style="min-width: 120px;">Delete image</button>
             </form>
@@ -74,7 +74,7 @@
                 <div class="col-sm-8"><p class="dccn-text">{{ user.profile.get_preferred_language_display }}</p></div>
               </div>
               <div class="row mt-3">
-                <a href="{% url 'profile-personal' %}" class="dccn-link"><i class="fas fa-edit"></i> Edit personal data</a>
+                <a href="{% url 'users:profile-personal' %}" class="dccn-link"><i class="fas fa-edit"></i> Edit personal data</a>
               </div>
             </div>
             <hr>
@@ -93,7 +93,7 @@
                 <div class="col-sm-8"><p class="dccn-text">{{ user.subscriptions.info_email|yesno }}</p></div>
               </div>
               <div class="row mt-3">
-                <a href="{% url 'profile-account' %}" class="dccn-link"><i class="fas fa-edit"></i> Edit account settings</a>
+                <a href="{% url 'users:profile-account' %}" class="dccn-link"><i class="fas fa-edit"></i> Edit account settings</a>
               </div>
             </div>
             <!-- Professional info -->
@@ -115,7 +115,7 @@
                 <div class="col-sm-8"><p class="dccn-text">{{ user.profile.ieee_member|yesno }}</p></div>
               </div>
               <div class="row mt-3">
-                <a href="{% url 'profile-professional' %}" class="dccn-link"><i class="fas fa-edit"></i> Edit professional data</a>
+                <a href="{% url 'users:profile-professional' %}" class="dccn-link"><i class="fas fa-edit"></i> Edit professional data</a>
               </div>
             </div>
             <!-- Reviewer info -->
@@ -129,7 +129,7 @@
                 <div class="col-sm-8"><p class="dccn-text font-italic">no unaccepted invitations</p></div>
               </div>
               <div class="row mt-3">
-                <a href="{% url 'profile-reviewer' %}" class="dccn-link"><i class="fas fa-edit"></i> Edit reviewer settings</a>
+                <a href="{% url 'users:profile-reviewer' %}" class="dccn-link"><i class="fas fa-edit"></i> Edit reviewer settings</a>
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-{% extends "user_site/../../../wwwdccn/templates/private_base.html" %}
+{% extends "user_site/../../../wwwdccn/templates/../../../user_site/templates/user_site/base.html" %}
 {% load bootstrap4 %}
 
 {% block title %}
@@ -90,7 +90,7 @@
         </div>
 
         <div class="dccn-authors-search" id="addNewAuthor"
-             data-source="{% url 'users-search' %}">
+             data-source="{% url 'users:search' %}">
           <div class="dccn-authors-search-content">
             <form class="dccn-authors-search-form d-flex">
               <input type="search" name="q" id="searchInput"

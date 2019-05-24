@@ -11,7 +11,7 @@
     <li class="dccn-title">{{ user.profile.get_full_name }}</li>
     <li class="dccn-text">{{ user.profile.affiliation }}</li>
     <li class="dccn-text">{{ user.profile.role }}{% if user.profile.role != "" and user.profile.degree != "" %},{% endif %} {{ user.profile.degree }}</li>
-    <li class="dccn-text mt-2"><a href="{% url 'profile-overview' %}" class="dccn-link">Edit Profile...</a></li>
+    <li class="dccn-text mt-2"><a href="{% url 'users:profile-overview' %}" class="dccn-link">Edit Profile...</a></li>
   </ul>
   <hr class="d-none d-lg-block">
   <ul class="list-unstyled mt-lg-1 ml-auto ml-lg-0">

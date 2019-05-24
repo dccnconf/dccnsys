@@ -1,4 +1,4 @@
-{% extends 'private_base.html' %}
+{% extends 'user_site/base.html' %}
 {% load bootstrap4 %}
 
 {% block title %}
@@ -17,7 +17,7 @@
 
         <nav class="breadcrumb">
           <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'conferences-list' %}" class="dccn-link">Conferences</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'conferences:list' %}" class="dccn-link">Conferences</a></li>
             <li class="breadcrumb-item active">
               {{ conference.short_name }}
             </li>
@@ -47,7 +47,7 @@
         {# TODO: change the following check to filter whether user is able to edit conference #}
         {% if user in conference.chairs.all %}
           <div class="d-flex ml-auto mt-3">
-            <a href="{% url 'conference-edit' pk=conference.pk %}" class="dccn-link ml-auto">
+            <a href="{% url 'conferences:edit' pk=conference.pk %}" class="dccn-link ml-auto">
               <i class="far fa-edit"></i> Edit details
             </a>
           </div>
@@ -67,10 +67,10 @@
           <div class="col-8 dccn-text">
             {{ conference.submission_stage.end_date }}
 
-            {# TODO: change the following check to filter whether user is able to edit conference #}
+            {# TODO: change the following check txo filter whether user is able to edit conference #}
             {% if user in conference.chairs.all %}
               <span class="ml-2">
-                (<a href="{% url 'conference-submission-stage' pk=conference.pk %}" class="dccn-link">Edit</a>)
+                (<a href="{% url 'conferences:submission-deadline' pk=conference.pk %}" class="dccn-link">Edit</a>)
               </span>
             {% endif %}
 
@@ -84,7 +84,7 @@
             {# TODO: change the following check to filter whether user is able to edit conference #}
             {% if user in conference.chairs.all %}
               <span class="ml-2">
-                (<a href="{% url 'conference-review-stage' pk=conference.pk %}" class="dccn-link">Edit</a>)
+                (<a href="{% url 'conferences:review-deadline' pk=conference.pk %}" class="dccn-link">Edit</a>)
               </span>
             {% endif %}
 
@@ -98,7 +98,7 @@
 
           {# TODO: change the following check to filter whether user is able to edit conference #}
           {% if user in conference.chairs.all %}
-            <a href="{% url 'conference-topics' pk=conference.pk %}" class="dccn-link ml-auto text-light">
+            <a href="{% url 'conferences:topics' pk=conference.pk %}" class="dccn-link ml-auto text-light">
               <i class="far fa-edit"></i> Edit
             </a>
           {% endif %}
@@ -120,7 +120,7 @@
 
           {# TODO: change the following check to filter whether user is able to edit conference #}
           {% if user in conference.chairs.all %}
-            <a href="{% url 'conference-proceedings-create' pk=conference.pk %}" class="dccn-link ml-auto text-light">
+            <a href="{% url 'conferences:proceedings-create' pk=conference.pk %}" class="dccn-link ml-auto text-light">
               <i class="far fa-plus-square"></i> Add
             </a>
           {% endif %}
@@ -155,7 +155,7 @@
               {# TODO: change the following check to filter whether user is able to edit conference #}
               {% if user in conference.chairs.all %}
                 <div class="card-footer bg-white d-flex align-items-center">
-                  <a href="{% url 'conference-proceedings-update' pk=conference.pk proc_pk=proc.pk %}" class="dccn-link">
+                  <a href="{% url 'conferences:proceedings-update' pk=conference.pk proc_pk=proc.pk %}" class="dccn-link">
                     <i class="far fa-edit"></i> Edit
                   </a>
                   <button class="btn btn-link dccn-link text-danger ml-3" data-toggle="modal" data-target="#deleteProceedings-{{ proc.pk }}">
@@ -179,7 +179,7 @@
                   </div>
                   <div class="modal-footer">
                     <button class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-                    <form action="{% url 'conference-proceedings-delete' pk=conference.pk proc_pk=proc.pk %}" method="POST">
+                    <form action="{% url 'conferences:proceedings-delete' pk=conference.pk proc_pk=proc.pk %}" method="POST">
                       {% csrf_token %}
                       <button type="submit" class="btn btn-danger">Delete</button>
                     </form>
@@ -197,7 +197,7 @@
 
           {# TODO: change the following check to filter whether user is able to edit conference #}
           {% if user in conference.chairs.all %}
-            <a href="{% url 'conference-submissiontype-create' pk=conference.pk %}" class="dccn-link ml-auto text-light">
+            <a href="{% url 'conferences:stype-create' pk=conference.pk %}" class="dccn-link ml-auto text-light">
               <i class="far fa-plus-square"></i> Add
             </a>
           {% endif %}
@@ -244,7 +244,7 @@
               {# TODO: change the following check to filter whether user is able to edit conference #}
               {% if user in conference.chairs.all %}
                 <div class="card-footer bg-white d-flex align-items-center">
-                  <a href="{% url 'conference-submissiontype-update' pk=conference.pk sub_pk=st.pk %}" class="dccn-link">
+                  <a href="{% url 'conferences:stype-update' pk=conference.pk sub_pk=st.pk %}" class="dccn-link">
                     <i class="far fa-edit"></i> Edit
                   </a>
                   <button class="btn btn-link dccn-link text-danger ml-3" data-toggle="modal" data-target="#deleteSubmissionType-{{ st.pk }}">
@@ -268,7 +268,7 @@
                   </div>
                   <div class="modal-footer">
                     <button class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-                    <form action="{% url 'conference-submissiontype-delete' pk=conference.pk sub_pk=st.pk %}" method="POST">
+                    <form action="{% url 'conferences:stype-delete' pk=conference.pk sub_pk=st.pk %}" method="POST">
                       {% csrf_token %}
                       <button type="submit" class="btn btn-danger">Delete</button>
                     </form>

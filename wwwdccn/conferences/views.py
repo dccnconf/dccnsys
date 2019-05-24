@@ -12,8 +12,14 @@ from conferences.models import Conference, ProceedingType, SubmissionType, Topic
 from submissions.models import Submission
 
 
+def get_url_of(file_field, default=''):
+    return file_field.url if file_field else default
+
+
+# For get_country_display():
+# noinspection PyUnresolvedReferences
 @require_GET
-def ajax_conference_details(request, pk):
+def ajax_details(request, pk):
     conference = get_object_or_404(Conference, pk=pk)
     return JsonResponse({
         'full_name': conference.full_name,
@@ -23,12 +29,50 @@ def ajax_conference_details(request, pk):
         'city': conference.city,
         'start_date': conference.start_date,
         'close_date': conference.close_date,
-        'logotype': conference.logotype.url if conference.logotype else '',
+        'logotype': get_url_of(conference.logotype),
         'description': conference.description,
         'site_url': conference.site_url,
-        'submission_stage': {
-            'end_date': conference.submission_stage.end_date,
-        }
+        'submission_deadline': conference.submission_stage.end_date,
+        'review_deadline': conference.review_stage.end_date,
+        'topics': [
+            topic.name for topic in conference.topic_set.order_by('order')
+        ],
+        'proceeding_volumes': [
+            {
+                'id': volume.pk,
+                'name': volume.name,
+                'description': volume.description,
+                'deadline': volume.final_manuscript_deadline,
+                'min_num_pages': volume.min_num_pages,
+                'max_num_pages': volume.max_num_pages,
+                'final_latex_template': get_url_of(volume.final_latex_template),
+                'submission_types': [
+                    {
+                        'id': stype.pk,
+                        'name': stype.name,
+                    } for stype in volume.submissiontype_set.all()
+                ]
+            } for volume in conference.proceedingtype_set.all()
+        ],
+        'submission_types': [
+            {
+                'id': stype.pk,
+                'name': stype.name,
+                'description': stype.description,
+                'language': stype.get_language_display(),
+                'latex_template': get_url_of(stype.latex_template),
+                'num_reviews': stype.num_reviews,
+                'min_num_pages': stype.min_num_pages,
+                'max_num_pages': stype.max_num_pages,
+                'blind_review': stype.blind_review,
+                'possible_proceedings': [
+                    {
+                        'id': proc.pk,
+                        'name': proc.name,
+                    } for proc in stype.possible_proceedings.all()
+                ]
+            } for stype in conference.submissiontype_set.all()
+        ]
     })
 
 
@@ -36,27 +80,13 @@ def ajax_conference_details(request, pk):
 def ajax_submission_type_details(request, pk):
     stype = get_object_or_404(SubmissionType, pk=pk)
     return JsonResponse({
-        'id': stype.pk,
-        'name': stype.name,
         'conference': stype.conference.pk,
-        'description': stype.description,
-        'language': stype.get_language_display(),
-        'latex_template': (
-            stype.latex_template.url if stype.latex_template else ''),
-        'num_reviews': stype.num_reviews,
-        'min_num_pages': stype.min_num_pages,
-        'max_num_pages': stype.max_num_pages,
-        'blind_review': stype.blind_review,
-        'possible_proceedings': [
-            {'id': proc.pk, 'name': proc.name}
-            for proc in stype.possible_proceedings.all()
-        ]
     })
 
 
 @login_required
 def conferences_list(request):
-    return render(request, 'conferences/conferences_list.html', {
+    return render(request, 'conferences/list.html', {
         'conferences': Conference.objects.all(),
         'submissions': Submission.objects.filter(authors__user=request.user),
     })
@@ -65,7 +95,7 @@ def conferences_list(request):
 @login_required
 def conference_details(request, pk):
     conference = get_object_or_404(Conference, pk=pk)
-    return render(request, 'conferences/conference_details.html', {
+    return render(request, 'conferences/details.html', {
         'conference': conference,
     })
 
@@ -79,10 +109,10 @@ def conference_create(request):
             conference = form.save()
             conference.creator = request.user
             conference.save()
-            return redirect('conference-details', pk=conference.pk)
+            return redirect('conferences:details', pk=conference.pk)
     else:
         form = ConferenceForm()
-    return render(request, 'conferences/conference_create.html', {
+    return render(request, 'conferences/create.html', {
         'form': form,
     })
 
@@ -98,10 +128,10 @@ def conference_edit(request, pk):
                 request,
                 f'Conference #{pk} "{conference.short_name}" was updated'
             )
-            return redirect('conference-details', pk=pk)
+            return redirect('conferences:details', pk=pk)
     else:
         form = ConferenceForm(instance=conference)
-    return render(request, 'conferences/conference_form.html', {
+    return render(request, 'conferences/form.html', {
         'conference': conference,
         'form': form,
         'subtitle': 'Settings',
@@ -121,10 +151,10 @@ def conference_submission_stage(request, pk):
                 request,
                 f'Conference #{pk} submission stage settings were updated'
             )
-            return redirect('conference-details', pk=pk)
+            return redirect('conferences:details', pk=pk)
     else:
         form = SubmissionStageForm(instance=stage)
-    return render(request, 'conferences/conference_form.html', {
+    return render(request, 'conferences/form.html', {
         'conference': conference,
         'form': form,
         'subtitle': 'Submissions Stage',
@@ -144,10 +174,10 @@ def conference_review_stage(request, pk):
                 request,
                 f'Conference #{pk} review stage settings were updated'
             )
-            return redirect('conference-details', pk=pk)
+            return redirect('conferences:details', pk=pk)
     else:
         form = ReviewStageForm(instance=stage)
-    return render(request, 'conferences/conference_form.html', {
+    return render(request, 'conferences/form.html', {
         'conference': conference,
         'form': form,
         'subtitle': 'Reviews Stage',
@@ -168,10 +198,10 @@ def proceedings_create(request, pk):
                 request,
                 f'Proceedings were created'
             )
-            return redirect('conference-details', pk=pk)
+            return redirect('conferences:details', pk=pk)
     else:
         form = ProceedingTypeForm()
-    return render(request, 'conferences/conference_form.html', {
+    return render(request, 'conferences/form.html', {
         'conference': conference,
         'form': form,
         'subtitle': 'Define New Proceedings',
@@ -191,10 +221,10 @@ def proceedings_update(request, pk, proc_pk):
         if form.is_valid():
             form.save()
             messages.success(request, f'{proceedings.name} updated')
-            return redirect('conference-details', pk=pk)
+            return redirect('conferences:details', pk=pk)
     else:
         form = ProceedingTypeForm(instance=proceedings)
-    return render(request, 'conferences/conference_form.html', {
+    return render(request, 'conferences/form.html', {
         'conference': conference,
         'form': form,
         'subtitle': f'Edit proceedings',
@@ -209,7 +239,7 @@ def proceedings_delete(request, pk, proc_pk):
     form = DeleteForm(proceedings, request.POST)
     form.save()
     messages.success(request, f'Deleted proceedings')
-    return redirect('conference-details', pk=pk)
+    return redirect('conferences:details', pk=pk)
 
 
 @chair_required
@@ -224,10 +254,10 @@ def submission_type_create(request, pk):
             messages.success(
                 request, f'Submission type #{stype.pk} was created'
             )
-            return redirect('conference-details', pk=pk)
+            return redirect('conferences:details', pk=pk)
     else:
         form = SubmissionTypeForm()
-    return render(request, 'conferences/conference_form.html', {
+    return render(request, 'conferences/form.html', {
         'conference': conference,
         'form': form,
         'subtitle': 'Define New Submission Type',
@@ -246,10 +276,10 @@ def submission_type_update(request, pk, sub_pk):
         if form.is_valid():
             form.save()
             messages.success(request, f'{stype.name} updated')
-            return redirect('conference-details', pk=pk)
+            return redirect('conferences:details', pk=pk)
     else:
         form = SubmissionTypeForm(instance=stype)
-    return render(request, 'conferences/conference_form.html', {
+    return render(request, 'conferences/form.html', {
         'conference': conference,
         'form': form,
         'subtitle': f'Edit Submission Type',
@@ -264,7 +294,7 @@ def submission_type_delete(request, pk, sub_pk):
     form = DeleteForm(stype, request.POST)
     form.save()
     messages.success(request, f'Deleted submission type')
-    return redirect('conference-details', pk=pk)
+    return redirect('conferences:details', pk=pk)
 
 
 ################################
@@ -279,11 +309,11 @@ def topics_list(request, pk):
         if create_topic_form.is_valid():
             topic = create_topic_form.save()
             messages.success(request, f'Added new topic "{topic.name}"')
-            return redirect('conference-topics', pk=pk)
+            return redirect('conferences:topics', pk=pk)
     else:
         create_topic_form = TopicCreateForm(conference)
 
-    return render(request, 'conferences/conference_topics.html', {
+    return render(request, 'conferences/topics.html', {
         'conference': conference,
         'form': create_topic_form,
         'reorder_form': topics_reorder_form,
@@ -302,7 +332,7 @@ def topic_delete(request, pk, topic_pk):
     if form.is_valid():
         messages.warning(request, f'Topic "{name}" was deleted')
         form.save()
-    return redirect('conference-topics', pk=conference.pk)
+    return redirect('conferences:topics', pk=conference.pk)
 
 
 @chair_required
@@ -316,7 +346,7 @@ def topic_update(request, pk, topic_pk):
     if form.is_valid():
         messages.success(request, f'Topic "{topic.name}" was updated')
         form.save()
-    return redirect('conference-topics', pk=conference.pk)
+    return redirect('conferences:topics', pk=conference.pk)
 
 
 @chair_required
@@ -326,4 +356,4 @@ def topics_reorder(request, pk):
     form = TopicsReorderForm(conference, ',', request.POST)
     if form.is_valid():
         form.save()
-    return redirect('conference-topics', pk=pk)
+    return redirect('conferences:topics', pk=pk)

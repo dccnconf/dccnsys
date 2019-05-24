@@ -1,4 +1,4 @@
-{% extends "user_site/../../../wwwdccn/templates/private_base.html" %}
+{% extends "user_site/base.html" %}
 {% load bootstrap4 %}
 
 {% block title %}
@@ -15,14 +15,14 @@
 
     <div class="dccn-panel w-100">
       <h1 class="dccn-panel-title">Profile</h1>
-      {% include 'user_site/components/profile_navigation.html' with active='account' %}
+      {% include 'users/components/profile_navigation.html' with active='account' %}
 
       <div class="dccn-content p-4">
 
         {% bootstrap_messages %}
 
         <h2 class="dccn-subtitle mb-3">Update Email</h2>
-        <form action="{% url 'profile-update-email' %}" method="POST" class="form-inline dccn-protected-form" id="updateEmailForm">
+        <form action="{% url 'users:update-email' %}" method="POST" class="form-inline dccn-protected-form" id="updateEmailForm">
           {% csrf_token %}
           <input type="email" name="email" id="newEmailInput" class="form-control flex-fill" placeholder="Current email: {{ user.email }}">
           <button type="button" class="btn btn-outline-primary btn-sm ml-sm-2 mt-2 mt-sm-0" data-toggle="modal" data-target="#updateEmailConfirmDialog">Update</button>
@@ -30,7 +30,7 @@
         <hr>
 
         <h2 class="dccn-subtitle mb-3">Change Password</h2>
-        <form action="{% url 'profile-update-password' %}" method="POST" class="dccn-protected-form" id="updatePasswordForm">
+        <form action="{% url 'users:update-password' %}" method="POST" class="dccn-protected-form" id="updatePasswordForm">
           {% csrf_token %}
           <div class="form-group">
             <input type="password" name="new_password1" id="password1" class="form-control" placeholder="Enter new password">
@@ -46,7 +46,7 @@
         <hr>
 
         <h2 class="dccn-subtitle mb-3">Notification Settings</h2>
-        <form action="{% url 'profile-update-subscriptions' %}" method="POST" id="notificationsSettingsForm">
+        <form action="{% url 'users:update-subscriptions' %}" method="POST" id="notificationsSettingsForm">
           {% csrf_token %}
           {% bootstrap_form notifications_form %}
           <button type="submit" class="btn btn-outline-primary btn-sm">Update</button>
@@ -73,7 +73,7 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <form action="{% url 'profile-delete' %}" method="POST">
+        <form action="{% url 'users:delete' %}" method="POST">
           <div class="modal-body">
             {% csrf_token %}
             {% bootstrap_form delete_user_form %}

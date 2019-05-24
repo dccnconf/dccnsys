@@ -21,7 +21,7 @@
         </a>
       </li>
       <li class="nav-item">
-        <a href="{% url 'conferences-list' %}" class="nav-link {% if active == 'conferences' %}active{% endif %}">
+        <a href="{% url 'conferences:list' %}" class="nav-link {% if active == 'conferences' %}active{% endif %}">
           {% if active == 'conferences' %}<span class="text-secondary">|</span>{% endif %} Conferences
         </a>
       </li>
@@ -33,7 +33,7 @@
           {{ user.profile.first_name }} {% if user.profile.avatar %}<img src="{{ user.profile.avatar.url }}" alt="" class="img-fluid rounded-circle" width="24" height="24">{% endif %}
         </a>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userMenuDropdown">
-          <a href="{% url 'profile-overview' %}" class="dropdown-item">Profile</a>
+          <a href="{% url 'users:profile-overview' %}" class="dropdown-item">Profile</a>
           <a href="{% url 'logout' %}" class="dropdown-item">Sign out</a>
         </div>
       </li>

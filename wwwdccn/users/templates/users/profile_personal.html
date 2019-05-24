@@ -1,4 +1,4 @@
-{% extends "user_site/../../../wwwdccn/templates/private_base.html" %}
+{% extends "user_site/base.html" %}
 {% load bootstrap4 %}
 
 {% block title %}
@@ -15,7 +15,7 @@
 
     <div class="dccn-panel w-100">
       <h1 class="dccn-panel-title">Profile</h1>
-      {% include 'user_site/components/profile_navigation.html' with active='personal' %}
+      {% include 'users/components/profile_navigation.html' with active='personal' %}
 
       <div class="dccn-content p-4">
         <form action="" method="POST" novalidate>

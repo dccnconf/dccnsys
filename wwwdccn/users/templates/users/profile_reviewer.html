@@ -1,4 +1,4 @@
-{% extends "private_base.html" %}
+{% extends "user_site/base.html" %}
 
 {% block title %}
   Profile | DCCN
@@ -14,7 +14,7 @@
 
     <div class="dccn-panel w-100">
       <h1 class="dccn-panel-title">Profile</h1>
-      {% include 'user_site/components/profile_navigation.html' with active='reviewer' %}
+      {% include 'users/components/profile_navigation.html' with active='reviewer' %}
 
       <div class="dccn-content p-4">
         <h3 class="font-weight-lighter text-center mb-3">Invitations</h3>

@@ -1,4 +1,4 @@
-{% extends 'private_base.html' %}
+{% extends 'user_site/base.html' %}
 {% load bootstrap4 %}
 
 {% block title %}
@@ -25,7 +25,7 @@
               <li class="dccn-text-0-light list-group-item bg-light px-2 py-1 mt-1 d-flex dccn-reorder-list-item" data-id="{{ topic.pk }}">
                 <span>{{ topic.name }}</span>
                 <button class="ml-auto mr-1 btn btn-link dccn-link dccn-text-small-light" data-toggle="modal" data-target="#editTopic-{{ topic.pk }}"><i class="far fa-edit"></i></button>
-                <form action="{% url 'conference-topic-delete' pk=conference.pk topic_pk=topic.pk %}" method="POST" novalidate>
+                <form action="{% url 'conferences:topic-delete' pk=conference.pk topic_pk=topic.pk %}" method="POST" novalidate>
                   {% csrf_token %}
                   <button type="submit" class="btn btn-link dccn-link dccn-text-small-light">
                     <i class="far fa-trash-alt"></i>
@@ -36,7 +36,7 @@
                   <div class="modal-dialog">
                     <div class="modal-content">
                       <div class="modal-body">
-                        <form action="{% url 'conference-topic-update' pk=conference.pk topic_pk=topic.pk %}" method="POST" class="form-inline">
+                        <form action="{% url 'conferences:topic-update' pk=conference.pk topic_pk=topic.pk %}" method="POST" class="form-inline">
                           {% csrf_token %}
                           <div class="form-group flex-fill">
                             <label for="editTopic-{{ topic.pk }}-name"></label>
@@ -53,7 +53,7 @@
               </li>
             {% endfor %}
           </ul>
-          <form action="{% url 'conference-topics-reorder' pk=conference.pk %}" method="POST" class="dccn-reorder-form" novalidate>
+          <form action="{% url 'conferences:topics-reorder' pk=conference.pk %}" method="POST" class="dccn-reorder-form" novalidate>
             {% csrf_token %}
             <input type="hidden" name="topic_pks" class="dccn-reorder-form-input">
           </form>
@@ -66,7 +66,7 @@
           {% csrf_token %}
           {% bootstrap_form form show_label=False %}
           <div class="form-group row">
-            <a href="{% url 'conference-details' pk=conference.pk %}" class="btn btn-outline-secondary btn-sm ml-auto mr-2">Back</a>
+            <a href="{% url 'conferences:details' pk=conference.pk %}" class="btn btn-outline-secondary btn-sm ml-auto mr-2">Back</a>
             <input type="submit" value="Add" class="btn btn-primary btn-sm">
           </div>
         </form>
