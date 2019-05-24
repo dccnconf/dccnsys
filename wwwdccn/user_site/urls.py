@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import profile, submissions, conferences
+from .views import profile, submissions
 
 
 urlpatterns = [
@@ -28,45 +28,4 @@ urlpatterns = [
          name='profile-delete'),
     path('profile/delete/avatar/', profile.delete_avatar,
          name='profile-delete-avatar'),
-
-    path('conferences/', conferences.conferences_list,
-         name='conferences-list'),
-    path('conferences/new/', conferences.conference_create,
-         name='conference-create'),
-    path('conferences/<int:pk>/', conferences.conference_details,
-         name='conference-details'),
-    path('conferences/<int:pk>/settings/', conferences.conference_edit,
-         name='conference-edit'),
-    path('conferences/<int:pk>/stages/submission',
-         conferences.conference_submission_stage,
-         name='conference-submission-stage'),
-    path('conferences/<int:pk>/stages/reviews',
-         conferences.conference_review_stage,
-         name='conference-review-stage'),
-    path('conferences/<int:pk>/proceedings/new/',
-         conferences.proceedings_create,
-         name='conference-proceedings-create'),
-    path('conferences/<int:pk>/proceedings/<int:proc_pk>/',
-         conferences.proceedings_update,
-         name='conference-proceedings-update'),
-    path('conferences/<int:pk>/proceedings/<int:proc_pk>/delete/',
-         conferences.proceedings_delete,
-         name='conference-proceedings-delete'),
-    path('conferences/<int:pk>/submissiontype/new/',
-         conferences.submission_type_create,
-         name='conference-submissiontype-create'),
-    path('conferences/<int:pk>/submissiontype/<int:sub_pk>/',
-         conferences.submission_type_update,
-         name='conference-submissiontype-update'),
-    path('conferences/<int:pk>/submissiontype/<int:sub_pk>/delete/',
-         conferences.submission_type_delete,
-         name='conference-submissiontype-delete'),
-    path('conferences/<int:pk>/topics/', conferences.topics_list,
-         name='conference-topics'),
-    path('conferences/<int:pk>/topics/<int:topic_pk>/delete/', conferences.topic_delete,
-         name='conference-topic-delete'),
-    path('conferences/<int:pk>/topics/<int:topic_pk>/', conferences.topic_update,
-         name='conference-topic-update'),
-    path('conference/<int:pk>/topics/reorder/', conferences.topics_reorder,
-         name='conference-topics-reorder'),
 ]
