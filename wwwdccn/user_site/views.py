@@ -5,7 +5,7 @@ from submissions.models import Submission
 
 
 @login_required
-def user_details(request):
+def submissions(request):
     return render(request, 'user_site/submissions.html', {
         'submissions': Submission.objects.filter(authors__user=request.user)
     })

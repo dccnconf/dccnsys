@@ -38,7 +38,7 @@
               <button type="submit" class="btn btn-outline-primary"><i class="far fa-save"></i> Save</button>
             {% else %}
               {% if submission.filled_details %}
-                <a href="{% url 'submission-authors' pk=submission.pk %}"
+                <a href="{% url 'submissions:authors' pk=submission.pk %}"
                    class="btn btn-outline-secondary ml-auto">
                   Skip
                 </a>

@@ -40,7 +40,6 @@ class CreateSubmissionForm(forms.ModelForm):
         return super().save(False)
 
 
-
 class SubmissionDetailsForm(forms.ModelForm):
     class Meta:
         model = Submission

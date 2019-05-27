@@ -14,21 +14,21 @@
       {% if not submission.filled_details and active == 'details' %}
         <a class="dccn-nav-link" style="cursor: not-allowed;">1. Details</a>
       {% else %}
-        <a href="{% url 'submission-details' pk=submission.pk %}" class="dccn-nav-link">1. Details</a>
+        <a href="{% url 'submissions:details' pk=submission.pk %}" class="dccn-nav-link">1. Details</a>
       {% endif %}
     </li>
     <li class="dccn-nav-list-item {% if active == 'authors' %}active{% endif %}">
       {% if not submission.filled_details and active == 'details' %}
         <a class="dccn-nav-link" style="cursor: not-allowed;">2. Authors</a>
       {% else %}
-        <a href="{% url 'submission-authors' pk=submission.pk %}" class="dccn-nav-link">2. Authors</a>
+        <a href="{% url 'submissions:authors' pk=submission.pk %}" class="dccn-nav-link">2. Authors</a>
       {% endif %}
     </li>
     <li class="dccn-nav-list-item {% if active == 'manuscript' %}active{% endif %}">
       {% if not submission.filled_details and active == 'details' %}
         <a class="dccn-nav-link" style="cursor: not-allowed;">3. Review Manuscript</a>
       {% else %}
-        <a href="{% url 'submission-manuscript-edit' pk=submission.pk %}" class="dccn-nav-link">3. Review Manuscript</a>
+        <a href="{% url 'submissions:edit-manuscript' pk=submission.pk %}" class="dccn-nav-link">3. Review Manuscript</a>
       {% endif %}
     </li>
   </ul>

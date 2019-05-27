@@ -7,16 +7,15 @@ from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST, require_GET
 
+from conferences.models import Conference
 from submissions.forms import CreateSubmissionForm, SubmissionDetailsForm, \
     AuthorCreateForm, AuthorsReorderForm, AuthorDeleteForm, \
     UploadReviewManuscriptForm, InviteAuthorForm
 from submissions.models import Submission, Author
 
 
-@login_required
-def create_submission(request):
+def _create_submission(request, form):
     if request.method == 'POST':
-        form = CreateSubmissionForm(request.POST)
         if form.is_valid():
             submission = form.save()
 
@@ -30,13 +29,30 @@ def create_submission(request):
             )
 
             messages.success(request, f'Created submission #{submission.pk}')
-            return redirect('submission-details', pk=submission.pk)
-    else:
-        form = CreateSubmissionForm()
+            return redirect('submissions:details', pk=submission.pk)
 
-    return render(request, 'submissions/submission_create.html', {
+    return render(request, 'submissions/create.html', {
         'form': form,
     })
+
+
+@login_required
+def create_submission(request):
+    if request.method == 'POST':
+        form = CreateSubmissionForm(request.POST)
+    else:
+        form = CreateSubmissionForm()
+    return _create_submission(request, form)
+
+
+@login_required
+def create_submission_for(request, pk):
+    conference = get_object_or_404(Conference, pk=pk)
+    if request.method == 'POST':
+        form = CreateSubmissionForm(request.POST)
+    else:
+        form = CreateSubmissionForm(initial={'conference': conference.pk})
+    return _create_submission(request, form)
 
 
 @login_required
@@ -49,13 +65,13 @@ def submission_details(request, pk):
                 if form.is_valid():
                     form.save()
                     if submission.reached_overview:
-                        return redirect('submission-overview', pk=pk)
-                    return redirect('submission-authors', pk=pk)
+                        return redirect('submissions:overview', pk=pk)
+                    return redirect('submissions:authors', pk=pk)
             else:
                 return HttpResponseForbidden()
         else:
             form = SubmissionDetailsForm(instance=submission)
-        return render(request, 'submissions/submission_details.html', {
+        return render(request, 'submissions/details.html', {
             'submission': submission,
             'form': form,
         })
@@ -66,14 +82,14 @@ def submission_details(request, pk):
 def submission_authors(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     if submission.is_viewable_by(request.user):
-        return render(request, 'submissions/submission_authors.html', {
+        return render(request, 'submissions/authors.html', {
             'submission': submission,
         })
     return HttpResponseForbidden()
 
 
 @login_required
-def submission_manuscript_edit(request, pk):
+def edit_manuscript(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     if submission.is_viewable_by(request.user):
         if request.method == 'POST':
@@ -100,7 +116,7 @@ def submission_manuscript_edit(request, pk):
                             old_file.name
                         )
                     form.save()
-                    return redirect('submission-overview', pk=pk)
+                    return redirect('submissions:overview', pk=pk)
                 else:
                     # If the form is invalid (e.g. title is not provided),
                     # but the user tried to upload a file, a new
@@ -116,7 +132,7 @@ def submission_manuscript_edit(request, pk):
                 return HttpResponseForbidden()
         else:
             form = UploadReviewManuscriptForm(instance=submission)
-        return render(request, 'submissions/submission_manuscript.html', {
+        return render(request, 'submissions/manuscript.html', {
             'submission': submission,
             'form': form,
         })
@@ -125,7 +141,7 @@ def submission_manuscript_edit(request, pk):
 
 @login_required
 @require_POST
-def submission_manuscript_delete(request, pk):
+def delete_manuscript(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     if submission.review_manuscript_editable_by(request.user):
         file_name = submission.get_review_manuscript_name()
@@ -143,7 +159,7 @@ def submission_manuscript_delete(request, pk):
 
 @login_required
 @require_GET
-def submission_manuscript_download(request, pk):
+def download_manuscript(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     if submission.is_viewable_by(request.user):
         if submission.review_manuscript:
@@ -181,7 +197,7 @@ def submission_overview(request, pk):
         )
 
     if submission.is_viewable_by(request.user):
-        return render(request, 'submissions/submission_overview.html', {
+        return render(request, 'submissions/overview.html', {
             'submission': submission,
             'deadline': deadline,
             'show_finish': show_finish,
@@ -211,37 +227,37 @@ def submission_delete(request, pk):
 #
 @login_required
 @require_POST
-def submission_author_delete(request, pk):
+def delete_author(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     if submission.authors_editable_by(request.user):
         form = AuthorDeleteForm(submission, request.POST)
         if form.is_valid():
             form.save()
-        return redirect('submission-authors', pk=pk)
+        return redirect('submissions:authors', pk=pk)
     return HttpResponseForbidden()
 
 
 @login_required
 @require_POST
-def submission_author_create(request, pk):
+def create_author(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     if submission.authors_editable_by(request.user):
         form = AuthorCreateForm(submission, request.POST)
         if form.is_valid():
             form.save()
-        return redirect('submission-authors', pk=pk)
+        return redirect('submissions:authors', pk=pk)
     return HttpResponseForbidden()
 
 
 @login_required
 @require_POST
-def submission_authors_reorder(request, pk):
+def order_authors(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     if submission.authors_editable_by(request.user):
         form = AuthorsReorderForm(submission, ',', request.POST)
         if form.is_valid():
             form.save()
-        return redirect('submission-authors', pk=pk)
+        return redirect('submissions:authors', pk=pk)
     return HttpResponseForbidden()
 
 
@@ -256,5 +272,5 @@ def send_invitation(request, pk):
             messages.success(request, _('Invitation sent'))
         else:
             messages.warning(request, _('Errors while sending invitation'))
-        return redirect('submission-authors', pk=pk)
+        return redirect('submissions:authors', pk=pk)
     return HttpResponseForbidden()

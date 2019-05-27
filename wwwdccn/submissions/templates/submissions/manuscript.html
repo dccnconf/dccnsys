@@ -32,14 +32,14 @@
           </p>
 
           <div class="dccn-file-vd">
-            <form action="{% url 'submission-manuscript-delete' pk=submission.pk %}" method="POST"
+            <form action="{% url 'submissions:delete-manuscript' pk=submission.pk %}" method="POST"
                   class="dccn-file-vd-form" id="deleteManuscriptForm">
               {% csrf_token %}
             </form>
             <div class="dccn-file-vd-box">
               {% if submission.review_manuscript %}
                 <p class="my-1">Current document:
-                  <a href="{% url 'submission-manuscript-download' pk=submission.pk %}" target="_blank">
+                  <a href="{% url 'submissions:download-manuscript' pk=submission.pk %}" target="_blank">
                     <i class="far fa-file-pdf"></i> {{ submission.get_review_manuscript_name }}
                   </a>
                 </p>
@@ -72,10 +72,10 @@
                 Save <i class="fas fa-save"></i>
               </button>
             {% else %}
-              <a href="{% url 'submission-authors' pk=submission.pk %}" class="btn btn-outline-secondary">
+              <a href="{% url 'submissions:authors' pk=submission.pk %}" class="btn btn-outline-secondary">
                 <i class="fas fa-chevron-left"></i> Prev
               </a>
-              <a href="{% url 'submission-overview' pk=submission.pk %}"
+              <a href="{% url 'submissions:overview' pk=submission.pk %}"
                  class="btn btn-outline-secondary ml-auto mr-1">
                 Skip
               </a>

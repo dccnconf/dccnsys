@@ -1,0 +1,50 @@
+{% extends 'user_site/base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}
+  Conferences | DCCN
+{% endblock %}
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='conferences' %}
+{% endblock %}
+
+{% block body %}
+  <main class="container py-3">
+    <div class="dccn-layout-row-lg-col">
+
+      <!-- SUBMISSIONS BOX -->
+      <div class="dccn-panel dccn-work-panel" style="min-height: 90vh;">
+        <h2 class="dccn-panel-title">Conferences</h2>
+
+        {% bootstrap_messages %}
+
+        {% if user.is_superuser %}
+          <div class="dccn-panel-toolbar">
+            <a href="{% url 'conferences:create' %}" class="btn btn-primary btn-sm btn-block btn-sm-normal mb-3 mb-lg-0"><i class="fas fa-plus pr-2"></i>New</a>
+          </div>
+        {% endif %}
+
+        {% for conference in conferences %}
+          <div>
+            <div class="">
+              <div class="d-flex align-items-center">
+                <a href="{% url 'conferences:details' pk=conference.pk %}"><img src="{{ conference.logotype.url }}" alt="Conference logo" class="img-fluid d-none d-md-block mr-3" style="max-width: 150px; padding: 5px;"></a>
+                <div>
+                  <a href="{% url 'conferences:details' pk=conference.pk %}" class="d-block card-title dccn-link text-dark-9 dccn-text-3">{{ conference.full_name }}</a>
+                  <a href="{% url 'conferences:details' pk=conference.pk %}" class="d-block text-muted dccn-link dccn-text-3">({{ conference.short_name }} {{ conference.year }})</a>
+                  <p class="dccn-text mt-2">{{ conference.start_date }} - {{ conference.close_date }}, {{ conference.city }}, {{ conference.get_country_display }}</p>
+                  <div class="dccn-feed-item-footer">
+                    <a href="{% url 'conferences:details' pk=conference.pk %}" class="dccn-feed-item-link"><i class="fas fa-bars"></i> View</a>
+                    <a href="{% url 'submissions:create-for' pk=conference.pk %}" class="dccn-feed-item-link"><i class="far fa-edit"></i> Submit Paper</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+
+      </div>
+    </div>
+  </main>
+{% endblock %}
