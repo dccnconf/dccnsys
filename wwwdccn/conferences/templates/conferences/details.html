@@ -41,7 +41,7 @@
           {{ conference.start_date }} - {{ conference.close_date }}, {{ conference.city }}, {{ conference.get_country_display }}
         </p>
         <div class="d-flex">
-          <a href="{% url 'submission-create' %}" class="btn btn-outline-primary mt-3 mx-auto">Submit paper</a>
+          <a href="{% url 'submissions:create' %}" class="btn btn-outline-primary mt-3 mx-auto">Submit paper</a>
         </div>
 
         {# TODO: change the following check to filter whether user is able to edit conference #}

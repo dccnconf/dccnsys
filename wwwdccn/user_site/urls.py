@@ -1,8 +1,10 @@
 from django.urls import path
 
-from .views import submissions
+from . import views
 
+
+app_name = 'user_site'
 
 urlpatterns = [
-    path('', submissions.user_details, name='submissions'),
+    path('', views.submissions, name='submissions'),
 ]

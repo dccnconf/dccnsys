@@ -1,4 +1,4 @@
-{% extends "user_site/../../../wwwdccn/templates/../../../user_site/templates/user_site/base.html" %}
+{% extends "user_site/base.html" %}
 {% load bootstrap4 %}
 
 {% block title %}
@@ -58,7 +58,7 @@
                             Are you sure you want to delete {{ author.user.profile.get_full_name }}
                             from the co-authors list?
                           </p>
-                          <form action="{% url 'submission-author-delete' pk=submission.pk %}"
+                          <form action="{% url 'submissions:delete-author' pk=submission.pk %}"
                                 method="POST">
                             {% csrf_token %}
                             <input type="hidden" name="author_pk" value="{{ author.pk }}">
@@ -82,7 +82,7 @@
             {% endfor %}
 
           </ul>
-          <form action="{% url 'submission-authors-reorder' pk=submission.pk %}" method="POST"
+          <form action="{% url 'submissions:order-authors' pk=submission.pk %}" method="POST"
                 class="dccn-reorder-form" novalidate>
             {% csrf_token %}
             <input type="hidden" name="pks" class="dccn-reorder-form-input">
@@ -119,7 +119,7 @@
               </div>
             </div>
 
-            <form action="{% url 'submission-author-create' pk=submission.pk %}" method="POST"
+            <form action="{% url 'submissions:create-author' pk=submission.pk %}" method="POST"
                   class="dccn-hidden-form" novalidate>
               {% csrf_token %}
               <input type="hidden" name="user_pk" id="user_pk">
@@ -142,7 +142,7 @@
                 </button>
               </div>
               <div class="modal-body">
-                <form action="{% url 'submission-authors-invite' pk=submission.pk %}" method="POST">
+                <form action="{% url 'submissions:invite' pk=submission.pk %}" method="POST">
                   {% csrf_token %}
                   <div class="form-group">
                     <label for="email">Enter user email:</label>
@@ -176,14 +176,14 @@
             <a href="{% url 'home' %}" class="btn btn-outline-secondary ml-auto mr-2">
               <i class="fas fa-home"></i> Close
             </a>
-            <a href="{% url 'submission-overview' pk=submission.pk %}" class="btn btn-outline-primary">
+            <a href="{% url 'submissions:overview' pk=submission.pk %}" class="btn btn-outline-primary">
               <i class="far fa-eye"></i> View
             </a>
           {% else %}
-            <a href="{% url 'submission-details' pk=submission.pk %}" class="btn btn-outline-secondary">
+            <a href="{% url 'submissions:details' pk=submission.pk %}" class="btn btn-outline-secondary">
               <i class="fas fa-chevron-left"></i> Prev
             </a>
-            <a href="{% url 'submission-manuscript-edit' pk=submission.pk %}"  class="btn btn-primary ml-auto">
+            <a href="{% url 'submissions:edit-manuscript' pk=submission.pk %}"  class="btn btn-primary ml-auto">
               Next <i class="fas fa-chevron-right"></i>
             </a>
           {% endif %}

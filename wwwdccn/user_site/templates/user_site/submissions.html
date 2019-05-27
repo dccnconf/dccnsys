@@ -24,7 +24,9 @@
       {% bootstrap_messages %}
 
       <div class="dccn-panel-toolbar">
-        <a href="{% url 'submission-create' %}" class="btn btn-primary btn-sm btn-block btn-sm-normal mb-3 mb-lg-0"><i class="fas fa-plus pr-2"></i>New</a>
+        <a href="{% url 'submissions:create' %}" class="btn btn-primary btn-sm btn-block btn-sm-normal mb-3 mb-lg-0">
+          <i class="fas fa-plus pr-2"></i>New
+        </a>
       </div>
 
       {% for submission in submissions %}

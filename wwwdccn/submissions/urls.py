@@ -3,32 +3,23 @@ from django.urls import path
 from . import views
 
 
-urlpatterns = [
-    path('create/', views.create_submission, name='submission-create'),
-    path('<int:pk>/details/', views.submission_details, name='submission-details'),
-    path('<int:pk>/authors/', views.submission_authors, name='submission-authors'),
-    path('<int:pk>/manuscript/',
-         views.submission_manuscript_edit,
-         name='submission-manuscript-edit'),
-    path('<int:pk>/manuscript/delete/',
-         views.submission_manuscript_delete,
-         name='submission-manuscript-delete'),
-    path('<int:pk>/manuscript/download/',
-         views.submission_manuscript_download,
-         name='submission-manuscript-download'),
-    path('<int:pk>', views.submission_overview, name='submission-overview'),
-    path('<int:pk>/delete/', views.submission_delete, name='submission-delete'),
+app_name = 'submissions'
 
-    path('<int:pk>/authors/delete/',
-         views.submission_author_delete,
-         name='submission-author-delete'),
-    path('<int:pk>/authors/create/',
-         views.submission_author_create,
-         name='submission-author-create'),
-    path('<int:pk>/authors/reorder/',
-         views.submission_authors_reorder,
-         name='submission-authors-reorder'),
-    path('<int:pk>/authors/invite/',
-         views.send_invitation,
-         name='submission-authors-invite'),
+
+urlpatterns = [
+    path('create/', views.create_submission, name='create'),
+    path('<int:pk>/details/', views.submission_details, name='details'),
+    path('<int:pk>/authors/', views.submission_authors, name='authors'),
+    path('<int:pk>/manuscript/', views.edit_manuscript, name='edit-manuscript'),
+    path('<int:pk>/manuscript/delete/', views.delete_manuscript,
+         name='delete-manuscript'),
+    path('<int:pk>/manuscript/download/', views.download_manuscript,
+         name='download-manuscript'),
+    path('<int:pk>', views.submission_overview, name='overview'),
+    path('<int:pk>/delete/', views.submission_delete, name='delete'),
+
+    path('<int:pk>/authors/delete/', views.delete_author, name='delete-author'),
+    path('<int:pk>/authors/create/', views.create_author, name='create-author'),
+    path('<int:pk>/authors/order/', views.order_authors, name='order-authors'),
+    path('<int:pk>/authors/invite/', views.send_invitation, name='invite'),
 ]

@@ -77,10 +77,24 @@ def ajax_details(request, pk):
 
 
 @require_GET
-def ajax_submission_type_details(request, pk):
+def ajax_stype_details(request, pk):
     stype = get_object_or_404(SubmissionType, pk=pk)
     return JsonResponse({
-        'conference': stype.conference.pk,
+        'id': stype.pk,
+        'name': stype.name,
+        'description': stype.description,
+        'language': stype.get_language_display(),
+        'latex_template': get_url_of(stype.latex_template),
+        'num_reviews': stype.num_reviews,
+        'min_num_pages': stype.min_num_pages,
+        'max_num_pages': stype.max_num_pages,
+        'blind_review': stype.blind_review,
+        'possible_proceedings': [
+            {
+                'id': proc.pk,
+                'name': proc.name,
+            } for proc in stype.possible_proceedings.all()
+        ]
     })
 
 

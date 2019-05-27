@@ -6,6 +6,8 @@ from . import views
 app_name = 'conferences'
 urlpatterns = [
     path('ajax/<int:pk>/', views.ajax_details),
+    path('ajax/stype/<int:pk>/', views.ajax_stype_details),
+
     path('/', views.conferences_list,
          name='list'),
     path('new/', views.conference_create, name='create'),
