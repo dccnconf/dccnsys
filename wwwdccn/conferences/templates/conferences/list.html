@@ -13,9 +13,6 @@
   <main class="container py-3">
     <div class="dccn-layout-row-lg-col">
 
-      <!-- PROFILE BOX -->
-      {% include 'user_site/components/profile_panel.html' with user=user numSubmissions=submissions|length numReviews=0 %}
-
       <!-- SUBMISSIONS BOX -->
       <div class="dccn-panel dccn-work-panel" style="min-height: 90vh;">
         <h2 class="dccn-panel-title">Conferences</h2>
@@ -29,23 +26,20 @@
         {% endif %}
 
         {% for conference in conferences %}
-          <div class="">
-            <div class="d-flex align-items-center">
-              <a href="{% url 'conferences:details' pk=conference.pk %}"><img src="{{ conference.logotype.url }}" alt="Conference logo" class="img-fluid d-none d-md-block mr-3" style="max-width: 120px; max-height: 120px; padding: 5px;"></a>
-              <div class="">
-                {% if conference.is_ieee %}
-{#                  <p class="dccn-text-3-light text-muted text-center text-md-left">IEEE International Conference on</p>#}
-                {% endif %}
-                <a href="{% url 'conferences:details' pk=conference.pk %}" class="d-block text-center text-md-left card-title dccn-link text-dark-9 dccn-text-5">{{ conference.full_name }}</a>
-                <a href="{% url 'conferences:details' pk=conference.pk %}" class="d-block text-center text-md-left text-muted dccn-link dccn-text-4">({{ conference.short_name }} {{ conference.year }})</a>
-                <p class="text-center text-md-left dccn-text mt-2">{{ conference.start_date }} - {{ conference.close_date }}, {{ conference.city }}, {{ conference.get_country_display }}</p>
-                <div class="d-flex">
-                  <a href="{% url 'submission-create' %}" class="btn btn-outline-primary mt-3 mx-auto ml-md-0">Submit paper</a>
+          <div>
+            <div class="">
+              <div class="d-flex align-items-center">
+                <a href="{% url 'conferences:details' pk=conference.pk %}"><img src="{{ conference.logotype.url }}" alt="Conference logo" class="img-fluid d-none d-md-block mr-3" style="max-width: 150px; padding: 5px;"></a>
+                <div>
+                  <a href="{% url 'conferences:details' pk=conference.pk %}" class="d-block card-title dccn-link text-dark-9 dccn-text-3">{{ conference.full_name }}</a>
+                  <a href="{% url 'conferences:details' pk=conference.pk %}" class="d-block text-muted dccn-link dccn-text-3">({{ conference.short_name }} {{ conference.year }})</a>
+                  <p class="dccn-text mt-2">{{ conference.start_date }} - {{ conference.close_date }}, {{ conference.city }}, {{ conference.get_country_display }}</p>
+                  <div class="dccn-feed-item-footer">
+                    <a href="{% url 'conferences:details' pk=conference.pk %}" class="dccn-feed-item-link"><i class="fas fa-bars"></i> View</a>
+                    <a href="{% url 'submissions:create-for' pk=conference.pk %}" class="dccn-feed-item-link"><i class="far fa-edit"></i> Submit Paper</a>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="d-flex mt-4">
-              <a href="{% url 'conferences:details' pk=conference.pk %}" class="ml-auto dccn-link"><i class="fas fa-bars"></i> View</a>
             </div>
           </div>
         {% endfor %}

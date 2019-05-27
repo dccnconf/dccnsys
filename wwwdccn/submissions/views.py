@@ -7,16 +7,15 @@ from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST, require_GET
 
+from conferences.models import Conference
 from submissions.forms import CreateSubmissionForm, SubmissionDetailsForm, \
     AuthorCreateForm, AuthorsReorderForm, AuthorDeleteForm, \
     UploadReviewManuscriptForm, InviteAuthorForm
 from submissions.models import Submission, Author
 
 
-@login_required
-def create_submission(request):
+def _create_submission(request, form):
     if request.method == 'POST':
-        form = CreateSubmissionForm(request.POST)
         if form.is_valid():
             submission = form.save()
 
@@ -31,12 +30,29 @@ def create_submission(request):
 
             messages.success(request, f'Created submission #{submission.pk}')
             return redirect('submissions:details', pk=submission.pk)
-    else:
-        form = CreateSubmissionForm()
 
     return render(request, 'submissions/create.html', {
         'form': form,
     })
+
+
+@login_required
+def create_submission(request):
+    if request.method == 'POST':
+        form = CreateSubmissionForm(request.POST)
+    else:
+        form = CreateSubmissionForm()
+    return _create_submission(request, form)
+
+
+@login_required
+def create_submission_for(request, pk):
+    conference = get_object_or_404(Conference, pk=pk)
+    if request.method == 'POST':
+        form = CreateSubmissionForm(request.POST)
+    else:
+        form = CreateSubmissionForm(initial={'conference': conference.pk})
+    return _create_submission(request, form)
 
 
 @login_required

@@ -8,6 +8,7 @@ app_name = 'submissions'
 
 urlpatterns = [
     path('create/', views.create_submission, name='create'),
+    path('create/<int:pk>/', views.create_submission_for, name='create-for'),
     path('<int:pk>/details/', views.submission_details, name='details'),
     path('<int:pk>/authors/', views.submission_authors, name='authors'),
     path('<int:pk>/manuscript/', views.edit_manuscript, name='edit-manuscript'),
