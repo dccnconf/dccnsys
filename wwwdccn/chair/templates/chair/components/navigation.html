@@ -1,0 +1,8 @@
+<ul class="dccn-nav-list">
+  <li class="{% if active == 'home' %}active{% endif %}">
+    <a href="{% url 'chair:home' pk=conference.pk %}"><i class="fas fa-tachometer-alt mr-2"></i> Home</a>
+  </li>
+  <li class="{% if active == 'submissions' %}active{% endif %}">
+    <a href="{% url 'chair:submissions' pk=conference.pk %}"><i class="far fa-copy mr-2"></i> Submissions</a>
+  </li>
+</ul>

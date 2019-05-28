@@ -37,6 +37,9 @@
                   <div class="dccn-feed-item-footer">
                     <a href="{% url 'conferences:details' pk=conference.pk %}" class="dccn-feed-item-link"><i class="fas fa-bars"></i> View</a>
                     <a href="{% url 'submissions:create-for' pk=conference.pk %}" class="dccn-feed-item-link"><i class="far fa-edit"></i> Submit Paper</a>
+                    {% if user in conference.chairs.all %}
+                      <a href="{% url 'chair:submissions' pk=conference.pk %}" class="dccn-feed-item-link"><i class="fas fa-chair"></i> Administrate</a>
+                    {% endif %}
                   </div>
                 </div>
               </div>

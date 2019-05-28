@@ -8,7 +8,7 @@ urlpatterns = [
     path('ajax/<int:pk>/', views.ajax_details),
     path('ajax/stype/<int:pk>/', views.ajax_stype_details),
 
-    path('/', views.conferences_list,
+    path('', views.conferences_list,
          name='list'),
     path('new/', views.conference_create, name='create'),
     path('<int:pk>/', views.conference_details, name='details'),

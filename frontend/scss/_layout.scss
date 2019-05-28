@@ -24,8 +24,7 @@
 
   .dccn-panel-toolbar {
     margin: 30px 0 15px 0;
-    padding: 0;
-    padding-bottom: 15px;
+    padding: 0 0 15px 0;
     border-bottom: 1px solid #eee;
 
     .dccn-panel-form-label {
@@ -156,13 +155,13 @@
     padding: 0;
     margin: 0;
 
-    li.dccn-nav-list-item {
+    li {
       @extend .dccn-text;
       margin: 0;
       border: 1px solid #eee;
       border-bottom: none;
 
-      a.dccn-nav-link {
+      a {
         display: inline-block;
         width: 100%;
         height: 100%;
@@ -171,22 +170,22 @@
         color: inherit !important;
       }
 
-      a.dccn-nav-link:hover {
+      a:hover {
         text-decoration: none;
       }
     }
 
-    li.dccn-nav-list-item.active {
+    li.active {
       color: white !important;
       background-color: theme-color-level("dark", -1) !important;
       border: 1px solid theme-color-level("dark", -2) !important;
     }
 
-    li.dccn-nav-list-item:last-child {
+    li:last-child {
       border-bottom: 1px solid #eee;
     }
 
-    li.dccn-nav-list-item:hover {
+    li:hover {
       background-color: #eee;
       cursor: pointer;
     }
@@ -236,5 +235,76 @@
   .dccn-panel-status-row {
     display: flex;
     flex-wrap: wrap;
+  }
+}
+
+
+/////////////////////////////////////////////////////////////////////
+// Right-side filters
+@each $sz in ('sm', 'md', 'lg', 'xl') {
+  .dccn-panel-right-#{$sz} {
+
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// Main area layout at chair app
+.dccn-chair-workspace {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+
+  //noinspection SassScssResolvedByNameOnly
+  @include media-breakpoint-up(lg) {
+    flex-direction: row;
+  }
+
+  .dccn-chair-workspace-center {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    order: 1;
+    margin: 0;
+  }
+
+  .dccn-chair-workspace-main {
+    @extend .dccn-panel;
+    flex-grow: 1;
+    min-height: 90vh;
+    order: 1;
+    margin-top: 5px;
+
+    //noinspection SassScssResolvedByNameOnly
+    @include media-breakpoint-up(lg) {
+      order: 0;
+    }
+  }
+
+  .dccn-chair-workspace-filter {
+    @extend .dccn-panel;
+    padding: 5px;
+    min-width: 260px;
+    margin-left: 0;
+    margin-bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    order: 0;
+    min-height: 40px;
+
+    //noinspection SassScssResolvedByNameOnly
+    @include media-breakpoint-up(lg) {
+      margin-left: 10px;
+      margin-bottom: 0;
+      width: 260px !important;
+      max-width: 260px !important;
+      order: 1;
+    }
+  }
+}
+
+@include media-breakpoint-up(md) {
+  .dccn-panel-nav nav {
+    display: block !important;
   }
 }
