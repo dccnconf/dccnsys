@@ -24,6 +24,33 @@
 {# Main content                                                              #}
 {#---------------------------------------------------------------------------#}
 {% block mainPanelContent %}
+  {% for submission in submissions %}
+    <div class="dccn-feed-item pb-3">
+      <div class="dccn-feed-item-row">
+        <div class="dccn-feed-item-id">#{{ submission.pk }}</div>
+        <div class="ml-auto"></div>
+        {% if submission.warnings %}
+          <div class="dccn-feed-item-label mx-2" data-toggle="tooltip" data-placement="bottom" data-html="true"
+               title="<ul class='list-unstyled'>{% for warning in submission.warnings %}<li class='text-left dccn-text-smallest'>{{ warning }}{% if forloop.last %}.{% else %};{% endif %}</li>{% endfor %}</ul>">
+            <i class="fas fa-exclamation-triangle text-warning"></i> {{ submission.warnings|length }}
+          </div>
+        {% endif %}
+        <div class="dccn-feed-item-label dccn-feed-item-status ml-2">
+          Submitted <i class="fas fa-circle {% if not submission.review_manuscript %}text-warning{% else %}text-success{% endif %}"></i>
+        </div>
+      </div>
+      <p class="mb-2">
+        <a href="#" class="dccn-link dccn-text-3 font-weight-light">{{ submission.title }}</a>
+      </p>
+      <div class="mb-1">
+        <p class="dccn-text-0">
+          {% for author in submission.authors.all %}
+            <span><a href="#" class="dccn-link dccn-text-0">{{ author.user.profile }}</a>{% if not forloop.last %},&nbsp;{% endif %}</span>
+          {% endfor %}
+        </p>
+      </div>
+    </div>
+  {% endfor %}
 {% endblock %}
 
 
@@ -33,5 +60,15 @@
 {#---------------------------------------------------------------------------#}
 {% block filterPanel %}
   <div class="dccn-chair-workspace-filter">
+    <form action="#" method="GET">
+      <div class="form-group">
+        <label for="search">Search:</label>
+        <input type="text" class="form-control" name="search">
+      </div>
+      <div class="form-group">
+        <label for="language">Language:</label>
+
+      </div>
+    </form>
   </div>
 {% endblock %}

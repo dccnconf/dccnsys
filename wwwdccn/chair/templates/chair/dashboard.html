@@ -1,4 +1,5 @@
 {% extends 'chair/base.html' %}
+{% load conferences_extras %}
 
 
 {#---------------------------------------------------------------------------#}
@@ -14,4 +15,36 @@
 {# Main content                                                              #}
 {#---------------------------------------------------------------------------#}
 {% block mainPanelContent %}
+  <div class="container">
+
+    {#  Number of papers and authors #}
+    <div class="row">
+      <div class="col-12 col-md-6 p-3">
+        <div class="border border-light rounded mx-3">
+          <p class="ml-3">
+            <span class="dccn-text-larger text-success">{{ conference.submission_set.count }}</span>
+            &nbsp;
+            <span class="dccn-text-5">submissions</span>
+          </p>
+          <ul class="list-unstyled ml-5">
+            {% for stype in conference.submissiontype_set.all %}
+              <li>
+                <span class="dccn-text-large text-success">{{ stype.submissions.count }}</span>
+                &nbsp;
+                <span class="dccn-text-3">{{ stype|lower }}</span></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 p-3">
+        <div class="border border-light rounded mx-3" style="height: 100%;">
+          <p class="ml-3">
+            <span class="dccn-text-larger text-success">{{ conference|submissions_authors|length }}</span>
+            &nbsp;
+            <span class="dccn-text-5">authors</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
