@@ -46,23 +46,36 @@
       <div class="mb-1">
         <p class="dccn-text-0">
           {% for author in submission.authors.all %}
-            <span><a href="#" class="dccn-link dccn-text-0">{{ author.user.profile }}</a>{% if not forloop.last %},&nbsp;{% endif %}</span>
+            <span>
+              <img src="{{ author.user.profile.avatar.url }}" alt="{{ author.user.profile.get_full_name }} profile image" class="rounded-circle img-fluid" style="max-width: 20px; max-height: 20px;">
+              <a href="#" class="dccn-link dccn-text-0">{{ author.user.profile }}</a>{% if not forloop.last %},&nbsp;{% endif %}
+            </span>
           {% endfor %}
         </p>
       </div>
-    <div class="mb-1">
-      <ul>
-        {% for topic in submission.topics.all %}
-          <li>{{ topic }}</li>
-        {% endfor %}
-      </ul>
-    </div>
 
       <div class="dccn-feed-item-footer mt-4">
-        <a href="#" class="dccn-feed-item-link"><i class="fas fa-align-justify"></i> View</a>
+        <a href="#submission-{{ submission.pk }}-modal" class="dccn-feed-item-link" data-toggle="modal"><i class="fas fa-align-justify"></i> View</a>
         <a href="#" class="dccn-feed-item-link"><i class="far fa-edit"></i> Edit</a>
         <a href="#" class="dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</a>
         <div class="dccn-feed-item-id ml-auto">#{{ submission.pk }}</div>
+      </div>
+
+      <div class="modal fade" id="submission-{{ submission.pk }}-modal">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Submission #{{ submission.pk }}</h5>
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              {% include 'chair/components/submission_overview_modal.html' with submission=submission %}
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>
