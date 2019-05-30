@@ -57,7 +57,7 @@ def submissions_list(request, pk):
         print(f'Countries: {countries}')
         print(f'Affiliations: {affiliations}')
 
-    return render(request, 'chair/submissions.html', context={
+    return render(request, 'chair/submissions_list.html', context={
         'conference': conference,
         'submissions': submissions,
         'filter_form': form,
