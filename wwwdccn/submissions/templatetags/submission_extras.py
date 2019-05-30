@@ -1,5 +1,6 @@
 from django import template
 
+from submissions.helpers import get_affiliations_of, get_countries_of
 from submissions.models import Submission
 
 register = template.Library()
@@ -19,3 +20,13 @@ def statusclass(submission):
     elif submission.status == 'REJECT':
         return 'text-danger'
     return ''
+
+
+@register.filter
+def affiliations(submission):
+    return get_affiliations_of(submission)
+
+
+@register.filter
+def countries(submission):
+    return get_countries_of(submission)

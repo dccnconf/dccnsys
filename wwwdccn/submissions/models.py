@@ -141,6 +141,11 @@ class Submission(models.Model):
             for author in self.authors.order_by('order')
         )
 
+    def warnings(self):
+        if not self.review_manuscript:
+            return ['Review manuscript missing']
+        return []
+
 
 class Author(models.Model):
     class Meta:

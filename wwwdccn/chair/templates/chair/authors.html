@@ -1,0 +1,37 @@
+{% extends 'chair/base.html' %}
+
+{#---------------------------------------------------------------------------#}
+{# Navigation and breadcrumbs                                                #}
+{#---------------------------------------------------------------------------#}
+{% block navigation %}
+  {% include 'chair/components/navigation.html' with active='authors' %}
+{% endblock %}
+
+{% block chairCrumbItemsSmall %}
+  <li class="breadcrumb-item">
+    <a href="{% url 'chair:authors' pk=conference.pk %}">authors</a>
+  </li>
+{% endblock %}
+
+{% block chairCrumbItemsLarge %}
+  <li class="breadcrumb-item">
+    <a href="{% url 'chair:authors' pk=conference.pk %}">authors</a>
+  </li>
+{% endblock %}
+
+
+{#---------------------------------------------------------------------------#}
+{# Main content                                                              #}
+{#---------------------------------------------------------------------------#}
+{% block mainPanelContent %}
+{% endblock %}
+
+
+
+{#---------------------------------------------------------------------------#}
+{# Filter                                                                    #}
+{#---------------------------------------------------------------------------#}
+{% block filterPanel %}
+  <div class="dccn-chair-workspace-filter">
+  </div>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends 'chair/base.html' %}
+{% load conferences_extras %}
+{% load bootstrap4 %}
+
+{#---------------------------------------------------------------------------#}
+{# Navigation and breadcrumbs                                                #}
+{#---------------------------------------------------------------------------#}
+{% block navigation %}
+  {% include 'chair/components/navigation.html' with active='submissions' %}
+{% endblock %}
+
+{% block chairCrumbItemsSmall %}
+  <li class="breadcrumb-item">
+    <a href="{% url 'chair:submissions' pk=conference.pk %}">submissions</a>
+  </li>
+{% endblock %}
+
+{% block chairCrumbItemsLarge %}
+  <li class="breadcrumb-item">
+    <a href="{% url 'chair:submissions' pk=conference.pk %}">submissions</a>
+  </li>
+{% endblock %}
+
+
+{#---------------------------------------------------------------------------#}
+{# Main content                                                              #}
+{#---------------------------------------------------------------------------#}
+{% block mainPanelContent %}
+  <div class="dccn-panel-toolbar">
+  {{ submissions|length }}&nbsp;submissions
+  </div>
+  {% for submission in submissions %}
+    <div class="dccn-feed-item pb-3">
+      <div class="dccn-feed-item-row">
+        <div class="ml-auto"></div>
+        {% if submission.warnings %}
+          <div class="dccn-feed-item-label mx-2" data-toggle="tooltip" data-placement="bottom" data-html="true"
+               title="<ul class='list-unstyled'>{% for warning in submission.warnings %}<li class='text-left dccn-text-smallest'>{{ warning }}{% if forloop.last %}.{% else %};{% endif %}</li>{% endfor %}</ul>">
+            <i class="fas fa-exclamation-triangle text-warning"></i> {{ submission.warnings|length }}
+          </div>
+        {% endif %}
+        <div class="dccn-feed-item-label dccn-feed-item-status ml-2">
+          Submitted <i class="fas fa-circle {% if not submission.review_manuscript %}text-warning{% else %}text-success{% endif %}"></i>
+        </div>
+      </div>
+      <p class="mb-2">
+        <a href="#submission-{{ submission.pk }}-modal" class="dccn-link dccn-text-3 font-weight-light" data-toggle="modal">{{ submission.title }}</a>
+      </p>
+      <div class="mb-1">
+        <p class="dccn-text-0">
+          {% for author in submission.authors.all %}
+            <span>
+              <img src="{{ author.user.profile.avatar.url }}" alt="{{ author.user.profile.get_full_name }} profile image" class="rounded-circle img-fluid" style="max-width: 20px; max-height: 20px;">
+              <a href="{% url 'chair:user' pk=conference.pk user_pk=author.user.pk %}" class="dccn-link dccn-text-0">{{ author.user.profile }}</a>{% if not forloop.last %},&nbsp;{% endif %}
+            </span>
+          {% endfor %}
+        </p>
+      </div>
+
+      <div class="dccn-feed-item-footer mt-4">
+        <a href="#submission-{{ submission.pk }}-modal" class="dccn-feed-item-link" data-toggle="modal"><i class="fas fa-align-justify"></i> View</a>
+        <a href="#" class="dccn-feed-item-link"><i class="far fa-edit"></i> Edit</a>
+        <a href="#" class="dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</a>
+        <div class="dccn-feed-item-id ml-auto">#{{ submission.pk }}</div>
+      </div>
+
+      <div class="modal fade" id="submission-{{ submission.pk }}-modal">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Submission #{{ submission.pk }}</h5>
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              {% include 'chair/components/submission_overview_modal.html' with submission=submission %}
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  {% endfor %}
+{% endblock %}
+
+
+
+{#---------------------------------------------------------------------------#}
+{# Filter                                                                    #}
+{#---------------------------------------------------------------------------#}
+{% block filterPanel %}
+  <div class="dccn-chair-workspace-filter">
+    <form action="{% url 'chair:submissions' pk=conference.pk %}" method="GET" class="m-2">
+      {% bootstrap_field filter_form.term show_label=False %}
+
+      <a href="#detailedFilterFormFields" class="d-block dccn-link mb-3" data-toggle="collapse" id="detailedFilterFormToggler">
+        <i class="fas fa-chevron-right"></i>&nbsp; Detailed filter
+      </a>
+
+      <div class="collapse" id="detailedFilterFormFields" data-form-filled="{{ filter_form.has_changed }}">
+        <div class="form-group">
+          <div class="dccn-text-0">Types (<button type="button" class="btn btn-link dccn-link dccn-text-small clear-cb-btn">clear</button>):</div>
+          {{ filter_form.types }}
+        </div>
+
+        <div class="form-group">
+          <div class="dccn-text-0">Topics (<button type="button" class="btn btn-link dccn-link dccn-text-small clear-cb-btn">clear</button>):</div>
+          {{ filter_form.topics }}
+        </div>
+
+        <div class="form-group">
+          <div class="dccn-text-0">Status (<button type="button" class="btn btn-link dccn-link dccn-text-small clear-cb-btn">clear</button>):</div>
+          {{ filter_form.status }}
+        </div>
+
+        <div class="form-group">
+          <div class="dccn-text-0">Countries (<button type="button" class="btn btn-link dccn-link dccn-text-small clear-cb-btn">clear</button>):</div>
+          {{ filter_form.countries }}
+        </div>
+
+        <div class="form-group">
+          <div class="dccn-text-0">Affiliations (<button type="button" class="btn btn-link dccn-link dccn-text-small clear-cb-btn">clear</button>):</div>
+          {{ filter_form.affiliations }}
+        </div>
+      </div>
+      <div class="form-group mt-2">
+        <button type="submit" class="btn btn-outline-info">Apply</button>
+        <a href="{% url 'chair:submissions' pk=conference.pk %}" class="btn btn-link dccn-link ml-3">Clear filter</a>
+      </div>
+
+    </form>
+  </div>
+{% endblock %}
+
+
+{% block script %}
+<script>
+const detailedFilter = $('#detailedFilterFormFields');
+const detailedFilterTogglerIcon = $('#detailedFilterFormToggler i');
+
+detailedFilter.on('hidden.bs.collapse', function () {
+  detailedFilterTogglerIcon.removeClass('fa-chevron-down');
+  detailedFilterTogglerIcon.addClass('fa-chevron-right');
+});
+
+detailedFilter.on('shown.bs.collapse', function () {
+  detailedFilterTogglerIcon.removeClass('fa-chevron-right');
+  detailedFilterTogglerIcon.addClass('fa-chevron-down');
+});
+
+$('.clear-cb-btn').on('click', function () {
+  const parent = $(this).parent().parent();
+  parent.find('.form-check input').prop('checked', false);
+});
+
+$(document).ready(function () {
+  const formFilled = detailedFilter.attr('data-form-filled') === 'True';
+  if (formFilled) {
+    detailedFilter.collapse('show');
+  } else {
+    detailedFilter.collapse('hide');
+  }
+});
+</script>
+{% endblock %}
