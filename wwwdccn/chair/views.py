@@ -1,10 +1,13 @@
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
 from chair.forms import FilterSubmissionsForm
 from conferences.decorators import chair_required
-from conferences.helpers import get_authors_of
 from conferences.models import Conference
+
+
+User = get_user_model()
 
 
 @chair_required
@@ -62,10 +65,11 @@ def submissions_list(request, pk):
 
 
 @chair_required
-def authors_list(request, pk):
+@require_GET
+def users_list(request, pk):
     conference = get_object_or_404(Conference, pk=pk)
-    authors = get_authors_of(conference.submission_set.all())
-    return render(request, 'chair/authors.html', context={
+    users = User.objects.all()
+    return render(request, 'chair/users_list.html', context={
         'conference': conference,
-        'authors': authors,
+        'users': users,
     })

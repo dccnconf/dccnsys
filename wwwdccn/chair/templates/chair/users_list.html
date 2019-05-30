@@ -1,0 +1,140 @@
+{% extends 'chair/base.html' %}
+{% load conferences_extras %}
+{% load bootstrap4 %}
+
+{#---------------------------------------------------------------------------#}
+{# Navigation and breadcrumbs                                                #}
+{#---------------------------------------------------------------------------#}
+{% block navigation %}
+  {% include 'chair/components/navigation.html' with active='users' %}
+{% endblock %}
+
+{% block chairCrumbItemsSmall %}
+  <li class="breadcrumb-item">
+    <a href="{% url 'chair:users' pk=conference.pk %}">users</a>
+  </li>
+{% endblock %}
+
+{% block chairCrumbItemsLarge %}
+  <li class="breadcrumb-item">
+    <a href="{% url 'chair:users' pk=conference.pk %}">users</a>
+  </li>
+{% endblock %}
+
+
+{#---------------------------------------------------------------------------#}
+{# Main content                                                              #}
+{#---------------------------------------------------------------------------#}
+{% block mainPanelContent %}
+  {% for user in users %}
+    <div class="dccn-feed-item pb-3">
+
+      <div class="d-flex align-items-center">
+        <img src="{{ user.profile.avatar.url }}" alt="{{ user.profile.get_full_name }} profile image" class="rounded-circle img-fluid mr-3" style="max-width: 96px; max-height: 96px;">
+        <div>
+          <h4 class="dccn-text-3-light">{{ user.profile.get_full_name }}</h4>
+          {% if user.profile.get_full_name_rus %}
+            <p class="dccn-text-small text-muted">{{ user.profile.get_full_name_rus }}</p>
+          {% endif %}
+          <p class="dccn-text-small mt-1">{{ user.profile.get_country_display }}, {{ user.profile.city }}, {{ user.profile.affiliation }}</p>
+          <p class="dccn-text-small mt-0 text-muted">{{ user.profile.degree }}, {{ user.profile.role }}</p>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center mt-2 dccn-text-0-light">
+        <div class="mx-0 my-0">
+          {% if conference|is_author:user %}
+            <div class="dccn-feed-item-label">{{ conference|num_submissions_by:user }} submissions to {{ conference.short_name }}:</div>
+            <ul>
+              {% for submission in conference|list_submission_by:user %}
+                <li>{{ submission.title }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="dccn-feed-item-label text-muted">Not attending {{ conference.short_name }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="dccn-feed-item-footer mt-2">
+        <a href="#" class="dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</a>
+        <div class="dccn-feed-item-id ml-auto">#{{ user.pk }}</div>
+      </div>
+
+    </div>
+  {% endfor %}
+{% endblock %}
+
+
+
+{#---------------------------------------------------------------------------#}
+{# Filter                                                                    #}
+{#---------------------------------------------------------------------------#}
+{% block filterPanel %}
+  <div class="dccn-chair-workspace-filter">
+{#    <form action="{% url 'chair:users' pk=conference.pk %}" method="GET" class="m-2">#}
+{#      {% bootstrap_field filter_form.term show_label=False %}#}
+{##}
+{#      <a href="#detailedFilterFormFields" class="d-block dccn-link mb-3" data-toggle="collapse" id="detailedFilterFormToggler">#}
+{#        <i class="fas fa-chevron-right"></i>&nbsp; Detailed filter#}
+{#      </a>#}
+{##}
+{#      <div class="collapse" id="detailedFilterFormFields">#}
+{#        <div class="form-group">#}
+{#          <div class="dccn-text-0">Types (<button type="button" class="btn btn-link dccn-link dccn-text-small clear-cb-btn">clear</button>):</div>#}
+{#          {{ filter_form.types }}#}
+{#        </div>#}
+{##}
+{#        <div class="form-group">#}
+{#          <div class="dccn-text-0">Topics (<button type="button" class="btn btn-link dccn-link dccn-text-small clear-cb-btn">clear</button>):</div>#}
+{#          {{ filter_form.topics }}#}
+{#        </div>#}
+{##}
+{#        <div class="form-group">#}
+{#          <div class="dccn-text-0">Status (<button type="button" class="btn btn-link dccn-link dccn-text-small clear-cb-btn">clear</button>):</div>#}
+{#          {{ filter_form.status }}#}
+{#        </div>#}
+{##}
+{#        <div class="form-group">#}
+{#          <div class="dccn-text-0">Countries (<button type="button" class="btn btn-link dccn-link dccn-text-small clear-cb-btn">clear</button>):</div>#}
+{#          {{ filter_form.countries }}#}
+{#        </div>#}
+{##}
+{#        <div class="form-group">#}
+{#          <div class="dccn-text-0">Affiliations (<button type="button" class="btn btn-link dccn-link dccn-text-small clear-cb-btn">clear</button>):</div>#}
+{#          {{ filter_form.affiliations }}#}
+{#        </div>#}
+{#      </div>#}
+{##}
+{#      <div class="form-group mt-2">#}
+{#        <button type="submit" class="btn btn-outline-info">Apply</button>#}
+{#        <a href="{% url 'chair:users' pk=conference.pk %}" class="btn btn-link dccn-link ml-3">Clear filter</a>#}
+{#      </div>#}
+{##}
+{#    </form>#}
+  </div>
+{% endblock %}
+
+
+{% block script %}
+<script>
+const detailedFilter = $('#detailedFilterFormFields');
+const detailedFilterTogglerIcon = $('#detailedFilterFormToggler i');
+
+detailedFilter.on('hidden.bs.collapse', function () {
+  detailedFilterTogglerIcon.removeClass('fa-chevron-down');
+  detailedFilterTogglerIcon.addClass('fa-chevron-right');
+});
+
+detailedFilter.on('shown.bs.collapse', function () {
+  detailedFilterTogglerIcon.removeClass('fa-chevron-right');
+  detailedFilterTogglerIcon.addClass('fa-chevron-down');
+});
+
+$('.clear-cb-btn').on('click', function () {
+  const parent = $(this).parent().parent();
+  parent.find('.form-check input').prop('checked', false);
+});
+
+</script>
+{% endblock %}

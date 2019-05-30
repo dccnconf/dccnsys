@@ -38,3 +38,8 @@ def get_affiliations_of(submissions):
             ret_set.add(item)
     ret = list(ret_set)
     return sorted(ret)
+
+
+def is_author(conference, user):
+    authors = get_authors_of(conference.submission_set.all())
+    return user in authors

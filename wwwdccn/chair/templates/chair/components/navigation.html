@@ -5,7 +5,7 @@
   <li class="{% if active == 'submissions' %}active{% endif %}">
     <a href="{% url 'chair:submissions' pk=conference.pk %}"><i class="far fa-copy mr-2"></i> Submissions</a>
   </li>
-  <li class="{% if active == 'authors' %}active{% endif %}">
-    <a href="{% url 'chair:authors' pk=conference.pk %}"><i class="fas fa-users mr-2"></i> Authors</a>
+  <li class="{% if active == 'users' %}active{% endif %}">
+    <a href="{% url 'chair:users' pk=conference.pk %}"><i class="fas fa-users mr-2"></i> Users</a>
   </li>
 </ul>
