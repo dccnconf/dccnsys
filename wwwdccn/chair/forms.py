@@ -50,3 +50,32 @@ class FilterSubmissionsForm(forms.ModelForm):
         self.fields['affiliations'].choices = [
             (aff, aff) for aff in get_affiliations_of(all_submissions)
         ]
+
+
+class FilterUsersForm(forms.ModelForm):
+    class Meta:
+        model = Conference
+        fields = []
+
+    term = forms.CharField(required=False)
+
+    attending = forms.BooleanField(required=False)
+
+    countries = forms.MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False,
+    )
+
+    affiliations = forms.MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        assert self.instance
+        all_submissions = self.instance.submission_set.all()
+        self.fields['countries'].choices = [
+            (cnt.code, cnt.name) for cnt in get_countries_of(all_submissions)
+        ]
+        self.fields['affiliations'].choices = [
+            (aff, aff) for aff in get_affiliations_of(all_submissions)
+        ]

@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from chair.forms import FilterSubmissionsForm
+from chair.forms import FilterSubmissionsForm, FilterUsersForm
 from conferences.decorators import chair_required
 from conferences.models import Conference
 
@@ -85,9 +85,48 @@ def submissions_list(request, pk):
 def users_list(request, pk):
     conference = get_object_or_404(Conference, pk=pk)
     users = User.objects.all()
+    form = FilterUsersForm(request.GET, instance=conference)
+
+    if form.is_valid():
+        term = form.cleaned_data['term']
+        attending = form.cleaned_data['attending']
+        countries = form.cleaned_data['countries']
+        affiliations = form.cleaned_data['affiliations']
+
+        if term:
+            words = term.lower().split()
+            users = [
+                user for user in users
+                if all(any(word in string for string in [
+                    user.profile.get_full_name().lower(),
+                    user.profile.get_full_name_rus().lower(),
+                    user.profile.affiliation.lower(),
+                    user.profile.get_country_display().lower()
+                    ]) for word in words)
+            ]
+
+        if attending:
+            users = [
+                user for user in users
+                if any(author.submission.conference == conference
+                       for author in user.authorship.all())
+            ]
+
+        if countries:
+            users = [
+                user for user in users if user.profile.country.code in countries
+            ]
+
+        if affiliations:
+            users = [
+                user for user in users
+                if user.profile.affiliation in affiliations
+            ]
+
     return render(request, 'chair/users_list.html', context={
         'conference': conference,
         'users': users,
+        'filter_form': form,
     })
 
 

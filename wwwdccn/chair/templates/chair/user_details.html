@@ -52,8 +52,8 @@
         {% if conference|is_author:user %}
           <div class="dccn-feed-item-label">{{ conference|num_submissions_by:user }} submissions to {{ conference.short_name }}:</div>
           <ul>
-            {% for submission in conference|list_submission_by:user %}
-              <li>{{ submission.title }}</li>
+            {% for submission in conference|list_submission_by:member %}
+              <li><a href="#submission-{{ submission.pk }}-modal" data-toggle="modal" class="dccn-link">{{ submission.title }}</a></li>
             {% endfor %}
           </ul>
         {% else %}
@@ -62,5 +62,28 @@
       </div>
     </div>
 
+    <div class="d-flex">
+      <a href="{% url 'chair:users' pk=conference.pk %}" class="btn btn-outline-secondary"><i class="fas fa-chevron-left"></i> Back to users list</a>
+    </div>
   </div>
+
+  {% for submission in conference|list_submission_by:member %}
+    <div class="modal fade" id="submission-{{ submission.pk }}-modal">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Submission #{{ submission.pk }}</h5>
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+          </div>
+          <div class="modal-body">
+            {% include 'chair/components/submission_overview_modal.html' with submission=submission %}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+
 {% endblock %}
