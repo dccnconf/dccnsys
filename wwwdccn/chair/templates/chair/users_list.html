@@ -57,6 +57,7 @@
       </div>
 
       <div class="dccn-feed-item-footer mt-2">
+        <a href="{% url 'chair:user' pk=conference.pk user_pk=user.pk %}" class="dccn-feed-item-link"><i class="fas fa-bars"></i> View</a>
         <a href="#" class="dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</a>
         <div class="dccn-feed-item-id ml-auto">#{{ user.pk }}</div>
       </div>

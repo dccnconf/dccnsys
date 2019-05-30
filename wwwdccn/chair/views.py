@@ -28,9 +28,10 @@ def submissions_list(request, pk):
 
     if form.is_valid():
         term = form.cleaned_data['term']
+        types = [int(t) for t in form.cleaned_data['types']]
         topics = [int(topic) for topic in form.cleaned_data['topics']]
         status = form.cleaned_data['status']
-        countries = [int(cnt) for cnt in form.cleaned_data['countries']]
+        countries = form.cleaned_data['countries']
         affiliations = form.cleaned_data['affiliations']
 
         if term:
@@ -52,10 +53,25 @@ def submissions_list(request, pk):
                        for topic in topics)
             ]
 
-        print(f'Topics: {topics}')
-        print(f'Status: {status}')
-        print(f'Countries: {countries}')
-        print(f'Affiliations: {affiliations}')
+        if types:
+            submissions = [sub for sub in submissions if sub.stype.pk in types]
+
+        if status:
+            submissions = [sub for sub in submissions if sub.status in status]
+
+        if countries:
+            submissions = [
+                sub for sub in submissions
+                if any(author.user.profile.country.code in countries
+                       for author in sub.authors.all())
+            ]
+
+        if affiliations:
+            submissions = [
+                sub for sub in submissions
+                if any(author.user.profile.affiliation in affiliations
+                       for author in sub.authors.all())
+            ]
 
     return render(request, 'chair/submissions_list.html', context={
         'conference': conference,
@@ -72,4 +88,15 @@ def users_list(request, pk):
     return render(request, 'chair/users_list.html', context={
         'conference': conference,
         'users': users,
+    })
+
+
+@chair_required
+@require_GET
+def user_details(request, pk, user_pk):
+    conference = get_object_or_404(Conference, pk=pk)
+    user = get_object_or_404(User, pk=user_pk)
+    return render(request, 'chair/user_details.html', context={
+        'conference': conference,
+        'member': user,
     })

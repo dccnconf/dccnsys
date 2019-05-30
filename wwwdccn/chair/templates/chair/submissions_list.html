@@ -26,6 +26,9 @@
 {# Main content                                                              #}
 {#---------------------------------------------------------------------------#}
 {% block mainPanelContent %}
+  <div class="dccn-panel-toolbar">
+  {{ submissions|length }}&nbsp;submissions
+  </div>
   {% for submission in submissions %}
     <div class="dccn-feed-item pb-3">
       <div class="dccn-feed-item-row">
@@ -41,7 +44,7 @@
         </div>
       </div>
       <p class="mb-2">
-        <a href="#" class="dccn-link dccn-text-3 font-weight-light">{{ submission.title }}</a>
+        <a href="#submission-{{ submission.pk }}-modal" class="dccn-link dccn-text-3 font-weight-light" data-toggle="modal">{{ submission.title }}</a>
       </p>
       <div class="mb-1">
         <p class="dccn-text-0">
