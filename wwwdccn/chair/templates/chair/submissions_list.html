@@ -27,7 +27,11 @@
 {#---------------------------------------------------------------------------#}
 {% block mainPanelContent %}
   <div class="dccn-panel-toolbar">
-  {{ submissions|length }}&nbsp;submissions
+    <p class="dccn-text-normal-light font-italic mb-3 mt-0">{{ num_items }}&nbsp;submissions, showing from {{ first_index }} to {{ last_index }}</p>
+    <div class="row">
+      <a href="{% url 'chair:submissions-pages' pk=conference.pk page=prev_page %}" class="btn btn-outline-info mr-auto {% if is_first_page %}disabled{% endif %}"><i class="fas fa-chevron-left"></i></a>
+      <a href="{% url 'chair:submissions-pages' pk=conference.pk page=next_page %}" class="btn btn-outline-info ml-auto {% if is_last_page %}disabled{% endif %}"><i class="fas fa-chevron-right"></i></a>
+    </div>
   </div>
   {% for submission in submissions %}
     <div class="dccn-feed-item pb-3">

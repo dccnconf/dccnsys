@@ -1,3 +1,5 @@
+import math
+
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
@@ -5,6 +7,9 @@ from django.views.decorators.http import require_GET
 from chair.forms import FilterSubmissionsForm, FilterUsersForm
 from conferences.decorators import chair_required
 from conferences.models import Conference
+
+
+ITEMS_PER_PAGE = 10
 
 
 User = get_user_model()
@@ -21,7 +26,7 @@ def dashboard(request, pk):
 
 @chair_required
 @require_GET
-def submissions_list(request, pk):
+def submissions_list(request, pk, page=1):
     conference = get_object_or_404(Conference, pk=pk)
     form = FilterSubmissionsForm(request.GET, instance=conference)
     submissions = list(conference.submission_set.all())
@@ -54,7 +59,8 @@ def submissions_list(request, pk):
             ]
 
         if types:
-            submissions = [sub for sub in submissions if sub.stype.pk in types]
+            submissions = [sub for sub in submissions
+                           if sub.stype and sub.stype.pk in types]
 
         if status:
             submissions = [sub for sub in submissions if sub.status in status]
@@ -73,16 +79,31 @@ def submissions_list(request, pk):
                        for author in sub.authors.all())
             ]
 
+    num_items = len(submissions)
+    num_pages = int(math.ceil(len(submissions) / ITEMS_PER_PAGE))
+    start_index = (page-1) * ITEMS_PER_PAGE
+    end_index = min(page * ITEMS_PER_PAGE, num_items)
+    submissions = submissions[start_index: end_index]
+
     return render(request, 'chair/submissions_list.html', context={
         'conference': conference,
         'submissions': submissions,
         'filter_form': form,
+        'num_pages': num_pages,
+        'num_items': num_items,
+        'page': page,
+        'next_page': page + 1,
+        'prev_page': page - 1,
+        'first_index': start_index + 1,
+        'last_index': end_index,
+        'is_first_page': start_index == 0,
+        'is_last_page': end_index == num_items,
     })
 
 
 @chair_required
 @require_GET
-def users_list(request, pk):
+def users_list(request, pk, page=1):
     conference = get_object_or_404(Conference, pk=pk)
     users = User.objects.all()
     form = FilterUsersForm(request.GET, instance=conference)
@@ -123,10 +144,25 @@ def users_list(request, pk):
                 if user.profile.affiliation in affiliations
             ]
 
+    num_items = len(users)
+    num_pages = int(math.ceil(len(users) / ITEMS_PER_PAGE))
+    start_index = (page-1) * ITEMS_PER_PAGE
+    end_index = min(page * ITEMS_PER_PAGE, num_items)
+    users = users[start_index: end_index]
+
     return render(request, 'chair/users_list.html', context={
         'conference': conference,
         'users': users,
         'filter_form': form,
+        'num_pages': num_pages,
+        'num_items': num_items,
+        'page': page,
+        'next_page': page + 1,
+        'prev_page': page - 1,
+        'first_index': start_index + 1,
+        'last_index': end_index,
+        'is_first_page': start_index == 0,
+        'is_last_page': end_index == num_items,
     })
 
 
