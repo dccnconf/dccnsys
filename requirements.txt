@@ -7,7 +7,7 @@ cffi==1.12.2
 chardet==3.0.4
 cryptography==2.6.1
 decorator==4.4.0
-Django==2.1.7
+Django==2.1.9
 django-anymail==6.0
 django-bootstrap4==0.0.8
 django-countries==5.3.3
