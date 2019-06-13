@@ -222,7 +222,8 @@ class Subscriptions(models.Model):
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.create(user=instance)
+        profile = Profile.objects.create(user=instance)
+        profile.avatar = generate_avatar(profile)
         Subscriptions.objects.create(user=instance)
 
 

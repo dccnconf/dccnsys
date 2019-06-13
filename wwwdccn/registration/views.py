@@ -14,11 +14,8 @@ def personal(request):
         form = PersonalForm(request.POST, instance=profile)
         if form.is_valid():
             form.save()
-
-            if not profile.avatar:
-                profile.avatar = generate_avatar(profile)
-                profile.save()
-
+            profile.avatar = generate_avatar(profile)
+            profile.save()
             return redirect('register-professional')
     else:
         form = PersonalForm(instance=profile)
