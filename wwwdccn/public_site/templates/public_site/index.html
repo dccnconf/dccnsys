@@ -47,11 +47,11 @@
               <form action="{% url 'login' %}" method="POST" novalidate>
                 {% csrf_token %}
                 <div class="form-group">
-                  <label for="email">Email address</label>
+                  <label for="loginEmail">Email address</label>
                   <input type="email" class="form-control form-control-lg" id="loginEmail" placeholder="Email" name="username" autocomplete="username">
                 </div>
                 <div class="form-group mb-4">
-                  <label for="password">Password</label>
+                  <label for="loginPassword">Password</label>
                   <input type="password" class="form-control form-control-lg" id="loginPassword" placeholder="Password" name="password" autocomplete="current-password">
                 </div>
                 <button type="submit" class="btn btn-success btn-lg btn-block">Sign In</button>
@@ -176,8 +176,8 @@
         </ul>
       </div>
       <div class="col-md-3">
+        <h5 class="text-uppercase">Contribute</h5>
         <ul class="list-unstyled">
-          <h5 class="text-uppercase">Contribute</h5>
           <li class="py-1"><a href="{% url 'signup' %}" class="text-secondary">Create user account</a></li>
           <li class="py-1"><a href="{% url 'login' %}" class="text-secondary">Sign in</a></li>
           <li class="py-1"><a href="#" class="text-secondary">Terms and conditions</a></li>
@@ -202,8 +202,7 @@
 <script>
 $(document).ready(() => {
   $('.dccn-springer-stats').each((index, elem) => {
-    var ctx = elem;
-    new Chart(ctx, {
+    new Chart(elem, {
       type: 'bar',
       data: {
         labels: ['2013', '2015', '2016', '2017', '2018'],
@@ -217,7 +216,7 @@ $(document).ready(() => {
 
   // Based on icl7126 answer from StackOverflow:
   // https://stackoverflow.com/questions/13903897/javascript-return-number-of-days-hours-minutes-seconds-between-two-dates
-  var timeUnitsBetween = function (startDate, endDate) {
+  const timeUnitsBetween = function (startDate, endDate) {
     let delta = {
       value: Math.abs(endDate - startDate) / 1000
     };
@@ -234,24 +233,33 @@ $(document).ready(() => {
     }, {});
   };
 
-  var displayCountdown = function (box) {
-    var tu = timeUnitsBetween(new Date(), new Date(box.attr('data-deadline')));
+  const displayCountdown = function (box, deadline) {
+    const tu = timeUnitsBetween(new Date(), deadline);
     box.find('.dccn-countdown-days').text(tu.days);
     box.find('.dccn-countdown-hours').text(tu.hours);
     box.find('.dccn-countdown-minutes').text(tu.minutes);
     box.find('.dccn-countdown-seconds').text(tu.seconds);
   };
 
-  var countdowns = $('.dccn-countdown-box');
-    countdowns.each((index, elem) => {
-      displayCountdown($(elem));
-    });
+  fetch('/conferences/ajax/1/')
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      const countdowns = $('.dccn-countdown-box');
+      const deadline = new Date(data['submission_deadline']);
 
-  setInterval(() => {
-    countdowns.each((index, elem) => {
-      displayCountdown($(elem));
+      countdowns.each((index, elem) => {
+
+        displayCountdown($(elem), deadline);
+      });
+
+      setInterval(() => {
+        countdowns.each((index, elem) => {
+          displayCountdown($(elem), deadline);
+        });
+      }, 10000);
     });
-  }, 10000);
 });
 </script>
 {% endblock %}
