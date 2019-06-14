@@ -7,6 +7,7 @@ from users.forms import PersonalForm, ProfessionalForm, SubscriptionsForm
 
 User = get_user_model()
 
+
 @login_required
 def personal(request):
     profile = request.user.profile
