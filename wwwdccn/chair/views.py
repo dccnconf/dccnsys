@@ -5,6 +5,7 @@ from datetime import datetime
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 from django.views.decorators.http import require_GET
 
 from chair.forms import FilterSubmissionsForm, FilterUsersForm
@@ -102,7 +103,12 @@ def get_submissions_csv(request, pk):
         owner = sub.created_by
         corr_author = owner.profile.get_full_name() if owner else ''
         corr_email = owner.email if owner else ''
-        link = sub.review_manuscript.url if sub.review_manuscript else ''
+
+        if sub.review_manuscript:
+            link = request.build_absolute_uri(
+                reverse('submissions:download-manuscript', args=[sub.pk]))
+        else:
+            link = ''
         stype = sub.stype.get_language_display() if sub.stype else ''
 
         row = [
