@@ -78,6 +78,8 @@ class Environment:
         self.SECRET_KEY = self.env('SECRET_KEY')
         self.RECAPTCHA_SITE_KEY = self.env('RECAPTCHA_SITE_KEY')
         self.RECAPTCHA_SECRET_KEY = self.env('RECAPTCHA_SECRET_KEY')
+        self.ADMIN_NAME = self.env('ADMIN_NAME')
+        self.ADMIN_EMAIL = self.env('ADMIN_EMAIL')
 
         # Derivatives and constants:
         self.DOMAIN = '.'.join(self.SITENAME.split('.')[-2:])
@@ -413,6 +415,8 @@ def write_env(c, env):
         'DB_PORT': env.DB_PORT,
         'RECAPTCHA_SITE_KEY': env.RECAPTCHA_SITE_KEY,
         'RECAPTCHA_SECRET_KEY': env.RECAPTCHA_SECRET_KEY,
+        'ADMIN_NAME': env.ADMIN_NAME,
+        'ADMIN_EMAIL': env.ADMIN_EMAIL,
     }
 
     with c.cd(f'/home/{env.VM_USER_NAME}/sites/{env.SITENAME}'):

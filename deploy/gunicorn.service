@@ -10,7 +10,7 @@ Restart=on-failure
 User=USERNAME
 WorkingDirectory=/home/USERNAME/sites/SITENAME/PROJNAME
 EnvironmentFile=/home/USERNAME/sites/SITENAME/.env
-ExecStart=/home/USERNAME/sites/SITENAME/.venv/bin/gunicorn --bind unix:/tmp/SITENAME.socket PROJNAME.wsgi:application
+ExecStart=/home/USERNAME/sites/SITENAME/.venv/bin/gunicorn --bind unix:/tmp/SITENAME.socket --access-logfile ../access.log --error-logfile ../error.log --workers 4 --timeout 120 PROJNAME.wsgi:application
 
 [Install]
 WantedBy=multi-user.target

@@ -30,6 +30,7 @@ if REMOTE_DEPLOY:
     SECRET_KEY = os.environ['SECRET_KEY']
     ALLOWED_HOSTS = [os.environ['SITENAME']]
     DEBUG = False
+    ADMINS = [(os.environ['ADMIN_NAME'], os.environ['ADMIN_EMAIL'])]
 else:
     # noinspection SpellCheckingInspection
     SECRET_KEY = '!unng-b4vbp6e=i^_gj!mrq56a88z4%6m2@_fhe8v!o*2k_%v*'
