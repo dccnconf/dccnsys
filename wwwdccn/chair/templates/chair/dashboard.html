@@ -21,11 +21,14 @@
     <div class="row">
       <div class="col-12 col-md-6 p-3">
         <div class="border border-light rounded mx-3">
-          <p class="ml-3">
-            <span class="dccn-text-larger text-success">{{ conference.submission_set.count }}</span>
-            &nbsp;
-            <span class="dccn-text-5">submissions</span>
-          </p>
+          <div class="row align-items-center">
+            <p class="ml-3 mr-auto">
+              <span class="dccn-text-larger text-success">{{ conference.submission_set.count }}</span>
+              &nbsp;
+              <span class="dccn-text-5">submissions</span>
+            </p>
+            <a class="btn btn-outline-info" href="{% url 'chair:export-submissions-csv' conference.pk %}" target="_blank"><i class="fas fa-2x fa-file-csv text-info"></i></a>
+          </div>
           <ul class="list-unstyled ml-5">
             {% for stype in conference.submissiontype_set.all %}
               <li>
@@ -38,11 +41,14 @@
       </div>
       <div class="col-12 col-md-6 p-3">
         <div class="border border-light rounded mx-3" style="height: 100%;">
-          <p class="ml-3">
-            <span class="dccn-text-larger text-success">{{ conference|submissions_authors|length }}</span>
-            &nbsp;
-            <span class="dccn-text-5">authors</span>
-          </p>
+          <div class="row align-items-center">
+            <p class="ml-3 mr-auto">
+              <span class="dccn-text-larger text-success">{{ conference|submissions_authors|length }}</span>
+              &nbsp;
+              <span class="dccn-text-5">authors</span>
+            </p>
+            <a class="btn btn-outline-info" href="{% url 'chair:export-authors-csv' conference.pk %}" target="_blank"><i class="fas fa-2x fa-file-csv text-info"></i></a>
+          </div>
         </div>
       </div>
     </div>
