@@ -72,7 +72,7 @@
 {% block filterPanel %}
   <div class="dccn-chair-workspace-filter">
     <form action="{% url 'chair:users' pk=conference.pk %}" method="GET" class="m-2">
-      {% bootstrap_field filter_form.term show_label=False %}
+      {% bootstrap_field filter_form.term show_label=False bound_css_class='' %}
 
       <a href="#detailedFilterFormFields" class="d-block dccn-link mb-3" data-toggle="collapse" id="detailedFilterFormToggler">
         <i class="fas fa-chevron-right"></i>&nbsp; Detailed filter
