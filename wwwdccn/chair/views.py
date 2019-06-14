@@ -49,7 +49,7 @@ def users_list(request, pk):
     form = FilterUsersForm(request.GET, instance=conference)
 
     if form.is_valid():
-        users = form.apply(users)
+        users = form.apply(users, conference)
 
     return render(request, 'chair/users_list.html', context={
         'conference': conference,

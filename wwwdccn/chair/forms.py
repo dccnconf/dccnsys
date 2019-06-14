@@ -6,12 +6,24 @@ from gears.widgets import CustomCheckboxSelectMultiple
 from submissions.models import Submission
 
 
+COMPLETION_STATUS = [
+    ('EMPTY', 'Empty submissions'),
+    ('INCOMPLETE', 'Incomplete submissions'),
+    ('COMPLETE', 'Complete submissions'),
+]
+
+
 class FilterSubmissionsForm(forms.ModelForm):
     class Meta:
         model = Conference
         fields = []
 
     term = forms.CharField(required=False)
+
+    completion = forms.MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False,
+        choices=COMPLETION_STATUS,
+    )
 
     types = forms.MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False,
@@ -53,6 +65,7 @@ class FilterSubmissionsForm(forms.ModelForm):
 
     def apply(self, submissions):
         term = self.cleaned_data['term']
+        completion = self.cleaned_data['completion']
         types = [int(t) for t in self.cleaned_data['types']]
         topics = [int(topic) for topic in self.cleaned_data['topics']]
         status = self.cleaned_data['status']
@@ -69,6 +82,19 @@ class FilterSubmissionsForm(forms.ModelForm):
                        any(word in a.user.profile.get_full_name_rus().lower()
                            for a in sub.authors.all())
                        for word in words)
+            ]
+
+        print('incomplete: ', completion)
+
+        if completion:
+            _show_incomplete = 'INCOMPLETE' in completion
+            _show_complete = 'COMPLETE' in completion
+            _show_empty = 'EMPTY' in completion
+            submissions = [
+                sub for sub in submissions
+                if (sub.warnings() and _show_incomplete or
+                    not sub.warnings() and _show_complete or
+                    not sub.title and _show_empty)
             ]
 
         if topics:
@@ -102,6 +128,12 @@ class FilterSubmissionsForm(forms.ModelForm):
         return submissions
 
 
+ATTENDING_STATUS = (
+    ('YES', 'Attending'),
+    ('NO', 'Not attending'),
+)
+
+
 class FilterUsersForm(forms.ModelForm):
     class Meta:
         model = Conference
@@ -109,7 +141,10 @@ class FilterUsersForm(forms.ModelForm):
 
     term = forms.CharField(required=False)
 
-    attending = forms.BooleanField(required=False)
+    attending_status = forms.MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False,
+        choices=ATTENDING_STATUS,
+    )
 
     countries = forms.MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False,
@@ -130,9 +165,9 @@ class FilterUsersForm(forms.ModelForm):
             (aff, aff) for aff in get_affiliations_of(all_submissions)
         ]
 
-    def apply(self, users):
+    def apply(self, users, conference):
         term = self.cleaned_data['term']
-        attending = self.cleaned_data['attending']
+        attending_status = self.cleaned_data['attending_status']
         countries = self.cleaned_data['countries']
         affiliations = self.cleaned_data['affiliations']
 
@@ -148,11 +183,17 @@ class FilterUsersForm(forms.ModelForm):
                     ]) for word in words)
             ]
 
-        if attending:
+        if attending_status:
+            _show_attending = 'YES' in attending_status
+            _show_not_attending = 'NO' in attending_status
+            _user_attending_map = {
+                u: any(author.submission.conference == conference
+                       for author in u.authorship.all()) for u in users}
+
             users = [
                 user for user in users
-                if any(author.submission.conference == conference
-                       for author in user.authorship.all())
+                if (_user_attending_map[user] and _show_attending or
+                    not _user_attending_map[user] and _show_not_attending)
             ]
 
         if countries:
