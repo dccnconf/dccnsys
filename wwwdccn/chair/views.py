@@ -1,9 +1,11 @@
 import csv
+import logging
 import math
+import time
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET
@@ -18,6 +20,7 @@ ITEMS_PER_PAGE = 10
 
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 @chair_required
@@ -49,18 +52,53 @@ def submissions_list(request, pk):
 @chair_required
 @require_GET
 def users_list(request, pk):
+    t0 = time.time()
     conference = get_object_or_404(Conference, pk=pk)
+    t01 = time.time()
     users = User.objects.all()
+    t02 = time.time()
     form = FilterUsersForm(request.GET, instance=conference)
+    t03 = time.time()
 
     if form.is_valid():
-        users = form.apply(users, conference)
+        users = form.apply(users)
 
-    return render(request, 'chair/users_list.html', context={
+    t1 = time.time()
+    profiles = {user: user.profile for user in users}
+    authors = {
+        user: list(user.authorship.filter(submission__conference=conference))
+        for user in users
+    }
+
+    t2 = time.time()
+    ups = [{
+        'pk': user.pk,
+        'name': profile.get_full_name(),
+        'name_rus': profile.get_full_name_rus(),
+        'avatar': profile.avatar,
+        'country': profile.country,
+        'city': profile.city,
+        'affiliation': profile.affiliation,
+        'degree': profile.degree,
+        'role': profile.role,
+        'num_submissions': len(authors[user]),
+        'is_participant': len(authors[user]) > 0,
+    } for user, profile in profiles.items()]
+
+    t3 = time.time()
+    ret = render(request, 'chair/users_list.html', context={
         'conference': conference,
-        'users': users,
+        'users': ups,
         'filter_form': form,
     })
+    t4 = time.time()
+    print('**** handling chair:users_list():')
+    print(f'* getting conference, user and form took {t1 - t0:.5f} ('
+          f'{t01 - t0:.5f}, {t02 - t01:.5f}, {t03 - t02:.5f}, {t1 - t03:.5f})')
+    print(f'* building profiles and authors dicts took {t2 - t1:.5f}')
+    print(f'* building ups list took {t3 - t2:.5f}')
+    print(f'* rendering took {t4 - t3:.5f}')
+    return ret
 
 
 @chair_required

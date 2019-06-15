@@ -13,6 +13,11 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 from django.urls import reverse_lazy
 
+
+def check_bool_env_var(name):
+    return name in os.environ and os.environ[name] in {'y', 'yes', 'true', 'on'}
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -31,11 +36,13 @@ if REMOTE_DEPLOY:
     ALLOWED_HOSTS = [os.environ['SITENAME']]
     DEBUG = False
     ADMINS = [(os.environ['ADMIN_NAME'], os.environ['ADMIN_EMAIL'])]
+    USE_DEBUG_TOOLBAR = check_bool_env_var('USE_DEBUG_TOOLBAR')
 else:
     # noinspection SpellCheckingInspection
     SECRET_KEY = '!unng-b4vbp6e=i^_gj!mrq56a88z4%6m2@_fhe8v!o*2k_%v*'
     ALLOWED_HOSTS = []
     DEBUG = True
+    USE_DEBUG_TOOLBAR = True
 
 
 # Application definition
@@ -271,3 +278,62 @@ if REMOTE_DEPLOY:
 else:
     RECAPTCHA_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
     RECAPTCHA_SECRET_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
+
+
+######################
+# DEBUG TOOLBAR
+if USE_DEBUG_TOOLBAR:
+    # DEBUG = True
+    INTERNAL_IPS = ['localhost', '127.0.0.1']
+    MIDDLEWARE += [
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    ]
+
+    INSTALLED_APPS += [
+        'debug_toolbar',
+    ]
+
+    DEBUG_TOOLBAR_PANELS = [
+        'debug_toolbar.panels.versions.VersionsPanel',
+        'debug_toolbar.panels.timer.TimerPanel',
+        'debug_toolbar.panels.settings.SettingsPanel',
+        'debug_toolbar.panels.headers.HeadersPanel',
+        'debug_toolbar.panels.request.RequestPanel',
+        'debug_toolbar.panels.sql.SQLPanel',
+        'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+        'debug_toolbar.panels.templates.TemplatesPanel',
+        'debug_toolbar.panels.cache.CachePanel',
+        'debug_toolbar.panels.signals.SignalsPanel',
+        'debug_toolbar.panels.logging.LoggingPanel',
+        'debug_toolbar.panels.redirects.RedirectsPanel',
+    ]
+
+    DEBUG_TOOLBAR_CONFIG = {
+        'INTERCEPT_REDIRECTS': False,
+    }
+
+
+    def show_toolbar(request):
+        return True
+
+    SHOW_TOOLBAR_CALLBACK = show_toolbar
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'wwwdccn.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}

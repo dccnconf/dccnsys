@@ -8,6 +8,8 @@ wwwdccn/media/
 /node_modules
 package-lock.json
 
+static_dist/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

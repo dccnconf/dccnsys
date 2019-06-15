@@ -1,9 +1,16 @@
+import time
+
 from django import forms
+from django.contrib.auth import get_user_model
 
 from conferences.helpers import get_countries_of, get_affiliations_of
 from conferences.models import Conference
 from gears.widgets import CustomCheckboxSelectMultiple
-from submissions.models import Submission
+from submissions.models import Submission, Author
+from users.models import Profile
+
+
+User = get_user_model()
 
 
 COMPLETION_STATUS = [
@@ -156,55 +163,82 @@ class FilterUsersForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        assert self.instance
-        all_submissions = self.instance.submission_set.all()
+        assert isinstance(self.instance, Conference)
+
+        # Getting profiles of all participants:
+        profiles = Profile.objects.filter(
+            user__authorship__submission__conference__pk=self.instance.pk
+        ).distinct()
+
+        # Extracting all the different countries:
+        countries = list(set(p.country for p in profiles))
+        countries.sort(key=lambda cnt: cnt.name)
         self.fields['countries'].choices = [
-            (cnt.code, cnt.name) for cnt in get_countries_of(all_submissions)
-        ]
-        self.fields['affiliations'].choices = [
-            (aff, aff) for aff in get_affiliations_of(all_submissions)
+            (cnt.code, cnt.name) for cnt in countries
         ]
 
-    def apply(self, users, conference):
+        # Extracting all the different affiliations:
+        affs = [item['affiliation'] for item in profiles.values('affiliation')]
+        affs.sort()
+        self.fields['affiliations'].choices = [(item, item) for item in affs]
+
+    def apply(self, users):
         term = self.cleaned_data['term']
         attending_status = self.cleaned_data['attending_status']
         countries = self.cleaned_data['countries']
         affiliations = self.cleaned_data['affiliations']
 
+        #
+        # Here we map users list to profiles, then work with profiles and
+        # finally map filtered profiles back to users.
+        #
+        # This is done for performance reasons to avoid huge number of
+        # duplicated SQL queries when requesting foreign key object via
+        # `user.profile` call.
+        #
+        # This optimization allowed to increase the filter speed more than
+        # 10 times.
+        #
+        profiles = list(Profile.objects.filter(user__in=users))
+
         if term:
             words = term.lower().split()
-            users = [
-                user for user in users
+            profiles = [
+                profile for profile in profiles
                 if all(any(word in string for string in [
-                    user.profile.get_full_name().lower(),
-                    user.profile.get_full_name_rus().lower(),
-                    user.profile.affiliation.lower(),
-                    user.profile.get_country_display().lower()
+                    profile.get_full_name().lower(),
+                    profile.get_full_name_rus().lower(),
+                    profile.affiliation.lower(),
+                    profile.get_country_display().lower()
                     ]) for word in words)
             ]
 
         if attending_status:
             _show_attending = 'YES' in attending_status
             _show_not_attending = 'NO' in attending_status
-            _user_attending_map = {
-                u: any(author.submission.conference == conference
-                       for author in u.authorship.all()) for u in users}
 
-            users = [
-                user for user in users
-                if (_user_attending_map[user] and _show_attending or
-                    not _user_attending_map[user] and _show_not_attending)
+            attending_profiles = Profile.objects.filter(
+                user__authorship__submission__conference=self.instance
+            ).distinct()
+
+            profiles = [
+                profile for profile in profiles
+                if (profile in attending_profiles and _show_attending or
+                    profile not in attending_profiles and _show_not_attending)
             ]
 
         if countries:
-            users = [
-                user for user in users if user.profile.country.code in countries
+            profiles = [
+                profile for profile in profiles
+                if profile.country.code in countries
             ]
 
         if affiliations:
-            users = [
-                user for user in users
-                if user.profile.affiliation in affiliations
+            profiles = [
+                profile for profile in profiles
+                if profile.affiliation in affiliations
             ]
+
+        users = User.objects.filter(profile__in=profiles)
 
         return users
