@@ -1,49 +1,46 @@
 {% load submission_extras %}
 
 <!-- MAIN AREA -->
-<div class="">
+<div class="dccn-panel-body">
+  <div class="d-flex">
+    <p class="dccn-text-small text-muted mb-3">{{ submission.conference.short_name }}</p>
+    <div class="ml-auto"></div>
+    <p class="dccn-text-small">
+      {{ submission.get_status_display }} <i class="fas fa-circle {{ submission|status_class }}"></i>
+    </p>
+  </div>
 
-  <div class="dccn-panel-body">
-    <div class="d-flex">
-      <p class="dccn-text-small text-muted mb-3">{{ submission.conf_short_name }}</p>
-      <div class="ml-auto"></div>
-      <p class="dccn-text-small">
-        {{ submission.get_status_display }} <i class="fas fa-circle {{ submission|status_class }}"></i>
-      </p>
-    </div>
+  <p class="text-center dccn-text-larger-light">{{ submission.title }}</p>
+  <p class="text-center dccn-text-2-light mt-2">{{ submission.get_authors_display }}</p>
+  <p class="text-justify dccn-text-0 mt-3"><strong>Abstract:</strong> {{ submission.abstract }}</p>
 
-    <p class="text-center dccn-text-larger-light">{{ submission.title }}</p>
-    <p class="text-center dccn-text-2-light mt-2">{{ submission.get_authors_display }}</p>
-    <p class="text-justify dccn-text-0 mt-3"><strong>Abstract:</strong> {{ submission.abstract }}</p>
+  <p class="dccn-text-0 mt-3"><strong>Topics:</strong></p>
+  <ul class="list-unstyled mt-0">
+    {% for topic in submission.topics.all %}
+      <li class="dccn-text-0"><i class="far fa-check-square"></i> {{ topic }}</li>
+    {% endfor %}
+  </ul>
 
-    <p class="dccn-text-0 mt-3"><strong>Topics:</strong></p>
-    <ul class="list-unstyled mt-0">
-      {% for topic in submission.topics.all %}
-        <li class="dccn-text-0"><i class="far fa-check-square"></i> {{ topic }}</li>
+  <p class="dccn-text-0 mt-3"><strong>Submission type:</strong> {{ submission.stype.name }}</p>
+
+  {% if submission.review_manuscript %}
+    <p class="dccn-text-0 mt-3">
+      <strong>Review Manuscript: </strong>
+      <a href="{% url 'submissions:download-manuscript' pk=submission.pk %}" class="dccn-link" target="_blank">
+        <i class="far fa-file-pdf"></i> {{ submission.get_review_manuscript_name }}
+      </a>
+    </p>
+  {% endif %}
+
+  {% if submission.warnings %}
+    <p class="dccn-text-0 mt-3"><strong>Warnings:</strong></p>
+    <ul class="list-unstyled">
+      {% for warning in submission.warnings %}
+      <li>
+        <span class="text-warning-13"><i class="fas fa-exclamation-circle"></i> {{ warning }}</span>
+      </li>
       {% endfor %}
     </ul>
+  {% endif %}
 
-    <p class="dccn-text-0 mt-3"><strong>Submission type:</strong> {{ submission.stype.name }}</p>
-
-    {% if submission.review_manuscript %}
-      <p class="dccn-text-0 mt-3">
-        <strong>Review Manuscript: </strong>
-        <a href="{% url 'submissions:download-manuscript' pk=submission.pk %}" class="dccn-link" target="_blank">
-          <i class="far fa-file-pdf"></i> {{ submission.get_review_manuscript_name }}
-        </a>
-      </p>
-    {% endif %}
-
-    {% if submission.warnings %}
-      <p class="dccn-text-0 mt-3"><strong>Warnings:</strong></p>
-      <ul class="list-unstyled">
-        {% for warning in submission.warnings %}
-        <li>
-          <span class="text-warning-13"><i class="fas fa-exclamation-circle"></i> {{ warning }}</span>
-        </li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-
-  </div>
 </div>

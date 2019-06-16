@@ -1,17 +1,19 @@
 import csv
 import logging
+import math
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render
-from django.urls import reverse
+from django.urls import reverse, resolve
 from django.views.decorators.http import require_GET
 
 from chair.forms import FilterSubmissionsForm, FilterUsersForm
 from conferences.decorators import chair_required
 from conferences.helpers import is_author
 from conferences.models import Conference, Topic
+from submissions.models import Submission
 from users.models import Profile
 
 ITEMS_PER_PAGE = 10
@@ -21,19 +23,60 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
-@chair_required
+def validate_chair_access(user, conference):
+    if user not in conference.chairs.all():
+        raise Http404
+
+
+def _build_paged_view_context(request, items, page, viewname, kwargs):
+    num_items = len(items)
+    num_pages = int(math.ceil(num_items / ITEMS_PER_PAGE))
+
+    if page < 1 or page > max(num_pages, 1):
+        raise Http404
+
+    first_index = min((page - 1) * ITEMS_PER_PAGE, num_items)
+    last_index = min(page * ITEMS_PER_PAGE, num_items)
+    prev_page_url, next_page_url = '', ''
+    query_string = request.GET.urlencode()
+
+    if page > 1:
+        _kwargs = dict(kwargs)
+        _kwargs['page'] = page - 1
+        prev_page_url = reverse(viewname, kwargs=_kwargs)
+        if query_string:
+            prev_page_url = prev_page_url + '?' + query_string
+
+    if page < num_pages:
+        _kwargs = dict(kwargs)
+        _kwargs['page'] = page + 1
+        next_page_url = reverse(viewname, kwargs=_kwargs)
+        if query_string:
+            next_page_url = next_page_url + '?' + query_string
+
+    return {
+        'items': items[first_index:last_index],
+        'num_items': num_items,
+        'prev_page_url': prev_page_url,
+        'next_page_url': next_page_url,
+        'first_index': first_index + 1,
+        'last_index': last_index,
+    }
+
+
 @require_GET
 def dashboard(request, pk):
     conference = get_object_or_404(Conference, pk=pk)
+    validate_chair_access(request.user, conference)
     return render(request, 'chair/dashboard.html', context={
         'conference': conference,
     })
 
 
-@chair_required
 @require_GET
-def submissions_list(request, pk):
+def submissions_list(request, pk, page=1):
     conference = get_object_or_404(Conference, pk=pk)
+    validate_chair_access(request.user, conference)
     form = FilterSubmissionsForm(request.GET, instance=conference)
     submissions = conference.submission_set.all()
 
@@ -46,39 +89,31 @@ def submissions_list(request, pk):
         )
         for sub in submissions
     }
-    conf_short_name = conference.short_name
 
-    # TODO (optional): find a way to optimize listing topics.
-    subs = [{
+    items = [{
         'object': sub,
         'warnings': sub.warnings(),
         'title': sub.title,
-        'abstract': sub.abstract,
         'authors': [{
             'name': f"{profile['first_name']} {profile['last_name']}",
             'user_pk': profile['user__pk'],
         } for profile in auth_prs[sub]],
-        'authors_display': ', '.join(
-            f"{p['first_name']} {p['last_name']}" for p in auth_prs[sub]
-        ),
         'pk': sub.pk,
         'status': sub.status,  # this is needed to make `status_class` work,
         'status_display': sub.get_status_display(),
     } for sub in submissions]
 
-    ret = render(request, 'chair/submissions_list.html', context={
-        'conference': conference,
-        'submissions': subs,
-        'filter_form': form,
-    })
-
-    return ret
+    context = _build_paged_view_context(
+        request, items, page, 'chair:submissions-pages', {'pk': pk}
+    )
+    context.update({'conference': conference, 'filter_form': form})
+    return render(request, 'chair/submissions_list.html', context=context)
 
 
-@chair_required
 @require_GET
-def users_list(request, pk):
+def users_list(request, pk, page=1):
     conference = get_object_or_404(Conference, pk=pk)
+    validate_chair_access(request.user, conference)
     users = User.objects.all()
     form = FilterUsersForm(request.GET, instance=conference)
 
@@ -91,7 +126,7 @@ def users_list(request, pk):
         for user in users
     }
 
-    ups = [{
+    items = [{
         'pk': user.pk,
         'name': profile.get_full_name(),
         'name_rus': profile.get_full_name_rus(),
@@ -105,23 +140,34 @@ def users_list(request, pk):
         'is_participant': len(authors[user]) > 0,
     } for user, profile in profiles.items()]
 
-    ret = render(request, 'chair/users_list.html', context={
-        'conference': conference,
-        'users': ups,
-        'filter_form': form,
-    })
-    return ret
+    context = _build_paged_view_context(
+        request, items, page, 'chair:users-pages', {'pk': pk}
+    )
+    context.update({'conference': conference, 'filter_form': form})
+    return render(request, 'chair/users_list.html', context=context)
 
 
-@chair_required
 @require_GET
 def user_details(request, pk, user_pk):
     conference = get_object_or_404(Conference, pk=pk)
+    validate_chair_access(request.user, conference)
     user = get_object_or_404(User, pk=user_pk)
     return render(request, 'chair/user_details.html', context={
         'conference': conference,
         'member': user,
+        'next_url': request.GET.get('next', ''),
     })
+
+
+#############################################################################
+# AJAX PARTIAL HTML
+#############################################################################
+@require_GET
+def get_submission_overview(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    validate_chair_access(request.user, submission.conference)
+    return render(request, 'chair/components/submission_overview_modal.html',
+                  context={'submission': submission})
 
 
 #############################################################################

@@ -28,9 +28,19 @@
 {#---------------------------------------------------------------------------#}
 {% block mainPanelContent %}
   <div class="dccn-panel-toolbar mt-2">
-    <p class="dccn-text-normal-light mb-3 mt-0">{{ submissions|length }}&nbsp;submissions</p>
+    <p class="dccn-text-normal-light mb-3 mt-0">{{ num_items }}&nbsp;submissions found{% if num_items > 0 %}, showing from {{ first_index }} to {{ last_index }}{% endif %}</p>
+    <div class="row">
+      <a href="{{ prev_page_url }}"
+         class="btn btn-outline-secondary mr-auto {% if not prev_page_url %}disabled{% endif %}">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+      <a href="{{ next_page_url }}"
+         class="btn btn-outline-secondary ml-auto {% if not next_page_url %}disabled{% endif %}">
+        <i class="fas fa-chevron-right"></i>
+      </a>
+    </div>
   </div>
-  {% for sub in submissions %}
+  {% for sub in items %}
     <div class="dccn-feed-item pb-3">
       <div class="dccn-feed-item-row">
         <div class="ml-auto"></div>
@@ -64,7 +74,7 @@
         <p class="dccn-text-0">
           {% for author in sub.authors %}
             <span>
-              <a href="{% url 'chair:user' pk=conference.pk user_pk=author.user_pk %}"
+              <a href="{% url 'chair:user' pk=conference.pk user_pk=author.user_pk %}?next={{ request.get_full_path|urlencode }}"
                  class="dccn-link dccn-text-small font-weight-light">
                 {{ author.name }}</a>{% if not forloop.last %},&nbsp;{% endif %}
             </span>
@@ -85,7 +95,8 @@
         <div class="dccn-feed-item-id ml-auto">#{{ sub.pk }}</div>
       </div>
 
-      <div class="modal fade" id="submission-{{ sub.pk }}-modal">
+      <div class="modal fade" id="submission-{{ sub.pk }}-modal"
+           data-src="{% url 'chair:get-submission-overview' sub.pk %}">
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
             <div class="modal-header">
@@ -95,7 +106,7 @@
               </button>
             </div>
             <div class="modal-body">
-              {% include 'chair/components/submission_overview_modal.html' with submission=sub.object %}
+{#              {% include 'chair/components/submission_overview_modal.html' with submission=sub.object %}#}
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
@@ -216,5 +227,14 @@ $(document).ready(function () {
     detailedFilter.collapse('hide');
   }
 });
+
+// Get modal body content on modal show:
+const modals = $('.modal[data-src]');
+console.log(modals);
+modals.on('show.bs.modal', function () {
+  const thisModal = $(this);
+  $(this).find('.modal-body').load(thisModal.attr('data-src'));
+});
+
 </script>
 {% endblock %}

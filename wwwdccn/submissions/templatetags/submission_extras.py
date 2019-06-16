@@ -9,7 +9,7 @@ register = template.Library()
 def status_class(submission):
     try:
         status = submission.status
-        warnings = submission.warnings
+        warnings = submission.warnings()
     except AttributeError:
         status = submission['status']
         warnings = submission['warnings']
