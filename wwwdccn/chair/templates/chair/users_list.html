@@ -1,4 +1,4 @@
-{% extends 'chair/base.html' %}
+{% extends 'chair/base_listview.html' %}
 {% load conferences_extras %}
 {% load bootstrap4 %}
 
@@ -25,54 +25,41 @@
 {#---------------------------------------------------------------------------#}
 {# Main content                                                              #}
 {#---------------------------------------------------------------------------#}
-{% block mainPanelContent %}
-  <div class="dccn-panel-toolbar mt-2">
-    <p class="dccn-text-normal-light mb-3 mt-0">{{ num_items }}&nbsp;users found{% if num_items > 0 %}, showing from {{ first_index }} to {{ last_index }}{% endif %}</p>
-    <div class="row">
-      <a href="{{ prev_page_url }}"
-         class="btn btn-outline-secondary mr-auto {% if not prev_page_url %}disabled{% endif %}">
-        <i class="fas fa-chevron-left"></i>
-      </a>
-      <a href="{{ next_page_url }}"
-         class="btn btn-outline-secondary ml-auto {% if not next_page_url %}disabled{% endif %}">
-        <i class="fas fa-chevron-right"></i>
-      </a>
+{% block listViewContent %}
+{% for item in items %}
+<div class="dccn-feed-item pb-3">
+  <div class="d-flex align-items-center">
+    <a href="{% url 'chair:user' pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
+      <img src="{{ item.avatar.url }}" alt="{{ item.name }} profile image" class="rounded-circle img-fluid mr-3" style="width: 96px; height: 96px;">
+    </a>
+    <div>
+      <h4 class="dccn-text-3-light">{{ item.name }}</h4>
+      {% if item.name_rus %}
+        <p class="dccn-text-small text-muted">{{ item.name_rus }}</p>
+      {% endif %}
+      <p class="dccn-text-small mt-1">{{ item.country }}, {{ item.city }}, {{ item.affiliation }}</p>
+      <p class="dccn-text-small mt-0 text-muted">{{ item.degree }}, {{ item.role }}</p>
     </div>
   </div>
-  {% for u in items %}
-    <div class="dccn-feed-item pb-3">
-      <div class="d-flex align-items-center">
-        <a href="{% url 'chair:user' pk=conference.pk user_pk=u.pk %}?next={{ request.get_full_path|urlencode }}">
-          <img src="{{ u.avatar.url }}" alt="{{ u.name }} profile image" class="rounded-circle img-fluid mr-3" style="width: 96px; height: 96px;">
-        </a>
-        <div>
-          <h4 class="dccn-text-3-light">{{ u.name }}</h4>
-          {% if u.name_rus %}
-            <p class="dccn-text-small text-muted">{{ u.name_rus }}</p>
-          {% endif %}
-          <p class="dccn-text-small mt-1">{{ u.country }}, {{ u.city }}, {{ u.affiliation }}</p>
-          <p class="dccn-text-small mt-0 text-muted">{{ u.degree }}, {{ u.role }}</p>
-        </div>
-      </div>
 
-      <div class="d-flex align-items-center mt-2 dccn-text-0-light">
-        <div class="mx-0 my-0">
-          {% if u.is_participant %}
-            <div class="dccn-feed-item-label">{{ u.num_submissions }} submissions to {{ conference.short_name }}</div>
-          {% else %}
-            <div class="dccn-feed-item-label text-muted">Not attending {{ conference.short_name }}</div>
-          {% endif %}
-        </div>
-      </div>
-
-      <div class="dccn-feed-item-footer mt-2">
-        <a href="{% url 'chair:user' pk=conference.pk user_pk=u.pk %}?next={{ request.get_full_path|urlencode }}" class="dccn-feed-item-link"><i class="fas fa-bars"></i> View</a>
-        <a href="#" class="dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</a>
-        <div class="dccn-feed-item-id ml-auto">#{{ u.pk }}</div>
-      </div>
-
+  <div class="d-flex align-items-center mt-2 dccn-text-0-light">
+    <div class="mx-0 my-0">
+      {% if item.is_participant %}
+        <div class="dccn-feed-item-label">{{ item.num_submissions }} submissions to {{ conference.short_name }}</div>
+      {% else %}
+        <div class="dccn-feed-item-label text-muted">Not attending {{ conference.short_name }}</div>
+      {% endif %}
     </div>
-  {% endfor %}
+  </div>
+
+  <div class="dccn-feed-item-footer mt-2">
+    <a href="{% url 'chair:user' pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}" class="dccn-feed-item-link"><i class="fas fa-bars"></i> View</a>
+    <a href="#" class="dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</a>
+    <div class="dccn-feed-item-id ml-auto">#{{ item.pk }}</div>
+  </div>
+
+</div>
+{% endfor %}
 {% endblock %}
 
 
@@ -125,39 +112,9 @@
 {% endblock %}
 
 
-{% block script %}
-<script>
-const detailedFilter = $('#detailedFilterFormFields');
-const detailedFilterTogglerIcon = $('#detailedFilterFormToggler i');
-
-detailedFilter.on('hidden.bs.collapse', function () {
-  detailedFilterTogglerIcon.removeClass('fa-chevron-down');
-  detailedFilterTogglerIcon.addClass('fa-chevron-right');
-});
-
-detailedFilter.on('shown.bs.collapse', function () {
-  detailedFilterTogglerIcon.removeClass('fa-chevron-right');
-  detailedFilterTogglerIcon.addClass('fa-chevron-down');
-});
-
-$('.clear-cb-btn').on('click', function () {
-  const parent = $(this).parent().parent();
-  parent.find('.form-check input').prop('checked', false);
-});
-
-$('.select-all-cb-btn').on('click', function () {
-  const parent = $(this).parent().parent();
-  parent.find('.form-check input').prop('checked', true);
-});
-
-$(document).ready(function () {
-  const formFilled = detailedFilter.attr('data-form-filled') === 'True';
-  if (formFilled) {
-    detailedFilter.collapse('show');
-  } else {
-    detailedFilter.collapse('hide');
-  }
-});
-
-</script>
+{#---------------------------------------------------------------------------#}
+{# Script                                                                    #}
+{#---------------------------------------------------------------------------#}
+{% block listItemScript %}
+{#  Put additional JS script here if needed #}
 {% endblock %}
