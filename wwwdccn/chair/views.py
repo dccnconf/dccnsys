@@ -37,7 +37,7 @@ def dashboard(request, pk):
 def submissions_list(request, pk):
     conference = get_object_or_404(Conference, pk=pk)
     form = FilterSubmissionsForm(request.GET, instance=conference)
-    submissions = list(conference.submission_set.all())
+    submissions = conference.submission_set.all()
 
     if form.is_valid():
         submissions = form.apply(submissions)
@@ -52,25 +52,19 @@ def submissions_list(request, pk):
 @chair_required
 @require_GET
 def users_list(request, pk):
-    t0 = time.time()
     conference = get_object_or_404(Conference, pk=pk)
-    t01 = time.time()
     users = User.objects.all()
-    t02 = time.time()
     form = FilterUsersForm(request.GET, instance=conference)
-    t03 = time.time()
 
     if form.is_valid():
         users = form.apply(users)
 
-    t1 = time.time()
     profiles = {user: user.profile for user in users}
     authors = {
         user: list(user.authorship.filter(submission__conference=conference))
         for user in users
     }
 
-    t2 = time.time()
     ups = [{
         'pk': user.pk,
         'name': profile.get_full_name(),
@@ -85,19 +79,11 @@ def users_list(request, pk):
         'is_participant': len(authors[user]) > 0,
     } for user, profile in profiles.items()]
 
-    t3 = time.time()
     ret = render(request, 'chair/users_list.html', context={
         'conference': conference,
         'users': ups,
         'filter_form': form,
     })
-    t4 = time.time()
-    print('**** handling chair:users_list():')
-    print(f'* getting conference, user and form took {t1 - t0:.5f} ('
-          f'{t01 - t0:.5f}, {t02 - t01:.5f}, {t03 - t02:.5f}, {t1 - t03:.5f})')
-    print(f'* building profiles and authors dicts took {t2 - t1:.5f}')
-    print(f'* building ups list took {t3 - t2:.5f}')
-    print(f'* rendering took {t4 - t3:.5f}')
     return ret
 
 
