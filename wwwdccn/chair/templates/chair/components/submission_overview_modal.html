@@ -8,12 +8,12 @@
       <p class="dccn-text-small text-muted mb-3">{{ submission.conf_short_name }}</p>
       <div class="ml-auto"></div>
       <p class="dccn-text-small">
-        {{ submission.status_display }} <i class="fas fa-circle {{ submission|status_class }}"></i>
+        {{ submission.get_status_display }} <i class="fas fa-circle {{ submission|status_class }}"></i>
       </p>
     </div>
 
     <p class="text-center dccn-text-larger-light">{{ submission.title }}</p>
-    <p class="text-center dccn-text-2-light mt-2">{{ submission.authors_display }}</p>
+    <p class="text-center dccn-text-2-light mt-2">{{ submission.get_authors_display }}</p>
     <p class="text-justify dccn-text-0 mt-3"><strong>Abstract:</strong> {{ submission.abstract }}</p>
 
     <p class="dccn-text-0 mt-3"><strong>Topics:</strong></p>
@@ -29,12 +29,9 @@
       <p class="dccn-text-0 mt-3">
         <strong>Review Manuscript: </strong>
         <a href="{% url 'submissions:download-manuscript' pk=submission.pk %}" class="dccn-link" target="_blank">
-          <i class="far fa-file-pdf"></i> {{ submission.review_manuscript_name }}
+          <i class="far fa-file-pdf"></i> {{ submission.get_review_manuscript_name }}
         </a>
       </p>
-      {% if not submission.can_edit_review_manuscript %}
-        <p class="mt-1 dccn-text-small-light text-muted">Review manuscript can not be changed after review started.</p>
-      {% endif %}
     {% endif %}
 
     {% if submission.warnings %}

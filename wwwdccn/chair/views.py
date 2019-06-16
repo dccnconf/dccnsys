@@ -50,6 +50,7 @@ def submissions_list(request, pk):
 
     # TODO (optional): find a way to optimize listing topics.
     subs = [{
+        'object': sub,
         'warnings': sub.warnings(),
         'title': sub.title,
         'abstract': sub.abstract,
@@ -63,12 +64,6 @@ def submissions_list(request, pk):
         'pk': sub.pk,
         'status': sub.status,  # this is needed to make `status_class` work,
         'status_display': sub.get_status_display(),
-        'topics': sub.topics,
-        'stype': sub.stype.name if sub.stype else '',
-        'review_manuscript': sub.review_manuscript,
-        'review_manuscript_name': sub.get_review_manuscript_name(),
-        'can_edit_review_manuscript': sub.can_edit_review_manuscript(),
-        'conf_short_name': conf_short_name,
     } for sub in submissions]
 
     ret = render(request, 'chair/submissions_list.html', context={
