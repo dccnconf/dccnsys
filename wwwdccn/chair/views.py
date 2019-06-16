@@ -1,11 +1,12 @@
 import csv
 import logging
 import math
+import time
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse, Http404
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 
@@ -193,6 +194,10 @@ def get_submission_overview(request, pk):
 def get_submissions_csv(request, pk):
     conference = get_object_or_404(Conference, pk=pk)
     submissions = list(conference.submission_set.all().order_by('pk'))
+    profs = {
+        sub: Profile.objects.filter(user__authorship__submission=sub).all()
+        for sub in submissions
+    }
 
     # Create the HttpResponse object with the appropriate CSV header.
     response = HttpResponse(content_type='text/csv')
@@ -206,11 +211,10 @@ def get_submissions_csv(request, pk):
         '#', 'ID', 'TITLE', 'AUTHORS', 'COUNTRY', 'CORR_AUTHOR', 'CORR_EMAIL',
         'LANGUAGE', 'LINK',
     ])
+
     for sub in submissions:
-        authors = ', '.join(a.user.profile.get_full_name()
-                           for a in sub.authors.all())
-        countries = ', '.join(set(a.user.profile.get_country_display()
-                             for a in sub.authors.all()))
+        authors = ', '.join(pr.get_full_name() for pr in profs[sub])
+        countries = ', '.join(set(p.get_country_display() for p in profs[sub]))
         owner = sub.created_by
         corr_author = owner.profile.get_full_name() if owner else ''
         corr_email = owner.email if owner else ''
@@ -236,8 +240,12 @@ def get_submissions_csv(request, pk):
 @require_GET
 def get_authors_csv(request, pk):
     conference = get_object_or_404(Conference, pk=pk)
-    users = [u for u in User.objects.all().order_by('pk')
-             if is_author(conference, u)]
+
+    users = {
+        user: list(user.authorship.filter(
+            submission__conference=conference
+        ).order_by('pk')) for user in User.objects.all()
+    }
 
     # Create the HttpResponse object with the appropriate CSV header.
     response = HttpResponse(content_type='text/csv')
@@ -251,12 +259,13 @@ def get_authors_csv(request, pk):
         '#', 'ID', 'FULL_NAME', 'FULL_NAME_RUS', 'DEGREE', 'COUNTRY', 'CITY',
         'AFFILIATION', 'ROLE', 'EMAIL'
     ])
+
     for user in users:
         prof = user.profile
         row = [
             number, user.pk, prof.get_full_name(), prof.get_full_name_rus(),
-            prof.degree, prof.get_country_display(), prof.city, prof.affiliation,
-            prof.role, user.email,
+            prof.degree, prof.get_country_display(), prof.city,
+            prof.affiliation, prof.role, user.email,
         ]
         writer.writerow(row)
         number += 1
