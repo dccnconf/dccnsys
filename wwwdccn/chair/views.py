@@ -1,7 +1,5 @@
 import csv
 import logging
-import math
-import time
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
@@ -13,8 +11,8 @@ from django.views.decorators.http import require_GET
 from chair.forms import FilterSubmissionsForm, FilterUsersForm
 from conferences.decorators import chair_required
 from conferences.helpers import is_author
-from conferences.models import Conference
-
+from conferences.models import Conference, Topic
+from users.models import Profile
 
 ITEMS_PER_PAGE = 10
 
@@ -42,11 +40,44 @@ def submissions_list(request, pk):
     if form.is_valid():
         submissions = form.apply(submissions)
 
-    return render(request, 'chair/submissions_list.html', context={
+    auth_prs = {
+        sub: Profile.objects.filter(user__authorship__submission=sub).values(
+            'first_name', 'last_name', 'user__pk',
+        )
+        for sub in submissions
+    }
+    conf_short_name = conference.short_name
+
+    # TODO (optional): find a way to optimize listing topics.
+    subs = [{
+        'warnings': sub.warnings(),
+        'title': sub.title,
+        'abstract': sub.abstract,
+        'authors': [{
+            'name': f"{profile['first_name']} {profile['last_name']}",
+            'user_pk': profile['user__pk'],
+        } for profile in auth_prs[sub]],
+        'authors_display': ', '.join(
+            f"{p['first_name']} {p['last_name']}" for p in auth_prs[sub]
+        ),
+        'pk': sub.pk,
+        'status': sub.status,  # this is needed to make `status_class` work,
+        'status_display': sub.get_status_display(),
+        'topics': sub.topics,
+        'stype': sub.stype.name if sub.stype else '',
+        'review_manuscript': sub.review_manuscript,
+        'review_manuscript_name': sub.get_review_manuscript_name(),
+        'can_edit_review_manuscript': sub.can_edit_review_manuscript(),
+        'conf_short_name': conf_short_name,
+    } for sub in submissions]
+
+    ret = render(request, 'chair/submissions_list.html', context={
         'conference': conference,
-        'submissions': submissions,
+        'submissions': subs,
         'filter_form': form,
     })
+
+    return ret
 
 
 @chair_required

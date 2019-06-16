@@ -3,10 +3,9 @@ import time
 from django import forms
 from django.contrib.auth import get_user_model
 
-from conferences.helpers import get_countries_of, get_affiliations_of
 from conferences.models import Conference
 from gears.widgets import CustomCheckboxSelectMultiple
-from submissions.models import Submission, Author
+from submissions.models import Submission
 from users.models import Profile
 
 
@@ -55,20 +54,31 @@ class FilterSubmissionsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        assert self.instance
+        assert isinstance(self.instance, Conference)
+
         self.fields['types'].choices = [
             (st.pk, st) for st in self.instance.submissiontype_set.all()
         ]
         self.fields['topics'].choices = [
             (topic.pk, topic) for topic in self.instance.topic_set.all()
         ]
-        all_submissions = self.instance.submission_set.all()
+
+        # Getting profiles of all participants:
+        profiles = Profile.objects.filter(
+            user__authorship__submission__conference__pk=self.instance.pk
+        ).distinct()
+
+        # Extracting all the different countries:
+        countries = list(set(p.country for p in profiles))
+        countries.sort(key=lambda cnt: cnt.name)
         self.fields['countries'].choices = [
-            (cnt.code, cnt.name) for cnt in get_countries_of(all_submissions)
+            (cnt.code, cnt.name) for cnt in countries
         ]
-        self.fields['affiliations'].choices = [
-            (aff, aff) for aff in get_affiliations_of(all_submissions)
-        ]
+
+        # Extracting all the different affiliations:
+        affs = [item['affiliation'] for item in profiles.values('affiliation')]
+        affs.sort()
+        self.fields['affiliations'].choices = [(item, item) for item in affs]
 
     def apply(self, submissions):
         term = self.cleaned_data['term']
@@ -79,36 +89,45 @@ class FilterSubmissionsForm(forms.ModelForm):
         countries = self.cleaned_data['countries']
         affiliations = self.cleaned_data['affiliations']
 
+        auth_prs = {
+            sub: Profile.objects.filter(user__authorship__submission=sub)
+            for sub in submissions
+        }
+
         if term:
             words = term.lower().split()
             submissions = [
                 sub for sub in submissions
                 if all(word in sub.title.lower() or
-                       any(word in a.user.profile.get_full_name().lower()
-                           for a in sub.authors.all()) or
-                       any(word in a.user.profile.get_full_name_rus().lower()
-                           for a in sub.authors.all())
+                       any(word in pr.get_full_name().lower()
+                           for pr in auth_prs[sub]) or
+                       any(word in pr.get_full_name_rus().lower()
+                           for pr in auth_prs[sub])
                        for word in words)
             ]
-
-        print('incomplete: ', completion)
 
         if completion:
             _show_incomplete = 'INCOMPLETE' in completion
             _show_complete = 'COMPLETE' in completion
             _show_empty = 'EMPTY' in completion
+
+            _sub_warnings = {sub: sub.warnings() for sub in submissions}
+
             submissions = [
                 sub for sub in submissions
-                if (sub.warnings() and _show_incomplete or
-                    not sub.warnings() and _show_complete or
+                if (_sub_warnings[sub] and _show_incomplete or
+                    not _sub_warnings[sub] and _show_complete or
                     not sub.title and _show_empty)
             ]
 
         if topics:
+            _sub_topics = {
+                sub: set(x[0] for x in sub.topics.values_list('pk'))
+                for sub in submissions
+            }
             submissions = [
                 sub for sub in submissions
-                if any(topic in [t.pk for t in sub.topics.all()]
-                       for topic in topics)
+                if any(topic in _sub_topics[sub] for topic in topics)
             ]
 
         if types:
@@ -121,15 +140,13 @@ class FilterSubmissionsForm(forms.ModelForm):
         if countries:
             submissions = [
                 sub for sub in submissions
-                if any(author.user.profile.country.code in countries
-                       for author in sub.authors.all())
+                if any(pr.country.code in countries for pr in auth_prs[sub])
             ]
 
         if affiliations:
             submissions = [
                 sub for sub in submissions
-                if any(author.user.profile.affiliation in affiliations
-                       for author in sub.authors.all())
+                if any(pr.affiliation in affiliations for pr in auth_prs[sub])
             ]
 
         return submissions

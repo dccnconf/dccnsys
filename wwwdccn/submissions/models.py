@@ -142,9 +142,12 @@ class Submission(models.Model):
         )
 
     def warnings(self):
+        w = []
         if not self.review_manuscript:
-            return ['Review manuscript missing']
-        return []
+            w.append('Review manuscript missing')
+        if not self.title:
+            w.append('Missing submission title')
+        return w
 
 
 class Author(models.Model):
