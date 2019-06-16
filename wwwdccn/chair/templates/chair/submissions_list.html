@@ -119,6 +119,38 @@
 
     </div>
   {% endfor %}
+
+  <div class="row">
+    <nav class="mx-auto">
+      <ul class="pagination">
+        <li class="page-item {% if not first_page_url %}disabled{% endif %}">
+          <a class="page-link" href="{{ first_page_url }}" aria-label="Previous">
+            <i class="fas fa-angle-double-left"></i>
+          </a>
+        </li>
+        <li class="page-item {% if not prev_page_url %}disabled{% endif %}">
+          <a class="page-link" href="{{ prev_page_url }}" aria-label="Previous">
+            <i class="fas fa-angle-left"></i>
+          </a>
+        </li>
+        {% for page_url in page_urls %}
+          <li class="page-item {% if forloop.counter == curr_page %}active{% endif %}">
+            <a href="{{ page_url }}" class="page-link">{{ forloop.counter }}</a>
+          </li>
+        {% endfor %}
+        <li class="page-item {% if not next_page_url %}disabled{% endif %}">
+          <a class="page-link" href="{{ next_page_url }}" aria-label="Previous">
+            <i class="fas fa-angle-right"></i>
+          </a>
+        </li>
+        <li class="page-item {% if not last_page_url %}disabled{% endif %}">
+          <a class="page-link" href="{{ last_page_url }}" aria-label="Previous">
+            <i class="fas fa-angle-double-right"></i>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
 {% endblock %}
 
 
@@ -230,7 +262,6 @@ $(document).ready(function () {
 
 // Get modal body content on modal show:
 const modals = $('.modal[data-src]');
-console.log(modals);
 modals.on('show.bs.modal', function () {
   const thisModal = $(this);
   $(this).find('.modal-body').load(thisModal.attr('data-src'));
