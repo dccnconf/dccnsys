@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'public_site',
     'user_site',
     'chair',
+    'review',
 ]
 
 MIDDLEWARE = [
