@@ -76,6 +76,8 @@ class Review(models.Model):
 
     details = models.TextField()
 
+    submitted = models.BooleanField(default=False)
+
     def __str__(self):
         name = self.reviewer.user.profile.get_full_name()
         return f'Review for submission #{self.paper.pk} by {name}'
