@@ -8,12 +8,13 @@ from django.contrib.auth import get_user_model
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 
 from chair.forms import FilterSubmissionsForm, FilterUsersForm
 from conferences.decorators import chair_required
 from conferences.helpers import is_author
 from conferences.models import Conference, Topic
+from review.models import Reviewer
 from submissions.models import Submission
 from users.models import Profile
 
@@ -173,6 +174,67 @@ def user_details(request, pk, user_pk):
         'member': user,
         'next_url': request.GET.get('next', ''),
     })
+
+
+@require_GET
+def reviewers_list(request, pk, page=1):
+    conference = get_object_or_404(Conference, pk=pk)
+    validate_chair_access(request.user, conference)
+    users = User.objects.all()
+    form = FilterUsersForm(request.GET, instance=conference)
+
+    if form.is_valid():
+        users = form.apply(users)
+
+    profiles = {user: user.profile for user in users}
+    reviewers = {
+        user: list(user.reviewer_set.filter(conference=conference))
+        for user in users
+    }
+    num_reviews = {
+        user: len(reviewers[user][0].reviews.all()) if reviewers[user] else 0
+        for user in users
+    }
+
+    items = [{
+        'pk': user.pk,
+        'name': profile.get_full_name(),
+        'name_rus': profile.get_full_name_rus(),
+        'avatar': profile.avatar,
+        'country': profile.get_country_display(),
+        'city': profile.city,
+        'affiliation': profile.affiliation,
+        'degree': profile.degree,
+        'role': profile.role,
+        'invited': len(reviewers[user]) > 0,
+        'num_reviews': num_reviews[user],
+    } for user, profile in profiles.items()]
+
+    context = _build_paged_view_context(
+        request, items, page, 'chair:reviewers-pages', {'pk': pk}
+    )
+    context.update({'conference': conference, 'filter_form': form})
+    return render(request, 'chair/reviewers_list.html', context=context)
+
+
+@require_POST
+def invite_reviewer(request, conf_pk, user_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    user = get_object_or_404(User, pk=user_pk)
+    if user.reviewer_set.count() == 0:
+        Reviewer.objects.create(user=user, conference=conference)
+    return redirect(request.GET.get('next'))
+
+
+@require_POST
+def revoke_reviewer(request, conf_pk, user_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    user = get_object_or_404(User, pk=user_pk)
+    if user.reviewer_set.count() > 0:
+        Reviewer.objects.filter(user=user, conference=conference).delete()
+    return redirect(request.GET.get('next'))
 
 
 #############################################################################

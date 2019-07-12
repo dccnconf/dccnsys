@@ -18,6 +18,14 @@ urlpatterns = [
 
     path('<int:pk>/users/<int:user_pk>', views.user_details, name='user'),
 
+    path('<int:pk>/reviewers/', views.reviewers_list, name='reviewers'),
+    path('<int:pk>/reviewers/pages/<int:page>/', views.reviewers_list,
+         name='reviewers-pages'),
+    path('<int:conf_pk>/reviewers/invite/<int:user_pk>/', views.invite_reviewer,
+         name='invite-reviewer'),
+    path('<int:conf_pk>/reviewers/revoke/<int:user_pk>/', views.revoke_reviewer,
+         name='revoke-reviewer'),
+
     path('<int:pk>/export/submissions/', views.get_submissions_csv,
          name='export-submissions-csv'),
     path('<int:pk>/export/authors/', views.get_authors_csv,
