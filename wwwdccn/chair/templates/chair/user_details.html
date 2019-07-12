@@ -53,7 +53,7 @@
           <div class="dccn-feed-item-label">{{ conference|num_submissions_by:user }} submissions to {{ conference.short_name }}:</div>
           <ul>
             {% for submission in conference|list_submission_by:member %}
-              <li><a href="#submission-{{ submission.pk }}-modal" data-toggle="modal" class="dccn-link">{{ submission.title }}</a></li>
+              <li><a href="{% url 'chair:submission-overview' pk=submission.pk %}" class="dccn-link" target="_blank">{{ submission.title }}</a></li>
             {% endfor %}
           </ul>
         {% else %}
@@ -70,21 +70,21 @@
   </div>
 
   {% for submission in conference|list_submission_by:member %}
-    <div class="modal fade" id="submission-{{ submission.pk }}-modal"
-         data-src="{% url 'chair:get-submission-overview' submission.pk %}">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Submission #{{ submission.pk }}</h5>
-            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
-          </div>
-          <div class="modal-body"></div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
+{#    <div class="modal fade" id="submission-{{ submission.pk }}-modal"#}
+{#         data-src="{% url 'chair:get-submission-overview' submission.pk %}">#}
+{#      <div class="modal-dialog modal-lg">#}
+{#        <div class="modal-content">#}
+{#          <div class="modal-header">#}
+{#            <h5 class="modal-title">Submission #{{ submission.pk }}</h5>#}
+{#            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>#}
+{#          </div>#}
+{#          <div class="modal-body"></div>#}
+{#          <div class="modal-footer">#}
+{#            <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>#}
+{#          </div>#}
+{#        </div>#}
+{#      </div>#}
+{#    </div>#}
   {% endfor %}
 
 {% endblock %}

@@ -1,7 +1,6 @@
 import csv
 import logging
 import math
-import time
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
@@ -12,8 +11,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from chair.forms import FilterSubmissionsForm, FilterUsersForm
 from conferences.decorators import chair_required
-from conferences.helpers import is_author
-from conferences.models import Conference, Topic
+from conferences.models import Conference
 from review.models import Reviewer
 from submissions.models import Submission
 from users.models import Profile
@@ -107,6 +105,15 @@ def submissions_list(request, pk, page=1):
         for sub in submissions
     }
 
+    # Collect possible actions:
+    actions = {
+        sub: {
+            'review': sub.status == Submission.SUBMITTED and not sub.warnings(),
+            'revoke_review': sub.status == Submission.UNDER_REVIEW,
+        }
+        for sub in submissions
+    }
+
     items = [{
         'object': sub,
         'warnings': sub.warnings(),
@@ -116,8 +123,9 @@ def submissions_list(request, pk, page=1):
             'user_pk': profile['user__pk'],
         } for profile in auth_prs[sub]],
         'pk': sub.pk,
-        'status': sub.status,  # this is needed to make `status_class` work,
+        'status': sub.status,  # this is needed to make `status_class` work
         'status_display': sub.get_status_display(),
+        'actions': actions[sub],
     } for sub in submissions]
 
     context = _build_paged_view_context(
@@ -125,6 +133,48 @@ def submissions_list(request, pk, page=1):
     )
     context.update({'conference': conference, 'filter_form': form})
     return render(request, 'chair/submissions_list.html', context=context)
+
+
+@require_GET
+def submission_overview(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    conference = submission.conference
+    validate_chair_access(request.user, conference)
+    return render(request, 'chair/submission_overview.html', context={
+        'submission': submission,
+        'conference': conference,
+    })
+
+
+@require_POST
+def start_review(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    conference = submission.conference
+    validate_chair_access(request.user, conference)
+    if submission.status == Submission.SUBMITTED:
+        submission.status = Submission.UNDER_REVIEW
+        submission.save()
+    return redirect(request.GET.get('next', ''))
+
+
+@require_POST
+def revoke_review(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    conference = submission.conference
+    validate_chair_access(request.user, conference)
+    if submission.status == Submission.UNDER_REVIEW:
+        submission.status = Submission.SUBMITTED
+        submission.save()
+    return redirect(request.GET.get('next', ''))
+
+
+def select_reviewers(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    conference = submission.conference
+    validate_chair_access(request.user, conference)
+    return render(request, 'chair/select_reviewers.html', context={
+        'submission': submission,
+    })
 
 
 @require_GET

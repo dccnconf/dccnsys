@@ -24,13 +24,20 @@ def get_review_manuscript_full_path(instance, filename):
 
 
 class Submission(models.Model):
-    STATUS = (
-        ('SUBMIT', _('Submitted')),
-        ('REVIEW', _('Review')),
-        ('REJECT', _('Rejected')),
-        ('ACCEPT', _('Accepted')),
-        ('PRINT', _('In-print')),
-        ('PUBLISH', _('Published')),
+    SUBMITTED = 'SUBMIT'
+    UNDER_REVIEW = 'REVIEW'
+    REJECTED = 'REJECT'
+    ACCEPTED = 'ACCEPT'
+    IN_PRINT = 'PRINT'
+    PUBLISHED = 'PUBLISH'
+
+    STATUS_CHOICE = (
+        (SUBMITTED, _('Submitted')),
+        (UNDER_REVIEW, _('Review')),
+        (REJECTED, _('Rejected')),
+        (ACCEPTED, _('Accepted')),
+        (IN_PRINT, _('In-print')),
+        (PUBLISHED, _('Published')),
     )
 
     conference = models.ForeignKey(
@@ -65,7 +72,7 @@ class Submission(models.Model):
     )
 
     status = models.CharField(
-        choices=STATUS,
+        choices=STATUS_CHOICE,
         default='SUBMIT',
         max_length=10,
     )

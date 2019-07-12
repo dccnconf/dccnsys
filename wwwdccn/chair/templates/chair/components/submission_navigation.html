@@ -1,0 +1,17 @@
+<ul class="nav nav-pills justify-content-start">
+  <li class="nav-item">
+    <a href="{% url 'chair:submission-overview' pk=submission.pk %}?next={{ request.GET.next }}" class="nav-link {% if active == 'overview' %}active{% endif %}">Overview</a>
+  </li>
+  <li class="nav-item">
+    <a href="#" class="nav-link {% if active == 'metadata' %}active{% endif %}">Metadata</a>
+  </li>
+  <li class="nav-item">
+    <a href="#" class="nav-link {% if active == 'authors' %}active{% endif %}">Authors</a>
+  </li>
+  <li class="nav-item">
+    <a href="#" class="nav-link {% if active == 'manuscript' %}active{% endif %}">Review Manuscript</a>
+  </li>
+  <li class="nav-item">
+    <a href="#" class="nav-link {% if active == 'reviews' %}active{% endif %} {% if submission.status == 'SUBMIT' %}disabled text-dark-2{% endif %}">Reviews</a>
+  </li>
+</ul>

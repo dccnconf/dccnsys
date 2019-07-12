@@ -41,7 +41,7 @@ class FilterSubmissionsForm(forms.ModelForm):
 
     status = forms.MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False,
-        choices=Submission.STATUS
+        choices=Submission.STATUS_CHOICE
     )
 
     countries = forms.MultipleChoiceField(
