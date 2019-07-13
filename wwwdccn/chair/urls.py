@@ -18,6 +18,7 @@ urlpatterns = [
     # Submission views and actions
     #
     path('submission/<int:pk>/overview/', views.submission_overview, name='submission-overview'),
+    path('submission/<int:pk>/metadata/', views.submission_metadata, name='submission-metadata'),
     path('submission/<int:pk>/start_review/', views.start_review, name='start-review'),
     path('submission/<int:pk>/revoke_review/', views.revoke_review, name='revoke-review'),
     path('submission/<int:pk>/select_reviewers/', views.select_reviewers, name='select-reviewers'),

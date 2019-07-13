@@ -1,9 +1,9 @@
 <ul class="nav nav-pills justify-content-start">
   <li class="nav-item">
-    <a href="{% url 'chair:submission-overview' pk=submission.pk %}?next={{ request.GET.next }}" class="nav-link {% if active == 'overview' %}active{% endif %}">Overview</a>
+    <a href="{% url 'chair:submission-overview' pk=submission.pk %}" class="nav-link {% if active == 'overview' %}active{% endif %}">Overview</a>
   </li>
   <li class="nav-item">
-    <a href="#" class="nav-link {% if active == 'metadata' %}active{% endif %}">Metadata</a>
+    <a href="{% url 'chair:submission-metadata' pk=submission.pk %}" class="nav-link {% if active == 'metadata' %}active{% endif %}">Metadata</a>
   </li>
   <li class="nav-item">
     <a href="#" class="nav-link {% if active == 'authors' %}active{% endif %}">Authors</a>

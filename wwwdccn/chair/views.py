@@ -3,6 +3,7 @@ import logging
 import math
 from datetime import datetime
 
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render, redirect
@@ -14,6 +15,7 @@ from conferences.decorators import chair_required
 from conferences.models import Conference
 from review.models import Reviewer
 from submissions.models import Submission
+from submissions.forms import SubmissionDetailsForm
 from users.models import Profile
 
 ITEMS_PER_PAGE = 10
@@ -135,6 +137,10 @@ def submissions_list(request, pk, page=1):
     return render(request, 'chair/submissions_list.html', context=context)
 
 
+# def submission_object_view(fn):
+#     def wrapper(request, pk):
+
+
 @require_GET
 def submission_overview(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
@@ -143,6 +149,24 @@ def submission_overview(request, pk):
     return render(request, 'chair/submission_overview.html', context={
         'submission': submission,
         'conference': conference,
+    })
+
+
+def submission_metadata(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    conference = submission.conference
+    validate_chair_access(request.user, conference)
+    if request.method == 'POST':
+        form = SubmissionDetailsForm(request.POST, instance=submission)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Submission #{pk} updated')
+    else:
+        form = SubmissionDetailsForm(instance=submission)
+    return render(request, 'chair/submission_metadata.html', context={
+        'submission': submission,
+        'conference': conference,
+        'form': form,
     })
 
 
