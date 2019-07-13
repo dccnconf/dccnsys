@@ -19,6 +19,11 @@ urlpatterns = [
     #
     path('submission/<int:pk>/overview/', views.submission_overview, name='submission-overview'),
     path('submission/<int:pk>/metadata/', views.submission_metadata, name='submission-metadata'),
+    path('submission/<int:pk>/authors/', views.submission_authors, name='submission-authors'),
+    path('submission/<int:pk>/authors/delete/', views.submission_author_delete, name='submission-author-delete'),
+    path('submission/<int:pk>/authors/create/', views.submission_author_create, name='submission-author-create'),
+    path('submission/<int:pk>/authors/invite/', views.submission_author_invite, name='submission-author-invite'),
+    path('submission/<int:pk>/authors/reorder/', views.submission_authors_reorder, name='submission-authors-reorder'),
     path('submission/<int:pk>/start_review/', views.start_review, name='start-review'),
     path('submission/<int:pk>/revoke_review/', views.revoke_review, name='revoke-review'),
     path('submission/<int:pk>/select_reviewers/', views.select_reviewers, name='select-reviewers'),

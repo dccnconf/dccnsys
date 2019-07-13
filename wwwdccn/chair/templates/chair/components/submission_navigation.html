@@ -6,7 +6,7 @@
     <a href="{% url 'chair:submission-metadata' pk=submission.pk %}" class="nav-link {% if active == 'metadata' %}active{% endif %}">Metadata</a>
   </li>
   <li class="nav-item">
-    <a href="#" class="nav-link {% if active == 'authors' %}active{% endif %}">Authors</a>
+    <a href="{% url 'chair:submission-authors' pk=submission.pk %}" class="nav-link {% if active == 'authors' %}active{% endif %}">Authors</a>
   </li>
   <li class="nav-item">
     <a href="#" class="nav-link {% if active == 'manuscript' %}active{% endif %}">Review Manuscript</a>

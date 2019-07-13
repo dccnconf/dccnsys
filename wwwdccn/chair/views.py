@@ -1,4 +1,5 @@
 import csv
+import functools
 import logging
 import math
 from datetime import datetime
@@ -9,13 +10,15 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
+from django.utils.translation import ugettext_lazy as _
 
 from chair.forms import FilterSubmissionsForm, FilterUsersForm
 from conferences.decorators import chair_required
 from conferences.models import Conference
 from review.models import Reviewer
 from submissions.models import Submission
-from submissions.forms import SubmissionDetailsForm
+from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
+    AuthorDeleteForm, InviteAuthorForm, AuthorsReorderForm
 from users.models import Profile
 
 ITEMS_PER_PAGE = 10
@@ -168,6 +171,63 @@ def submission_metadata(request, pk):
         'conference': conference,
         'form': form,
     })
+
+
+@require_GET
+def submission_authors(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    conference = submission.conference
+    validate_chair_access(request.user, conference)
+    return render(request, 'chair/submission_authors.html', context={
+        'submission': submission,
+        'conference': conference,
+    })
+
+
+def authors_post_view(form_class):
+    """This decorator constructor is used in author editing POST-only views.
+    """
+    def decorator(fn):
+        @require_POST
+        @functools.wraps(fn)
+        def wrapper(request, pk):
+            submission = get_object_or_404(Submission, pk=pk)
+            conference = submission.conference
+            validate_chair_access(request.user, conference)
+            form = form_class(submission, request.POST)
+            if form.is_valid():
+                form.save()
+            return fn(request, pk)
+        return wrapper
+    return decorator
+
+
+@authors_post_view(AuthorCreateForm)
+def submission_author_create(request, pk):
+    return redirect('chair:submission-authors', pk=pk)
+
+
+@authors_post_view(AuthorDeleteForm)
+def submission_author_delete(request, pk):
+    return redirect('chair:submission-authors', pk=pk)
+
+
+@authors_post_view(AuthorsReorderForm)
+def submission_authors_reorder(request, pk):
+    return redirect('chair:submission-authors', pk=pk)
+
+
+def submission_author_invite(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    conference = submission.conference
+    validate_chair_access(request.user, conference)
+    form = InviteAuthorForm(request.POST)
+    if form.is_valid():
+        form.save(request, submission)
+        messages.success(request, _('Invitation sent'))
+    else:
+        messages.warning(request, _('Error sending invitation'))
+    return redirect('chair:submission-authors', pk=pk)
 
 
 @require_POST

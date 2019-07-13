@@ -254,7 +254,7 @@ def create_author(request, pk):
 def order_authors(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     if submission.authors_editable_by(request.user):
-        form = AuthorsReorderForm(submission, ',', request.POST)
+        form = AuthorsReorderForm(submission, request.POST)
         if form.is_valid():
             form.save()
         return redirect('submissions:authors', pk=pk)

@@ -130,17 +130,16 @@ class UploadReviewManuscriptForm(forms.ModelForm):
             self.fields['understand_blind_review'].initial = True
 
 
-
 # TODO: refactor this - unify this form with TopicReorderForm
 # (maybe reasonable to remove validation all authors are registered within
 # a given submission, remove submission from constructor, etc.)
 class AuthorsReorderForm(forms.Form):
     pks = forms.CharField(max_length=100, widget=forms.HiddenInput)
 
-    def __init__(self, submission, separator, *args, **kwargs):
+    def __init__(self, submission, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.submission = submission
-        self.separator = separator
+        self.separator = kwargs.get('separator', ',')
         self.cleaned_keys = []
 
     def clean_pks(self):
