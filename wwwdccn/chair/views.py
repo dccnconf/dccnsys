@@ -6,6 +6,7 @@ from datetime import datetime
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
@@ -13,7 +14,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django.utils.translation import ugettext_lazy as _
 
 from chair.forms import FilterSubmissionsForm, FilterUsersForm, \
-    ChairUploadReviewManuscriptForm
+    ChairUploadReviewManuscriptForm, AssignReviewerForm
 from conferences.decorators import chair_required
 from conferences.models import Conference
 from review.models import Reviewer
@@ -321,10 +322,34 @@ def submission_reviewers(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     conference = submission.conference
     validate_chair_access(request.user, conference)
+
+    reviews = submission.reviews.all()
+    stype = submission.stype
+
+    num_reviews = reviews.all().count()
+    num_reviews_required = stype.num_reviews
+
+    assign_reviewer_form = AssignReviewerForm(submission=submission)
+
     return render(request, 'chair/submission_reviewers.html', context={
         'submission': submission,
         'conference': conference,
+        'num_reviews': num_reviews,
+        'num_reviews_required': num_reviews_required,
+        'assign_reviewer_form': assign_reviewer_form,
+        'reviews': reviews,
     })
+
+
+@require_POST
+def assign_reviewer(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    conference = submission.conference
+    validate_chair_access(request.user, conference)
+    form = AssignReviewerForm(request.POST, submission=submission)
+    if form.is_valid():
+        form.save()
+    return redirect('chair:submission-reviewers', pk=pk)
 
 
 @require_GET

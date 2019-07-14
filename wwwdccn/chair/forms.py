@@ -1,9 +1,11 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 from conferences.models import Conference
 from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput
+from review.models import Reviewer, Review
 from submissions.models import Submission
 from users.models import Profile
 
@@ -273,6 +275,27 @@ class ChairUploadReviewManuscriptForm(forms.ModelForm):
             })
         }
 
-    # def has_manuscript(self):
-    #     return (bool(self.cleaned_data['review_manuscript']) or
-    #             bool(self.instance and self.instance.review_manuscript))
+
+class AssignReviewerForm(forms.Form):
+    reviewer = forms.ChoiceField(required=True, label=_('Assign reviewer'))
+
+    def __init__(self, *args, submission=None):
+        super().__init__(*args)
+        self.submission = submission
+
+        # Fill available reviewers - neither already assigned, nor authors:
+        reviews = submission.reviews.all()
+        assigned_reviewers = reviews.values_list('reviewer', flat=True)
+        authors_users = submission.authors.values_list('user', flat=True)
+        available_reviewers = Reviewer.objects.exclude(
+            Q(pk__in=assigned_reviewers) | Q(user__in=authors_users)
+        )
+        self.fields['reviewer'].choices = (
+            (reviewer.pk, reviewer.user.profile.get_full_name())
+            for reviewer in available_reviewers
+        )
+
+    def save(self):
+        reviewer = Reviewer.objects.get(pk=self.cleaned_data['reviewer'])
+        review = Review.objects.create(reviewer=reviewer, paper=self.submission)
+        return review

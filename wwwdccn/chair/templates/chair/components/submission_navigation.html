@@ -26,7 +26,7 @@
   <li class="nav-item">
     <a href="{% url 'chair:submission-reviewers' pk=submission.pk %}"
        class="nav-link {% if active == 'reviews' %}active{% endif %} {% if submission.status == 'SUBMIT' %}disabled text-dark-2{% endif %}">
-      Reviews
+      Reviews {% if submission.status != 'SUBMIT' %}({{ submission.reviews|length }}/{{ submission.stype.num_reviews }}){% endif %}
     </a>
   </li>
 </ul>
