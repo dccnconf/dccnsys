@@ -80,7 +80,6 @@ class SubmissionDetailsForm(forms.ModelForm):
 
 
 class UploadReviewManuscriptForm(forms.ModelForm):
-    #TODO: this is hardcode! we will not need blind checkbox for submissions without blind review
     confirm_blind = forms.BooleanField(
         required=False,
         label=_('I confirm that the uploaded PDF is prepared for blind review. '
@@ -89,7 +88,6 @@ class UploadReviewManuscriptForm(forms.ModelForm):
                 'references to funding sources is given.')
     )
 
-    #TODO: this is also hardcode!
     understand_blind_review = forms.BooleanField(
         required=False,
         label=_('I understand that the paper may be rejected during the review '

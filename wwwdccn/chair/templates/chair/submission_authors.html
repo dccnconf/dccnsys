@@ -13,6 +13,8 @@
 
 <div class="container py-3">
 
+  {% bootstrap_messages %}
+
   <div class="dccn-authors-editor dccn-reorder" id="authorsEditor">
     <ul class="dccn-authors-editor-list dccn-reorder-list" id="authorsList">
     {% for author in submission.authors.all %}

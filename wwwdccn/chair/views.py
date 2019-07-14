@@ -12,7 +12,8 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 from django.utils.translation import ugettext_lazy as _
 
-from chair.forms import FilterSubmissionsForm, FilterUsersForm
+from chair.forms import FilterSubmissionsForm, FilterUsersForm, \
+    ChairUploadReviewManuscriptForm
 from conferences.decorators import chair_required
 from conferences.models import Conference
 from review.models import Reviewer
@@ -228,6 +229,70 @@ def submission_author_invite(request, pk):
     else:
         messages.warning(request, _('Error sending invitation'))
     return redirect('chair:submission-authors', pk=pk)
+
+
+def submission_review_manuscript(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    conference = submission.conference
+    validate_chair_access(request.user, conference)
+    if request.method == 'POST':
+        form = ChairUploadReviewManuscriptForm(
+            request.POST,
+            request.FILES,
+            instance=submission
+        )
+
+        # We save current file (if any) for two reasons:
+        # 1) if this file is not empty and user uploaded a new file, we
+        #    are going to delete this old file (in case of valid form);
+        #    and
+        # 2) it is going to be assigned instead of TemporaryUploadedFile
+        #    object in case of form validation error.
+        old_file = (submission.review_manuscript.file
+                    if submission.review_manuscript else None)
+        if form.is_valid():
+            # If the form is valid and user provided a new file, we
+            # delete original file first. Otherwise Django will add a
+            # random suffix which will break our storage strategy.
+            if old_file and request.FILES:
+                submission.review_manuscript.storage.delete(
+                    old_file.name
+                )
+            form.save()
+            messages.success(request, _('Manuscript updated'))
+            return redirect('chair:submission-review-manuscript', pk=pk)
+        else:
+            # If the form is invalid (e.g. title is not provided),
+            # but the user tried to upload a file, a new
+            # TemporaryUploadedFile object will be created and,
+            # which is more important, it will be assigned to
+            # `note.document` field. We want to avoid this to make sure
+            # that until the form is completely valid previous file
+            # is not re-written. To do it we assign the `old_file`
+            # value to both cleaned_data and note.document:
+            form.cleaned_data['review_manuscript'] = old_file
+            submission.review_manuscript.document = old_file
+            messages.warning(request, _('Error uploading manuscript'))
+    else:
+        form = ChairUploadReviewManuscriptForm(instance=submission)
+
+    return render(request, 'chair/submission_review_manuscript.html', context={
+        'submission': submission,
+        'conference': conference,
+        'form': form,
+    })
+
+
+@require_POST
+def submission_delete_review_manuscript(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    conference = submission.conference
+    validate_chair_access(request.user, conference)
+    file_name = submission.get_review_manuscript_name()
+    if submission.review_manuscript:
+        submission.review_manuscript.delete()
+        messages.info(request, f'Manuscript {file_name} was deleted')
+    return redirect('chair:submission-review-manuscript', pk=pk)
 
 
 @require_POST

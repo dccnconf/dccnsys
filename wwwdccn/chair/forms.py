@@ -1,10 +1,9 @@
-import time
-
 from django import forms
 from django.contrib.auth import get_user_model
+from django.utils.translation import ugettext_lazy as _
 
 from conferences.models import Conference
-from gears.widgets import CustomCheckboxSelectMultiple
+from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput
 from submissions.models import Submission
 from users.models import Profile
 
@@ -259,3 +258,21 @@ class FilterUsersForm(forms.ModelForm):
         users = User.objects.filter(profile__in=profiles)
 
         return users
+
+
+class ChairUploadReviewManuscriptForm(forms.ModelForm):
+    class Meta:
+        model = Submission
+        fields = ('review_manuscript',)
+        widgets = {
+            'review_manuscript': CustomFileInput(attrs={
+                'accept': '.pdf',
+                'show_file_name': True,
+                'btn_class': 'btn-outline-secondary',
+                'label': _('Review manuscript PDF file')
+            })
+        }
+
+    # def has_manuscript(self):
+    #     return (bool(self.cleaned_data['review_manuscript']) or
+    #             bool(self.instance and self.instance.review_manuscript))
