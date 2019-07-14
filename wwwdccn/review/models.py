@@ -81,3 +81,11 @@ class Review(models.Model):
     def __str__(self):
         name = self.reviewer.user.profile.get_full_name()
         return f'Review for submission #{self.paper.pk} by {name}'
+
+    def check_details(self):
+        return check_review_details(self.details, self.paper.stype)
+
+
+def check_review_details(value, submission_type):
+    num_words = len(value.split())
+    return num_words >= submission_type.min_num_words_in_review

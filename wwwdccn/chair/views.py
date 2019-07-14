@@ -17,7 +17,7 @@ from chair.forms import FilterSubmissionsForm, FilterUsersForm, \
     ChairUploadReviewManuscriptForm, AssignReviewerForm
 from conferences.decorators import chair_required
 from conferences.models import Conference
-from review.models import Reviewer
+from review.models import Reviewer, Review
 from submissions.models import Submission
 from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
     AuthorDeleteForm, InviteAuthorForm, AuthorsReorderForm
@@ -350,6 +350,15 @@ def assign_reviewer(request, pk):
     if form.is_valid():
         form.save()
     return redirect('chair:submission-reviewers', pk=pk)
+
+
+@require_POST
+def delete_review(request, pk):
+    review = get_object_or_404(Review, pk=pk)
+    conference = review.paper.conference
+    validate_chair_access(request.user, conference)
+    review.delete()
+    return redirect('chair:submission-reviewers', pk=review.paper.pk)
 
 
 @require_GET

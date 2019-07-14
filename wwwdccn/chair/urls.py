@@ -30,6 +30,7 @@ urlpatterns = [
     path('submission/<int:pk>/revoke_review/', views.revoke_review, name='revoke-review'),
     path('submission/<int:pk>/reviewers/', views.submission_reviewers, name='submission-reviewers'),
     path('submission/<int:pk>/reviewers/assign/', views.assign_reviewer, name='assign-reviewer'),
+    path('reviews/<int:pk>/delete/', views.delete_review, name='delete-review'),
 
     #
     # Users listing
