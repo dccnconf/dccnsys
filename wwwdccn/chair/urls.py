@@ -28,7 +28,7 @@ urlpatterns = [
     path('submission/<int:pk>/review_manuscript/delete/', views.submission_delete_review_manuscript, name='submission-review-manuscript-delete'),
     path('submission/<int:pk>/start_review/', views.start_review, name='start-review'),
     path('submission/<int:pk>/revoke_review/', views.revoke_review, name='revoke-review'),
-    path('submission/<int:pk>/select_reviewers/', views.select_reviewers, name='select-reviewers'),
+    path('submission/<int:pk>/reviewers/', views.submission_reviewers, name='submission-reviewers'),
 
     #
     # Users listing

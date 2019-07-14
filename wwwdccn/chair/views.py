@@ -317,12 +317,13 @@ def revoke_review(request, pk):
     return redirect(request.GET.get('next', ''))
 
 
-def select_reviewers(request, pk):
+def submission_reviewers(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     conference = submission.conference
     validate_chair_access(request.user, conference)
-    return render(request, 'chair/select_reviewers.html', context={
+    return render(request, 'chair/submission_reviewers.html', context={
         'submission': submission,
+        'conference': conference,
     })
 
 
