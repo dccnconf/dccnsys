@@ -33,8 +33,10 @@
       {% for submission in submissions %}
         {% if submission.status == submission.SUBMITTED %}
           {% include 'submissions/components/card_submitted.html' with submission=submission %}
+        {% elif submission.status == submission.UNDER_REVIEW %}
+          {% include 'submissions/components/card_review.html' with submission=submission %}
         {% else %}
-          <p>{{submission.status}}</p>
+          {{ submission.title }} -- {{ submission.get_status_display }}
         {% endif %}
       {% endfor %}
 

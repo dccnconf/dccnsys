@@ -27,9 +27,6 @@
 
       {% for review in reviews %}
         {% include 'user_site/components/review_card.html' with review=review %}
-{#        {% if review.status == 'SUBMIT' %}#}
-{#          {% include 'submissions/components/card_submitted.html' with submission=submission %}#}
-{#        {% endif %}#}
       {% endfor %}
 
     </div>
