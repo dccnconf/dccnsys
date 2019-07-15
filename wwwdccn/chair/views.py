@@ -122,9 +122,40 @@ def submissions_list(request, pk, page=1):
         for sub in submissions
     }
 
+    reviews = {
+        sub: sub.reviews.all() for sub in submissions
+    }
+    num_revs_incomplete = {
+        sub: len(sub.reviews.filter(submitted=False)) for sub in submissions
+    }
+
+    scores = {
+        sub: [r.average_score() for r in reviews[sub]] for sub in submissions
+    }
+    average_scores = {
+        sub: (f'{sum(scores[sub])/len(scores[sub]):.1f}'
+              if len(scores[sub]) > 0 else '-')
+        for sub in submissions}
+
+    for sub in submissions:
+        _scores = scores[sub]
+        for i in range(len(_scores)):
+            x = _scores[i]
+            _scores[i] = '-' if x == 0 else f'{x:.1f}'
+
+    warnings = {}
+    for sub in submissions:
+        _w = []
+        if sub.status == Submission.UNDER_REVIEW:
+            if num_revs_incomplete[sub] > 0:
+                _w.append(f'{num_revs_incomplete[sub]} reviews incomplete')
+            if len(reviews[sub]) < sub.stype.num_reviews:
+                _w.append(f'missing {sub.stype.num_reviews - len(reviews[sub])}'
+                          f' review assignments')
+        warnings[sub] = _w + list(sub.warnings())
+
     items = [{
         'object': sub,
-        'warnings': sub.warnings(),
         'title': sub.title,
         'authors': [{
             'name': f"{profile['first_name']} {profile['last_name']}",
@@ -134,8 +165,13 @@ def submissions_list(request, pk, page=1):
         'status': sub.status,  # this is needed to make `status_class` work
         'status_display': sub.get_status_display(),
         'actions': actions[sub],
+        'reviews': sub.reviews.all(),
         'num_reviews': sub.reviews.all().count(),
         'num_reviews_required': sub.stype.num_reviews if sub.stype else 0,
+        'num_incomplete_reviews': num_revs_incomplete[sub],
+        'scores': scores[sub],
+        'average_score': average_scores[sub],
+        'warnings': warnings[sub],
     } for sub in submissions]
 
     context = _build_paged_view_context(
@@ -443,47 +479,6 @@ def user_details(request, pk, user_pk):
         'member': user,
         'next_url': request.GET.get('next', ''),
     })
-
-
-@require_GET
-def reviewers_list(request, pk, page=1):
-    conference = get_object_or_404(Conference, pk=pk)
-    validate_chair_access(request.user, conference)
-    users = User.objects.all()
-    form = FilterUsersForm(request.GET, instance=conference)
-
-    if form.is_valid():
-        users = form.apply(users)
-
-    profiles = {user: user.profile for user in users}
-    reviewers = {
-        user: list(user.reviewer_set.filter(conference=conference))
-        for user in users
-    }
-    num_reviews = {
-        user: len(reviewers[user][0].reviews.all()) if reviewers[user] else 0
-        for user in users
-    }
-
-    items = [{
-        'pk': user.pk,
-        'name': profile.get_full_name(),
-        'name_rus': profile.get_full_name_rus(),
-        'avatar': profile.avatar,
-        'country': profile.get_country_display(),
-        'city': profile.city,
-        'affiliation': profile.affiliation,
-        'degree': profile.degree,
-        'role': profile.role,
-        'invited': len(reviewers[user]) > 0,
-        'num_reviews': num_reviews[user],
-    } for user, profile in profiles.items()]
-
-    context = _build_paged_view_context(
-        request, items, page, 'chair:reviewers-pages', {'pk': pk}
-    )
-    context.update({'conference': conference, 'filter_form': form})
-    return render(request, 'chair/reviewers_list.html', context=context)
 
 
 @require_POST

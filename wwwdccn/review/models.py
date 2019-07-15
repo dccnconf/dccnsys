@@ -128,6 +128,12 @@ class Review(models.Model):
                 warnings.append('Review is not submitted yet')
         return warnings
 
+    def average_score(self):
+        if self.all_scores_filled():
+            fields = self.score_fields()
+            return sum(int(x) for x in fields.values()) / len(fields)
+        return 0
+
 
 def check_review_details(value, submission_type):
     num_words = len(value.split())
