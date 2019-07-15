@@ -27,6 +27,11 @@ LOGIN_URL = reverse_lazy('login')
 LOGIN_REDIRECT_URL = reverse_lazy('home')
 LOGOUT_REDIRECT_URL = reverse_lazy('home')
 
+#####################################################
+# Here we store current site domain and protocol:
+SITE_PROTOCOL = os.environ.get('SITE_PROTOCOL', 'http')
+SITE_DOMAIN = os.environ.get('SITE_DOMAIN', 'localhost:8000')
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
@@ -70,6 +75,7 @@ INSTALLED_APPS = [
     'public_site',
     'user_site',
     'chair',
+    'review',
 ]
 
 MIDDLEWARE = [

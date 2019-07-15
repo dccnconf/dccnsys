@@ -1,0 +1,57 @@
+{% extends 'chair/_submission_base.html' %}
+{% load conferences_extras %}
+{% load submission_extras %}
+{% load bootstrap4 %}
+
+
+{#---------------------------------------------------------------------------#}
+{# Main content                                                              #}
+{#---------------------------------------------------------------------------#}
+{% block mainPanelContent %}
+<div class="dccn-panel-body">
+{% include 'chair/components/submission_navigation.html' with active='review-manuscript' %}
+
+<div class="container py-3">
+
+  {% bootstrap_messages %}
+
+  <div class="dccn-file-vd">
+    <form action="{% url 'chair:submission-review-manuscript-delete' pk=submission.pk %}"
+          method="POST" id="deleteManuscriptForm">
+      {% csrf_token %}
+    </form>
+    <div class="dccn-file-vd-box">
+      {% if submission.review_manuscript %}
+        <p class="my-1">Current document:
+          <a href="{% url 'submissions:download-manuscript' pk=submission.pk %}" target="_blank">
+            <i class="far fa-file-pdf"></i> {{ submission.get_review_manuscript_name }}
+          </a>
+        </p>
+      {% endif %}
+    </div>
+  </div>
+
+  <form method="POST" action="{% url 'chair:submission-review-manuscript' pk=submission.pk %}"
+        class="mt-3" enctype="multipart/form-data" id="uploadForm" novalidate>
+    {% csrf_token %}
+    {% bootstrap_form_errors form type='non_fields' %}
+    {% bootstrap_field form.review_manuscript %}
+  </form>
+
+  <div class="d-flex mt-4">
+    <button type="submit" class="btn btn-outline-primary" form="uploadForm">
+      Upload <i class="fas fa-save"></i>
+    </button>
+    <button type="submit" class="btn btn-danger ml-3" form="deleteManuscriptForm"
+            {% if not submission.review_manuscript %}disabled{% endif %}>
+      <i class="far fa-trash-alt"></i> Delete
+    </button>
+  </div>
+
+</div>
+</div>
+{% endblock %}
+
+
+{% block script %}
+{% endblock %}

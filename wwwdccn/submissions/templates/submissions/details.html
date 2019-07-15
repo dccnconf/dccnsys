@@ -19,6 +19,12 @@
       <div class="dccn-panel pb-4 flex-fill">
         <h1 class="dccn-panel-title mb-4">Details</h1>
 
+        {% if not submission.can_edit_details %}
+          <p class="dccn-text-2-light border border-danger rounded bg-light p-3 mb-3">
+            Submission details can not be changed any longer. Please, contact organizing committee if you need to update it.
+          </p>
+        {% endif %}
+
         <form method="POST" action="" class="mt-3" novalidate>
           {% bootstrap_messages %}
           {% csrf_token %}
@@ -35,7 +41,7 @@
             {% if submission.reached_overview %}
               <a href="{% url 'home' %}" class="btn btn-outline-secondary ml-auto mr-2">
                 <i class="fas fa-home"></i> Close</a>
-              <button type="submit" class="btn btn-outline-primary"><i class="far fa-save"></i> Save</button>
+              <button type="submit" class="btn btn-outline-primary" {% if not submission.can_edit_details %}disabled{% endif %}><i class="far fa-save"></i> Save</button>
             {% else %}
               {% if submission.filled_details %}
                 <a href="{% url 'submissions:authors' pk=submission.pk %}"

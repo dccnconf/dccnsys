@@ -1,0 +1,20 @@
+{% extends 'auth_app/email/email_base.html' %}
+
+{% block title %}
+  Cancel review for submission #{{ review.paper.pk }}
+{% endblock %}
+
+{% block subject %}
+  Cancel review for submission #{{ review.paper.pk }}
+{% endblock %}
+
+{% block body %}
+<p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
+  Dear {{ first_name }} {{ last_name }},
+</p>
+
+<p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
+you were de-assigned from reviewing the submission #{{ review.paper.pk }} "{{ review.paper.title }}".
+</p>
+
+{% endblock %}

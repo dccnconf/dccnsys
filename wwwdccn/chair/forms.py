@@ -1,10 +1,11 @@
-import time
-
 from django import forms
 from django.contrib.auth import get_user_model
+from django.db.models import Q
+from django.utils.translation import ugettext_lazy as _
 
 from conferences.models import Conference
-from gears.widgets import CustomCheckboxSelectMultiple
+from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput
+from review.models import Reviewer, Review
 from submissions.models import Submission
 from users.models import Profile
 
@@ -41,7 +42,7 @@ class FilterSubmissionsForm(forms.ModelForm):
 
     status = forms.MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False,
-        choices=Submission.STATUS
+        choices=Submission.STATUS_CHOICE
     )
 
     countries = forms.MultipleChoiceField(
@@ -259,3 +260,50 @@ class FilterUsersForm(forms.ModelForm):
         users = User.objects.filter(profile__in=profiles)
 
         return users
+
+
+class ChairUploadReviewManuscriptForm(forms.ModelForm):
+    class Meta:
+        model = Submission
+        fields = ('review_manuscript',)
+        widgets = {
+            'review_manuscript': CustomFileInput(attrs={
+                'accept': '.pdf',
+                'show_file_name': True,
+                'btn_class': 'btn-outline-secondary',
+                'label': _('Review manuscript PDF file')
+            })
+        }
+
+
+class AssignReviewerForm(forms.Form):
+    reviewer = forms.ChoiceField(required=True, label=_('Assign reviewer'))
+
+    def __init__(self, *args, submission=None):
+        super().__init__(*args)
+        self.submission = submission
+
+        # Fill available reviewers - neither already assigned, nor authors:
+        reviews = submission.reviews.all()
+        assigned_reviewers = reviews.values_list('reviewer', flat=True)
+        authors_users = submission.authors.values_list('user', flat=True)
+        available_reviewers = Reviewer.objects.exclude(
+            Q(pk__in=assigned_reviewers) | Q(user__in=authors_users)
+        )
+        profiles = {
+            rev: rev.user.profile for rev in available_reviewers
+        }
+        reviewers = list(available_reviewers)
+        reviewers.sort(key=lambda r: r.reviews.count())
+        self.fields['reviewer'].choices = (
+            (rev.pk,
+             f'{profiles[rev].get_full_name()} ({rev.reviews.count()}) - '
+             f'{profiles[rev].affiliation}, '
+             f'{profiles[rev].get_country_display()}')
+            for rev in reviewers
+        )
+
+    def save(self):
+        reviewer = Reviewer.objects.get(pk=self.cleaned_data['reviewer'])
+        review = Review.objects.create(reviewer=reviewer, paper=self.submission)
+        return review

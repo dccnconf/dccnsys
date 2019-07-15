@@ -80,7 +80,6 @@ class SubmissionDetailsForm(forms.ModelForm):
 
 
 class UploadReviewManuscriptForm(forms.ModelForm):
-    #TODO: this is hardcode! we will not need blind checkbox for submissions without blind review
     confirm_blind = forms.BooleanField(
         required=False,
         label=_('I confirm that the uploaded PDF is prepared for blind review. '
@@ -89,7 +88,6 @@ class UploadReviewManuscriptForm(forms.ModelForm):
                 'references to funding sources is given.')
     )
 
-    #TODO: this is also hardcode!
     understand_blind_review = forms.BooleanField(
         required=False,
         label=_('I understand that the paper may be rejected during the review '
@@ -130,17 +128,16 @@ class UploadReviewManuscriptForm(forms.ModelForm):
             self.fields['understand_blind_review'].initial = True
 
 
-
 # TODO: refactor this - unify this form with TopicReorderForm
 # (maybe reasonable to remove validation all authors are registered within
 # a given submission, remove submission from constructor, etc.)
 class AuthorsReorderForm(forms.Form):
     pks = forms.CharField(max_length=100, widget=forms.HiddenInput)
 
-    def __init__(self, submission, separator, *args, **kwargs):
+    def __init__(self, submission, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.submission = submission
-        self.separator = separator
+        self.separator = kwargs.get('separator', ',')
         self.cleaned_keys = []
 
     def clean_pks(self):

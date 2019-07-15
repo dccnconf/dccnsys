@@ -1,0 +1,37 @@
+{% extends 'user_site/base.html' %}
+{% load submission_extras %}
+{% load review_extras %}
+{% load conferences_extras %}
+{% load bootstrap4 %}
+
+{% block title %}
+  Reviews | DCCN
+{% endblock %}
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='reviews' %}
+{% endblock %}
+
+{% block body %}
+<main class="container py-3">
+  <div class="dccn-layout-row-lg-col">
+
+    <!-- PROFILE BOX -->
+    {% include 'user_site/components/profile_panel.html' with user=user numSubmissions=numSubmissions numReviews=user|count_incomplete_reviews %}
+
+
+    <!-- SUBMISSIONS BOX -->
+    <div class="dccn-panel dccn-work-panel" style="min-height: 90vh;">
+      <h2 class="dccn-panel-title">Reviews</h2>
+
+      {% bootstrap_messages %}
+
+      {% for review in reviews %}
+        {% include 'user_site/components/review_card.html' with review=review %}
+      {% endfor %}
+
+    </div>
+  </div>
+
+</main>
+{% endblock %}

@@ -29,9 +29,17 @@
 {% block listViewContent %}
 {% for item in items %}
 <div class="dccn-feed-item pb-3">
-  <div class="dccn-feed-item-row">
-    <div class="ml-auto"></div>
 
+  {#--------------------------------#}
+  {# 1. Top row: status and actions #}
+  {#--------------------------------#}
+  <div class="dccn-feed-item-row">
+    {#-----------------------------------------------#}
+    {# 1.1. Submission status and warnings indicator #}
+    {#-----------------------------------------------#}
+    <div class="dccn-feed-item-label dccn-feed-item-status">
+      <i class="fas fa-circle {{ item|status_class }}"></i> {{ item.status_display }}
+    </div>
     {% if item.warnings %}
       <div class="dccn-feed-item-label mx-2" data-toggle="tooltip"
            data-placement="bottom" data-html="true"
@@ -40,20 +48,38 @@
         <i class="fas fa-exclamation-triangle text-warning"></i> {{ item.warnings|length }}
       </div>
     {% endif %}
+    {% if item.status != 'SUBMIT' %}
+      <div class="d-flex dccn-feed-item-label mx-2">
+          Score: {{ item.average_score }}
+      </div>
+    {% endif %}
 
-    <div class="dccn-feed-item-label dccn-feed-item-status ml-2">
-      {{ item.status_display }} <i class="fas fa-circle {{ item|status_class }}"></i>
-    </div>
 
+    {#-----------------------------------------#}
+    {# 1.2. Actions modifying submission state #}
+    {#-----------------------------------------#}
+    <div class="ml-auto"></div>
+    {% if item.actions.review %}
+      <form method="POST" action="{% url 'chair:start-review' pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-info"><i class="fas fa-check"></i> Start review</button>
+      </form>
+    {% endif %}
+    {% if item.actions.revoke_review %}
+      <form method="POST" action="{% url 'chair:revoke-review' pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-warning"><i class="fas fa-times"></i> Revoke review</button>
+      </form>
+    {% endif %}
   </div>
 
+  {#---------------------------------------#}
+  {# 2. Submission body: title and authors #}
+  {#---------------------------------------#}
   <p class="mb-1">
-    <a href="#submission-{{ item.pk }}-modal"
-       class="dccn-link dccn-text-4 font-weight-normal"
-       data-toggle="modal">
-      {% if item.title %}{{ item.title }}
-      {% else %}<span class="bg-warning">No Title</span>
-      {% endif %}
+{#    <a href="#submission-{{ item.pk }}-modal" class="dccn-link dccn-text-4 font-weight-normal" data-toggle="modal">#}
+    <a href="{% url 'chair:submission-overview' pk=item.pk %}" class="dccn-link dccn-text-4 font-weight-normal">
+      {% if item.title %}{{ item.title }}{% else %}<span class="bg-warning">No Title</span>{% endif %}
     </a>
   </p>
 
@@ -69,40 +95,33 @@
     </p>
   </div>
 
+  <div class="mt-2"></div>
+
+  {% if item.status != 'SUBMIT' %}
+
+  {% endif %}
+
+  {#--------------------------------------------------------------------------------------------#}
+  {# 3. Bottom row: view, delete, etc. - actions those do not depend on current status and refs #}
+  {#--------------------------------------------------------------------------------------------#}
   <div class="dccn-feed-item-footer mt-4">
-    <a href="#submission-{{ item.pk }}-modal" class="dccn-feed-item-link" data-toggle="modal">
-      <i class="fas fa-align-justify"></i> View
-    </a>
-    <a href="#" class="dccn-feed-item-link">
-      <i class="far fa-edit"></i> Edit
+    <a href="{% url 'chair:submission-overview' pk=item.pk %}" class="dccn-feed-item-link">
+      <i class="fas fa-align-justify"></i> Details
     </a>
     <a href="#" class="dccn-feed-item-link">
       <i class="fas fa-envelope"></i> Contact
     </a>
+    {% if item.actions.assign_reviewers %}
+      <a href="{% url 'chair:submission-reviewers' pk=item.pk %}" class="dccn-feed-item-link">
+        <i class="fas fa-glasses"></i> Select reviewers (<span class="{% if item.num_reviews < item.num_reviews_required %}text-danger{% endif %}">{{ item.num_reviews }}/{{ item.num_reviews_required }}</span>)
+      </a>
+    {% endif  %}
+
+
     <div class="dccn-feed-item-id ml-auto">#{{ item.pk }}</div>
+
   </div>
 
-  <div class="modal fade" id="submission-{{ item.pk }}-modal"
-       data-src="{% url 'chair:get-submission-overview' item.pk %}">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Submission #{{ item.pk }}</h5>
-          <button type="button" class="close" data-dismiss="modal">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-{#              {% include 'chair/components/submission_overview_modal.html' with submission=item.object %}#}
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 {% endfor %}
 {% endblock %}

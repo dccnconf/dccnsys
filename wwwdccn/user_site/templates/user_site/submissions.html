@@ -1,5 +1,6 @@
 {% extends 'user_site/base.html' %}
 {% load submission_extras %}
+{% load review_extras %}
 {% load bootstrap4 %}
 
 {% block title %}
@@ -15,7 +16,7 @@
   <div class="dccn-layout-row-lg-col">
 
     <!-- PROFILE BOX -->
-    {% include 'user_site/components/profile_panel.html' with user=user numSubmissions=submissions|length numReviews=0 %}
+    {% include 'user_site/components/profile_panel.html' with user=user numSubmissions=submissions|length numReviews=user|count_incomplete_reviews %}
 
     <!-- SUBMISSIONS BOX -->
     <div class="dccn-panel dccn-work-panel" style="min-height: 90vh;">
@@ -30,8 +31,12 @@
       </div>
 
       {% for submission in submissions %}
-        {% if submission.status == 'SUBMIT' %}
+        {% if submission.status == submission.SUBMITTED %}
           {% include 'submissions/components/card_submitted.html' with submission=submission %}
+        {% elif submission.status == submission.UNDER_REVIEW %}
+          {% include 'submissions/components/card_review.html' with submission=submission %}
+        {% else %}
+          {{ submission.title }} -- {{ submission.get_status_display }}
         {% endif %}
       {% endfor %}
 

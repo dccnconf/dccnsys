@@ -6,5 +6,6 @@ from . import views
 app_name = 'user_site'
 
 urlpatterns = [
-    path('', views.submissions, name='submissions'),
+    path('submissions/', views.submissions, name='submissions'),
+    path('reviews/', views.reviews, name='reviews'),
 ]

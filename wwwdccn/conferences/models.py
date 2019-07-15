@@ -164,6 +164,10 @@ class SubmissionType(models.Model):
 
     possible_proceedings = models.ManyToManyField(ProceedingType)
 
+    min_num_words_in_review = models.IntegerField(
+        default=150, verbose_name=_('Minimum number of words in the review')
+    )
+
     def __str__(self):
         return self.name
 

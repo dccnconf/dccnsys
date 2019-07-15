@@ -49,15 +49,31 @@
 
     <div class="d-flex align-items-center mt-2 dccn-text-1-light mt-4">
       <div class="mx-0 my-0">
-        {% if conference|is_author:user %}
-          <div class="dccn-feed-item-label">{{ conference|num_submissions_by:user }} submissions to {{ conference.short_name }}:</div>
+        {% if conference|is_author:member %}
+          <div class="dccn-feed-item-label">{{ conference|num_submissions_by:member }} submissions to {{ conference.short_name }}:</div>
           <ul>
             {% for submission in conference|list_submission_by:member %}
-              <li><a href="#submission-{{ submission.pk }}-modal" data-toggle="modal" class="dccn-link">{{ submission.title }}</a></li>
+              <li><a href="{% url 'chair:submission-overview' pk=submission.pk %}" class="dccn-link">{{ submission.title }}</a></li>
             {% endfor %}
           </ul>
         {% else %}
           <div class="dccn-feed-item-label text-muted">Not attending {{ conference.short_name }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="d-flex align-items-center mt-2 dccn-text-1-light mt-4">
+      <div class="mx-0 my-0">
+        {% if conference|is_reviewer:member %}
+          <div class="dccn-feed-item-label">{{ conference|num_reviews_by:member }} reviews for {{ conference.short_name }}:</div>
+          <ul>
+            {% for review in conference|list_reviews_by:member %}
+{#              <li>{{ review }}</li>#}
+              <li><a href="{% url 'chair:submission-reviewers' pk=review.paper.pk %}" class="dccn-link">{{ review.paper.title }}</a></li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="dccn-feed-item-label text-muted">No reviews assigned</div>
         {% endif %}
       </div>
     </div>
@@ -68,24 +84,6 @@
       </div>
     {% endif %}
   </div>
-
-  {% for submission in conference|list_submission_by:member %}
-    <div class="modal fade" id="submission-{{ submission.pk }}-modal"
-         data-src="{% url 'chair:get-submission-overview' submission.pk %}">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Submission #{{ submission.pk }}</h5>
-            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
-          </div>
-          <div class="modal-body"></div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  {% endfor %}
 
 {% endblock %}
 

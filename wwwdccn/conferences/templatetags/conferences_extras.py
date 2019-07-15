@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from conferences.helpers import (
     get_authors_of, get_countries_of, get_affiliations_of,
 )
+from review.models import Reviewer
 from users.models import User
 
 register = template.Library()
@@ -45,3 +46,29 @@ def list_submission_by(conference, user):
     authors = [author for author in user.authorship.all()
                if author.submission.conference == conference]
     return [author.submission for author in authors]
+
+
+@register.filter
+def is_reviewer(conference, user):
+    assert isinstance(user, User)
+    reviewers = Reviewer.objects.filter(conference=conference, user=user)
+    return reviewers.count() > 0
+
+
+@register.filter
+def num_reviews_by(conference, user):
+    assert isinstance(user, User)
+    reviewers = Reviewer.objects.filter(conference=conference, user=user)
+    if reviewers.count() == 0:
+        return 0
+    print('Reviews: ', reviewers.first().reviews.all())
+    return len(reviewers.first().reviews.all())
+
+
+@register.filter
+def list_reviews_by(conference, user):
+    assert isinstance(user, User)
+    reviewers = Reviewer.objects.filter(conference=conference, user=user)
+    if reviewers.count() > 0:
+        return [rev for rev in reviewers.first().reviews.all()]
+    return []

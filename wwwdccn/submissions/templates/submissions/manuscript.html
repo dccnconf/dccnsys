@@ -31,6 +31,12 @@
             You will be able to add this information in your final manuscript after the review.
           </p>
 
+          {% if not submission.can_edit_review_manuscript %}
+            <p class="dccn-text-2-light border border-danger rounded bg-light p-3 mb-3">
+              Review manuscript can not be changed any longer. Please, contact organizing committee if you need to update it.
+            </p>
+          {% endif %}
+
           <div class="dccn-file-vd">
             <form action="{% url 'submissions:delete-manuscript' pk=submission.pk %}" method="POST"
                   class="dccn-file-vd-form" id="deleteManuscriptForm">
@@ -44,7 +50,7 @@
                   </a>
                 </p>
                 <p class="my-1">
-                  <button type="submit" class="btn btn-link p-0 m-0 text-danger" form="deleteManuscriptForm">
+                  <button type="submit" class="btn btn-link p-0 m-0 text-danger" form="deleteManuscriptForm" {% if not submission.can_edit_review_manuscript %}disabled{% endif %}>
                     <i class="far fa-trash-alt"></i> Delete
                   </button>
                 </p>
@@ -68,7 +74,7 @@
               <a href="{% url 'home' %}" class="btn btn-outline-secondary ml-auto mr-2">
                 <i class="fas fa-home"></i> Close
               </a>
-              <button type="submit" class="btn btn-outline-primary">
+              <button type="submit" class="btn btn-outline-primary" {% if not submission.can_edit_review_manuscript %}disabled{% endif %}>
                 Save <i class="fas fa-save"></i>
               </button>
             {% else %}

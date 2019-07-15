@@ -161,7 +161,7 @@ def delete_manuscript(request, pk):
 @require_GET
 def download_manuscript(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
-    if submission.is_viewable_by(request.user):
+    if submission.is_manuscript_viewable_by(request.user):
         if submission.review_manuscript:
             filename = submission.get_review_manuscript_name()
             mtype = mimetypes.guess_type(filename)[0]
@@ -254,7 +254,7 @@ def create_author(request, pk):
 def order_authors(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     if submission.authors_editable_by(request.user):
-        form = AuthorsReorderForm(submission, ',', request.POST)
+        form = AuthorsReorderForm(submission, request.POST)
         if form.is_valid():
             form.save()
         return redirect('submissions:authors', pk=pk)

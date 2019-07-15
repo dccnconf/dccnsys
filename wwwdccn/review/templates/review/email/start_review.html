@@ -1,0 +1,33 @@
+{% extends 'auth_app/email/email_base.html' %}
+
+{% block title %}
+  Review assignment for submission #{{ review.paper.pk }}
+{% endblock %}
+
+{% block subject %}
+  Review assignment for submission #{{ review.paper.pk }}
+{% endblock %}
+
+{% block body %}
+<p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
+  Dear {{ first_name }} {{ last_name }},
+</p>
+
+<p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
+  you were selected as a reviewer for the submission #{{ review.paper.pk }} "{{ review.paper.title }}" by the DCCN'2019 Organization Committee.
+  Please, complete the review at <a href="{{ protocol }}://{{ domain }}{% url 'review:review-details' pk=review.pk %}">{{ protocol }}://{{ domain }}{% url 'review:review-details' pk=review.pk %}</a> before {{ deadline }}.
+</p>
+
+<p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
+During the work, you can save your review draft at any time. To finish the review, you need to press "Submit review" button. Note, that there are limitations on the minimum number of words in each review, and you won't be able to submit if your detailed review contains less words then required.
+</p>
+
+<p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
+Please, provide your overall impression of the paper, its strengths and weaknesses and your recommendation on its acceptance.
+</p>
+
+<p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
+If for some reason you can not review the paper, please press "Refuse to review this paper" button and confirm review decline in the pop-up dialog.
+</p>
+
+{% endblock %}

@@ -1,0 +1,33 @@
+{###################}
+{# CONTEXT:        #}
+{# * review        #}
+{###################}
+<div class="dccn-feed-item">
+  <div class="dccn-feed-item-top">
+    <div class="dccn-feed-item-label dccn-feed-item-conf">{{ review.paper.conference.short_name }}</div>
+    <div class="dccn-feed-item-label ml-auto mr-3" data-toggle="tooltip" title="End of review">
+      <i class="far fa-clock"></i> <span class="font-weight-lighter">{{ review.paper.conference.review_stage.end_date }}</span>
+    </div>
+    <div class="dccn-feed-item-label dccn-feed-item-status">
+      <i class="fas fa-circle {% if review.submitted %}text-success{% else %}text-warning{% endif %}"></i>
+    </div>
+  </div>
+  <p class="dccn-feed-item-title">
+    <a href="{% url 'review:review-details' pk=review.pk %}">
+      {{ review.paper.title }}
+    </a>
+  </p>
+  <div class="dccn-feed-item-messages">
+    {% for warning in review.warnings %}
+      <div class="dccn-feed-item-row">
+        <div class="dccn-feed-item-message-text">
+          <i class="fas fa-exclamation-triangle text-warning"></i> {{ warning }}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <div class="dccn-feed-item-footer">
+    <a href="{% url 'review:review-details' pk=review.pk %}" class="dccn-feed-item-link"><i class="far fa-edit"></i> Edit</a>
+    <div class="dccn-feed-item-id ml-auto">#{{ review.pk }}</div>
+  </div>
+</div>
