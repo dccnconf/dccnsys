@@ -8,7 +8,4 @@
   <li class="{% if active == 'users' %}active{% endif %}">
     <a href="{% url 'chair:users' pk=conference.pk %}"><i class="fas fa-users mr-2"></i> Users</a>
   </li>
-  <li class="{% if active == 'reviewers' %}active{% endif %}">
-    <a href="{% url 'chair:reviewers' pk=conference.pk %}"><i class="fas fa-glasses mr-2"></i> Reviewers</a>
-  </li>
 </ul>

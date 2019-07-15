@@ -27,35 +27,95 @@
 {#---------------------------------------------------------------------------#}
 {% block listViewContent %}
 {% for item in items %}
-<div class="dccn-feed-item pb-3">
-  <div class="d-flex align-items-center">
-    <a href="{% url 'chair:user' pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
-      <img src="{{ item.avatar.url }}" alt="{{ item.name }} profile image" class="rounded-circle img-fluid mr-3" style="width: 96px; height: 96px;">
-    </a>
-    <div>
-      <h4 class="dccn-text-3-light">{{ item.name }}</h4>
-      {% if item.name_rus %}
-        <p class="dccn-text-small text-muted">{{ item.name_rus }}</p>
+<div class="dccn-feed-item pb-3 mt-0 pt-0">
+  <div class="row">
+    <div class="col-9 d-flex align-items-center">
+      <a href="{% url 'chair:user' pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
+        <img src="{{ item.avatar.url }}" alt="{{ item.name }} profile image" class="rounded-circle img-fluid mr-3" style="width: 96px; height: 96px;">
+      </a>
+      <div>
+        <h4 class="dccn-text-3-light">{{ item.name }}</h4>
+        {% if item.name_rus %}
+          <p class="dccn-text-small text-muted">{{ item.name_rus }}</p>
+        {% endif %}
+        <p class="dccn-text-small mt-1">{{ item.country }}, {{ item.city }}, {{ item.affiliation }}</p>
+        <p class="dccn-text-small mt-0 text-muted">{{ item.degree }}, {{ item.role }}</p>
+      </div>
+    </div>
+
+    <div class="col-3 d-flex flex-column align-items-end">
+      <div class="mb-2">
+        {% if not item.is_reviewer %}
+          <form method="POST" action="{% url 'chair:invite-reviewer' conf_pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-info"><span class="fas fa-plus"></span> Invite as a reviewer</button>
+          </form>
+        {% endif %}
+      </div>
+      <div class="d-flex align-items-center mt-2 dccn-text-small">
+        <div class="mx-0 my-0">
+          {% if item.is_participant %}
+            <div class="dccn-feed-item-label"><i class="far fa-file text-center" style="width: 20px;"></i> {{ item.num_submissions }} submission{{ item.num_submissions|pluralize:",s" }}</div>
+          {% else %}
+            <div class="dccn-feed-item-label text-muted">Not attending {{ conference.short_name }}</div>
+          {% endif %}
+        </div>
+      </div>
+      {% if item.is_reviewer %}
+        <div class="d-flex align-items-center dccn-text-small">
+          <div class="mx-0 my-0">
+            <div class="dccn-feed-item-label"><i class="fas fa-glasses" style="width: 20px;"></i> {{ item.num_reviews }} review{{ item.num_reviews|pluralize:",s" }}</div>
+          </div>
+        </div>
+        {% if item.num_incomplete_reviews > 0 %}
+          <div class="d-flex align-items-center dccn-text-small">
+            <div class="mx-0 my-0">
+              <div class="dccn-feed-item-label">
+                <i class="fas fa-exclamation-triangle text-warning" style="width: 20px;"></i>
+                {{ item.num_incomplete_reviews }} incomplete review{{ item.num_incomplete_reviews|pluralize:",s" }}
+              </div>
+            </div>
+          </div>
+        {% endif %}
       {% endif %}
-      <p class="dccn-text-small mt-1">{{ item.country }}, {{ item.city }}, {{ item.affiliation }}</p>
-      <p class="dccn-text-small mt-0 text-muted">{{ item.degree }}, {{ item.role }}</p>
+
     </div>
   </div>
 
-  <div class="d-flex align-items-center mt-2 dccn-text-0-light">
-    <div class="mx-0 my-0">
-      {% if item.is_participant %}
-        <div class="dccn-feed-item-label">{{ item.num_submissions }} submissions to {{ conference.short_name }}</div>
-      {% else %}
-        <div class="dccn-feed-item-label text-muted">Not attending {{ conference.short_name }}</div>
-      {% endif %}
-    </div>
-  </div>
 
   <div class="dccn-feed-item-footer mt-2">
     <a href="{% url 'chair:user' pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}" class="dccn-feed-item-link"><i class="fas fa-bars"></i> View</a>
     <a href="#" class="dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</a>
+    {% if item.is_reviewer %}
+      <button type="submit" class="btn btn-link dccn-feed-item-link text-danger" data-toggle="modal" data-target="#revokeModal-{{ item.pk }}">
+        <i class="fas fa-minus-circle"></i> Revoke reviewer
+      </button>
+    {% endif %}
     <div class="dccn-feed-item-id ml-auto">#{{ item.pk }}</div>
+  </div>
+
+
+  <div class="modal" tabindex="-1" role="dialog" id="revokeModal-{{ item.pk }}">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm reviewer revoke</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to revoke reviewer? If you proceed, {{ item.num_reviews }} reviews will be lost.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <form method="POST" action="{% url 'chair:revoke-reviewer' conf_pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
+            <button type="submit" class="btn btn-danger">Revoke</button>
+            {% csrf_token %}
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>

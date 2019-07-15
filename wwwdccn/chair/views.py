@@ -387,18 +387,43 @@ def users_list(request, pk, page=1):
         for user in users
     }
 
+    reviewers = {
+        user: list(user.reviewer_set.filter(conference=conference))
+        for user in users
+    }
+    num_reviews = {
+        user: len(reviewers[user][0].reviews.all()) if reviewers[user] else 0
+        for user in users
+    }
+    num_submitted_reviews = {
+        user: (
+            len(reviewers[user][0].reviews.filter(submitted=True))
+            if reviewers[user] else 0
+        ) for user in users
+    }
+    num_incomplete_reviews = {
+        user: (
+            len(reviewers[user][0].reviews.filter(submitted=False))
+            if reviewers[user] else 0
+        ) for user in users
+    }
+
     items = [{
         'pk': user.pk,
         'name': profile.get_full_name(),
         'name_rus': profile.get_full_name_rus(),
         'avatar': profile.avatar,
-        'country': profile.country,
+        'country': profile.get_country_display(),
         'city': profile.city,
         'affiliation': profile.affiliation,
         'degree': profile.degree,
         'role': profile.role,
         'num_submissions': len(authors[user]),
         'is_participant': len(authors[user]) > 0,
+        'num_reviews': num_reviews[user],
+        'num_submitted_reviews': num_submitted_reviews[user],
+        'num_incomplete_reviews': num_incomplete_reviews[user],
+        'is_reviewer': len(reviewers[user]) > 0,
     } for user, profile in profiles.items()]
 
     context = _build_paged_view_context(
