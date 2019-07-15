@@ -82,8 +82,8 @@ class Environment:
         self.ADMIN_NAME = self.env('ADMIN_NAME')
         self.ADMIN_EMAIL = self.env('ADMIN_EMAIL')
         self.USE_DEBUG_TOOLBAR = self.env('USE_DEBUG_TOOLBAR')
-        self.SITE_DOMAIN = self.env('SITE_DOMAIN'),
-        self.SITE_PROTOCOL = self.env('SITE_PROTOCOL'),
+        self.SITE_DOMAIN = self.env('SITE_DOMAIN')
+        self.SITE_PROTOCOL = self.env('SITE_PROTOCOL')
 
         # Derivatives and constants:
         self.DOMAIN = '.'.join(self.SITENAME.split('.')[-2:])
