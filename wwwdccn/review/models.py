@@ -22,6 +22,8 @@ SCORE = (
 
 
 class Review(models.Model):
+    NUM_SCORES = 4
+
     # Score choices codes:
     POOR = 1
     BELOW_AVERAGE = 2
@@ -84,6 +86,42 @@ class Review(models.Model):
 
     def check_details(self):
         return check_review_details(self.details, self.paper.stype)
+
+    def score_fields(self):
+        return {
+            'technical_merit': self.technical_merit,
+            'clarity': self.clarity,
+            'originality': self.originality,
+            'relevance': self.relevance,
+        }
+
+    def missing_score_fields(self):
+        return tuple(k for k, v in self.score_fields().items() if v == '')
+
+    def all_scores_filled(self):
+        return self.num_scores_missing() == 0
+
+    def num_scores_missing(self):
+        return len(self.missing_score_fields())
+
+    def warnings(self):
+        num_missing = self.num_scores_missing()
+        warnings = []
+        if num_missing == Review.NUM_SCORES and not self.details:
+            warnings.append('Please, start the review')
+        else:
+            filled_details = self.check_details()
+            filled_scores = num_missing == 0
+
+            if not filled_scores:
+                warnings.append(
+                    f'{num_missing} of {Review.NUM_SCORES} scores not filled'
+                )
+            if not filled_details:
+                warnings.append('Review details are incomplete')
+            if filled_scores and filled_details and not self.submitted:
+                warnings.append('Review is not submitted yet')
+        return warnings
 
 
 def check_review_details(value, submission_type):

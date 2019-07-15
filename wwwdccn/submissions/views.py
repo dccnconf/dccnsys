@@ -161,7 +161,7 @@ def delete_manuscript(request, pk):
 @require_GET
 def download_manuscript(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
-    if submission.is_viewable_by(request.user):
+    if submission.is_manuscript_viewable_by(request.user):
         if submission.review_manuscript:
             filename = submission.get_review_manuscript_name()
             mtype = mimetypes.guess_type(filename)[0]

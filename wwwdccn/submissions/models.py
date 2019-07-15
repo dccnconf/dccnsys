@@ -138,6 +138,10 @@ class Submission(models.Model):
     def is_viewable_by(self, user):
         return self.is_chaired_by(user) or self.is_author(user)
 
+    def is_manuscript_viewable_by(self, user):
+        return (self.is_viewable_by(user) or
+                (self.reviews.filter(reviewer__user=user).count() > 0))
+
     def is_deletable_by(self, user):
         return ((self.is_chaired_by(user) or self.is_author(user))
                 and self.status != 'PUBLISH')

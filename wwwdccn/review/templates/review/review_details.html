@@ -1,0 +1,118 @@
+{% extends "user_site/base.html" %}
+{% load bootstrap4 %}
+{% load submission_extras %}
+
+{% block title %}
+  Review #{{ review.pk }} | DCCN
+{% endblock %}
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='reviews' %}
+{% endblock %}
+
+{% block body %}
+<main class="container py-3">
+  <div class="dccn-layout-row">
+
+      <!-- MAIN AREA -->
+    <div class="dccn-panel dccn-panel-screen">
+      <div class="dccn-panel-header">
+        <h1 class="dccn-panel-title">Review for submission #{{ review.paper.pk }}</h1>
+        <a href="{% url 'user_site:reviews' %}" class="dccn-panel-close-btn"><i class="fas fa-times fa-2x"></i></a>
+      </div>
+
+      <div class="dccn-panel-status-row">
+        <p class="dccn-text-small text-muted mb-3">{{ review.paper.conference.short_name }}</p>
+        <p class="dccn-text-small ml-auto mr-3" data-toggle="tooltip" title="Deadline">
+          <i class="far fa-clock"></i> {{ review.paper.conference.review_stage.end_date }}
+        </p>
+
+        <div class="dccn-text-small">
+          <i class="fas fa-circle {% if review.submitted %}text-success{% else %}text-warning{% endif %}"></i>
+        </div>
+      </div>
+
+      {% bootstrap_messages %}
+
+      <p class="text-center dccn-text-larger-light">{{ review.paper.title }}</p>
+      <p class="text-justify dccn-text-0 mt-3"><strong>Abstract:</strong> {{ review.paper.abstract }}</p>
+
+      <p class="dccn-text-0 mt-3"><strong>Topics:</strong></p>
+      <ul class="list-unstyled mt-0">
+        {% for topic in review.paper.topics.all %}
+          <li class="dccn-text-0"><i class="far fa-check-square"></i> {{ topic.name }}</li>
+        {% endfor %}
+      </ul>
+
+      <p class="dccn-text-0 mt-3"><strong>Submission type:</strong> {{ review.paper.stype.name }}</p>
+
+      <p class="dccn-text-0 mt-3">
+        <strong>Review Manuscript: </strong>
+        <a href="{% url 'submissions:download-manuscript' pk=review.paper.pk %}" class="dccn-link" target="_blank">
+          <i class="far fa-file-pdf"></i> {{ review.paper.get_review_manuscript_name }}
+        </a>
+      </p>
+
+      <hr>
+
+      <form action="" id="editForm" method="POST" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="submitted" value="{{ review.submitted }}" id="submittedInput">
+        {% bootstrap_field edit_form.technical_merit form_group_class="form-group row" label_class="col-sm-4 col-md-3 col-lg-2" field_class="col-sm-8 col-md-9 col-lg-10" %}
+        {% bootstrap_field edit_form.originality form_group_class="form-group row" label_class="col-sm-4 col-md-3 col-lg-2" field_class="col-sm-8 col-md-9 col-lg-10" %}
+        {% bootstrap_field edit_form.relevance form_group_class="form-group row" label_class="col-sm-4 col-md-3 col-lg-2" field_class="col-sm-8 col-md-9 col-lg-10" %}
+        {% bootstrap_field edit_form.clarity form_group_class="form-group row" label_class="col-sm-4 col-md-3 col-lg-2" field_class="col-sm-8 col-md-9 col-lg-10" %}
+        {% bootstrap_field edit_form.details show_label=False placeholder="Enter detailed review here" %}
+        <small class="form-text text-muted">
+          <span id="detailsNumWords" data-min="{{ review.paper.stype.min_num_words_in_review }}"></span> words (min: {{ review.paper.stype.min_num_words_in_review }})
+        </small>
+      </form>
+
+      <form action="#" id="deleteForm" method="POST"></form>
+
+      <div class="d-flex my-3">
+        {% if not review.submitted %}
+          <button type="submit" class="btn btn-primary" form="editForm" id="submitReviewBtn">Submit review</button>
+          <button type="submit" class="btn btn-outline-secondary ml-2" form="editForm">Save draft</button>
+        {% else %}
+          <button class="btn btn-primary" form="editForm">Save</button>
+        {% endif %}
+        <button type="submit" class="btn btn-danger ml-auto" form="deleteForm">Refuse to review this paper</button>
+      </div>
+
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block script %}
+<script>
+$(document).ready(function () {
+  const detailsInput = $('#id_details');
+  const numWordsSpan = $('#detailsNumWords');
+  const minNumWords = parseInt(numWordsSpan.attr('data-min'));
+
+  function countWords(s) {
+    const words = s.trim().split(/\s+/);
+    if (words.length === 1 && words[0] === "") {
+      return 0;
+    }
+    return words.length;
+  }
+
+  function fillNumWordsSpan() {
+    const numWords = countWords(detailsInput.val());
+    const cname = (numWords >= minNumWords) ? 'text-success' : 'text-danger';
+    numWordsSpan.html(`<span class="${cname}">${numWords}</span>`);
+  }
+
+  $('#submitReviewBtn').on('click', function () {
+    $('#submittedInput').val('True');
+  });
+  detailsInput.on('input', fillNumWordsSpan)
+
+  // Fill num words for the first time:
+  fillNumWordsSpan();
+});
+</script>
+{% endblock %}

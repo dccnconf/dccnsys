@@ -3,6 +3,8 @@
 {#                                                   #}
 {# * active: 'submissions', 'reviews', 'conferences' #}
 {# ==================================================#}
+{% load review_extras %}
+
 <nav class="navbar navbar-expand-md navbar-dark bg-dark">
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -16,8 +18,9 @@
         </a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link {% if active == 'reviews' %}active{% endif %}">
+        <a href="{% url 'user_site:reviews' %}" class="nav-link {% if active == 'reviews' %}active{% endif %}">
           {% if active == 'reviews' %}<span class="text-secondary">|</span>{% endif %} Reviews
+          {% if user|is_reviewer %} <span class="badge badge-light">{{ user|count_incomplete_reviews }}</span>{% endif %}
         </a>
       </li>
       <li class="nav-item">
