@@ -16,10 +16,10 @@
   <hr class="d-none d-lg-block">
   <ul class="list-unstyled mt-lg-1 ml-auto ml-lg-0">
     <li class="dccn-text-normal">
-      <span class="dccn-text-large-light">{{ numSubmissions }}</span> <a href="{% url 'user_site:submissions' %}" class="dccn-link">submissions</a>
+      <span class="dccn-text-large-light">{{ numSubmissions }}</span> <a href="{% url 'user_site:submissions' %}" class="dccn-link">submission{{ numSubmissions|pluralize:',s' }}</a>
     </li>
     <li class="dccn-text-normal">
-      <span class="dccn-text-large-light">{{ numReviews }}</span> <a href="{% url 'user_site:reviews' %}" class="dccn-link">incomplete reviews</a>
+      <span class="dccn-text-large-light">{{ numReviews }}</span> <a href="{% url 'user_site:reviews' %}" class="dccn-link">incomplete review{{ numReviews|pluralize:',s' }}</a>
     </li>
   </ul>
 </div>

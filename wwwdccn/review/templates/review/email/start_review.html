@@ -15,7 +15,7 @@
 
 <p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
   you were selected as a reviewer for the submission #{{ review.paper.pk }} "{{ review.paper.title }}" by the DCCN'2019 Organization Committee.
-  Please, complete the review at <a href="{{ protocol }}://{{ domain }}{% url 'review:review-details' pk=review.pk %}">{{ protocol }}://{{ domain }}{% url 'review:review-details' pk=review.pk %}</a> before {{ deadline }}.
+  Please, complete the review at <a href="{{ protocol }}://{{ domain }}{% url 'review:review-details' pk=review.pk %}">{{ protocol }}://{{ domain }}{% url 'review:review-details' pk=review.pk %}</a> before {{ deadline }}
 </p>
 
 <p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
@@ -27,7 +27,7 @@ Please, provide your overall impression of the paper, its strengths and weakness
 </p>
 
 <p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
-If for some reason you can not review the paper, please press "Refuse to review this paper" button and confirm review decline in the pop-up dialog.
+If you can not review the paper for any reason, please press "Refuse to review this paper" button and confirm refuse in the pop-up dialog.
 </p>
 
 {% endblock %}

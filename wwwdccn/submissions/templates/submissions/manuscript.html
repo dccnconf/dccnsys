@@ -61,13 +61,14 @@
         <form method="POST" action="" class="mt-5" enctype="multipart/form-data" novalidate>
           {% csrf_token %}
           {% bootstrap_form_errors form type='non_fields' %}
+          {% if submission.can_edit_review_manuscript %}
           {% bootstrap_field form.confirm_blind %}
           {% bootstrap_field form.understand_blind_review %}
           {% bootstrap_field form.review_manuscript %}
-
           <p class="text-muted dccn-text-small-light" id="mustConfirmNote">
             You need to confirm with blind review conditions before uploading the manuscript.
           </p>
+          {% endif %}
 
           <div class="dccn-saveform">
             {% if submission.reached_overview %}

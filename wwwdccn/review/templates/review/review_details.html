@@ -68,6 +68,14 @@
         </small>
       </form>
 
+      <div class="dccn-text-small mt-3">
+        Please fill the reviewer form. To complete the review, you need to grade technical merit,
+          originality, relevance and clarity, and also provide a detailed review. The detailed review must contain at least <strong>{{ review.paper.stype.min_num_words_in_review }}</strong> words.<br>
+          To finish the review, you need to press "Submit review". You can also press "Save draft" to save your current state and continue your work after a while.<br>
+        Please note, that <strong>to finish the review you need to submit it</strong>. The review status at the top right corner then becomes green.<br>
+        You can also refuse to review at any time, just press the button "Refuse to review this paper" and confirm your refuse.
+      </div>
+
       <div class="d-flex my-3">
         {% if not review.submitted %}
           <button type="submit" class="btn btn-primary" form="editForm" id="submitReviewBtn">Submit review</button>

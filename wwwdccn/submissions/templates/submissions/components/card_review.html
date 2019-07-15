@@ -33,8 +33,8 @@
     {% endif %}
   </div>
   <div class="dccn-feed-item-footer">
-    <a href="" class="dccn-feed-item-link"><i class="fas fa-align-justify"></i> View</a>
-    <a href="" class="dccn-feed-item-link"><i class="far fa-edit"></i> Edit authors</a>
+    <a href="{% url 'submissions:overview' pk=submission.pk %}" class="dccn-feed-item-link"><i class="fas fa-align-justify"></i> View</a>
+    <a href="{% url 'submissions:authors' pk=submission.pk %}" class="dccn-feed-item-link"><i class="far fa-edit"></i> Edit authors</a>
     <button class="btn btn-link dccn-feed-item-link" data-toggle="modal" data-target="#deleteDialog-{{ submission.pk }}">
       <i class="far fa-trash-alt"></i> Delete
     </button>
