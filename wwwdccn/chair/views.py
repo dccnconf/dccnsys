@@ -4,11 +4,14 @@ import logging
 import math
 from datetime import datetime
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
 from django.db.models import Q
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render, redirect
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 from django.utils.translation import ugettext_lazy as _
@@ -350,6 +353,30 @@ def start_review(request, pk):
     if submission.status == Submission.SUBMITTED:
         submission.status = Submission.UNDER_REVIEW
         submission.save()
+
+        # Sending an email to authors:
+        for author in submission.authors.all():
+            user = author.user
+            profile = user.profile
+            ctx = {
+                'first_name': profile.first_name,
+                'last_name': profile.last_name,
+                'submission': submission,
+                'protocol': settings.SITE_PROTOCOL,
+                'domain': settings.SITE_DOMAIN,
+                'deadline': conference.review_stage.end_date,
+            }
+            html = render_to_string('submissions/email/status_review.html', ctx)
+            text = render_to_string('submissions/email/status_review.txt', ctx)
+            send_mail(
+                f"[DCCN'2019] Submission #{submission.pk} is under review",
+                message=text,
+                html_message=html,
+                recipient_list=[user.email],
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                fail_silently=False,
+            )
+
     return redirect(request.GET.get('next', ''))
 
 

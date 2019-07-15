@@ -1,0 +1,33 @@
+{% extends 'auth_app/email/email_base.html' %}
+
+{% block title %}
+  Submission #{{ submission.pk }} is under review
+{% endblock %}
+
+{% block subject %}
+  Submission #{{ submission.pk }} is under review
+{% endblock %}
+
+{% block body %}
+<p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
+  Dear {{ first_name }} {{ last_name }},
+</p>
+
+<p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
+  your submission #{{ submission.pk }} "{{ submission.title }}" for conference DCCN'2019 is now under the review.
+</p>
+
+<p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
+  The review ends at <strong>{{ deadline }}</strong>.
+</p>
+
+<p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
+  Please note, that until the end of review you are not allowed to change your manuscript or submission details.
+If you have a strong reason to update your submission data, please contact organization committee.
+</p>
+
+<p style="font-size: 0.9rem; font-weight: lighter; font-family: Verdana, Geneva, sans-serif;">
+However, you still can change your co-authors inside the system - since the review is double-blinded, the reviewers do not see them anyway.
+</p>
+
+{% endblock %}

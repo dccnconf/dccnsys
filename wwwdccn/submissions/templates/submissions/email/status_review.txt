@@ -1,0 +1,18 @@
+Dear {{ first_name }} {{ last_name }},
+
+your submission #{{ submission.pk }} "{{ submission.title }}" for DCCN'2019 is now under the review.
+
+The review ends at {{ deadline }}.
+
+Please note, that until the end of review you are not allowed to change your manuscript or submission details.
+If you have a strong reason to update your submission data, please contact organization committee.
+
+However, you still can change your co-authors inside the system - since the review is double-blinded, the reviewers do not see them anyway.
+
+Happy conferencing,
+DCCN Organization Committee
+Contact us: org@dccn.ru
+
+--
+This email was generated automatically due to actions performed at {{ protocol }}://{{ domain }}.
+If you received this email unintentionally, please contact us at org@dccn.ru and delete this email.
