@@ -68,8 +68,6 @@
         </small>
       </form>
 
-      <form action="#" id="deleteForm" method="POST"></form>
-
       <div class="d-flex my-3">
         {% if not review.submitted %}
           <button type="submit" class="btn btn-primary" form="editForm" id="submitReviewBtn">Submit review</button>
@@ -77,9 +75,31 @@
         {% else %}
           <button class="btn btn-primary" form="editForm">Save</button>
         {% endif %}
-        <button type="submit" class="btn btn-danger ml-auto" form="deleteForm">Refuse to review this paper</button>
+        <button type="button" class="btn btn-danger ml-auto" data-toggle="modal" data-target="#declineReviewModal">Refuse to review this paper</button>
       </div>
 
+      <div class="modal" tabindex="-1" role="dialog" id="declineReviewModal">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Decline the review</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to refuse to review this paper? All changes you made to the review will be lost and you will not have access to the paper anymore.</p>
+            </div>
+            <div class="modal-footer">
+              <form action="{% url 'review:review-decline' pk=review.pk %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Confirm</button>
+              </form>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </main>

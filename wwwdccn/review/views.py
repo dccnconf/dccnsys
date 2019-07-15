@@ -1,7 +1,10 @@
+from django.contrib import messages
 from django.http import Http404
 from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
+from django.views.decorators.http import require_POST
+
 from review.forms import EditReviewForm
 from review.models import Review
 
@@ -25,3 +28,13 @@ def review_details(request, pk):
         'review': review,
         'edit_form': edit_form,
     })
+
+
+@require_POST
+def decline_review(request, pk):
+    review = get_object_or_404(Review, pk=pk)
+    validate_reviewer_access(request.user, review)
+    paper_pk = review.paper.pk
+    review.delete()
+    messages.warning(request, f'You refused to review paper #{paper_pk}')
+    return redirect('user_site:reviews')

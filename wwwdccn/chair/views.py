@@ -117,6 +117,7 @@ def submissions_list(request, pk, page=1):
         sub: {
             'review': sub.status == Submission.SUBMITTED and not sub.warnings(),
             'revoke_review': sub.status == Submission.UNDER_REVIEW,
+            'assign_reviewers': sub.status == Submission.UNDER_REVIEW,
         }
         for sub in submissions
     }
@@ -133,6 +134,8 @@ def submissions_list(request, pk, page=1):
         'status': sub.status,  # this is needed to make `status_class` work
         'status_display': sub.get_status_display(),
         'actions': actions[sub],
+        'num_reviews': sub.reviews.all().count(),
+        'num_reviews_required': sub.stype.num_reviews if sub.stype else 0,
     } for sub in submissions]
 
     context = _build_paged_view_context(
