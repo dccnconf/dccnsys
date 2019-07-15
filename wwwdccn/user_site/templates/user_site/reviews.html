@@ -1,6 +1,7 @@
 {% extends 'user_site/base.html' %}
 {% load submission_extras %}
 {% load review_extras %}
+{% load conferences_extras %}
 {% load bootstrap4 %}
 
 {% block title %}
@@ -16,7 +17,7 @@
   <div class="dccn-layout-row-lg-col">
 
     <!-- PROFILE BOX -->
-    {% include 'user_site/components/profile_panel.html' with user=user numSubmissions=submissions|length numReviews=user|count_incomplete_reviews %}
+    {% include 'user_site/components/profile_panel.html' with user=user numSubmissions=numSubmissions numReviews=user|count_incomplete_reviews %}
 
 
     <!-- SUBMISSIONS BOX -->

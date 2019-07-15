@@ -14,6 +14,8 @@ def submissions(request):
 
 @login_required
 def reviews(request):
+    submissions = Submission.objects.filter(authors__user=request.user)
     return render(request, 'user_site/reviews.html', {
+        'numSubmissions': len(submissions),
         'reviews': Review.objects.filter(reviewer__user=request.user),
     })

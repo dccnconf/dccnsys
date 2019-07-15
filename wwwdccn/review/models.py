@@ -1,4 +1,9 @@
+from django.conf import settings
+from django.core.mail import send_mail
 from django.db import models
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 
 from conferences.models import Conference
@@ -127,3 +132,56 @@ class Review(models.Model):
 def check_review_details(value, submission_type):
     num_words = len(value.split())
     return num_words >= submission_type.min_num_words_in_review
+
+
+@receiver(post_save, sender=Review)
+def create_review(sender, instance, created, **kwargs):
+    if created:
+        assert isinstance(instance, Review)
+        user = instance.reviewer.user
+        profile = user.profile
+        context = {
+            'email': user.email,
+            'first_name': profile.first_name,
+            'last_name': profile.last_name,
+            'review': instance,
+            'protocol': settings.SITE_PROTOCOL,
+            'domain': settings.SITE_DOMAIN,
+            'deadline': instance.paper.conference.review_stage.end_date,
+        }
+        html = render_to_string('review/email/start_review.html', context)
+        text = render_to_string('review/email/start_review.txt', context)
+        send_mail(
+            f"[DCCN2019] Review assignment for submission #{instance.paper.pk}",
+            message=text,
+            html_message=html,
+            recipient_list=[user.email],
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            fail_silently=False,
+        )
+
+
+@receiver(post_delete, sender=Review)
+def delete_review(sender, instance, **kwargs):
+    assert isinstance(instance, Review)
+    user = instance.reviewer.user
+    profile = user.profile
+    context = {
+        'email': user.email,
+        'first_name': profile.first_name,
+        'last_name': profile.last_name,
+        'review': instance,
+        'protocol': settings.SITE_PROTOCOL,
+        'domain': settings.SITE_DOMAIN,
+        'deadline': instance.paper.conference.review_stage.end_date,
+    }
+    html = render_to_string('review/email/cancel_review.html', context)
+    text = render_to_string('review/email/cancel_review.txt', context)
+    send_mail(
+        f"[DCCN2019] Review cancelled for submission #{instance.paper.pk}",
+        message=text,
+        html_message=html,
+        recipient_list=[user.email],
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        fail_silently=False,
+    )

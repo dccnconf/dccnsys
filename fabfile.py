@@ -27,6 +27,7 @@ DEFAULTS = {
     'CERT_YEAR': '2019',
     'MAX_BODY_SIZE': '15M',
     'EMAIL_PROVIDER': 'mailgun',
+    'SITE_PROTOCOL': 'https',
 
     # Staging-specific deploy defaults:
     'STAGING_REPO_BRANCH': 'master',
@@ -81,6 +82,8 @@ class Environment:
         self.ADMIN_NAME = self.env('ADMIN_NAME')
         self.ADMIN_EMAIL = self.env('ADMIN_EMAIL')
         self.USE_DEBUG_TOOLBAR = self.env('USE_DEBUG_TOOLBAR')
+        self.SITE_DOMAIN = self.env('SITE_DOMAIN'),
+        self.SITE_PROTOCOL = self.env('SITE_PROTOCOL'),
 
         # Derivatives and constants:
         self.DOMAIN = '.'.join(self.SITENAME.split('.')[-2:])
@@ -419,6 +422,8 @@ def write_env(c, env):
         'ADMIN_NAME': env.ADMIN_NAME,
         'ADMIN_EMAIL': env.ADMIN_EMAIL,
         'USE_DEBUG_TOOLBAR': env.USE_DEBUG_TOOLBAR,
+        'SITE_DOMAIN': env.SITE_DOMAIN,
+        'SITE_PROTOCOL': env.SITE_PROTOCOL,
     }
 
     with c.cd(f'/home/{env.VM_USER_NAME}/sites/{env.SITENAME}'):

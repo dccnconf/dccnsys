@@ -1,0 +1,4 @@
+Reviewer {{ user.profile.get_full_name }} (user ID:{{ user.pk }}) refused to review the submission #{{ review.paper.pk }} "{{ review.paper.title }}".
+
+Assign another reviewer at: {{ protocol }}://{{ domain }}{% url 'chair:submission-reviewers' pk=review.paper.pk %}
+

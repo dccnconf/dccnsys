@@ -1,0 +1,11 @@
+Dear {{ first_name }} {{ last_name }},
+
+you were de-assigned from reviewing the submission #{{ review.paper.pk }} "{{ review.paper.title }}".
+
+With best regards,
+DCCN Organization Committee
+Contact us: org@dccn.ru
+
+--
+This email was generated automatically due to actions performed at {{ protocol }}://{{ domain }}.
+If you received this email unintentionally, please contact us at org@dccn.ru and delete this email.
