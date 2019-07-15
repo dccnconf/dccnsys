@@ -47,7 +47,7 @@
     <div class="col-3">
       {% if item.invited %}
         <div class="text-right">
-          <span class="fas fa-star text-warning"></span> <a href="#" class="dccn-link">{{ item.num_reviews }} reviews</a>
+          <span class="fas fa-star text-warning"></span> <a href="{% url 'chair:user' pk=conference.pk user_pk=item.pk %}" class="dccn-link">{{ item.num_reviews }} reviews</a>
         </div>
       {% else %}
         <div class="text-right">
@@ -63,7 +63,7 @@
 
   <div class="dccn-feed-item-footer mt-2">
     {% if item.invited %}
-      <a href="#" class="dccn-feed-item-link"><i class="fas fa-bars"></i> View assigned reviews</a>
+      <a href="{% url 'chair:user' pk=conference.pk user_pk=item.pk %}" class="dccn-feed-item-link"><i class="fas fa-bars"></i> View assigned reviews</a>
       <button type="submit" class="btn btn-link dccn-feed-item-link text-danger" data-toggle="modal" data-target="#revokeModal-{{ item.pk }}">
         <i class="fas fa-minus-circle"></i> Revoke reviewer
       </button>

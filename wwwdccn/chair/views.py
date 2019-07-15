@@ -154,9 +154,16 @@ def submission_overview(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     conference = submission.conference
     validate_chair_access(request.user, conference)
+
+    actions = {
+        'review': (submission.status == Submission.SUBMITTED and
+                   not submission.warnings()),
+        'revoke_review': submission.status == Submission.UNDER_REVIEW,
+    }
     return render(request, 'chair/submission_overview.html', context={
         'submission': submission,
         'conference': conference,
+        'actions': actions,
     })
 
 

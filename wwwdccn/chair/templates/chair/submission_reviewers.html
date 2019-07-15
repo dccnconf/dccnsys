@@ -66,10 +66,17 @@
       <div class="col-8 dccn-text-2">{% if review.clarity %}{{ review.clarity }}{% else %}-{% endif %}</div>
     </div>
     <div class="row">
-      {% if review.check_details %}
+      <div class="col-4 dccn-text-2">
+        <span class="dccn-text-smallest pr-3"><i class="fas fa-circle {% if review.relevance %}text-success{% else %}text-warning{% endif %}"></i></span>
+        Relevance:
+      </div>
+      <div class="col-8 dccn-text-2">{% if review.relevance %}{{ review.relevance }}{% else %}-{% endif %}</div>
+    </div>
+    <div class="row">
+      {% if review.details %}
         <div class="col">
           <p class="dccn-text-2">
-            <span class="dccn-text-smallest pr-3"><i class="fas fa-circle text-success"></i></span>
+            <span class="dccn-text-smallest pr-3"><i class="fas fa-circle {% if review.check_details %}text-success{% else %}text-warning{% endif %}"></i></span>
             Detailed review:
           </p>
           <p class="dccn-text-0-light">{{ review.details }}</p>

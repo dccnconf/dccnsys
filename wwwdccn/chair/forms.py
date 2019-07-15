@@ -290,9 +290,17 @@ class AssignReviewerForm(forms.Form):
         available_reviewers = Reviewer.objects.exclude(
             Q(pk__in=assigned_reviewers) | Q(user__in=authors_users)
         )
+        profiles = {
+            rev: rev.user.profile for rev in available_reviewers
+        }
+        reviewers = list(available_reviewers)
+        reviewers.sort(key=lambda r: r.reviews.count())
         self.fields['reviewer'].choices = (
-            (reviewer.pk, reviewer.user.profile.get_full_name())
-            for reviewer in available_reviewers
+            (rev.pk,
+             f'{profiles[rev].get_full_name()} ({rev.reviews.count()}) - '
+             f'{profiles[rev].affiliation}, '
+             f'{profiles[rev].get_country_display()}')
+            for rev in reviewers
         )
 
     def save(self):

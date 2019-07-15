@@ -50,6 +50,23 @@
       {% endfor %}
     </ul>
   {% endif %}
+
+  <hr>
+  <div class="row mt-3">
+    {% if actions.review %}
+      <form method="POST" action="{% url 'chair:start-review' pk=submission.pk %}?next={{ request.get_full_path|urlencode }}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-info"><i class="fas fa-check"></i> Start review</button>
+      </form>
+    {% endif %}
+    {% if actions.revoke_review %}
+      <form method="POST" action="{% url 'chair:revoke-review' pk=submission.pk %}?next={{ request.get_full_path|urlencode }}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-warning"><i class="fas fa-times"></i> Revoke review</button>
+      </form>
+    {% endif %}
+  </div>
+
 </div>
 </div>
 {% endblock %}
