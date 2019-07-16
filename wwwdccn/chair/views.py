@@ -177,6 +177,8 @@ def submissions_list(request, pk, page=1):
         'warnings': warnings[sub],
     } for sub in submissions]
 
+    items.sort(key=lambda item: item['pk'])
+
     context = _build_paged_view_context(
         request, items, page, 'chair:submissions-pages', {'pk': pk}
     )
@@ -488,6 +490,8 @@ def users_list(request, pk, page=1):
         'num_incomplete_reviews': num_incomplete_reviews[user],
         'is_reviewer': len(reviewers[user]) > 0,
     } for user, profile in profiles.items()]
+
+    items.sort(key=lambda x: x['pk'])
 
     context = _build_paged_view_context(
         request, items, page, 'chair:users-pages', {'pk': pk}
