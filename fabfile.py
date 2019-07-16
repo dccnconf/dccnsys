@@ -431,4 +431,4 @@ def write_env(c, env):
         for var, value in assignments.items():
             if var == 'SECRET_KEY':
                 value = f"'{value}'"  # need to enclose in quotes this
-            c.run(f'echo {var}={value} >> .env')
+            c.run(f'echo {var}="{value}" >> .env')
