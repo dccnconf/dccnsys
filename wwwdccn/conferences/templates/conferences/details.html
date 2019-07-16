@@ -40,8 +40,18 @@
         <p class="text-center dccn-text mt-2">
           {{ conference.start_date }} - {{ conference.close_date }}, {{ conference.city }}, {{ conference.get_country_display }}
         </p>
+        {% if conference.contact_email %}
+          <p class="text-center dccn-text mt-2">
+            Organizing committee email: <a href="mailto:{{ conference.contact_email }}">{{ conference.contact_email }}</a>
+          </p>
+        {% endif %}
+        {% if conference.site_url %}
+          <p class="text-center dccn-text mt-2">
+            Conference public site: <a href="{{ conference.site_url }}">{{ conference.site_url }}</a>
+          </p>
+        {% endif %}
         <div class="d-flex">
-          <a href="{% url 'submissions:create' %}" class="btn btn-outline-primary mt-3 mx-auto">Submit paper</a>
+          <a href="{% url 'submissions:create' %}" class="btn btn-outline-primary mt-4 mx-auto">Submit paper</a>
         </div>
 
         {# TODO: change the following check to filter whether user is able to edit conference #}
