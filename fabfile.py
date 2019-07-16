@@ -429,6 +429,4 @@ def write_env(c, env):
     with c.cd(f'/home/{env.VM_USER_NAME}/sites/{env.SITENAME}'):
         c.run('rm -f .env && touch .env', echo=True)
         for var, value in assignments.items():
-            if var == 'SECRET_KEY':
-                value = f"'{value}'"  # need to enclose in quotes this
-            c.run(f'echo {var}="{value}" >> .env')
+            c.run(f"echo {var}='{value}' >> .env")
