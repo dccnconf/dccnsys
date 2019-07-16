@@ -429,7 +429,8 @@ def write_env(c, env):
     with c.cd(f'/home/{env.VM_USER_NAME}/sites/{env.SITENAME}'):
         c.run('rm -f .env && touch .env', echo=True)
         for var, value in assignments.items():
-            value = f"'{value}'"  # need to enclose in quotes this
-            command = f'echo {var}={value} >> .env'
-            print('writing command: ', command)
-            c.run(command)
+            # We need to double quote value since one level of quotes is
+            # removed by echo command, and the second quote should appear
+            # in the variable itself since later this file is passed to
+            # export xargs:
+            c.run(f'echo {var}="\'{value}\'" >> .env')
