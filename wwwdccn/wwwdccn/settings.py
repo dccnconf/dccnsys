@@ -255,7 +255,9 @@ else:
 # * MAILGUN_API_URL (opt., by default - euro domain)
 #################################################################
 EMAIL_DOMAIN = os.environ.get('EMAIL_DOMAIN', 'mail.localhost')
-DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_FROM', f'support@{EMAIL_DOMAIN}')
+EMAIL_FROM_ADDRESS = os.environ.get('EMAIL_FROM_ADDRESS', f'support@{EMAIL_DOMAIN}')
+EMAIL_FROM_NAME = os.environ.get('EMAIL_FROM_NAME', 'DCCN Conference')
+DEFAULT_FROM_EMAIL = f'{EMAIL_FROM_NAME} <{EMAIL_FROM_ADDRESS}>'
 
 if os.environ.get('EMAIL_PROVIDER', '') == 'mailgun':
     EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"

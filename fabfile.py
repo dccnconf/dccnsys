@@ -28,6 +28,7 @@ DEFAULTS = {
     'MAX_BODY_SIZE': '15M',
     'EMAIL_PROVIDER': 'mailgun',
     'SITE_PROTOCOL': 'https',
+    'EMAIL_FROM_NAME': 'DCCN Conference',
 
     # Staging-specific deploy defaults:
     'STAGING_REPO_BRANCH': 'master',
@@ -72,7 +73,8 @@ class Environment:
         self.MAX_BODY_SIZE = self.env('MAX_BODY_SIZE')
         self.EMAIL_PROVIDER = self.env('EMAIL_PROVIDER')
         self.EMAIL_DOMAIN = self.env('EMAIL_DOMAIN')
-        self.EMAIL_FROM = self.env('EMAIL_FROM')
+        self.EMAIL_FROM_ADDRESS = self.env('EMAIL_FROM_ADDRESS')
+        self.EMAIL_FROM_NAME = self.env('EMAIL_FROM_NAME')
         self.SERVER_EMAIL_FROM = self.env('SERVER_EMAIL_FROM')
         self.MAILGUN_TOKEN = self.env('MAILGUN_TOKEN')
         self.MAILGUN_API_URL = self.env('MAILGUN_API_URL')
@@ -407,7 +409,8 @@ def write_env(c, env):
         'SELCDN_MEDIA_PUBLIC_BIN': env.CDN_MEDIA_PUBLIC_BIN,
         'EMAIL_PROVIDER': env.EMAIL_PROVIDER,
         'EMAIL_DOMAIN': env.EMAIL_DOMAIN,
-        'EMAIL_FROM': env.EMAIL_FROM,
+        'EMAIL_FROM_ADDRESS': env.EMAIL_FROM_ADDRESS,
+        'EMAIL_FROM_NAME': env.EMAIL_FROM_NAME,
         'SERVER_EMAIL_FROM': env.SERVER_EMAIL_FROM,
         'MAILGUN_TOKEN': env.MAILGUN_TOKEN,
         'MAILGUN_API_URL': env.MAILGUN_API_URL,
