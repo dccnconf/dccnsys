@@ -26,6 +26,7 @@ urlpatterns = [
     path('conferences/', include('conferences.urls')),
     path('submissions/', include('submissions.urls')),
     path('chair/', include('chair.urls')),
+    path('chair_mail/', include('chair_mail.urls')),
     path('review/', include('review.urls')),
 ]
 

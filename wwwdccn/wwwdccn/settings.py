@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'public_site',
     'user_site',
     'chair',
+    'chair_mail',
     'review',
 ]
 
