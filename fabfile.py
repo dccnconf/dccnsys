@@ -430,4 +430,6 @@ def write_env(c, env):
         c.run('rm -f .env && touch .env', echo=True)
         for var, value in assignments.items():
             value = f"'{value}'"  # need to enclose in quotes this
-            c.run(f'echo {var}={value} >> .env')
+            command = f'echo {var}={value} >> .env'
+            print('writing command: ', command)
+            c.run(command)
