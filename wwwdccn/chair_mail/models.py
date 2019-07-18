@@ -78,8 +78,13 @@ class EmailMessage(models.Model):
     subject_template_string = models.CharField(max_length=1024)
     html_template_string = models.TextField()
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
-    users_to = models.ManyToManyField(User)
+    users_to = models.ManyToManyField(User, related_name='email_messages')
     sent_at = models.DateTimeField()
+
+    sent_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True,
+        related_name='sent_email_messages'
+    )
 
     status = models.CharField(
         choices=STATUS_CHOICE,
@@ -261,9 +266,17 @@ class EmailMessageInst(models.Model):
     subject = models.TextField(max_length=1024)
     text = models.TextField()
     html = models.TextField()
-    user_to = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_to = models.ForeignKey(
+        User, on_delete=models.CASCADE,
+        related_name='email_instances'
+    )
     sent_at = models.DateTimeField()
     sent = models.BooleanField(default=False)
+    sent_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True,
+        related_name='sent_email_instances'
+    )
+
     message = models.ForeignKey(EmailMessage, on_delete=models.CASCADE)
 
     def send(self):
