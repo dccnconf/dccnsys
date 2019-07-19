@@ -8,7 +8,6 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from django.db.models import Q
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.loader import render_to_string
@@ -18,6 +17,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from chair.forms import FilterSubmissionsForm, FilterUsersForm, \
     ChairUploadReviewManuscriptForm, AssignReviewerForm
+from chair.utility import validate_chair_access
 from conferences.decorators import chair_required
 from conferences.models import Conference
 from review.models import Reviewer, Review
@@ -31,11 +31,6 @@ ITEMS_PER_PAGE = 10
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
-
-
-def validate_chair_access(user, conference):
-    if user not in conference.chairs.all():
-        raise Http404
 
 
 def _build_paged_view_context(request, items, page, viewname, kwargs):
@@ -501,14 +496,24 @@ def users_list(request, pk, page=1):
 
 
 @require_GET
-def user_details(request, pk, user_pk):
-    conference = get_object_or_404(Conference, pk=pk)
+def user_overview(request, conf_pk, user_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     user = get_object_or_404(User, pk=user_pk)
-    return render(request, 'chair/user_details.html', context={
+    return render(request, 'chair/user_overview.html', context={
         'conference': conference,
         'member': user,
-        'next_url': request.GET.get('next', ''),
+        # 'next_url': request.GET.get('next', ''),
+    })
+
+
+def user_messages(request, conf_pk, user_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    user = get_object_or_404(User, pk=user_pk)
+    return render(request, 'chair/user_messages.html', context={
+        'conference': conference,
+        'member': user,
     })
 
 

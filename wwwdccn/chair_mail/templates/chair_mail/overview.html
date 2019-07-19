@@ -1,0 +1,107 @@
+{% extends 'chair_mail/_base.html' %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}">
+<link rel="stylesheet" href="{% static 'codemirror/theme/monokai.css' %}">
+<link rel="stylesheet" href="{% static 'codemirror/addon/scroll/simplescrollbars.css' %}">
+{% endblock %}
+
+
+{#---------------------------------------------------------------------------#}
+{# Main content                                                              #}
+{#---------------------------------------------------------------------------#}
+{% block mainPanelContent %}
+<div class="dccn-panel-body">
+{% include 'chair_mail/components/navigation.html' with active='overview' %}
+
+  <div class="container my-3">
+    <h1 class="dccn-text-largest-light mb-4">Mail system overview</h1>
+
+    <div class="row mt-3">
+      <div class="col dccn-text-0">Messages sent:</div>
+      <div class="col"><span class="dccn-text-0 font-weight-bold text-info">0</span> (<a href="#">View...</a>)</div>
+    </div>
+
+    <div class="row">
+      <div class="col dccn-text-0">Mailing lists:</div>
+      <div class="col"><span class="dccn-text-0 font-weight-bold text-info">0</span> (<a href="#">View...</a>)</div>
+    </div>
+
+    <hr>
+    <h2 class="dccn-text-larger-light mb-3">Message templates</h2>
+
+    {% include 'chair_mail/components/template_help.html' %}
+
+    <h3 class="dccn-text-large-light mt-4 mb-2">HTML</h3>
+    <div class="row">
+      <div class="col-lg-6 col-12">
+        <div class="mr-0 mr-lg-3">
+          <textarea id="text_html" class="d-none">
+            {{ template_html }}
+          </textarea>
+        </div>
+      </div>
+      <div class="col-lg-6 col-12">
+        <div class="ml-0 ml-lg-3 border p-3">
+          <div>{{ template_html|safe }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-2">
+      <a href="{% url 'chair_mail:html_template' conf_pk=conference.pk %}" class="btn btn-outline-info">Edit HTML template</a>
+    </div>
+
+    <h3 class="dccn-text-large-light mt-4 mb-2">Plain text</h3>
+    <div class="row">
+      <div class="col-12">
+        <div class="mr-0 mr-sm-3">
+          <textarea id="text_plain" class="d-none">
+            {{ template_plain }}
+          </textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-2">
+      <a href="{% url 'chair_mail:plain_template' conf_pk=conference.pk %}" class="btn btn-outline-info">Edit plain text template</a>
+    </div>
+
+
+  </div>
+</div>
+{% endblock %}
+
+
+{% block script %}
+<script src="{% static 'codemirror/lib/codemirror.js' %}"></script>
+<script src="{% static 'codemirror/mode/htmlmixed/htmlmixed.js' %}"></script>
+<script src="{% static 'codemirror/addon/scroll/simplescrollbars.js' %}"></script>
+<script src="{% static 'scripts/require.js' %}" data-main="{% static '' %}"></script>
+<script>
+$(document).ready(function () {
+  {#var myCodeMirror = CodeMirror(document.body);#}
+  console.log(require)
+  requirejs([
+    'codemirror/lib/codemirror', 'codemirror/mode/htmlmixed/htmlmixed', 'codemirror/addon/scroll/simplescrollbars'
+  ], function (CodeMirror) {
+    CodeMirror.fromTextArea(document.getElementById('text_html'), {
+      mode: 'htmlmixed',
+      theme: 'monokai',
+      scrollbarStyle: "simple",
+      lineWrapping: true,
+      readOnly: true,
+      nocursor: true
+    });
+    CodeMirror.fromTextArea(document.getElementById('text_plain'), {
+      theme: 'monokai',
+      scrollbarStyle: "simple",
+      lineWrapping: true,
+      readOnly: true,
+      nocursor: true
+    });
+  });
+});
+</script>
+{% endblock %}

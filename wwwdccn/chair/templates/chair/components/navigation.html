@@ -8,4 +8,7 @@
   <li class="{% if active == 'users' %}active{% endif %}">
     <a href="{% url 'chair:users' pk=conference.pk %}"><i class="fas fa-users mr-2"></i> Users</a>
   </li>
+  <li class="{% if active == 'messages' %}active{% endif %}">
+    <a href="{% url 'chair_mail:overview' conf_pk=conference.pk %}"><i class="far fa-envelope mr-2"></i> Messages</a>
+  </li>
 </ul>

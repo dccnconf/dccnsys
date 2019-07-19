@@ -30,7 +30,7 @@
 <div class="dccn-feed-item pb-3 mt-0 pt-0">
   <div class="row">
     <div class="col-9 d-flex align-items-center">
-      <a href="{% url 'chair:user' pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
+      <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
         <img src="{{ item.avatar.url }}" alt="{{ item.name }} profile image" class="rounded-circle img-fluid mr-3" style="width: 96px; height: 96px;">
       </a>
       <div>
@@ -84,7 +84,7 @@
 
 
   <div class="dccn-feed-item-footer mt-2">
-    <a href="{% url 'chair:user' pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}" class="dccn-feed-item-link"><i class="fas fa-bars"></i> View</a>
+    <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}" class="dccn-feed-item-link"><i class="fas fa-bars"></i> View</a>
     <a href="#" class="dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</a>
     {% if item.is_reviewer %}
       <button type="submit" class="btn btn-link dccn-feed-item-link text-danger" data-toggle="modal" data-target="#revokeModal-{{ item.pk }}">

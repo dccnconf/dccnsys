@@ -87,7 +87,7 @@
     <p class="dccn-text-0">
       {% for author in item.authors %}
         <span>
-          <a href="{% url 'chair:user' pk=conference.pk user_pk=author.user_pk %}?next={{ request.get_full_path|urlencode }}"
+          <a href="{% url 'user-overview' pk=conference.pk user_pk=author.user_pk %}?next={{ request.get_full_path|urlencode }}"
              class="dccn-link dccn-text-small font-weight-light">
             {{ author.name }}</a>{% if not forloop.last %},&nbsp;{% endif %}
         </span>

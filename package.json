@@ -27,6 +27,7 @@
     "@fortawesome/fontawesome-free": "^5.8.2",
     "bootstrap": "^4.3.1",
     "bootstrap4": "0.0.1-security",
+    "codemirror": "^5.48.0",
     "del": "^4.1.1",
     "gulp": "^4.0.2",
     "gulp-concat": "^2.6.1",
@@ -37,6 +38,7 @@
     "jquery-ui": "^1.12.1",
     "package.json": "^2.0.1",
     "popper.js": "^1.15.0",
+    "requirejs": "^2.3.6",
     "yargs": "^13.2.4"
   },
   "devDependencies": {

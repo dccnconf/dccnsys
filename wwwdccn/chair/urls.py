@@ -36,8 +36,9 @@ urlpatterns = [
     # Users listing
     #
     path('<int:pk>/users/', views.users_list, name='users'),
-    path('<int:pk>/users/pages/<int:page>/', views.users_list,name='users-pages'),
-    path('<int:pk>/users/<int:user_pk>', views.user_details, name='user'),
+    path('<int:pk>/users/pages/<int:page>/', views.users_list, name='users-pages'),
+    path('<int:conf_pk>/users/<int:user_pk>/overview/', views.user_overview, name='user-overview'),
+    path('<int:conf_pk>/users/<int:user_pk>/messages/', views.user_messages, name='user-messages'),
     path('<int:conf_pk>/reviewers/invite/<int:user_pk>/', views.invite_reviewer,
          name='invite-reviewer'),
     path('<int:conf_pk>/reviewers/revoke/<int:user_pk>/', views.revoke_reviewer,

@@ -1,0 +1,63 @@
+{% extends 'chair_mail/_base.html' %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}">
+<link rel="stylesheet" href="{% static 'codemirror/theme/monokai.css' %}">
+<link rel="stylesheet" href="{% static 'codemirror/addon/scroll/simplescrollbars.css' %}">
+{% endblock %}
+
+
+{#---------------------------------------------------------------------------#}
+{# Main content                                                              #}
+{#---------------------------------------------------------------------------#}
+{% block mainPanelContent %}
+<div class="dccn-panel-body">
+{% include 'chair_mail/components/navigation.html' with active='plain_template' %}
+
+  <div class="container my-3">
+    <h1 class="dccn-text-largest-light mb-4">Plain text template</h1>
+
+    {% include 'chair_mail/components/template_help.html' %}
+
+    <form action="" class="mt-5">
+      <div class="form-group">
+        <textarea name="text_plain" id="text_plain" cols="30" rows="50" class="d-none">{{ template_plain }}</textarea>
+      </div>
+
+      <div class="form-group d-flex">
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
+
+
+{% block script %}
+<script src="{% static 'codemirror/lib/codemirror.js' %}"></script>
+<script src="{% static 'codemirror/mode/htmlmixed/htmlmixed.js' %}"></script>
+<script src="{% static 'codemirror/addon/scroll/simplescrollbars.js' %}"></script>
+<script src="{% static 'scripts/require.js' %}" data-main="{% static '' %}"></script>
+<!--suppress JSUnresolvedVariable -->
+<script>
+  hljs.initHighlightingOnLoad();
+</script>
+<script>
+$(document).ready(function () {
+  {#var myCodeMirror = CodeMirror(document.body);#}
+  console.log(require)
+  requirejs([
+    'codemirror/lib/codemirror', 'codemirror/mode/htmlmixed/htmlmixed', 'codemirror/addon/scroll/simplescrollbars'
+  ], function (CodeMirror) {
+    CodeMirror.fromTextArea(document.getElementById('text_plain'), {
+      lineNumbers: true,
+      theme: 'monokai',
+      scrollbarStyle: "simple",
+      lineWrapping: true,
+    });
+  });
+});
+</script>
+{% endblock %}

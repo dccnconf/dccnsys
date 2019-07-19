@@ -1,0 +1,23 @@
+{% extends 'chair/base.html' %}
+{% load conferences_extras %}
+{% load submission_extras %}
+
+
+{#---------------------------------------------------------------------------#}
+{# Navigation and breadcrumbs                                                #}
+{#---------------------------------------------------------------------------#}
+{% block navigation %}
+  {% include 'chair/components/navigation.html' with active='messages' %}
+{% endblock %}
+
+{% block chairCrumbItemsSmall %}
+  <li class="breadcrumb-item">
+    <a href="{% url 'chair_mail:overview' conf_pk=conference.pk %}">messages</a>
+  </li>
+{% endblock %}
+
+{% block chairCrumbItemsLarge %}
+  <li class="breadcrumb-item">
+    <a href="{% url 'chair_mail:overview' conf_pk=conference.pk %}">messages</a>
+  </li>
+{% endblock %}
