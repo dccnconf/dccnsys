@@ -5,6 +5,14 @@
 <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}">
 <link rel="stylesheet" href="{% static 'codemirror/theme/monokai.css' %}">
 <link rel="stylesheet" href="{% static 'codemirror/addon/scroll/simplescrollbars.css' %}">
+<style>
+#htmlTemplateGroup > .CodeMirror {
+  height: 40vh;
+}
+#plainTextTemplateGroup > .CodeMirror {
+  height: 20vh;
+}
+</style>
 {% endblock %}
 
 
@@ -33,26 +41,29 @@
 
     {% include 'chair_mail/components/template_help.html' %}
 
-    <h3 class="dccn-text-large-light mt-4 mb-2">HTML</h3>
-    <div class="row">
+    <div class="row mt-4">
       <div class="col-lg-6 col-12">
-        <div class="mr-0 mr-lg-3">
+        <div class="mr-0 mr-lg-3" id="htmlTemplateGroup">
+          <label for="text_html" class="form-label">HTML template (read-only)</label>
           <textarea id="text_html" class="d-none">
             {{ template_html }}
           </textarea>
         </div>
       </div>
       <div class="col-lg-6 col-12">
-        <div class="ml-0 ml-lg-3 border p-3">
-          <div>{{ template_html|safe }}</div>
+        <div class="ml-0 ml-lg-3 mt-4 mt-lg-0">
+          <label class="form-label">Preview</label>
+          <div class="p-3 border border-light">
+            {{ template_html|safe }}
+          </div>
         </div>
       </div>
     </div>
 
-    <h3 class="dccn-text-large-light mt-4 mb-2">Plain text</h3>
-    <div class="row">
+    <div class="row mt-4">
       <div class="col-12">
-        <div class="mr-0 mr-sm-3">
+        <div class="mr-0 mr-sm-3" id="plainTextTemplateGroup">
+          <label for="text_plain" class="form-label">Plain text template (read only)</label>
           <textarea id="text_plain" class="d-none">
             {{ template_plain }}
           </textarea>
@@ -60,7 +71,7 @@
       </div>
     </div>
 
-    <div class="mt-2">
+    <div class="mt-4">
       <a href="{% url 'chair_mail:message_template' conf_pk=conference.pk %}" class="btn btn-outline-info">Edit template</a>
     </div>
 
