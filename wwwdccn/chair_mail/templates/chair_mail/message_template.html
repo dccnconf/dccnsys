@@ -1,15 +1,16 @@
 {% extends 'chair_mail/_base.html' %}
 {% load static %}
+{% load bootstrap4 %}
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}">
 <link rel="stylesheet" href="{% static 'codemirror/theme/monokai.css' %}">
 <link rel="stylesheet" href="{% static 'codemirror/addon/scroll/simplescrollbars.css' %}">
 <style>
-#htmlFormGroup > .CodeMirror {
+#htmlFormGroup .CodeMirror {
   height: 60vh;
 }
-#plainTextFormGroup > .CodeMirror {
+#plainTextFormGroup .CodeMirror {
   height: 20vh;
 }
 </style>
@@ -23,38 +24,63 @@
 <div class="dccn-panel-body">
 {% include 'chair_mail/components/navigation.html' with active='template' %}
 
-  <div class="container my-3">
+  {% bootstrap_messages %}
 
-    <div class="px-3">
-      <p class="dccn-text-0 my-3">Preview:</p>
-      <div class="border">
-        <div>{{ template_html|safe }}</div>
-      </div>
-    </div>
+  <div class="container my-3 px-0" style="margin: 15px 0 !important; max-width: none !important;">
 
-    <form action="" class="mt-5">
-      <div class="form-group d-flex">
-        <button type="submit" class="btn btn-primary">Save</button>
-        <button type="button" class="btn btn-outline-secondary ml-2" id="updatePreviewBtn">Update preview</button>
-        <button type="button" class="btn btn-outline-info ml-auto" id="sendMeSampleBtn">Send me test message</button>
-      </div>
+    <form action="{% url 'chair_mail:message-template' conf_pk=conference.pk %}" method="POST" id="templateForm" class="mt-3 w-100">
+      {% csrf_token %}
 
-      <div class="form-group" id="htmlFormGroup">
-        <label for="text_html" class="form-label">Edit HTML template:</label>
-        <textarea name="text_html" id="text_html" cols="30" rows="50" class="d-none">{{ template_html }}</textarea>
+      <div class="form-group row" id="htmlFormGroup">
+        <div class="col-12 col-lg-6">
+          <div class="mr-0 mr-lg-2">
+            {% bootstrap_field form.text_html %}
+          </div>
+        </div>
+        <div class="col-12 col-lg-6">
+          <div class="ml-0 ml-lg-2">
+            <label class="form-label">Preview:</label>
+            <div class="border">
+              <div id="preview">{{ template.text_html|safe }}</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="form-group" id="plainTextFormGroup">
-        <label for="text_plain" class="form-label">Edit plain text template:</label>
-        <textarea name="text_plain" id="text_plain" cols="30" rows="20" class="d-none">{{ template_plain }}</textarea>
+        {% bootstrap_field form.text_plain %}
       </div>
 
     </form>
 
+    <div class="d-flex my-3">
+      <button type="submit" class="btn btn-primary" form="templateForm">Save</button>
+      <button type="button" class="btn btn-outline-info ml-auto" id="sendMeSampleBtn">Send me test message</button>
+    </div>
+
     {% include 'chair_mail/components/template_help.html' %}
+
+    <hr>
+
+    <div class="d-flex mt-4">
+      <div class="dccn-text-smaller text-muted">
+        Template created by {{ template.created_by.profile.get_full_name }}.
+        <br>
+        Created at {{ template.created_at }}
+        <br>
+        Last updated at {{ template.updated_at }}
+      </div>
+      <button class="btn btn-outline-danger ml-auto align-self-start" data-toggle="modal" data-target="#confirmTemplateResetModal">Reset template</button>
+    </div>
 
   </div>
 </div>
+
+{#------------------ #}
+{# **** MODALS ***** #}
+{#------------------ #}
+{% include 'chair_mail/components/confirm_template_reset_modal.html' %}
+
 {% endblock %}
 
 
@@ -65,10 +91,12 @@
 <script src="{% static 'scripts/require.js' %}" data-main="{% static '' %}"></script>
 <script>
 $(document).ready(function () {
+  const previewDiv = $('#preview');
+
   requirejs([
     'codemirror/lib/codemirror', 'codemirror/mode/htmlmixed/htmlmixed', 'codemirror/addon/scroll/simplescrollbars'
   ], function (CodeMirror) {
-    CodeMirror.fromTextArea(document.getElementById('text_html'), {
+    const htmlEditor = CodeMirror.fromTextArea(document.getElementById('id_text_html'), {
       lineNumbers: true,
       mode: 'htmlmixed',
       theme: 'monokai',
@@ -76,16 +104,16 @@ $(document).ready(function () {
       lineWrapping: true,
     });
 
-    CodeMirror.fromTextArea(document.getElementById('text_plain'), {
+    htmlEditor.on('change', function (cm) {
+      previewDiv.html(cm.getValue());
+    });
+
+    CodeMirror.fromTextArea(document.getElementById('id_text_plain'), {
       lineNumbers: true,
       theme: 'monokai',
       scrollbarStyle: "simple",
       lineWrapping: true,
     });
-  });
-
-  $('#updatePreviewBtn').on('click', function () {
-    //TODO
   });
 
   $('#sendMeSampleBtn').on('click', function () {

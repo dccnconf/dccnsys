@@ -11,16 +11,12 @@ from users.models import User
 
 
 class EmailTemplate(models.Model):
-    name = models.CharField(max_length=1024, blank=False)
     text_html = models.TextField()
     text_plain = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = (("name", "conference"),)
 
     def render_html(self, title, body, signature, footer, logo_url):
         return Template(self.text_html).render({
@@ -58,8 +54,12 @@ class EmailUserList(models.Model):
 
 
 class EmailGeneralSettings(models.Model):
-    default_template = models.ForeignKey(
+    template = models.ForeignKey(
         EmailTemplate, on_delete=models.SET_NULL, null=True
+    )
+    conference = models.OneToOneField(
+        Conference, null=True, blank=True, on_delete=models.CASCADE,
+        related_name='mail_settings',
     )
 
 

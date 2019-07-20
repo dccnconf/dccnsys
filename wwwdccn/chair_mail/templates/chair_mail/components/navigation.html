@@ -6,8 +6,8 @@
     </a>
   </li>
   <li class="nav-item">
-    <a href="{% url 'chair_mail:message_template' conf_pk=conference.pk %}"
-       class="nav-link {% if active == 'template' %}active{% endif %}">
+    <a href="{% url 'chair_mail:message-template' conf_pk=conference.pk %}"
+       class="nav-link {% if active == 'template' %}active{% endif %} {% if not template %}disabled text-dark-2{% endif %}">
       Template
     </a>
   </li>
