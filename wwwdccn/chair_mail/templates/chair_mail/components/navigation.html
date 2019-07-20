@@ -6,15 +6,9 @@
     </a>
   </li>
   <li class="nav-item">
-    <a href="{% url 'chair_mail:html_template' conf_pk=conference.pk %}"
-       class="nav-link {% if active == 'html_template' %}active{% endif %}">
-      HTML template
-    </a>
-  </li>
-  <li class="nav-item">
-    <a href="{% url 'chair_mail:plain_template' conf_pk=conference.pk %}"
-       class="nav-link {% if active == 'plain_template' %}active{% endif %}">
-      Plain text template
+    <a href="{% url 'chair_mail:message_template' conf_pk=conference.pk %}"
+       class="nav-link {% if active == 'template' %}active{% endif %}">
+      Template
     </a>
   </li>
 </ul>

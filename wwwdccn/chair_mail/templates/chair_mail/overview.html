@@ -49,10 +49,6 @@
       </div>
     </div>
 
-    <div class="mt-2">
-      <a href="{% url 'chair_mail:html_template' conf_pk=conference.pk %}" class="btn btn-outline-info">Edit HTML template</a>
-    </div>
-
     <h3 class="dccn-text-large-light mt-4 mb-2">Plain text</h3>
     <div class="row">
       <div class="col-12">
@@ -65,7 +61,7 @@
     </div>
 
     <div class="mt-2">
-      <a href="{% url 'chair_mail:plain_template' conf_pk=conference.pk %}" class="btn btn-outline-info">Edit plain text template</a>
+      <a href="{% url 'chair_mail:message_template' conf_pk=conference.pk %}" class="btn btn-outline-info">Edit template</a>
     </div>
 
 
