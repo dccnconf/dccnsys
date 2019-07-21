@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from chair.utility import validate_chair_access
-from chair_mail.forms import EmailTemplateUpdateForm
+from chair_mail.forms import EmailTemplateUpdateForm, EmailTemplateTestForm
 from chair_mail.models import EmailGeneralSettings, EmailTemplate
 from conferences.models import Conference
 
@@ -101,6 +101,16 @@ def message_template(request, conf_pk):
         'template': mail_template,
         'form': form,
     })
+
+
+@require_POST
+def send_template_test_message(request, conf_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    form = EmailTemplateTestForm(request.POST)
+    if form.is_valid():
+        form.send_message(request.user, conference)
+    return redirect('chair_mail:message-template', conf_pk=conf_pk)
 
 
 DEFAULT_TEMPLATE_PLAIN = """

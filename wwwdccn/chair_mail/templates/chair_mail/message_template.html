@@ -55,7 +55,10 @@
 
     <div class="d-flex my-3">
       <button type="submit" class="btn btn-primary" form="templateForm">Save</button>
-      <button type="button" class="btn btn-outline-info ml-auto" id="sendMeSampleBtn">Send me test message</button>
+      <button type="button" class="btn btn-outline-info ml-auto" id="sendMeSampleBtn"
+              data-action="{% url 'chair_mail:send-template-test-message' conf_pk=conference.pk %}">
+        Send me test message
+      </button>
     </div>
 
     {% include 'chair_mail/components/template_help.html' %}
@@ -117,7 +120,10 @@ $(document).ready(function () {
   });
 
   $('#sendMeSampleBtn').on('click', function () {
-    //TODO
+    const action = $(this).attr('data-action');
+    const data = $('#templateForm').serialize();
+    console.log(data);
+    $.post(action, data);
   });
 });
 </script>

@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import models
-from django.template import Template
+from django.template import Template, Context
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from html2text import html2text
@@ -18,30 +18,29 @@ class EmailTemplate(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
 
-    def render_html(self, title, body, signature, footer, logo_url):
-        return Template(self.text_html).render({
-            'title': title,
+    @staticmethod
+    def render_message_template(message_template, conference, subject, body):
+        return Template(message_template).render(Context({
+            'subject': subject,
             'body': body,
-            'signature': signature,
-            'footer': footer,
-            'conference_logo': logo_url,
-            'conference_full_name': self.conference.full_name,
-            'conference_short_name': self.conference.short_name,
-        })
+            'conf_email': conference.contact_email,
+            'conf_logo': "",
+            'conf_full_name': conference.full_name,
+            'conf_short_name': conference.short_name,
+        }, autoescape=False))
 
-    def render_plain(self, title, body, signature, footer, logo_url):
+    def render_html(self, subject, body):
+        return EmailTemplate.render_message_template(
+            self.text_html, self.conference, subject, body
+        )
+
+    def render_plain(self, subject, body):
         text_plain = self.text_plain
         if not text_plain:
             text_plain = html2text(self.text_html)
-        return Template(text_plain).render({
-            'title': title,
-            'body': body,
-            'signature': signature,
-            'footer': footer,
-            'conference_logo': logo_url,
-            'conference_full_name': self.conference.full_name,
-            'conference_short_name': self.conference.short_name,
-        })
+        return EmailTemplate.render_message_template(
+            text_plain, self.conference, subject, body
+        )
 
 
 class EmailUserList(models.Model):
