@@ -121,12 +121,17 @@ def compose_user_message(request, conf_pk, user_pk):
     user_to = get_object_or_404(User, pk=user_pk)
 
     if request.method == 'POST':
+        next_url = request.POST.get('next', reverse('chair:home', kwargs={
+            'pk': conference.pk
+        }))
         form = EmailMessageForm(request.POST)
         if form.is_valid():
+            body_html = form.cleaned_data['text_html']
+            body_plain = form.cleaned_data['text_plain']
             message = EmailMessage.create_message(
                 subject=form.cleaned_data['subject'],
-                body_html=form.cleaned_data['text_html'],
-                body_plain=form.cleaned_data['text_plain'],
+                body_html=body_html,
+                body_plain=body_plain if body_plain else html2text(body_html),
                 email_template=conference.mail_settings.template,
                 users_to=(user_to,)
             )
@@ -137,12 +142,9 @@ def compose_user_message(request, conf_pk, user_pk):
                     'user_pk': user_to.pk,
                 }
             })
-            print('\n\nNEXT:\n\n', form.cleaned_data['next'])
-            return redirect(form.cleaned_data['next'])
+            return redirect(next_url)
         else:
             messages.error(request, 'Error sending message')
-        print(form.cleaned_data)
-        next_url = form.cleaned_data['next']
     else:
         form = EmailMessageForm()
         next_url = request.GET['next']

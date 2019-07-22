@@ -50,5 +50,5 @@ class EmailTemplateTestForm(forms.Form):
 class EmailMessageForm(forms.Form):
     text_html = forms.CharField(widget=forms.Textarea(), required=False)
     text_plain = forms.CharField(widget=forms.Textarea(), required=False)
-    subject = forms.CharField(widget=forms.Textarea(), required=False)
+    subject = forms.CharField(widget=forms.TextInput(), required=True)
     next = forms.CharField(widget=forms.TextInput, required=False)
