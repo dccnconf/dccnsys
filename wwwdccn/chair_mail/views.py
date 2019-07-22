@@ -4,11 +4,14 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
+from html2text import html2text
 
 from chair.utility import validate_chair_access
-from chair_mail.forms import EmailTemplateUpdateForm, EmailTemplateTestForm
-from chair_mail.models import EmailGeneralSettings, EmailTemplate
+from chair_mail.forms import EmailTemplateUpdateForm, EmailTemplateTestForm, \
+    EmailMessageForm
+from chair_mail.models import EmailGeneralSettings, EmailTemplate, EmailMessage
 from conferences.models import Conference
+from users.models import User
 
 
 def get_mail_template_or_404(conference):
@@ -79,7 +82,6 @@ def create_template(request, conf_pk):
         'next',
         reverse('chair_mail:overview', kwargs={'conf_pk': conf_pk})
     )
-    print(next_url)
     return redirect(next_url)
 
 
@@ -111,6 +113,45 @@ def send_template_test_message(request, conf_pk):
     if form.is_valid():
         form.send_message(request.user, conference)
     return redirect('chair_mail:message-template', conf_pk=conf_pk)
+
+
+def compose_user_message(request, conf_pk, user_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    user_to = get_object_or_404(User, pk=user_pk)
+
+    if request.method == 'POST':
+        form = EmailMessageForm(request.POST)
+        if form.is_valid():
+            message = EmailMessage.create_message(
+                subject=form.cleaned_data['subject'],
+                body_html=form.cleaned_data['text_html'],
+                body_plain=form.cleaned_data['text_plain'],
+                email_template=conference.mail_settings.template,
+                users_to=(user_to,)
+            )
+            message.send(request.user, user_context={
+                user_to: {
+                    'first_name': user_to.profile.first_name,
+                    'last_name': user_to.profile.last_name,
+                    'user_pk': user_to.pk,
+                }
+            })
+            print('\n\nNEXT:\n\n', form.cleaned_data['next'])
+            return redirect(form.cleaned_data['next'])
+        else:
+            messages.error(request, 'Error sending message')
+        print(form.cleaned_data)
+        next_url = form.cleaned_data['next']
+    else:
+        form = EmailMessageForm()
+        next_url = request.GET['next']
+    return render(request, 'chair_mail/compose_to_single_user.html', context={
+        'form': form,
+        'member': user_to,
+        'conference': conference,
+        'next': next_url,
+    })
 
 
 DEFAULT_TEMPLATE_PLAIN = """

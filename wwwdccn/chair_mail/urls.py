@@ -11,4 +11,5 @@ urlpatterns = [
     path('<int:conf_pk>/template/create/', views.create_template, name='create-template'),
 
     path('<int:conf_pk>/template/send_test_message/', views.send_template_test_message, name='send-template-test-message'),
+    path('<int:conf_pk>/compose/user/<int:user_pk>/', views.compose_user_message, name='compose-user'),
 ]

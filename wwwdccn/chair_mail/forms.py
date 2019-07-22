@@ -5,7 +5,7 @@ from django.template import Template, Context
 from django.utils import timezone
 from html2text import html2text
 
-from .models import EmailTemplate
+from .models import EmailTemplate, EmailMessage
 
 
 class EmailTemplateUpdateForm(forms.ModelForm):
@@ -45,3 +45,10 @@ class EmailTemplateTestForm(forms.Form):
             recipient_list=[user.email],
             html_message=html,
         )
+
+
+class EmailMessageForm(forms.Form):
+    text_html = forms.CharField(widget=forms.Textarea(), required=False)
+    text_plain = forms.CharField(widget=forms.Textarea(), required=False)
+    subject = forms.CharField(widget=forms.Textarea(), required=False)
+    next = forms.CharField(widget=forms.TextInput, required=False)

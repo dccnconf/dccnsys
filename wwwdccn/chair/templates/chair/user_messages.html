@@ -1,5 +1,6 @@
 {% extends 'chair/_user_base.html' %}
 {% load conferences_extras %}
+{% load bootstrap4 %}
 
 
 {#---------------------------------------------------------------------------#}
@@ -11,54 +12,11 @@
 
 
 <div class="container my-3">
-  <form action="">
-    <div class="form-group row">
-      <label for="to" class="col-sm-2 col-md-1 col-form-label">To:</label>
-      <div class="col-sm-10 col-md-11">
-        <input type="text" name="to" id="to" class="form-control" value="{{ member.profile.get_full_name }}" readonly>
-      </div>
-    </div>
-    <div class="form-group row">
-      <label for="title" class="col-sm-2 col-md-1 col-form-label">Subject:</label>
-      <div class="col-sm-10 col-md-11">
-        <input type="text" name="title" id="title" class="form-control" placeholder="Enter message subject">
-      </div>
-    </div>
-    <div class="form-group row">
-      <label for="text" class="col-sm-2 col-md-1 col-form-label">Text:</label>
-      <div class="col-sm-10 col-md-11">
-        <textarea name="text" id="" cols="30" rows="10" class="form-control"></textarea>
-        <small class="form-text text-muted">
-          <p>You can use variables, e.g. <strong>{% verbatim %}{{ var }}{% endverbatim %}</strong>.
-            <a href="#availableVars" data-toggle="collapse">Show available variables...</a></p>
-          <ul class="collapse" id="availableVars">
-            <li><span class="text-info font-weight-bold">first_name</span>: user first name</li>
-            <li><span class="text-info font-weight-bold">last_name</span>: user last name</li>
-            <li><span class="text-info font-weight-bold">user_pk</span>: user identifier</li>
-          </ul>
-        </small>
-      </div>
-    </div>
-    <div class="form-group d-flex">
-      <button type="submit" class="btn btn-sm btn-primary">Send message</button>
-      <button type="submit" class="btn btn-sm btn-outline-secondary ml-2">Save</button>
-      <button type="button" class="btn btn-sm btn-outline-secondary ml-2">Load message...</button>
-      <button type="button" class="btn btn-sm btn-outline-info ml-auto">Choose template...</button>
-    </div>
-  </form>
+
+  {% bootstrap_messages %}
+
+  <a href="{% url 'chair_mail:compose-user' conf_pk=conference.pk user_pk=member.pk %}?next={{ request.get_full_path|urlencode }}"
+     class="btn btn-outline-primary">Compose new mail</a>
 </div>
 </div>
-{% endblock %}
-
-
-{% block script %}
-<script>
-// Get modal body content on modal show:
-const modals = $('.modal[data-src]');
-console.log(modals);
-modals.on('show.bs.modal', function () {
-  const thisModal = $(this);
-  $(this).find('.modal-body').load(thisModal.attr('data-src'));
-});
-</script>
 {% endblock %}

@@ -78,7 +78,7 @@ class EmailMessage(models.Model):
     text_plain = models.TextField()
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
     users_to = models.ManyToManyField(User, related_name='email_messages')
-    sent_at = models.DateTimeField()
+    sent_at = models.DateTimeField(auto_now_add=True)
 
     sent_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True,
@@ -92,22 +92,24 @@ class EmailMessage(models.Model):
     )
 
     @staticmethod
-    def create_message(subject, body_html, template, users_to, body_plain=None):
-        conference = template.conference
+    def create_message(subject, body_html, email_template, users_to,
+                       body_plain=None):
+        assert isinstance(email_template, EmailTemplate)
+        conference = email_template.conference
         if body_plain is None:
             body_plain = html2text(body_html)
-        message = EmailMessage(
+        message = EmailMessage.objects.create(
             conference=conference,
             subject=subject,
-            text_html=template.render_html(body_html),
-            text_plain=template.render_plain(body_plain),
+            text_html=email_template.render_html(subject, body_html),
+            text_plain=email_template.render_plain(subject, body_plain),
         )
         for user in users_to:
             message.users_to.add(user)
         message.save()
         return message
 
-    def send(self, sender, context: dict, user_context=None):
+    def send(self, sender, context=None, user_context=None):
         """Create a bunch of `EmailMessageInst` for each user and send them.
 
         The template from `html_template_string` is rendered with a given
@@ -126,9 +128,10 @@ class EmailMessage(models.Model):
         subject_template = Template(self.subject)
         text_plain_template = Template(self.text_plain)
         for user in self.users_to.all():
-            ctx = dict(context)
+            ctx = dict(context) if context is not None else {}
             if user_context and user in user_context:
                 ctx.update(user_context[user])
+            ctx = Context(ctx)
             inst = EmailMessageInst(
                 user_to=user,
                 message=self,
@@ -150,7 +153,7 @@ class EmailMessageInst(models.Model):
         User, on_delete=models.CASCADE,
         related_name='email_instances'
     )
-    sent_at = models.DateTimeField()
+    sent_at = models.DateTimeField(auto_now_add=True)
     sent = models.BooleanField(default=False)
     sent_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True,
