@@ -79,6 +79,7 @@ class EmailMessage(models.Model):
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
     users_to = models.ManyToManyField(User, related_name='email_messages')
     sent_at = models.DateTimeField(auto_now_add=True)
+    message_type = models.CharField(blank=True, max_length=128)
 
     sent_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True,
@@ -93,7 +94,7 @@ class EmailMessage(models.Model):
 
     @staticmethod
     def create_message(subject, body_html, email_template, users_to,
-                       body_plain=None):
+                       body_plain=None, message_type=''):
         assert isinstance(email_template, EmailTemplate)
         conference = email_template.conference
         if body_plain is None:
@@ -103,6 +104,7 @@ class EmailMessage(models.Model):
             subject=subject,
             text_html=email_template.render_html(subject, body_html),
             text_plain=email_template.render_plain(subject, body_plain),
+            message_type=message_type,
         )
         for user in users_to:
             message.users_to.add(user)

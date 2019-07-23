@@ -1,4 +1,4 @@
-{% extends 'chair/base.html' %}
+{% extends 'chair/base/_chair_dialog_base.html' %}
 {% load conferences_extras %}
 {% load submission_extras %}
 
@@ -7,23 +7,23 @@
 {# Navigation and breadcrumbs                                                #}
 {#---------------------------------------------------------------------------#}
 {% block navigation %}
-  {% include 'chair/components/navigation.html' with active='submissions' %}
+  {% include 'chair/components/navigation.html' with active='users' %}
 {% endblock %}
 
 {% block chairCrumbItemsSmall %}
   <li class="breadcrumb-item">
-    <a href="{% url 'chair:submissions' pk=conference.pk %}">submissions</a>
+    <a href="{% url 'chair:users' pk=conference.pk %}">users</a>
   </li>
   <li class="breadcrumb-item">
-    <a href="{% url 'chair:submission-overview' pk=submission.pk %}">#{{ submission.pk }}</a>
+    <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=member.pk %}">#{{ member.pk }}</a>
   </li>
 {% endblock %}
 
 {% block chairCrumbItemsLarge %}
   <li class="breadcrumb-item">
-    <a href="{% url 'chair:submissions' pk=conference.pk %}">submissions</a>
+    <a href="{% url 'chair:users' pk=conference.pk %}">users</a>
   </li>
   <li class="breadcrumb-item">
-    <a href="{% url 'chair:submission-overview' pk=submission.pk %}">#{{ submission.pk }}</a>
+    <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=member.pk %}">#{{ member.pk }}</a>
   </li>
 {% endblock %}

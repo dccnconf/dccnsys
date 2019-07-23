@@ -2,7 +2,7 @@
 {# CONTEXT:                                      #}
 {# #}
 {#-----------------------------------------------#}
-{% extends "user_site/base.html" %}
+{% extends "chair/base/_chair_overview_base.html" %}
 {% load bootstrap4 %}
 {% load submission_extras %}
 
@@ -23,107 +23,90 @@
 </style>
 {% endblock %}
 
-{% block body %}
-<main class="container py-3">
-  <div class="dccn-layout-row">
+{% block viewPanelTitle %}
+Compose message to {{ member.profile.get_full_name }}
+{% endblock %}
 
-    <!-- MAIN AREA -->
-    <div class="dccn-panel dccn-panel-screen">
+{% block viewPanelBody %}
+<div class="container my-3">
 
-      <div class="dccn-panel-header">
-        <h1 class="dccn-panel-title">Compose message to {{ member.profile.get_full_name }}</h1>
-        <a href="{{ next }}" class="dccn-panel-close-btn"><i class="fas fa-times fa-2x"></i></a>
+  <form action="{% url 'chair_mail:compose-user' conf_pk=conference.pk user_pk=member.pk %}"
+        id="newMessageForm" method="POST">
+
+    {% csrf_token %}
+
+    <input type="hidden" name="next" id="id_next" value="{{ next }}">
+
+    <div class="form-group row">
+      <div class="col-sm-10 col-md-11">
+        {% bootstrap_field form.subject show_label=False %}
       </div>
-
-      <div class="dccn-panel-body">
-
-        {% bootstrap_messages %}
-
-        <div class="container my-3">
-
-          <form action="{% url 'chair_mail:compose-user' conf_pk=conference.pk user_pk=member.pk %}"
-                id="newMessageForm" method="POST">
-
-            {% csrf_token %}
-
-            <input type="hidden" name="next" id="id_next" value="{{ next }}">
-
-            <div class="form-group row">
-              <div class="col-sm-10 col-md-11">
-                {% bootstrap_field form.subject show_label=False %}
-              </div>
-            </div>
-
-            <div class="form-group row">
-              <div class="col-sm-10 col-md-11">
-                <textarea name="text_html" id="id_text_html" cols="3" rows="1" class="form-control" hidden></textarea>
-                <textarea name="text_plain" id="id_text_plain" cols="3" rows="1" class="form-control" hidden></textarea>
-
-                <div id="message">
-                  <div id="message-toolbar">
-                    <span class="ql-formats">
-                      <select class="ql-font"></select>
-                      <select class="ql-size">
-                        <option value="0.8em">Small</option>
-                        <option value="1em">Normal</option>
-                        <option value="2em">Large</option>
-                        <option value="3em">Huge</option>
-                      </select>
-                    </span>
-                    <span class="ql-formats">
-                      <button class="ql-bold"></button>
-                      <button class="ql-italic"></button>
-                      <button class="ql-underline"></button>
-                      <button class="ql-strike"></button>
-                    </span>
-                    <span class="ql-formats">
-                      <select class="ql-color"></select>
-                      <select class="ql-background"></select>
-                    </span>
-                    <span class="ql-formats">
-                      <button class="ql-script" value="sub"></button>
-                      <button class="ql-script" value="super"></button>
-                    </span>
-                    <span class="ql-formats">
-                      <button class="ql-header" value="1"></button>
-                      <button class="ql-header" value="2"></button>
-                      <button class="ql-blockquote"></button>
-                      <button class="ql-code-block"></button>
-                    </span>
-                    <span class="ql-formats">
-                      <button class="ql-list" value="ordered"></button>
-                      <button class="ql-list" value="bullet"></button>
-                    </span>
-                    <span class="ql-formats">
-                      <select class="ql-align"></select>
-                    </span>
-                    <span class="ql-formats">
-                      <button class="ql-link"></button>
-                    </span>
-                    <span class="ql-formats">
-                      <button class="ql-clean"></button>
-                    </span>
-                  </div>
-                  <div id="message-editor" style="position: relative; height: 350px;"></div>
-                </div>
-
-                <small class="form-text text-muted">
-                  {% include 'chair_mail/components/message_to_user_help.html' %}
-                </small>
-              </div>
-            </div>
-            <div class="form-group d-flex">
-              <button type="submit" class="btn btn-primary" id="sendMessageButton">Send message</button>
-              <a href="{{ next }}" class="btn btn-outline-secondary ml-auto">Cancel</a>
-            </div>
-          </form>
-        </div>
-      </div>
-
     </div>
 
-  </div>
-</main>
+    <div class="form-group row">
+      <div class="col-sm-10 col-md-11">
+        <textarea name="text_html" id="id_text_html" cols="3" rows="1" class="form-control" hidden></textarea>
+        <textarea name="text_plain" id="id_text_plain" cols="3" rows="1" class="form-control" hidden></textarea>
+
+        <div id="message">
+          <div id="message-toolbar">
+            <span class="ql-formats">
+              <select class="ql-font"></select>
+              <select class="ql-size">
+                <option value="0.8em">Small</option>
+                <option value="1em">Normal</option>
+                <option value="2em">Large</option>
+                <option value="3em">Huge</option>
+              </select>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-bold"></button>
+              <button class="ql-italic"></button>
+              <button class="ql-underline"></button>
+              <button class="ql-strike"></button>
+            </span>
+            <span class="ql-formats">
+              <select class="ql-color"></select>
+              <select class="ql-background"></select>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-script" value="sub"></button>
+              <button class="ql-script" value="super"></button>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-header" value="1"></button>
+              <button class="ql-header" value="2"></button>
+              <button class="ql-blockquote"></button>
+              <button class="ql-code-block"></button>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-list" value="ordered"></button>
+              <button class="ql-list" value="bullet"></button>
+            </span>
+            <span class="ql-formats">
+              <select class="ql-align"></select>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-link"></button>
+            </span>
+            <span class="ql-formats">
+              <button class="ql-clean"></button>
+            </span>
+          </div>
+          <div id="message-editor" style="position: relative; height: 350px;"></div>
+        </div>
+
+        <small class="form-text text-muted">
+          {% include 'chair_mail/components/message_to_user_help.html' %}
+        </small>
+      </div>
+    </div>
+    <div class="form-group d-flex">
+      <button type="submit" class="btn btn-primary" id="sendMessageButton">Send message</button>
+      <a href="{{ next }}" class="btn btn-outline-secondary ml-auto">Cancel</a>
+    </div>
+  </form>
+</div>
 {% endblock %}
 
 {% block script %}

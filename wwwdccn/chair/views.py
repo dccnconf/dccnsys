@@ -18,6 +18,7 @@ from django.utils.translation import ugettext_lazy as _
 from chair.forms import FilterSubmissionsForm, FilterUsersForm, \
     ChairUploadReviewManuscriptForm, AssignReviewerForm
 from chair.utility import validate_chair_access
+from chair_mail.models import EmailMessage, EmailMessageInst
 from conferences.decorators import chair_required
 from conferences.models import Conference
 from review.models import Reviewer, Review
@@ -511,9 +512,11 @@ def user_messages(request, conf_pk, user_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     user = get_object_or_404(User, pk=user_pk)
+    emails = EmailMessageInst.objects.filter(user_to__pk=user_pk)
     return render(request, 'chair/user_messages.html', context={
         'conference': conference,
         'member': user,
+        'email_messages': emails,
     })
 
 

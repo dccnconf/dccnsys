@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -9,7 +9,8 @@ from html2text import html2text
 from chair.utility import validate_chair_access
 from chair_mail.forms import EmailTemplateUpdateForm, EmailTemplateTestForm, \
     EmailMessageForm
-from chair_mail.models import EmailGeneralSettings, EmailTemplate, EmailMessage
+from chair_mail.models import EmailGeneralSettings, EmailTemplate, EmailMessage, \
+    EmailMessageInst
 from conferences.models import Conference
 from users.models import User
 
@@ -133,7 +134,8 @@ def compose_user_message(request, conf_pk, user_pk):
                 body_html=body_html,
                 body_plain=body_plain if body_plain else html2text(body_html),
                 email_template=conference.mail_settings.template,
-                users_to=(user_to,)
+                users_to=(user_to,),
+                message_type='user',
             )
             message.send(request.user, user_context={
                 user_to: {
@@ -154,6 +156,13 @@ def compose_user_message(request, conf_pk, user_pk):
         'conference': conference,
         'next': next_url,
     })
+
+
+def get_message_inst_html(request, conf_pk, msg_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    msg = get_object_or_404(EmailMessageInst, pk=msg_pk)
+    return HttpResponse(msg.text_html)
 
 
 DEFAULT_TEMPLATE_PLAIN = """
