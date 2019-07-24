@@ -2,7 +2,7 @@
 {# CONTEXT:                                      #}
 {# #}
 {#-----------------------------------------------#}
-{% extends "chair/base/_chair_overview_base.html" %}
+{% extends "chair/base/_chair_preview_base.html" %}
 {% load bootstrap4 %}
 {% load submission_extras %}
 
@@ -45,8 +45,8 @@ Compose message to {{ member.profile.get_full_name }}
 
     <div class="form-group row">
       <div class="col-sm-10 col-md-11">
-        <textarea name="text_html" id="id_text_html" cols="3" rows="1" class="form-control" hidden></textarea>
-        <textarea name="text_plain" id="id_text_plain" cols="3" rows="1" class="form-control" hidden></textarea>
+        <textarea name="body_html" id="id_body_html" cols="3" rows="1" class="form-control" hidden></textarea>
+        <textarea name="body_plain" id="id_body_plain" cols="3" rows="1" class="form-control" hidden></textarea>
 
         <div id="message">
           <div id="message-toolbar">
@@ -139,8 +139,8 @@ $(document).ready(function () {
 
   $('#newMessageForm').on('submit', function () {
     const editor = $('#message-editor .ql-editor');
-    const htmlTextArea = $('#id_text_html');
-    const plainTextArea = $('#id_text_plain');
+    const htmlTextArea = $('#id_body_html');
+    const plainTextArea = $('#id_body_plain');
     const plainText = quill.getText();
     const htmlValue = editor.html();
     htmlTextArea.text(htmlValue);

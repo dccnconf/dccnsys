@@ -74,8 +74,8 @@ class EmailMessage(models.Model):
     )
 
     subject = models.CharField(max_length=1024)
-    text_html = models.TextField()
-    text_plain = models.TextField()
+    body_html = models.TextField()
+    body_plain = models.TextField()
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
     users_to = models.ManyToManyField(User, related_name='email_messages')
     sent_at = models.DateTimeField(auto_now_add=True)
@@ -93,17 +93,15 @@ class EmailMessage(models.Model):
     )
 
     @staticmethod
-    def create_message(subject, body_html, email_template, users_to,
+    def create_message(subject, body_html, users_to, conference,
                        body_plain=None, message_type=''):
-        assert isinstance(email_template, EmailTemplate)
-        conference = email_template.conference
         if body_plain is None:
             body_plain = html2text(body_html)
         message = EmailMessage.objects.create(
             conference=conference,
             subject=subject,
-            text_html=email_template.render_html(subject, body_html),
-            text_plain=email_template.render_plain(subject, body_plain),
+            body_html=body_html,
+            body_plain=body_plain,
             message_type=message_type,
         )
         for user in users_to:
@@ -125,10 +123,15 @@ class EmailMessage(models.Model):
             for each user, e.g. link to his login page or name.
         :return:
         """
+        email_template = self.conference.mail_settings.template
+        text_html = email_template.render_html(self.subject, self.body_html)
+        text_plain = email_template.render_plain(self.subject, self.body_plain)
         self.status = EmailMessage.SENDING
-        text_html_template = Template(self.text_html)
+        self.sent_by = sender
+        self.save()
+        text_html_template = Template(text_html)
+        text_plain_template = Template(text_plain)
         subject_template = Template(self.subject)
-        text_plain_template = Template(self.text_plain)
         for user in self.users_to.all():
             ctx = dict(context) if context is not None else {}
             if user_context and user in user_context:
@@ -145,6 +148,7 @@ class EmailMessage(models.Model):
             inst.send(sender)
         self.sent_at = timezone.now()
         self.status = EmailMessage.SENT
+        self.save()
 
 
 class EmailMessageInst(models.Model):

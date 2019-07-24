@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -127,14 +127,14 @@ def compose_user_message(request, conf_pk, user_pk):
         }))
         form = EmailMessageForm(request.POST)
         if form.is_valid():
-            body_html = form.cleaned_data['text_html']
-            body_plain = form.cleaned_data['text_plain']
+            body_html = form.cleaned_data['body_html']
+            body_plain = form.cleaned_data['body_plain']
             message = EmailMessage.create_message(
                 subject=form.cleaned_data['subject'],
                 body_html=body_html,
                 body_plain=body_plain if body_plain else html2text(body_html),
-                email_template=conference.mail_settings.template,
                 users_to=(user_to,),
+                conference=conference,
                 message_type='user',
             )
             message.send(request.user, user_context={
@@ -150,7 +150,7 @@ def compose_user_message(request, conf_pk, user_pk):
     else:
         form = EmailMessageForm()
         next_url = request.GET['next']
-    return render(request, 'chair_mail/compose_to_single_user.html', context={
+    return render(request, 'chair_mail/compose_user.html', context={
         'form': form,
         'member': user_to,
         'conference': conference,
@@ -158,11 +158,50 @@ def compose_user_message(request, conf_pk, user_pk):
     })
 
 
-def get_message_inst_html(request, conf_pk, msg_pk):
+@require_GET
+def message_instance_details(request, conf_pk, msg_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     msg = get_object_or_404(EmailMessageInst, pk=msg_pk)
-    return HttpResponse(msg.text_html)
+    if request.is_ajax():
+        return JsonResponse({
+            'text_html': msg.text_html,
+            'text_plain': msg.text_plain,
+            'subject': msg.subject,
+            'sent_at': msg.sent_at,
+            'sent_by': msg.sent_by.pk,
+            'user_to': msg.user_to.pk,
+        })
+    next_url = request.GET.get('next', default='')
+    return render(request, 'chair_mail/message_instance.html', context={
+        'conference': conference,
+        'msg': msg,
+        'next': next_url,
+    })
+
+
+@require_GET
+def message_details(request, conf_pk, msg_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    msg = get_object_or_404(EmailMessage, pk=msg_pk)
+    if request.is_ajax():
+        print()
+        return JsonResponse({
+            'body_html': msg.body_html,
+            'body_plain': msg.body_plain,
+            'subject': msg.subject,
+            'sent_at': msg.sent_at,
+            'sent_by': msg.sent_by.pk,
+            'users_to': list(msg.users_to.values_list('pk')),
+        })
+    next_url = request.GET.get('next', default='')
+    # TODO: replace template!
+    return render(request, 'chair_mail/message_instance.html', context={
+        'conference': conference,
+        'msg': msg,
+        'next': next_url,
+    })
 
 
 DEFAULT_TEMPLATE_PLAIN = """
