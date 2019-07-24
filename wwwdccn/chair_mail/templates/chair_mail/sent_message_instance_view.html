@@ -60,7 +60,7 @@
     <button class="btn btn-sm btn-info ml-2" data-toggle="modal" data-target="#templateModal">Show template</button>
   </div>
 
-  <div class="modal" tabindex="-1" role="dialog" id="templateModal" data-source="{% url 'chair_mail:message-details' conf_pk=conference.pk msg_pk=msg.message.pk %}">
+  <div class="modal" tabindex="-1" role="dialog" id="templateModal">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -73,14 +73,18 @@
           <form action="">  <!-- this form is never submitted, just to organize fields better -->
             <div class="form-group">
               <label for="templateSubject" class="form-label">Subject:</label>
-              <input type="text" name="template_subject" class="form-control" id="templateSubject" readonly>
+              <input type="text" name="template_subject" class="form-control" id="templateSubject" value="{{ msg.message.subject }}" readonly>
             </div>
             <div class="form-group mt-3">
               <label for="templateEditor" class="form-label">Template text:</label>
-              <div id="templateEditor" class="border px-3 py-2 bg-dark text-light dccn-text-small"></div>
+              <div id="templateEditor" class="border px-3 py-2 bg-dark text-light dccn-text-small">
+                {{ msg.message.body_html|safe }}
+              </div>
             </div>
           </form>
-          <p class="mt-3 dccn-text-small font-weight-bold">Sent <a href="#"><span id="numMsgInstLink"></span> instance(s)</a></p>
+          <p class="mt-3 dccn-text-small font-weight-bold">
+            Sent <a href="{% url 'chair_mail:message-details' conf_pk=conference.pk msg_pk=msg.message.pk %}">{{ msg.message.users_to.all|length }} instance(s)</a>
+          </p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
@@ -95,42 +99,25 @@
 <script>
 $(document).ready(function () {
 
-(function ($) {
-  $.fn.dccnEmbedHtml = function () {
-    const elem = this;
-    const box = this.find('.dccn-embed-box');
-    $.get(elem.attr('data-source'), function (data) {
-      box.html($.parseHTML(data[elem.attr('data-attr')]));
-    });
-  };
+  (function ($) {
+    $.fn.dccnEmbedHtml = function () {
+      const elem = this;
+      const box = this.find('.dccn-embed-box');
+      $.get(elem.attr('data-source'), function (data) {
+        box.html($.parseHTML(data[elem.attr('data-attr')]));
+      });
+    };
 
-  //////////////////////////////
-  // Associating the plugins
-  $('.dccn-embed-html').dccnEmbedHtml();
-
-  //////////////////////////////
-  // Load template on modal show event:
-  $('#templateModal').on('show.bs.modal', function () {
-    const modal = $(this);
-    $.get($(this).attr('data-source'), function (data) {
-      const subject = modal.find('#templateSubject');
-      const editor = modal.find('#templateEditor');
-      subject.val(data.subject);
-      editor.html(data.body_html);
-      console.log(data['users_to']);
-      $('#numMsgInstLink').text(data['users_to'].length);
-    });
-  });
-
+    //////////////////////////////
+    // Associating the plugins
+    $('.dccn-embed-html').dccnEmbedHtml();
+  }(jQuery));
 
   //////////////////////////////
   // Attach quill in read-only mode:
   const quill = new Quill('#templateEditor', {
     theme: 'bubble',
   });
-
-
-}(jQuery));
 
 });
 </script>

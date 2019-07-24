@@ -1,0 +1,105 @@
+{#-----------------------------------------------#}
+{# CONTEXT:                                      #}
+{# #}
+{#-----------------------------------------------#}
+{% extends "chair_mail/_chair_mail_base.html" %}
+{% load bootstrap4 %}
+{% load submission_extras %}
+
+{% block title %}
+  Compose message
+{% endblock %}
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='' %}
+{% endblock %}
+
+{% block css %}
+<link href="//cdn.quilljs.com/1.3.6/quill.bubble.css" rel="stylesheet">
+<style>
+#message-editor .ql-editor {
+  padding: 12px 15px !important;
+}
+</style>
+{% endblock %}
+
+{% block chairCrumbItemsSmall %}
+  <li class="breadcrumb-item">
+    <a href="{% url 'chair_mail:overview' conf_pk=conference.pk %}">messages</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'chair_mail:sent-messages-list' conf_pk=conference.pk %}">sent</a>
+  </li>
+  <li class="breadcrumb-item active">#{{ msg.pk }}</li>
+{% endblock %}
+
+{% block chairCrumbItemsLarge %}
+  <li class="breadcrumb-item">
+    <a href="{% url 'chair_mail:overview' conf_pk=conference.pk %}">messages</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'chair_mail:sent-messages-list' conf_pk=conference.pk %}">sent</a>
+  </li>
+  <li class="breadcrumb-item active">#{{ msg.pk }}</li>
+{% endblock %}
+
+
+{% block mainPanelContent %}
+<div class="dccn-panel-body">
+
+  <div>
+    <h1 class="dccn-text-large my-3">{{ msg.subject }}</h1>
+    <p class="dccn-text-smaller">
+      <span class="font-weight-bold">Sender:</span>
+      {{ msg.sent_by.profile.get_full_name }}
+    </p>
+    <p class="dccn-text-smaller">
+      <span class="font-weight-bold">To:</span>
+      {% for u in msg.users_to.all %}
+        <span>
+          <a href="{% url 'chair:user-overview' conf_pk=conf_pk user_pk=u.pk %}">{{ u.profile.get_full_name }}</a>
+        </span>
+        {% if not forloop.last %},{% endif %}
+      {% endfor %}
+    </p>
+    <p class="dccn-text-smaller">
+      <span class="font-weight-bold">Sent at:</span>
+      {{ msg.sent_at|date:"d.m.Y G:i" }}
+    </p>
+    <p class="dccn-text-smaller">
+      <span class="font-weight-bold">Message type:</span>
+      {{ msg.message_type }}
+    </p>
+
+    <hr>
+
+    <div id="msgBodyView" class="border px-3 py-2 bg-dark text-light dccn-text-small">
+      {{ msg.body_html|safe }}
+    </div>
+
+  </div>
+
+  <hr>
+
+  <div style="width: 100%;">
+    {% include 'chair_mail/components/sent_message_instances_list.html' with email_messages=msg.emailmessageinst_set.all conf_pk=conf_pk show_user_names=1 %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script>
+$(document).ready(function () {
+
+
+  //////////////////////////////
+  // Attach quill in read-only mode:
+  const quill = new Quill('#msgBodyView', {
+    theme: 'bubble',
+  });
+
+});
+</script>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'chair_mail/_chair_mail_base.html' %}
+{% load static %}
+{% load bootstrap4 %}
+
+{#---------------------------------------------------------------------------#}
+{# Main content                                                              #}
+{#---------------------------------------------------------------------------#}
+{% block mainPanelContent %}
+<div class="dccn-panel-body">
+{% include 'chair_mail/components/navigation.html' with active='messages' %}
+
+  {% bootstrap_messages %}
+
+  <div class="container my-3 px-0" style="margin: 15px 0 !important; max-width: none !important;">
+
+{#    <a href="{% url 'chair_mail:compose-user' conf_pk=conf_pk user_pk=member.pk %}?next={{ request.get_full_path|urlencode }}"#}
+{#     class="btn btn-outline-primary">Compose</a>#}
+
+  <hr>
+
+  <div class="container">
+    <div class="list-group">
+      {% for msg in email_messages %}
+        <a class="d-flex list-group-item list-group-item-action py-1"
+           href="{% url 'chair_mail:message-details' conf_pk=conf_pk msg_pk=msg.pk %}?next={{ request.get_full_path|urlencode }}">
+          <div>
+            <span class="dccn-text-small text-muted mr-2">{{ msg.sent_at|date:"d.m.Y G:i" }}</span>
+            <span class="dccn-text-0 font-weight-bold">{{ msg.subject }}</span>
+          </div>
+          <div class="ml-auto"><span class="badge badge-info">{{ msg.message_type }}</span></div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  </div>
+
+</div>
+
+{#------------------ #}
+{# **** MODALS ***** #}
+{#------------------ #}
+{% include 'chair_mail/components/confirm_template_reset_modal.html' %}
+
+{% endblock %}

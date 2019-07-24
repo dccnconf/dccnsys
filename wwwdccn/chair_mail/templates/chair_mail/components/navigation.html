@@ -11,4 +11,10 @@
       Template
     </a>
   </li>
+  <li class="nav-item">
+    <a href="{% url 'chair_mail:sent-messages-list' conf_pk=conference.pk %}"
+       class="nav-link {% if active == 'messages' %}active{% endif %} {% if not template %}disabled text-dark-2{% endif %}">
+      Sent messages
+    </a>
+  </li>
 </ul>

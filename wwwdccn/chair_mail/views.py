@@ -99,10 +99,23 @@ def message_template(request, conf_pk):
     else:
         form = EmailTemplateUpdateForm(instance=mail_template)
 
-    return render(request, 'chair_mail/message_template.html', context={
+    return render(request, 'chair_mail/email_template.html', context={
         'conference': conference,
         'template': mail_template,
         'form': form,
+    })
+
+
+@require_GET
+def sent_messages_list(request, conf_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    email_messages = conference.emailmessage_set.all().order_by('-sent_at')
+    return render(request, 'chair_mail/sent_messages_list.html', context={
+        'conference': conference,
+        'conf_pk': conference.pk,
+        'template': get_mail_template_or_404(conference),
+        'email_messages': email_messages,
     })
 
 
@@ -173,7 +186,7 @@ def message_instance_details(request, conf_pk, msg_pk):
             'user_to': msg.user_to.pk,
         })
     next_url = request.GET.get('next', default='')
-    return render(request, 'chair_mail/message_instance.html', context={
+    return render(request, 'chair_mail/sent_message_instance_view.html', context={
         'conference': conference,
         'msg': msg,
         'next': next_url,
@@ -197,8 +210,9 @@ def message_details(request, conf_pk, msg_pk):
         })
     next_url = request.GET.get('next', default='')
     # TODO: replace template!
-    return render(request, 'chair_mail/message_instance.html', context={
+    return render(request, 'chair_mail/sent_message_details.html', context={
         'conference': conference,
+        'conf_pk': conference.pk,
         'msg': msg,
         'next': next_url,
     })
