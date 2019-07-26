@@ -412,6 +412,17 @@ def submission_reviewers(request, pk):
     })
 
 
+def submission_messages(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    conference = submission.conference
+    validate_chair_access(request.user, conference)
+
+    return render(request, 'chair/submission_messages.html', context={
+        'submission': submission,
+        'conference': conference,
+    })
+
+
 @require_POST
 def assign_reviewer(request, pk):
     submission = get_object_or_404(Submission, pk=pk)

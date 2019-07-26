@@ -1,0 +1,58 @@
+{% extends 'chair/base/_chair_submission_base.html' %}
+{% load conferences_extras %}
+{% load bootstrap4 %}
+
+
+{#---------------------------------------------------------------------------#}
+{# Main content                                                              #}
+{#---------------------------------------------------------------------------#}
+{% block mainPanelContent %}
+<div class="dccn-panel-body">
+{% include 'chair/components/submission_navigation.html' with active='messages' %}
+
+
+<div class="container my-3">
+
+  {% bootstrap_messages %}
+
+  <a href="{% url 'chair_mail:compose-paper' conf_pk=conference.pk subm_pk=submission.pk %}?next={{ request.get_full_path|urlencode }}"
+     class="btn btn-outline-primary">Compose new mail</a>
+
+  <hr>
+
+{#  {% include 'chair_mail/components/sent_message_instances_list.html' with email_messages=email_messages conf_pk=conference.pk %}#}
+</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+/*
+(function ($) {
+  $.fn.dccnSentEmailInstanceView = function () {
+    const emailView = this;
+    const loaded = this.attr('data-loaded');
+    const box = this.find('.dccn-email-view-box');
+    const source = box.attr('data-source');
+    this.on('show.bs.collapse', function () {
+      if (loaded === '0') {
+        emailView.attr('data-loaded', '1');
+        $.get(source, function (data) {
+          let elems = $.parseHTML(data);
+          box.html(elems);
+          elems.forEach(function (el) {
+            console.log('Next item: ', el);
+          });
+        });
+      }
+    });
+  };
+
+
+  //////////////////////////////
+  // Associating the plugins
+  $('.dccn-sent-email-instance-view').dccnSentEmailInstanceView();
+}(jQuery));
+ */
+</script>
+{% endblock %}

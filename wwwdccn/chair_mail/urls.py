@@ -13,6 +13,7 @@ urlpatterns = [
 
     path('<int:conf_pk>/template/send_test_message/', views.send_template_test_message, name='send-template-test-message'),
     path('<int:conf_pk>/compose/user/<int:user_pk>/', views.compose_user_message, name='compose-user'),
+    path('<int:conf_pk>/compose/paper/<int:subm_pk>/', views.compose_paper_message, name='compose-paper'),
 
     path('<int:conf_pk>/message/<int:msg_pk>/', views.message_details, name='message-details'),
     path('<int:conf_pk>/message/instance/<int:msg_pk>/', views.message_instance_details, name='message-instance-details'),

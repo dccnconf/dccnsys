@@ -73,6 +73,9 @@ class EmailMessage(models.Model):
         (SENT, _('Sent'))
     )
 
+    USER_MESSAGE = 'user'
+    SUBMISSION_MESSAGE = 'submission'
+
     subject = models.CharField(max_length=1024)
     body_html = models.TextField()
     body_plain = models.TextField()

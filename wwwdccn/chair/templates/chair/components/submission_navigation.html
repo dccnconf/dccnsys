@@ -29,4 +29,10 @@
       Reviews {% if submission.status != 'SUBMIT' %}({{ submission.reviews.all|length }}/{{ submission.stype.num_reviews }}){% endif %}
     </a>
   </li>
+  <li class="nav-item">
+    <a href="{% url 'chair:submission-messages' pk=submission.pk %}"
+       class="nav-link {% if active == 'messages' %}active{% endif %}">
+      Messages
+    </a>
+  </li>
 </ul>

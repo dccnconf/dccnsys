@@ -10,10 +10,6 @@
   Compose message
 {% endblock %}
 
-{% block header %}
-  {% include 'user_site/components/navigation.html' with active='' %}
-{% endblock %}
-
 {% block css %}
 <link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <style>
@@ -24,14 +20,13 @@
 {% endblock %}
 
 {% block viewPanelTitle %}
-Compose message to {{ member.profile.get_full_name }}
+Compose message to {{ destination_name }}
 {% endblock %}
 
 {% block viewPanelBody %}
 <div class="container my-3">
 
-  <form action="{% url 'chair_mail:compose-user' conf_pk=conference.pk user_pk=member.pk %}"
-        id="newMessageForm" method="POST">
+  <form action="" id="newMessageForm" method="POST">
 
     {% csrf_token %}
 
@@ -48,6 +43,9 @@ Compose message to {{ member.profile.get_full_name }}
         <textarea name="body_html" id="id_body_html" cols="3" rows="1" class="form-control" hidden></textarea>
         <textarea name="body_plain" id="id_body_plain" cols="3" rows="1" class="form-control" hidden></textarea>
 
+        {# --------------------------------------------------- #}
+        {# Quill WISWIG editor area                            #}
+        {# --------------------------------------------------- #}
         <div id="message">
           <div id="message-toolbar">
             <span class="ql-formats">
@@ -96,8 +94,20 @@ Compose message to {{ member.profile.get_full_name }}
           <div id="message-editor" style="position: relative; height: 350px;"></div>
         </div>
 
+        {# --------------------------------------------------- #}
+        {# Help message with variables accessible by the users #}
+        {# --------------------------------------------------- #}
         <small class="form-text text-muted">
-          {% include 'chair_mail/components/message_to_user_help.html' %}
+          <p>
+            You can use variables, e.g. <strong>{% verbatim %}{{ var }}{% endverbatim %}</strong>.
+            <a href="#availableVars" data-toggle="collapse">Show available variables...</a>
+          </p>
+          <ul class="collapse" id="availableVars">
+            {% for var in variables %}
+              <li><span class="text-info font-weight-bold">{{ var.0 }}</span>: {{ var.1 }}</li>
+            {% endfor %}
+          </ul>
+
         </small>
       </div>
     </div>

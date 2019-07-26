@@ -5,6 +5,12 @@
 {% extends 'chair/base/_chair_base.html' %}
 {% load bootstrap4 %}
 
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='' %}
+{% endblock %}
+
+
 {% block chairWorkspaceContent %}
 <div class="dccn-panel dccn-chair-workspace-main dccn-panel-screen mt-0" style="min-height: 100vh;">
 

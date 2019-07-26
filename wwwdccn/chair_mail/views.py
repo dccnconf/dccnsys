@@ -1,8 +1,9 @@
 from django.contrib import messages
-from django.http import Http404, HttpResponse, JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.http import require_GET, require_POST
 from html2text import html2text
 
@@ -12,6 +13,7 @@ from chair_mail.forms import EmailTemplateUpdateForm, EmailTemplateTestForm, \
 from chair_mail.models import EmailGeneralSettings, EmailTemplate, EmailMessage, \
     EmailMessageInst
 from conferences.models import Conference
+from submissions.models import Submission
 from users.models import User
 
 
@@ -129,11 +131,22 @@ def send_template_test_message(request, conf_pk):
     return redirect('chair_mail:message-template', conf_pk=conf_pk)
 
 
-def compose_user_message(request, conf_pk, user_pk):
-    conference = get_object_or_404(Conference, pk=conf_pk)
-    validate_chair_access(request.user, conference)
-    user_to = get_object_or_404(User, pk=user_pk)
+def _compose(request, conference, users_to, dest_name, variables=None,
+             ctx=None, user_ctx=None):
+    """Process GET and POST requests for message composing views.
 
+    This function expects that chair access is already validated, and the
+    actual users are known. Assumes that form `EmailMessageForm` is used.
+
+    :param request:
+    :param conference:
+    :param users_to:
+    :param dest_name:
+    :param variables:
+    :param ctx:
+    :param user_ctx:
+    :return:
+    """
     if request.method == 'POST':
         next_url = request.POST.get('next', reverse('chair:home', kwargs={
             'pk': conference.pk
@@ -142,33 +155,85 @@ def compose_user_message(request, conf_pk, user_pk):
         if form.is_valid():
             body_html = form.cleaned_data['body_html']
             body_plain = form.cleaned_data['body_plain']
+
             message = EmailMessage.create_message(
                 subject=form.cleaned_data['subject'],
                 body_html=body_html,
                 body_plain=body_plain if body_plain else html2text(body_html),
-                users_to=(user_to,),
+                users_to=users_to,
                 conference=conference,
-                message_type='user',
+                message_type=EmailMessage.SUBMISSION_MESSAGE,
             )
-            message.send(request.user, user_context={
-                user_to: {
-                    'first_name': user_to.profile.first_name,
-                    'last_name': user_to.profile.last_name,
-                    'user_pk': user_to.pk,
-                }
-            })
+
+            _ctx = {}  # Provide context always being used here
+            _ctx.update(ctx if ctx is not None else {})
+
+            _user_ctx = {
+                u: {
+                    'first_name': u.profile.first_name,
+                    'last_name': u.profile.last_name,
+                    'user_pk': u.pk
+                } for u in users_to
+            }
+            _user_ctx.update(user_ctx if user_ctx is not None else {})
+
+            message.send(request.user, context=_ctx, user_context=_user_ctx)
             return redirect(next_url)
         else:
             messages.error(request, 'Error sending message')
     else:
         form = EmailMessageForm()
         next_url = request.GET['next']
-    return render(request, 'chair_mail/compose_user.html', context={
+
+    _vars = [
+        ('first_name', _('user first name')),
+        ('last_name', _('user first name')),
+        ('user_pk', _('user identifier')),
+    ]
+    _vars.extend(variables if variables is not None else [])
+
+    return render(request, 'chair_mail/compose_message.html', context={
         'form': form,
-        'member': user_to,
+        'users_to': users_to,
         'conference': conference,
         'next': next_url,
+        'variables': _vars,
+        'destination_name': dest_name,
     })
+
+
+# noinspection PyUnresolvedReferences
+def compose_user_message(request, conf_pk, user_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    user_to = get_object_or_404(User, pk=user_pk)
+    profile = user_to.profile
+    return _compose(request, conference, [user_to], profile.get_full_name())
+
+
+# noinspection PyUnresolvedReferences
+def compose_paper_message(request, conf_pk, subm_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    submission = get_object_or_404(Submission, pk=subm_pk)
+    authors = submission.authors
+    users_to = User.objects.filter(pk__in=authors.values('user__pk'))
+    context = {
+        'paper_title': submission.title,
+        'paper_pk': submission.pk,
+        'paper_url': reverse('submissions:details', kwargs={
+            'pk': submission.pk
+        }),
+    }
+    variables = [
+        ('paper_title', _('title of the submission')),
+        ('paper_pk', _('submission identifier')),
+        ('paper_url', _('URL of the submission overview page')),
+    ]
+    return _compose(
+        request, conference, users_to, f'submission #{subm_pk} authors',
+        variables=variables, ctx=context
+    )
 
 
 @require_GET
