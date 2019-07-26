@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.http import Http404
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 from django.template.loader import render_to_string
@@ -17,6 +18,7 @@ def validate_reviewer_access(user, review):
         raise Http404
 
 
+@login_required
 def review_details(request, pk):
     review = get_object_or_404(Review, pk=pk)
     validate_reviewer_access(request.user, review)
@@ -33,6 +35,7 @@ def review_details(request, pk):
     })
 
 
+@login_required
 @require_POST
 def decline_review(request, pk):
     review = get_object_or_404(Review, pk=pk)
