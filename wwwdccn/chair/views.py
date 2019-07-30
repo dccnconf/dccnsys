@@ -178,7 +178,11 @@ def submissions_list(request, pk, page=1):
     context = _build_paged_view_context(
         request, items, page, 'chair:submissions-pages', {'pk': pk}
     )
-    context.update({'conference': conference, 'filter_form': form})
+    context.update({
+        'conf_pk': conference.pk,
+        'filter_form': form,
+        'conference': conference,
+    })
     return render(request, 'chair/submissions_list.html', context=context)
 
 
@@ -503,7 +507,11 @@ def users_list(request, pk, page=1):
     context = _build_paged_view_context(
         request, items, page, 'chair:users-pages', {'pk': pk}
     )
-    context.update({'conference': conference, 'filter_form': form})
+    context.update({
+        'conf_pk': conference.pk,
+        'conference': conference,
+        'filter_form': form,
+    })
     return render(request, 'chair/users_list.html', context=context)
 
 
