@@ -1,0 +1,47 @@
+{###########################################################################}
+{# Base page for mail system tabs. It fills breadcrumbs and also defines a #}
+{# panel at the workspace area with navigation. Active tab is given with   #}
+{# `active_tab` variable, tabs navigation is specified in '_tab_nav.html'. #}
+{#                                                                         #}
+{# BLOCKS:                                                                 #}
+{# - `tabViewContent`: content of the container inside the active tab.     #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `active_tab`: value of `active` context variable for tab navigation   #}
+{# - `template`: the default conference email template                     #}
+{# - `hide_tabs`: if not falsy, tabs are not shown.                        #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{###########################################################################}
+{% extends 'chair/base/generic_page.html' %}
+{% load conferences_extras %}
+{% load submission_extras %}
+
+
+{#---------------------------------------------------------------------------#}
+{# Navigation and breadcrumbs                                                #}
+{#---------------------------------------------------------------------------#}
+{% block navigation %}
+  {% include 'chair/components/navigation.html' with active='messages' %}
+{% endblock %}
+
+{% block smallScreenBreadcrumbItems %}
+  <li class="breadcrumb-item active">messages</li>
+{% endblock %}
+
+{% block largeScreenBreadcrumbItems %}
+  <li class="breadcrumb-item active">messages</li>
+{% endblock %}
+
+{% block content %}
+  <div class="dccn-panel-body">
+    {% if not hide_tabs %}
+      {% include 'chair_mail/_tab_nav.html' with active=active_tab %}
+    {% endif %}
+    <div class="container py-3">
+      {% block tabViewContent %}
+      {% endblock %}
+    </div>
+  </div>
+{% endblock %}

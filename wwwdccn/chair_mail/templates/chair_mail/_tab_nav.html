@@ -1,3 +1,11 @@
+{###########################################################################}
+{# Tab navigation for mail system.                                         #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `conference`                                                          #}
+{# - `template`: the default conference email template                     #}
+{# - `active`: a string indicating which tab is currently active.          #}
+{###########################################################################}
 <ul class="nav nav-pills justify-content-start">
   <li class="nav-item">
     <a href="{% url 'chair_mail:overview' conf_pk=conference.pk %}"

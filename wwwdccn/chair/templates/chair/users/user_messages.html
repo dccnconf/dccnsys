@@ -1,0 +1,53 @@
+{###########################################################################}
+{# List of emails sent to the user.                                        #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `email_messages`: a sequence of email messages                        #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `u`: user                                                             #}
+{# - `active_tab`                                                          #}
+{###########################################################################}
+{% extends 'chair/users/_base.html' %}
+{% load conferences_extras %}
+
+{% block tabViewContent %}
+  <a href="{% url 'chair_mail:compose-user' conf_pk=conference.pk user_pk=u.pk %}?next={{ request.get_full_path|urlencode }}"
+     class="btn btn-outline-primary">
+    Compose new mail
+  </a>
+
+  <hr>
+
+  {% include 'chair_mail/components/sent_message_instances_list.html' with email_messages=email_messages conf_pk=conference.pk %}
+{% endblock %}
+
+{% block script %}
+<script>
+(function ($) {
+  $.fn.dccnSentEmailInstanceView = function () {
+    const emailView = this;
+    const loaded = this.attr('data-loaded');
+    const box = this.find('.dccn-email-view-box');
+    const source = box.attr('data-source');
+    this.on('show.bs.collapse', function () {
+      if (loaded === '0') {
+        emailView.attr('data-loaded', '1');
+        $.get(source, function (data) {
+          let elems = $.parseHTML(data);
+          box.html(elems);
+          elems.forEach(function (el) {
+          });
+        });
+      }
+    });
+  };
+
+
+  //////////////////////////////
+  // Associating the plugins
+  $('.dccn-sent-email-instance-view').dccnSentEmailInstanceView();
+}(jQuery));
+</script>
+{% endblock %}

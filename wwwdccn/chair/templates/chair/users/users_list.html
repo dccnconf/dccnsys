@@ -1,10 +1,23 @@
-{#############################################################################}
-{# CONTEXT:                                                                  #}
-{# - conf_pk: conference.pk                                                  #}
-{# - items: an iterable with users description objects                       #}
-{# - conference: the conference itself                                       #}
-{#############################################################################}
-{% extends 'chair/base/_chair_listview_base.html' %}
+{###########################################################################}
+{# Users list paged view.                                                  #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `items`: a sequence of submission describing objects                  #}
+{# - `filter_form`: a submissions filter form                              #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `num_items`: number of items shown on the page.                       #}
+{# - `curr_page`: index (1-based) of the current page.                     #}
+{# - `page_urls`: a list of all pages URLs.                                #}
+{# - `first_index`: index (1-based) of the first item being shown.         #}
+{# - `last_index`: index (1-based) of the last item being shown.           #}
+{# - `prev_page_url`: URL of the previous page, if exists.                 #}
+{# - `next_page_url`: URL of the next page, if exists.                     #}
+{# - `first_page_url`: URL of the first page, if exists.                   #}
+{# - `last_page_url`: URL of the last page, if exists.                     #}
+{# - `conference`                                                          #}
+{###########################################################################}
+{% extends 'chair/base/list_page.html' %}
 {% load conferences_extras %}
 {% load bootstrap4 %}
 
@@ -15,16 +28,12 @@
   {% include 'chair/components/navigation.html' with active='users' %}
 {% endblock %}
 
-{% block chairCrumbItemsSmall %}
-  <li class="breadcrumb-item">
-    <a href="{% url 'chair:users' pk=conf_pk %}">users</a>
-  </li>
+{% block smallScreenBreadcrumbItems %}
+  <li class="breadcrumb-item active">users</li>
 {% endblock %}
 
-{% block chairCrumbItemsLarge %}
-  <li class="breadcrumb-item">
-    <a href="{% url 'chair:users' pk=conf_pk %}">users</a>
-  </li>
+{% block largeScreenBreadcrumbItems %}
+  <li class="breadcrumb-item active">users</li>
 {% endblock %}
 
 
@@ -36,7 +45,7 @@
 <div class="dccn-feed-item pb-3 mt-0 pt-0">
   <div class="row">
     <div class="col-9 d-flex align-items-center">
-      <a href="{% url 'chair:user-overview' conf_pk=conf_pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
+      <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
         <img src="{{ item.avatar.url }}" alt="{{ item.name }} profile image" class="rounded-circle img-fluid mr-3" style="width: 96px; height: 96px;">
       </a>
       <div>
@@ -52,7 +61,7 @@
     <div class="col-3 d-flex flex-column align-items-end">
       <div class="mb-2">
         {% if not item.is_reviewer %}
-          <form method="POST" action="{% url 'chair:invite-reviewer' conf_pk=conf_pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
+          <form method="POST" action="{% url 'chair:invite-reviewer' conf_pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
             {% csrf_token %}
             <button type="submit" class="btn btn-sm btn-outline-info"><span class="fas fa-plus"></span> Invite as a reviewer</button>
           </form>
@@ -90,8 +99,8 @@
 
 
   <div class="dccn-feed-item-footer mt-2">
-    <a href="{% url 'chair:user-overview' conf_pk=conf_pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}" class="dccn-feed-item-link"><i class="fas fa-bars"></i> View</a>
-    <a href="{% url 'chair_mail:compose-user' conf_pk=conf_pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}" class="dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</a>
+    <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}" class="dccn-feed-item-link"><i class="fas fa-bars"></i> View</a>
+    <a href="{% url 'chair_mail:compose-user' conf_pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}" class="dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</a>
     {% if item.is_reviewer %}
       <button type="submit" class="btn btn-link dccn-feed-item-link text-danger" data-toggle="modal" data-target="#revokeModal-{{ item.pk }}">
         <i class="fas fa-minus-circle"></i> Revoke reviewer
@@ -115,7 +124,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-          <form method="POST" action="{% url 'chair:revoke-reviewer' conf_pk=conf_pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
+          <form method="POST" action="{% url 'chair:revoke-reviewer' conf_pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}">
             <button type="submit" class="btn btn-danger">Revoke</button>
             {% csrf_token %}
           </form>
@@ -135,7 +144,7 @@
 {#---------------------------------------------------------------------------#}
 {% block filterPanel %}
   <div class="dccn-chair-workspace-filter">
-    <form action="{% url 'chair:users' pk=conf_pk %}" method="GET" class="m-2">
+    <form action="{% url 'chair:users' pk=conference.pk %}" method="GET" class="m-2">
       {% bootstrap_field filter_form.term show_label=False bound_css_class='' %}
 
       <a href="#detailedFilterFormFields" class="d-block dccn-link mb-3" data-toggle="collapse" id="detailedFilterFormToggler">
@@ -170,7 +179,7 @@
 
       <div class="form-group mt-2">
         <button type="submit" class="btn btn-outline-info">Apply</button>
-        <a href="{% url 'chair:users' pk=conf_pk %}" class="btn btn-link dccn-link ml-3">Clear filter</a>
+        <a href="{% url 'chair:users' pk=conference.pk %}" class="btn btn-link dccn-link ml-3">Clear filter</a>
       </div>
 
     </form>

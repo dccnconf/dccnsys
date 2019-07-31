@@ -1,6 +1,13 @@
-{% extends 'chair_mail/_chair_mail_base.html' %}
+{###########################################################################}
+{# Overview page of the chair email system.                                #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `active_tab`: value of `active` context variable for tab navigation   #}
+{# - `template`: the default conference email template                     #}
+{###########################################################################}
+{% extends 'chair_mail/_base.html' %}
 {% load static %}
-{% load bootstrap4 %}
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}">
@@ -20,93 +27,87 @@
 {#---------------------------------------------------------------------------#}
 {# Main content                                                              #}
 {#---------------------------------------------------------------------------#}
-{% block mainPanelContent %}
-<div class="dccn-panel-body">
-{% include 'chair_mail/components/navigation.html' with active='overview' %}
+{% block tabViewContent %}
+  <h1 class="dccn-text-largest-light mb-4">Mail system overview</h1>
 
-  <div class="container my-3">
-    {% bootstrap_messages %}
-
-    <h1 class="dccn-text-largest-light mb-4">Mail system overview</h1>
-
-    <div class="row mt-3">
-      <div class="col dccn-text-0">Messages sent:</div>
-      <div class="col"><span class="dccn-text-0 font-weight-bold text-info">0</span> (<a href="#">View...</a>)</div>
+  <div class="row mt-3">
+    <div class="col-6 dccn-text-0">Messages sent:</div>
+    <div class="col-6">
+      <span class="dccn-text-0 font-weight-bold text-info">{{ conference.emailmessage_set.count }}</span>
+      (<a href="{% url 'chair_mail:sent-messages-list' conf_pk=conference.pk %}">View...</a>)
     </div>
-
-    <div class="row">
-      <div class="col dccn-text-0">Mailing lists:</div>
-      <div class="col"><span class="dccn-text-0 font-weight-bold text-info">0</span> (<a href="#">View...</a>)</div>
-    </div>
-
-    <hr>
-    <h2 class="dccn-text-larger-light mb-3">Message templates</h2>
-
-    {% if template %}
-
-      {% include 'chair_mail/components/template_help.html' %}
-
-      <div class="row mt-4">
-        <div class="col-lg-6 col-12">
-          <div class="mr-0 mr-lg-3" id="htmlTemplateGroup">
-            <label for="text_html" class="form-label">HTML template (read-only)</label>
-            <textarea id="text_html" class="d-none">
-              {{ template_html }}
-            </textarea>
-          </div>
-        </div>
-        <div class="col-lg-6 col-12">
-          <div class="ml-0 ml-lg-3 mt-4 mt-lg-0">
-            <label class="form-label">Preview</label>
-            <div class="p-3 border border-light">
-              {{ template_html|safe }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="row mt-4">
-        <div class="col-12">
-          <div class="mr-0 mr-sm-3" id="plainTextTemplateGroup">
-            <label for="text_plain" class="form-label">Plain text template (read only)</label>
-            <textarea id="text_plain" class="d-none">
-              {{ template_plain }}
-            </textarea>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-4 d-flex">
-        <a href="{% url 'chair_mail:message-template' conf_pk=conference.pk %}" class="btn btn-outline-info">Edit template</a>
-        <button type="button" class="btn btn-outline-danger ml-auto" data-toggle="modal" data-target="#confirmTemplateResetModal">
-          Reset template
-        </button>
-      </div>
-
-    {% else %}
-
-      <p class="dccn-text-0 text-info">
-        No message template for the conference is defined so far. You need to create one first.
-      </p>
-
-      <div class="d-flex mt-4">
-        <form action="{% url 'chair_mail:create-template' conf_pk=conference.pk %}?next={{ request.get_full_path|urlencode }}"
-              method="POST">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-outline-primary">Create template</button>
-        </form>
-      </div>
-
-    {% endif %}
-
-
   </div>
-</div>
 
-{#------------------ #}
-{# **** MODALS ***** #}
-{#------------------ #}
-{% include 'chair_mail/components/confirm_template_reset_modal.html' %}
+  <div class="row">
+    <div class="col dccn-text-0">Mailing lists:</div>
+    <div class="col"><span class="dccn-text-0 font-weight-bold text-info">0</span> (<a href="#">View...</a>)</div>
+  </div>
+
+  <hr>
+  <h2 class="dccn-text-larger-light mb-3">Message templates</h2>
+
+  {% if template %}
+
+    {% include 'chair_mail/components/template_help.html' %}
+
+    <div class="row mt-4">
+      <div class="col-lg-6 col-12">
+        <div class="mr-0 mr-lg-3" id="htmlTemplateGroup">
+          <label for="text_html" class="form-label">HTML template (read-only)</label>
+          <textarea id="text_html" class="d-none">
+            {{ template.text_html }}
+          </textarea>
+        </div>
+      </div>
+      <div class="col-lg-6 col-12">
+        <div class="ml-0 ml-lg-3 mt-4 mt-lg-0">
+          <label class="form-label">Preview</label>
+          <div class="p-3 border border-light">
+            {{ template.text_html|safe }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="mr-0 mr-sm-3" id="plainTextTemplateGroup">
+          <label for="text_plain" class="form-label">Plain text template (read only)</label>
+          <textarea id="text_plain" class="d-none">
+            {{ template.text_plain }}
+          </textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 d-flex">
+      <a href="{% url 'chair_mail:message-template' conf_pk=conference.pk %}" class="btn btn-outline-info">Edit template</a>
+      <button type="button" class="btn btn-outline-danger ml-auto" data-toggle="modal" data-target="#confirmTemplateResetModal">
+        Reset template
+      </button>
+    </div>
+
+  {% else %}
+
+    <p class="dccn-text-0 text-info">
+      No message template for the conference is defined so far. You need to create one first.
+    </p>
+
+    <div class="d-flex mt-4">
+      <form action="{% url 'chair_mail:create-template' conf_pk=conference.pk %}?next={{ request.get_full_path|urlencode }}"
+            method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-primary">Create template</button>
+      </form>
+    </div>
+
+  {% endif %}
+
+
+  {#------------------ #}
+  {# **** MODALS ***** #}
+  {#------------------ #}
+  {% include 'chair_mail/components/confirm_template_reset_modal.html' %}
 
 {% endblock %}
 

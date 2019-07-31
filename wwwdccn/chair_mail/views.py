@@ -31,25 +31,14 @@ def overview(request, conf_pk):
     validate_chair_access(request.user, conference)
 
     if hasattr(conference, 'mail_settings'):
-        mail_settings = conference.mail_settings
-        mail_template = mail_settings.template
+        mail_template = conference.mail_settings.template
     else:
         mail_template = None
-
-    template_exists = mail_template is not None
-
-    if template_exists:
-        template_html = mail_template.text_html
-        template_plain = mail_template.text_plain
-    else:
-        template_html = ""
-        template_plain = ""
 
     return render(request, 'chair_mail/overview.html', context={
         'conference': conference,
         'template': mail_template,
-        'template_html': template_html,
-        'template_plain': template_plain,
+        'active_tab': 'overview',
     })
 
 
@@ -104,6 +93,7 @@ def message_template(request, conf_pk):
     return render(request, 'chair_mail/email_template.html', context={
         'conference': conference,
         'template': mail_template,
+        'active_tab': 'template',
         'form': form,
     })
 
@@ -112,11 +102,12 @@ def message_template(request, conf_pk):
 def sent_messages_list(request, conf_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
+    template = get_mail_template_or_404(conference)
     email_messages = conference.emailmessage_set.all().order_by('-sent_at')
     return render(request, 'chair_mail/sent_messages_list.html', context={
         'conference': conference,
-        'conf_pk': conference.pk,
-        'template': get_mail_template_or_404(conference),
+        'template': template,
+        'active_tab': 'messages',
         'email_messages': email_messages,
     })
 
@@ -149,7 +140,7 @@ def _compose(request, conference, users_to, dest_name, variables=None,
     """
     if request.method == 'POST':
         next_url = request.POST.get('next', reverse('chair:home', kwargs={
-            'pk': conference.pk
+            'conf_pk': conference.pk
         }))
         form = EmailMessageForm(request.POST)
         if form.is_valid():
@@ -212,10 +203,10 @@ def compose_user_message(request, conf_pk, user_pk):
 
 
 # noinspection PyUnresolvedReferences
-def compose_paper_message(request, conf_pk, subm_pk):
+def compose_paper_message(request, conf_pk, sub_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
-    submission = get_object_or_404(Submission, pk=subm_pk)
+    submission = get_object_or_404(Submission, pk=sub_pk)
     authors = submission.authors
     users_to = User.objects.filter(pk__in=authors.values('user__pk'))
     context = {
@@ -231,7 +222,7 @@ def compose_paper_message(request, conf_pk, subm_pk):
         ('paper_url', _('URL of the submission overview page')),
     ]
     return _compose(
-        request, conference, users_to, f'submission #{subm_pk} authors',
+        request, conference, users_to, f'submission #{sub_pk} authors',
         variables=variables, ctx=context
     )
 
@@ -273,13 +264,11 @@ def message_details(request, conf_pk, msg_pk):
             'sent_by': msg.sent_by.pk,
             'users_to': list(msg.users_to.values_list('pk')),
         })
-    next_url = request.GET.get('next', default='')
-    # TODO: replace template!
     return render(request, 'chair_mail/sent_message_details.html', context={
         'conference': conference,
         'conf_pk': conference.pk,
         'msg': msg,
-        'next': next_url,
+        'hide_tabs': True,
     })
 
 

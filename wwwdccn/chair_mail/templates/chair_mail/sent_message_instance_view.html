@@ -1,33 +1,34 @@
-{#-----------------------------------------------#}
-{# CONTEXT:                                      #}
-{# #}
-{#-----------------------------------------------#}
-{% extends "chair/base/_chair_preview_base.html" %}
+{###########################################################################}
+{# Sent email instance view. Provides the actual rendered message sent     #}
+{# to a given user.                                                        #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `msg`: `EmailMessage` object                                          #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `active_tab`: value of `active` context variable for tab navigation   #}
+{# - `template`: the default conference email template                     #}
+{# - `next`: URL where to go after this preview is closed.                 #}
+{###########################################################################}
+{% extends "chair/base/preview_page.html" %}
 {% load bootstrap4 %}
 {% load submission_extras %}
 
-{% block title %}
-  Compose message
-{% endblock %}
-
-{% block header %}
-  {% include 'user_site/components/navigation.html' with active='' %}
-{% endblock %}
-
 {% block css %}
-<link href="//cdn.quilljs.com/1.3.6/quill.bubble.css" rel="stylesheet">
-<style>
-#message-editor .ql-editor {
-  padding: 12px 15px !important;
-}
-</style>
+  <link href="//cdn.quilljs.com/1.3.6/quill.bubble.css" rel="stylesheet">
+  <style>
+  #message-editor .ql-editor {
+    padding: 12px 15px !important;
+  }
+  </style>
 {% endblock %}
 
-{% block viewPanelTitle %}
-{{ msg.subject }}
+{% block panelTitle %}
+  {{ msg.subject }}
 {% endblock %}
 
-{% block viewPanelBody %}
+{% block content %}
   <div>
     <p class="dccn-text-smaller">
       <span class="font-weight-bold">Sender:</span>

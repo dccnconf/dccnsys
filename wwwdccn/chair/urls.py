@@ -1,56 +1,43 @@
 from django.urls import path
 
-from . import views
+from .views import dashboard, submissions, users
 
 
 app_name = 'chair'
 
 urlpatterns = [
-    path('<int:pk>/', views.dashboard, name='home'),
+    path('<int:conf_pk>/', dashboard.overview, name='home'),
 
     #
-    # Submissions listing
+    # Submissions
     #
-    path('<int:pk>/submissions/', views.submissions_list, name='submissions'),
-    path('<int:pk>/submissions/pages/<int:page>/', views.submissions_list, name='submissions-pages'),
-
-    #
-    # Submission views and actions
-    #
-    path('submission/<int:pk>/overview/', views.submission_overview, name='submission-overview'),
-    path('submission/<int:pk>/metadata/', views.submission_metadata, name='submission-metadata'),
-    path('submission/<int:pk>/authors/', views.submission_authors, name='submission-authors'),
-    path('submission/<int:pk>/authors/delete/', views.submission_author_delete, name='submission-author-delete'),
-    path('submission/<int:pk>/authors/create/', views.submission_author_create, name='submission-author-create'),
-    path('submission/<int:pk>/authors/invite/', views.submission_author_invite, name='submission-author-invite'),
-    path('submission/<int:pk>/authors/reorder/', views.submission_authors_reorder, name='submission-authors-reorder'),
-    path('submission/<int:pk>/review_manuscript/', views.submission_review_manuscript, name='submission-review-manuscript'),
-    path('submission/<int:pk>/review_manuscript/delete/', views.submission_delete_review_manuscript, name='submission-review-manuscript-delete'),
-    path('submission/<int:pk>/start_review/', views.start_review, name='start-review'),
-    path('submission/<int:pk>/revoke_review/', views.revoke_review, name='revoke-review'),
-    path('submission/<int:pk>/reviewers/', views.submission_reviewers, name='submission-reviewers'),
-    path('submission/<int:pk>/messages/', views.submission_messages, name='submission-messages'),
-    path('submission/<int:pk>/reviewers/assign/', views.assign_reviewer, name='assign-reviewer'),
-    path('reviews/<int:pk>/delete/', views.delete_review, name='delete-review'),
+    path('<int:conf_pk>/submissions/', submissions.list_submissions, name='submissions'),
+    path('<int:conf_pk>/submissions/pages/<int:page>/', submissions.list_submissions, name='submissions-pages'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/overview/', submissions.overview, name='submission-overview'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/metadata/', submissions.metadata, name='submission-metadata'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/authors/', submissions.authors, name='submission-authors'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/authors/delete/', submissions.delete_author, name='submission-author-delete'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/authors/create/', submissions.create_author, name='submission-author-create'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/authors/invite/', submissions.invite_author, name='submission-author-invite'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/authors/reorder/', submissions.reorder_authors, name='submission-authors-reorder'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/rev_man/', submissions.review_manuscript, name='submission-review-manuscript'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/rev_man/delete/', submissions.delete_review_manuscript, name='submission-review-manuscript-delete'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/start_review/', submissions.start_review, name='start-review'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/revoke_review/', submissions.revoke_review, name='revoke-review'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/reviews/', submissions.reviews, name='submission-reviewers'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/messages/', submissions.emails, name='submission-messages'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/reviews/assign/', submissions.assign_reviewer, name='assign-reviewer'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/reviews/<int:rev_pk>/delete/', submissions.delete_review, name='delete-review'),
+    path('<int:conf_pk>/submissions/export/csv/', submissions.export_csv, name='export-submissions-csv'),
 
     #
     # Users listing
     #
-    path('<int:pk>/users/', views.users_list, name='users'),
-    path('<int:pk>/users/pages/<int:page>/', views.users_list, name='users-pages'),
-    path('<int:conf_pk>/users/<int:user_pk>/overview/', views.user_overview, name='user-overview'),
-    path('<int:conf_pk>/users/<int:user_pk>/messages/', views.user_messages, name='user-messages'),
-    path('<int:conf_pk>/reviewers/invite/<int:user_pk>/', views.invite_reviewer,
-         name='invite-reviewer'),
-    path('<int:conf_pk>/reviewers/revoke/<int:user_pk>/', views.revoke_reviewer,
-         name='revoke-reviewer'),
-
-    #
-    # CSV and PDF exports
-    #
-    path('<int:pk>/export/submissions/', views.get_submissions_csv, name='export-submissions-csv'),
-    path('<int:pk>/export/authors/', views.get_authors_csv, name='export-authors-csv'),
-
-    # AJAX PARTIAL HTML PIECES:
-    path('ajax_html/submissions/<int:pk>/overview/', views.get_submission_overview, name='get-submission-overview'),
+    path('<int:conf_pk>/users/', users.list_users, name='users'),
+    path('<int:conf_pk>/users/pages/<int:page>/', users.list_users, name='users-pages'),
+    path('<int:conf_pk>/users/<int:user_pk>/overview/', users.overview, name='user-overview'),
+    path('<int:conf_pk>/users/<int:user_pk>/messages/', users.emails, name='user-messages'),
+    path('<int:conf_pk>/reviewers/invite/<int:user_pk>/', users.create_reviewer, name='invite-reviewer'),
+    path('<int:conf_pk>/reviewers/revoke/<int:user_pk>/', users.revoke_reviewer, name='revoke-reviewer'),
+    path('<int:conf_pk>/authors/export/csv/', users.export_csv, name='export-authors-csv'),
 ]

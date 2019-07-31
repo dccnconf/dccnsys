@@ -1,30 +1,32 @@
-{#-----------------------------------------------#}
-{# CONTEXT:                                      #}
-{#-----------------------------------------------#}
-{% extends "chair/base/_chair_preview_base.html" %}
+{###########################################################################}
+{# Compose email view.                                                     #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `msg`: `EmailMessage` object                                          #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `active_tab`: value of `active` context variable for tab navigation   #}
+{# - `template`: the default conference email template                     #}
+{# - `next`: URL where to go after this preview is closed.                 #}
+{###########################################################################}
+{% extends "chair/base/preview_page.html" %}
 {% load bootstrap4 %}
-{% load submission_extras %}
-
-{% block title %}
-  Compose message
-{% endblock %}
 
 {% block css %}
-<link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-<style>
-#message-editor .ql-editor {
-  padding: 12px 15px !important;
-}
-</style>
+  <link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <style>
+  #message-editor .ql-editor {
+    padding: 12px 15px !important;
+  }
+  </style>
 {% endblock %}
 
-{% block viewPanelTitle %}
-Compose message to {{ destination_name }}
+{% block panelTitle %}
+  Compose message to {{ destination_name }}
 {% endblock %}
 
-{% block viewPanelBody %}
-<div class="container my-3">
-
+{% block content %}
   <form action="" id="newMessageForm" method="POST">
 
     {% csrf_token %}
@@ -74,7 +76,6 @@ Compose message to {{ destination_name }}
               <button class="ql-header" value="1"></button>
               <button class="ql-header" value="2"></button>
               <button class="ql-blockquote"></button>
-              <button class="ql-code-block"></button>
             </span>
             <span class="ql-formats">
               <button class="ql-list" value="ordered"></button>
@@ -96,7 +97,7 @@ Compose message to {{ destination_name }}
         {# --------------------------------------------------- #}
         {# Help message with variables accessible by the users #}
         {# --------------------------------------------------- #}
-        <small class="form-text text-muted">
+        <div class="form-text text-muted dccn-text-small">
           <p>
             You can use variables, e.g. <strong>{% verbatim %}{{ var }}{% endverbatim %}</strong>.
             <a href="#availableVars" data-toggle="collapse">Show available variables...</a>
@@ -107,7 +108,7 @@ Compose message to {{ destination_name }}
             {% endfor %}
           </ul>
 
-        </small>
+        </div>
       </div>
     </div>
     <div class="form-group d-flex">
@@ -115,7 +116,6 @@ Compose message to {{ destination_name }}
       <a href="{{ next }}" class="btn btn-outline-secondary ml-auto">Cancel</a>
     </div>
   </form>
-</div>
 {% endblock %}
 
 {% block script %}
@@ -137,6 +137,9 @@ $(document).ready(function () {
   let SizeStyle = Quill.import('attributors/style/size');
   SizeStyle.whitelist = ['0.8em', '1em', '2em', '3em'];
   Quill.register(SizeStyle, true);
+
+  {#let CodeStyle = Quill.import('attributors/style/code');#}
+  {#Quill.register(CodeStyle, true);#}
 
   const quill = new Quill('#message-editor', {
     theme: 'snow',

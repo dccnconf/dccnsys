@@ -1,0 +1,84 @@
+{###########################################################################}
+{# Submission overview with title, authors, abstract, topics, PDF,         #}
+{# warnings and control buttons.                                           #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `warnings`: list of strings                                           #}
+{# - `actions`: a record with possible items:                              #}
+{#   * `review`                                                            #}
+{#   * `revoke_review`                                                     #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `submission`                                                          #}
+{# - `active_tab`                                                          #}
+{###########################################################################}
+{% extends 'chair/submissions/_base.html' %}
+{% load conferences_extras %}
+{% load submission_extras %}
+
+{% block tabViewContent %}
+  <div class="d-flex">
+    <div class="ml-auto"></div>
+    <p class="dccn-text">{{ submission.get_status_display }} <i class="fas fa-circle {{ submission|status_class }}"></i></p>
+  </div>
+
+  <p class="text-center dccn-text-larger-light">{{ submission.title }}</p>
+  <p class="text-center dccn-text-2-light mt-2">
+    {% for author in submission.get_authors_profiles %}
+      <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=author.user_id %}"
+         class="dccn-link">
+        {{ author.get_full_name }}
+      </a>{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+  </p>
+  <p class="text-justify dccn-text-0 mt-3"><strong>Abstract:</strong> {{ submission.abstract }}</p>
+
+  <p class="dccn-text-0 mt-3"><strong>Topics:</strong></p>
+  <ul class="list-unstyled mt-0">
+    {% for topic in submission.topics.all %}
+      <li class="dccn-text-0"><i class="far fa-check-square"></i> {{ topic }}</li>
+    {% endfor %}
+  </ul>
+
+  <p class="dccn-text-0 mt-3"><strong>Submission type:</strong> {{ submission.stype.name }}</p>
+
+  {% if submission.review_manuscript %}
+    <p class="dccn-text-0 mt-3">
+      <strong>Review Manuscript: </strong>
+      <a href="{% url 'submissions:download-manuscript' pk=submission.pk %}" class="dccn-link" target="_blank">
+        <i class="far fa-file-pdf"></i> {{ submission.get_review_manuscript_name }}
+      </a>
+    </p>
+  {% endif %}
+
+  {% if warnings %}
+    <p class="dccn-text-0 mt-3"><strong>Warnings:</strong></p>
+    <ul class="list-unstyled">
+      {% for warning in warnings %}
+      <li>
+        <span class="text-warning-13"><i class="fas fa-exclamation-circle"></i> {{ warning }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <hr>
+  <div class="row mt-3">
+    {% if actions.review %}
+      <form method="POST" action="{% url 'chair:start-review' conf_pk=conference.pk sub_pk=submission.pk %}?next={{ request.get_full_path|urlencode }}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-info"><i class="fas fa-check"></i> Start review</button>
+      </form>
+    {% endif %}
+    {% if actions.revoke_review %}
+      <form method="POST" action="{% url 'chair:revoke-review' conf_pk=conference.pk sub_pk=submission.pk %}?next={{ request.get_full_path|urlencode }}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-warning"><i class="fas fa-times"></i> Revoke review</button>
+      </form>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block script %}
+{% endblock %}

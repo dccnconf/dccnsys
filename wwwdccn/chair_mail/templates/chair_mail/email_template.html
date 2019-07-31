@@ -1,4 +1,15 @@
-{% extends 'chair_mail/_chair_mail_base.html' %}
+{###########################################################################}
+{# Overview page of the chair email system.                                #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `form`: a form with 'text_html' and 'text_plain' text fields.         #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `active_tab`: value of `active` context variable for tab navigation   #}
+{# - `template`: the default conference email template                     #}
+{###########################################################################}
+{% extends 'chair_mail/_base.html' %}
 {% load static %}
 {% load bootstrap4 %}
 
@@ -17,18 +28,11 @@
 {% endblock %}
 
 
-{#---------------------------------------------------------------------------#}
-{# Main content                                                              #}
-{#---------------------------------------------------------------------------#}
-{% block mainPanelContent %}
-<div class="dccn-panel-body">
-{% include 'chair_mail/components/navigation.html' with active='template' %}
-
-  {% bootstrap_messages %}
-
+{% block tabViewContent %}
   <div class="container my-3 px-0" style="margin: 15px 0 !important; max-width: none !important;">
 
-    <form action="{% url 'chair_mail:message-template' conf_pk=conference.pk %}" method="POST" id="templateForm" class="mt-3 w-100">
+    <form action="{% url 'chair_mail:message-template' conf_pk=conference.pk %}" method="POST" id="templateForm"
+          class="mt-3 w-100">
       {% csrf_token %}
 
       <div class="form-group row" id="htmlFormGroup">
@@ -73,16 +77,11 @@
         <br>
         Last updated at {{ template.updated_at }}
       </div>
-      <button class="btn btn-outline-danger ml-auto align-self-start" data-toggle="modal" data-target="#confirmTemplateResetModal">Reset template</button>
+      <button class="btn btn-outline-danger ml-auto align-self-start" data-toggle="modal"
+              data-target="#confirmTemplateResetModal">Reset template</button>
     </div>
 
   </div>
-</div>
-
-{#------------------ #}
-{# **** MODALS ***** #}
-{#------------------ #}
-{% include 'chair_mail/components/confirm_template_reset_modal.html' %}
 
 {% endblock %}
 

@@ -1,0 +1,57 @@
+{###########################################################################}
+{# This is a generic page base for chair applications. In contrast to      #}
+{# preview page, it provides breadcrumb location navigation (for large     #}
+{# screens, since breadcrumbs for small screens are defined in base.html). #}
+{# A separate panel for the content is also defined.                       #}
+{#                                                                         #}
+{# It also has `bootstrap_messages` included, they are shown at the top of #}
+{# the panel.                                                              #}
+{#                                                                         #}
+{# BLOCKS:                                                                 #}
+{# - `content`: main panel content inside `workspace` base block.          #}
+{# - `navigation`: left-side navigation (inherited).                       #}
+{# - `smallScreenBreadcrumbItems`: breadcrumbs shown on small screens.     #}
+{# - `largeScreenBreadcrumbItems`: breadcrumbs shown on large screens.     #}
+{#                                                                         #}
+{# Note: `smallScreenBreadcrumbItems` and `largeScreenBreadcrumbItems`     #}
+{# shold provide all breadcrumbs _after_ the leftmost breadcrumb item with #}
+{# conference name, which is defined here. Each item should be in form     #}
+{#     <li class="breadcrumb-item"><a href="...">...</a></li>              #}
+{# and the last one also have class "active".                              #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{###########################################################################}
+{% extends 'chair/base/base.html' %}
+{% load bootstrap4 %}
+
+{% block leftColumnTop %}
+  <div class="d-flex ml-2 d-md-none">
+    <nav class="breadcrumb flex-fill">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'chair:home' conf_pk=conference.pk %}">{{ conference.short_name }}</a></li>
+        {% block smallScreenBreadcrumbItems %}
+        {% endblock %}
+      </ol>
+    </nav>
+    <button class="btn btn-link dccn-link dccn-text-5 p-2" data-toggle="collapse" data-target="#chairNav"><i class="fas fa-bars"></i></button>
+  </div>
+{% endblock %}
+
+{% block workspace %}
+  <div class="dccn-panel py-0 d-none d-md-block">
+    <nav class="breadcrumb flex-fill">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'chair:home' conf_pk=conference.pk %}">{{ conference.short_name }}</a></li>
+        {% block largeScreenBreadcrumbItems %}
+        {% endblock %}
+      </ol>
+    </nav>
+  </div>
+
+  <div class="dccn-chair-workspace-main">
+    {% bootstrap_messages %}
+    {% block content %}
+    {% endblock %}
+  </div>
+{% endblock %}
