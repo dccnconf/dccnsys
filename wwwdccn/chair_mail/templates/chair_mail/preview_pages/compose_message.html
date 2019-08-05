@@ -31,12 +31,8 @@
         {% bootstrap_field form.subject show_label=False %}
     </div>
     <div class="form-group">
-    {{ form.body }}
-    <trix-editor input="{{ form.body.auto_id }}"></trix-editor>
-{#      {% bootstrap_field form.body show_label=False %}#}
-{#      <div class="mb-2">#}
-{#        <div class="quill-editor"></div>#}
-{#      </div>#}
+      {{ form.body }}
+      <trix-editor input="{{ form.body.auto_id }}"></trix-editor>
       <div class="form-text text-muted dccn-text-small">
         <p>
           You can use variables, e.g. <strong>{% verbatim %}{{ var }}{% endverbatim %}</strong>.
