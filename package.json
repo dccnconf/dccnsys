@@ -39,6 +39,7 @@
     "package.json": "^2.0.1",
     "popper.js": "^1.15.0",
     "requirejs": "^2.3.6",
+    "trix": "^1.2.0",
     "yargs": "^13.2.4"
   },
   "devDependencies": {

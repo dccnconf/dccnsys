@@ -10,17 +10,17 @@ from conferences.models import Conference
 from users.models import User
 
 
-class EmailTemplate(models.Model):
+class EmailFrame(models.Model):
     text_html = models.TextField()
-    text_plain = models.TextField(blank=True)
+    text_plain = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
 
     @staticmethod
-    def render_message_template(message_template, conference, subject, body):
-        return Template(message_template).render(Context({
+    def render(frame_template, conference, subject, body):
+        return Template(frame_template).render(Context({
             'subject': subject,
             'body': body,
             'conf_email': conference.contact_email,
@@ -30,7 +30,7 @@ class EmailTemplate(models.Model):
         }, autoescape=False))
 
     def render_html(self, subject, body):
-        return EmailTemplate.render_message_template(
+        return EmailFrame.render(
             self.text_html, self.conference, subject, body
         )
 
@@ -38,74 +38,74 @@ class EmailTemplate(models.Model):
         text_plain = self.text_plain
         if not text_plain:
             text_plain = html2text(self.text_html)
-        return EmailTemplate.render_message_template(
+        return EmailFrame.render(
             text_plain, self.conference, subject, body
         )
 
 
-class EmailUserList(models.Model):
-    name = models.CharField(max_length=1024, blank=False)
-    conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
-    users = models.ManyToManyField(User)
-
-    class Meta:
-        unique_together = (("name", "conference"),)
-
-
-class EmailGeneralSettings(models.Model):
-    template = models.ForeignKey(
-        EmailTemplate, on_delete=models.SET_NULL, null=True
-    )
+class EmailSettings(models.Model):
+    frame = models.ForeignKey(EmailFrame, on_delete=models.SET_NULL, null=True)
     conference = models.OneToOneField(
         Conference, null=True, blank=True, on_delete=models.CASCADE,
-        related_name='mail_settings',
+        related_name='email_settings',
     )
 
 
-class EmailMessage(models.Model):
-    DRAFT = 'DRAFT'
-    SENDING = 'TX'
-    SENT = 'SENT'
+class EmailTemplate(models.Model):
+    TYPE_USER = 'user'
+    TYPE_SUBMISSION = 'submission'
 
-    STATUS_CHOICE = (
-        (DRAFT, _('Draft')),
-        (SENDING, _('Sending')),
-        (SENT, _('Sent'))
+    MSG_TYPE_CHOICES = (
+        (None, _('Select message type')),
+        (TYPE_USER, _('Message for user')),
+        (TYPE_SUBMISSION, _('Message for submission authors')),
     )
-
-    USER_MESSAGE = 'user'
-    SUBMISSION_MESSAGE = 'submission'
 
     subject = models.CharField(max_length=1024)
-    body_html = models.TextField()
-    body_plain = models.TextField()
-    conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
-    users_to = models.ManyToManyField(User, related_name='email_messages')
-    sent_at = models.DateTimeField(auto_now_add=True)
-    message_type = models.CharField(blank=True, max_length=128)
+    body = models.TextField()
+    conference = models.ForeignKey(
+        Conference,
+        on_delete=models.CASCADE,
+        related_name='email_templates',
+    )
+    msg_type = models.CharField(
+        max_length=128,
+        choices=MSG_TYPE_CHOICES,
+        blank=True,
+    )
 
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True,
+        related_name='email_templates'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class GroupEmailMessage(models.Model):
+    template = models.ForeignKey(
+        EmailTemplate,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='sent_emails'
+    )
+    conference = models.ForeignKey(
+        Conference,
+        on_delete=models.CASCADE,
+        related_name='sent_group_emails',
+    )
+    users_to = models.ManyToManyField(User, related_name='group_emails')
+    sent_at = models.DateTimeField(auto_now_add=True)
     sent_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True,
-        related_name='sent_email_messages'
+        related_name='sent_group_emails'
     )
-
-    status = models.CharField(
-        choices=STATUS_CHOICE,
-        default=DRAFT,
-        max_length=5
-    )
+    sent = models.BooleanField(default=False)
 
     @staticmethod
-    def create_message(subject, body_html, users_to, conference,
-                       body_plain=None, message_type=''):
-        if body_plain is None:
-            body_plain = html2text(body_html)
-        message = EmailMessage.objects.create(
-            conference=conference,
-            subject=subject,
-            body_html=body_html,
-            body_plain=body_plain,
-            message_type=message_type,
+    def create(template, users_to):
+        message = GroupEmailMessage.objects.create(
+            template=template,
+            conference=template.conference,
         )
         for user in users_to:
             message.users_to.add(user)
@@ -113,63 +113,78 @@ class EmailMessage(models.Model):
         return message
 
     def send(self, sender, context=None, user_context=None):
-        """Create a bunch of `EmailMessageInst` for each user and send them.
-
-        The template from `html_template_string` is rendered with a given
-        context plus user-specific context from `user_context[user]`. For
-        each user, rendered template is put into a new `EmailMessageInst` and
-        this instance is being stored and sent.
+        """Create a bunch of messages for each user and send them.
 
         :param sender: user that initiates message sending
         :param context: context for template rendering.
         :param user_context: `dict` with `User -> dict` items. Specific context
             for each user, e.g. link to his login page or name.
-        :return:
+        :return: self
         """
-        email_template = self.conference.mail_settings.template
-        text_html = email_template.render_html(self.subject, self.body_html)
-        text_plain = email_template.render_plain(self.subject, self.body_plain)
-        self.status = EmailMessage.SENDING
+
+        # 1) Update status and save sender chair user:
+        self.sent = False
         self.sent_by = sender
         self.save()
-        text_html_template = Template(text_html)
-        text_plain_template = Template(text_plain)
-        subject_template = Template(self.subject)
+
+        # 2) For each user, we render this template with the given context,
+        #    and then build the whole message by inserting this body into
+        #    the frame. Plain-text version is also formed from HTML.
+        frame = self.conference.email_settings.frame
+        body_template = Template(self.template.body)
+        subject_template = Template(self.template.subject)
         for user in self.users_to.all():
+            # Building context:
             ctx = dict(context) if context is not None else {}
             if user_context and user in user_context:
                 ctx.update(user_context[user])
-            ctx = Context(ctx)
-            inst = EmailMessageInst(
+            _ctx = Context(ctx, autoescape=False)
+            # Rendering body and subject:
+            body_html = body_template.render(_ctx)
+            body_plain = html2text(body_html)
+            subject = subject_template.render(_ctx)
+            # Rendering full email with frame and building mail instance:
+            text_html = frame.render_html(subject, body_html)
+            text_plain = frame.render_plain(subject, body_plain)
+            message = EmailMessage.objects.create(
                 user_to=user,
-                message=self,
-                subject=subject_template.render(ctx),
-                text_html=text_html_template.render(ctx),
-                text_plain=text_plain_template.render(ctx),
+                group_message=self,
+                subject=subject,
+                text_html=text_html,
+                text_plain=text_plain,
             )
-            inst.save()
-            inst.send(sender)
+            message.send(sender)
+
+        # 3) Update self status, write sending timestamp
         self.sent_at = timezone.now()
-        self.status = EmailMessage.SENT
+        self.sent = True
         self.save()
+        return self
 
 
-class EmailMessageInst(models.Model):
+class EmailMessage(models.Model):
     subject = models.TextField(max_length=1024)
     text_plain = models.TextField()
     text_html = models.TextField()
     user_to = models.ForeignKey(
-        User, on_delete=models.CASCADE,
-        related_name='email_instances'
+        User,
+        on_delete=models.CASCADE,
+        related_name='emails'
     )
     sent_at = models.DateTimeField(auto_now_add=True)
     sent = models.BooleanField(default=False)
     sent_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True,
-        related_name='sent_email_instances'
+        User,
+        on_delete=models.SET_NULL, null=True,
+        related_name='sent_emails'
     )
 
-    message = models.ForeignKey(EmailMessage, on_delete=models.CASCADE)
+    group_message = models.ForeignKey(
+        GroupEmailMessage,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='messages',
+    )
 
     def send(self, sender):
         if not self.sent:

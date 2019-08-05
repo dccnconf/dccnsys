@@ -1,0 +1,29 @@
+{###########################################################################}
+{# A list of message instances.                                            #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `msg_inst_list`: sequence of `EmailMessageInstance` objects.          #}
+{# - `conference`                                                          #}
+{# - `show_user_names`: if truelthy, display users each message sent to.   #}
+{###########################################################################}
+<div>
+  <div class="list-group">
+    {% for msg in msg_inst_list %}
+      {% with template=msg.group_message.template %}
+        <a href="{% url 'chair_mail:instance-details' conf_pk=conference.pk msg_pk=msg.pk %}?next={{ request.get_full_path|urlencode }}"
+           class="d-flex list-group-item list-group-item-action py-1">
+          <div>
+            <span class="dccn-text-small text-muted mr-2">{{ msg.sent_at|date:"d.m.Y G:i" }}</span>
+            {% if show_user_names %}
+              <span class="dccn-text-small mr-2">
+                (<span class="text-info font-weight-bold">{{ msg.user_to.profile.get_full_name }}</span>)
+              </span>
+            {% endif %}
+            <span class="dccn-text-0 font-weight-bold">{{ msg.subject }}</span>
+          </div>
+          <div class="ml-auto"><span class="badge badge-info">{{ template.msg_type }}</span></div>
+        </a>
+      {% endwith %}
+    {% endfor %}
+  </div>
+</div>

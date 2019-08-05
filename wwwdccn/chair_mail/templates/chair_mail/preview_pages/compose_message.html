@@ -1,0 +1,60 @@
+{###########################################################################}
+{# Compose email view.                                                     #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `destination_name`: name of the mail destination                      #}
+{# - `form`                                                                #}
+{# - `variables`                                                           #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `next`: URL where to go after this preview is closed.                 #}
+{###########################################################################}
+{% extends "chair/base/preview_page.html" %}
+{% load bootstrap4 %}
+{% load static %}
+
+{% block panelTitle %}
+  Compose message to {{ destination_name }}
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" type="text/css" href="{% static 'css/trix.css' %}">
+  <script type="text/javascript" src="{% static 'scripts/trix.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+  <form action="" id="newMessageForm" method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="next" id="id_next" value="{{ next }}">
+    <div class="form-group">
+        {% bootstrap_field form.subject show_label=False %}
+    </div>
+    <div class="form-group">
+    {{ form.body }}
+    <trix-editor input="{{ form.body.auto_id }}"></trix-editor>
+{#      {% bootstrap_field form.body show_label=False %}#}
+{#      <div class="mb-2">#}
+{#        <div class="quill-editor"></div>#}
+{#      </div>#}
+      <div class="form-text text-muted dccn-text-small">
+        <p>
+          You can use variables, e.g. <strong>{% verbatim %}{{ var }}{% endverbatim %}</strong>.
+          <a href="#availableVars" data-toggle="collapse">Show available variables...</a>
+        </p>
+        <ul class="collapse" id="availableVars">
+          {% for var in variables %}
+            <li><span class="text-info font-weight-bold">{{ var.0 }}</span>: {{ var.1 }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <div class="form-group d-flex">
+      <button type="submit" class="btn btn-primary" id="sendMessageButton">Send message</button>
+      <a href="{{ next }}" class="btn btn-outline-secondary ml-auto">Cancel</a>
+    </div>
+  </form>
+{% endblock %}
+
+{% block script %}
+{% endblock %}

@@ -7,7 +7,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from chair.forms import FilterUsersForm
 from chair.utility import validate_chair_access, build_paged_view_context
-from chair_mail.models import EmailMessageInst
+from chair_mail.models import EmailMessage
 from conferences.decorators import chair_required
 from conferences.models import Conference
 from review.models import Reviewer
@@ -98,12 +98,13 @@ def emails(request, conf_pk, user_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     user = get_object_or_404(User, pk=user_pk)
-    email_messages = (EmailMessageInst.objects.filter(user_to__pk=user_pk)
+    email_messages = (EmailMessage.objects.filter(user_to__pk=user_pk)
                       .order_by('-sent_at'))
     return render(request, 'chair/users/user_messages.html', context={
         'conference': conference,
         'u': user,
         'email_messages': email_messages,
+        'active_tab': 'messages',
     })
 
 

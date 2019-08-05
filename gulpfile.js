@@ -38,9 +38,14 @@ const paths = {
         'node_modules/math/math.js',
         'node_modules/chart.js/dist/Chart.bundle.min.js',
         'node_modules/requirejs/require.js',
+        'node_modules/quill/dist/quill.js',
+        'node_modules/trix/dist/trix.js',
     ],
     externalStyles: [
         'node_modules/sweetalert2/dist/sweetalert2.min.css',
+        'node_modules/quill/dist/quill.bubble.css',
+        'node_modules/quill/dist/quill.snow.css',
+        'node_modules/trix/dist/trix.css',
     ],
     codeMirror: 'node_modules/codemirror'
 };

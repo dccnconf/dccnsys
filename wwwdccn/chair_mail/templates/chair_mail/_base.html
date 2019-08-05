@@ -5,6 +5,8 @@
 {#                                                                         #}
 {# BLOCKS:                                                                 #}
 {# - `tabViewContent`: content of the container inside the active tab.     #}
+{# - `chairMailStyle`: block for additional styles.                        #}
+{# - `chairMailScript`: block for additional scripts.                      #}
 {#                                                                         #}
 {# CONTEXT:                                                                #}
 {# - `active_tab`: value of `active` context variable for tab navigation   #}
@@ -15,9 +17,16 @@
 {# - `conference`                                                          #}
 {###########################################################################}
 {% extends 'chair/base/generic_page.html' %}
-{% load conferences_extras %}
-{% load submission_extras %}
+{% load static %}
 
+{% block css %}
+  {# Load codemirror: #}
+  <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}">
+  <link rel="stylesheet" href="{% static 'codemirror/theme/monokai.css' %}">
+  <link rel="stylesheet" href="{% static 'codemirror/addon/scroll/simplescrollbars.css' %}">
+  {% block chairMailStyle %}
+  {% endblock %}
+{% endblock %}
 
 {#---------------------------------------------------------------------------#}
 {# Navigation and breadcrumbs                                                #}
@@ -44,4 +53,14 @@
       {% endblock %}
     </div>
   </div>
+{% endblock %}
+
+
+{% block script %}
+  <script src="{% static 'codemirror/lib/codemirror.js' %}"></script>
+  <script src="{% static 'codemirror/mode/htmlmixed/htmlmixed.js' %}"></script>
+  <script src="{% static 'codemirror/addon/scroll/simplescrollbars.js' %}"></script>
+  <script src="{% static 'scripts/require.js' %}" data-main="{% static '' %}"></script>
+  {% block chairMailScript %}
+  {% endblock %}
 {% endblock %}

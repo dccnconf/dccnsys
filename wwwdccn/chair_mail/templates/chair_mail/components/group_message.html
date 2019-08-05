@@ -1,0 +1,36 @@
+{###########################################################################}
+{# Sent message (not instance!) display.                                   #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `msg`: `EmailMessage` object                                          #}
+{###########################################################################}
+{% with template=msg.template %}
+<div>
+  <h1 class="dccn-text-large my-3">{{ template.subject }}</h1>
+  <p class="dccn-text-smaller">
+    <span class="font-weight-bold">Sender:</span>
+    {{ msg.sent_by.profile.get_full_name }}
+  </p>
+  <p class="dccn-text-smaller">
+    <span class="font-weight-bold">To:</span>
+    {% for u in msg.users_to.all %}
+      <span>
+        <a href="{% url 'chair:user-overview' conf_pk=conf_pk user_pk=u.pk %}">{{ u.profile.get_full_name }}</a>
+      </span>
+      {% if not forloop.last %},{% endif %}
+    {% endfor %}
+  </p>
+  <p class="dccn-text-smaller">
+    <span class="font-weight-bold">Sent at:</span>
+    {{ msg.sent_at|date:"d.m.Y G:i" }}
+  </p>
+  <p class="dccn-text-smaller">
+    <span class="font-weight-bold">Message type:</span>
+    {{ template.msg_type }}
+  </p>
+  <hr>
+  <div class="text-dark border px-3 py-2 dccn-text-small">
+    {{ template.body|safe }}
+  </div>
+</div>
+{% endwith %}

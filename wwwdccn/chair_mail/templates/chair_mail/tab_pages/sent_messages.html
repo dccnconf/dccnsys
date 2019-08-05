@@ -1,30 +1,37 @@
 {###########################################################################}
-{# List of sent emails.                                                    #}
+{# List of sent group emails.                                              #}
 {#                                                                         #}
 {# CONTEXT:                                                                #}
-{# - `email_messages`: sequence of email messages.                         #}
+{# - `msg_list`: sequence of group email messages.                         #}
 {#                                                                         #}
 {# INHERITED CONTEXT:                                                      #}
 {# - `conference`                                                          #}
 {# - `active_tab`: value of `active` context variable for tab navigation   #}
-{# - `template`: the default conference email template                     #}
+{# - `frame`: the default conference email frame template                  #}
 {###########################################################################}
 {% extends 'chair_mail/_base.html' %}
 {% load static %}
 
 {% block tabViewContent %}
-  <div class="container">
-    <div class="list-group">
-      {% for msg in email_messages %}
+  <h1 class="dccn-text-larger-light mb-4">Sent messages</h1>
+  <div class="d-flex mb-3">
+    <a href="#"
+       class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> New</a>
+  </div>
+  <div class="list-group">
+    {% for msg in msg_list %}
+      {% with template=msg.template %}
         <a class="d-flex list-group-item list-group-item-action py-1"
            href="{% url 'chair_mail:message-details' conf_pk=conference.pk msg_pk=msg.pk %}?next={{ request.get_full_path|urlencode }}">
           <div>
             <span class="dccn-text-small text-muted mr-2">{{ msg.sent_at|date:"d.m.Y G:i" }}</span>
-            <span class="dccn-text-0 font-weight-bold">{{ msg.subject }}</span>
+            <span class="dccn-text-0 font-weight-bold">{{ template.subject }}</span>
           </div>
-          <div class="ml-auto"><span class="badge badge-info">{{ msg.message_type }}</span></div>
+          <div class="ml-auto"><span class="badge badge-info">{{ template.msg_type }}</span></div>
         </a>
-      {% endfor %}
-    </div>
+      {% endwith %}
+    {% empty %}
+      <p class="dccn-text-0 text-center">No messages.</p>
+    {% endfor %}
   </div>
 {% endblock %}

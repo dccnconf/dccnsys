@@ -3,7 +3,7 @@
 {# to a given user.                                                        #}
 {#                                                                         #}
 {# CONTEXT:                                                                #}
-{# - `msg`: `EmailMessage` object                                          #}
+{# - `msg`: `EmailMessageInstance` object                                  #}
 {#                                                                         #}
 {# INHERITED CONTEXT:                                                      #}
 {# - `conference`                                                          #}
@@ -29,6 +29,9 @@
 {% endblock %}
 
 {% block content %}
+{% with group_msg=msg.group_message %}
+{% with template=group_msg.template %}
+{% with receiver=msg.user_to %}
   <div>
     <p class="dccn-text-smaller">
       <span class="font-weight-bold">Sender:</span>
@@ -36,7 +39,7 @@
     </p>
     <p class="dccn-text-smaller">
       <span class="font-weight-bold">To:</span>
-      {{ msg.user_to.profile.get_full_name }}
+      <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=receiver.pk %}">{{ receiver.profile.get_full_name }}</a>
     </p>
     <p class="dccn-text-smaller">
       <span class="font-weight-bold">Sent at:</span>
@@ -44,12 +47,13 @@
     </p>
     <p class="dccn-text-smaller">
       <span class="font-weight-bold">Message type:</span>
-      {{ msg.message.message_type }}
+      {{ template.msg_type }}
     </p>
 
     <hr>
 
-    <div class="dccn-embed-html" data-source="{% url 'chair_mail:message-instance-details' conf_pk=conference.pk msg_pk=msg.pk %}" data-attr="text_html">
+    <div data-source="{% url 'chair_mail:instance-details' conf_pk=conference.pk msg_pk=msg.pk %}" data-attr="text_html"
+         class="dccn-embed-html">
       <div class="dccn-embed-box"></div>
     </div>
   </div>
@@ -62,7 +66,7 @@
   </div>
 
   <div class="modal" tabindex="-1" role="dialog" id="templateModal">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Message template</h5>
@@ -74,17 +78,23 @@
           <form action="">  <!-- this form is never submitted, just to organize fields better -->
             <div class="form-group">
               <label for="templateSubject" class="form-label">Subject:</label>
-              <input type="text" name="template_subject" class="form-control" id="templateSubject" value="{{ msg.message.subject }}" readonly>
+              <input type="text" name="template_subject" class="form-control" id="templateSubject"
+                     value="{{ template.subject }}" readonly>
             </div>
             <div class="form-group mt-3">
               <label for="templateEditor" class="form-label">Template text:</label>
-              <div id="templateEditor" class="border px-3 py-2 bg-dark text-light dccn-text-small">
-                {{ msg.message.body_html|safe }}
+              <div id="templateEditor" class="border px-3 py-2 dccn-text-small">
+                {{ template.body|safe }}
               </div>
             </div>
           </form>
           <p class="mt-3 dccn-text-small font-weight-bold">
-            Sent <a href="{% url 'chair_mail:message-details' conf_pk=conference.pk msg_pk=msg.message.pk %}">{{ msg.message.users_to.all|length }} instance(s)</a>
+            {% with num_sent=group_msg.users_to.all.count %}
+              Sent
+              <a href="{% url 'chair_mail:message-details' conf_pk=conference.pk msg_pk=group_msg.pk %}" target="_blank">
+                {{ num_sent }} instance{{ num_sent|pluralize }}
+            </a>
+            {% endwith %}
           </p>
         </div>
         <div class="modal-footer">
@@ -93,6 +103,9 @@
       </div>
     </div>
   </div>
+{% endwith %}
+{% endwith %}
+{% endwith %}
 {% endblock %}
 
 {% block script %}
@@ -113,13 +126,6 @@ $(document).ready(function () {
     // Associating the plugins
     $('.dccn-embed-html').dccnEmbedHtml();
   }(jQuery));
-
-  //////////////////////////////
-  // Attach quill in read-only mode:
-  const quill = new Quill('#templateEditor', {
-    theme: 'bubble',
-  });
-
 });
 </script>
 {% endblock %}

@@ -1,0 +1,147 @@
+{###########################################################################}
+{# Frame template view and edit.                                           #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `form`: a form with 'text_html' and 'text_plain' text fields.         #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `active_tab`: value of `active` context variable for tab navigation   #}
+{# - `frame`: the default conference email frame template                  #}
+{###########################################################################}
+{% extends 'chair_mail/_base.html' %}
+{% load static %}
+{% load bootstrap4 %}
+
+
+{% block chairMailStyle %}
+{% endblock %}
+
+{% block tabViewContent %}
+  <h1 class="dccn-text-larger-light mb-4">Message frame template</h1>
+  <div class="container mb-3 px-0" style="margin: 15px 0 !important; max-width: none !important;">
+    <form action="{% url 'chair_mail:frame-details' conf_pk=conference.pk %}" method="POST" id="frameForm"
+          class="mt-3 w-100">
+      {% csrf_token %}
+      <div class="form-group" id="htmlFormGroup">
+        <div class="mr-0 mr-lg-2">
+          {% bootstrap_field form.text_html %}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Preview:</label>
+        <div class="border">
+          <div id="preview" data-src="{{ form.text_html.auto_id }}">
+            {{ frame.text_html|safe }}
+          </div>
+        </div>
+      </div>
+      <div class="form-group" id="plainTextFormGroup">
+        {% bootstrap_field form.text_plain %}
+      </div>
+    </form>
+    <div class="d-flex my-3">
+      <button type="submit" class="btn btn-primary" form="frameForm">Save</button>
+      <button type="button" class="btn btn-outline-info ml-auto" id="sendTestMsgBtn"
+              data-action="{% url 'chair_mail:send-frame-test' conf_pk=conference.pk %}">
+        Send me test message
+      </button>
+    </div>
+    {% include 'chair_mail/components/frame_help.html' %}
+    <hr>
+    <div class="d-flex mt-4">
+      <div class="dccn-text-smaller text-muted">
+        Frame template created by {{ frame.created_by.profile.get_full_name }}.
+        <br>
+        Created at {{ frame.created_at }}
+        <br>
+        Last updated at {{ frame.updated_at }}
+      </div>
+      <button class="btn btn-outline-danger ml-auto align-self-start" data-toggle="modal"
+              data-target="#confirmFrameResetModal">Reset frame</button>
+    </div>
+  </div>
+
+  {#########################################################################}
+  {# MODALS:                                                               #}
+  {#########################################################################}
+  <div class="modal" tabindex="-1" role="dialog" id="confirmFrameResetModal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm template reset</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>
+            Are you sure you want to reset conference email template?
+            <br>
+            All your changes will be eventually lost.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+          <form action="{% url 'chair_mail:create-frame' conf_pk=conference.pk %}?next={{ request.get_full_path|urlencode }}" method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Reset</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+
+{% block chairMailScript %}
+<script>
+$(document).ready(function () {
+  /*
+   * Create CodeMirror editors for text_plain and text_html fields.
+   * We also bind changes in text_html field to the preview window to reflect changes.
+   */
+  requirejs([
+    'codemirror/lib/codemirror', 'codemirror/mode/htmlmixed/htmlmixed', 'codemirror/addon/scroll/simplescrollbars'
+  ], function (CodeMirror) {
+    const defaultProps = {
+      theme: 'monokai', scrollbarStyle: "simple", lineWrapping: true,  nocursor: true
+    };
+    const preview = $('#preview');
+    const htmlEditor = CodeMirror.fromTextArea(document.getElementById('id_text_html'), {
+      mode: 'htmlmixed',
+      ...defaultProps,
+    });
+    CodeMirror.fromTextArea(document.getElementById('id_text_plain'), defaultProps);
+
+    htmlEditor.on('change', function (cm) {
+      preview.html(cm.getValue());
+    });
+
+    /*
+     * Bind "Send me test message" button to sending the test message action.
+     * Here we use the same form as for saving frame template, but serialize
+     * and send it using AJAX call.
+     */
+    const sendTestMsgBtn = $('#sendTestMsgBtn');
+    sendTestMsgBtn.click(function () {
+      const action = $(this).attr('data-action');
+      const form = $('#frameForm');
+      $.post(action, form.serialize(), function (data) {
+        Swal.fire(
+          'Check your inbox!',
+          `Test email was sent to ${data.email}`,
+          'success'
+        );
+      }).fail((response) => {
+        Swal.fire(
+          'Failed to send message',
+          `Something gone wrong when sending test message to ${response.responseJSON.email}`,
+          'warning'
+        );
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

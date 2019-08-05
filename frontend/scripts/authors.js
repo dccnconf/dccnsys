@@ -57,7 +57,6 @@
       query: () => {
         const term = input.val().toLowerCase();
         if (dataSource.trim() === "") {
-          console.log('here??');
           return new Promise((resolve, reject) => {
             setTimeout(() => { 
               resolve(users.filter(user => {
@@ -91,7 +90,6 @@
     const confirmAddAuthor = (user) => {
       const formInput = form.find('input[name="user_pk"]');
       formInput.val(String(user.id));
-      console.log(form.serialize());
       form.submit();
     };
 
@@ -130,7 +128,6 @@
 
     const inputUpdateHandler = () => {
       const term = input.val().trim().toLowerCase();
-      // console.log(term);
       if (term === '') {
         // Handle term is empty
         showPreviewScreen(placeholder);

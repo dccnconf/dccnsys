@@ -4,12 +4,12 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from html2text import html2text
 
-from .models import EmailTemplate
+from .models import EmailTemplate, EmailFrame
 
 
-class EmailTemplateUpdateForm(forms.ModelForm):
+class EmailFrameUpdateForm(forms.ModelForm):
     class Meta:
-        model = EmailTemplate
+        model = EmailFrame
         fields = ('text_html', 'text_plain')
 
     def save(self, commit=True):
@@ -20,7 +20,7 @@ class EmailTemplateUpdateForm(forms.ModelForm):
         return template
 
 
-class EmailTemplateTestForm(forms.Form):
+class EmailFrameTestForm(forms.Form):
     text_html = forms.CharField(widget=forms.Textarea())
     text_plain = forms.CharField(widget=forms.Textarea())
 
@@ -30,10 +30,10 @@ class EmailTemplateTestForm(forms.Form):
         body_plain = html2text(body_html)
         subject = 'Template test'
 
-        html = EmailTemplate.render_message_template(
+        html = EmailFrame.render(
             self.cleaned_data['text_html'], conference, subject, body_html
         )
-        plain = EmailTemplate.render_message_template(
+        plain = EmailFrame.render(
             self.cleaned_data['text_plain'], conference, subject, body_plain
         )
 
@@ -46,8 +46,33 @@ class EmailTemplateTestForm(forms.Form):
         )
 
 
-class EmailMessageForm(forms.Form):
-    body_html = forms.CharField(widget=forms.Textarea(), required=False)
-    body_plain = forms.CharField(widget=forms.Textarea(), required=False)
-    subject = forms.CharField(widget=forms.TextInput(), required=True)
+class EmailTemplateForm(forms.ModelForm):
+    class Meta:
+        model = EmailTemplate
+        fields = ('body', 'subject')
+        widgets = {
+            'body': forms.HiddenInput()
+        }
+
+    # This field is not related to EmailTemplate, but used to store URL
+    # of the page from which we came to the page containing the form.
     next = forms.CharField(widget=forms.TextInput, required=False)
+
+    def __init__(self, *args, conference=None, msg_type=None, created_by=None,
+                 **kwargs):
+        super().__init__(*args, **kwargs)
+        self.conference = conference
+        self.msg_type = msg_type
+        self.created_by = created_by
+
+    def save(self, commit=True):
+        template = super().save(commit=False)
+        if self.msg_type:
+            template.msg_type = self.msg_type
+        if commit:
+            if self.conference:
+                template.conference = self.conference
+            if self.created_by:
+                template.created_by = self.created_by
+            template.save()
+        return template

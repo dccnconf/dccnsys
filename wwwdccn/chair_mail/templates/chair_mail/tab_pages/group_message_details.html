@@ -1,0 +1,37 @@
+{###########################################################################}
+{# Sent generic email view. Provides the template text and a list of mail  #}
+{# instances actually being sent.                                          #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `msg`: `EmailMessage` object                                          #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `active_tab`: value of `active` context variable for tab navigation   #}
+{# - `template`: the default conference email template                     #}
+{###########################################################################}
+{% extends "chair_mail/_base.html" %}
+{% load bootstrap4 %}
+{% load submission_extras %}
+
+{% block css %}
+{% endblock %}
+
+{% block smallScreenBreadcrumbItems %}
+  <li class="breadcrumb-item"><a href="{% url 'chair_mail:overview' conf_pk=conference.pk %}">messages</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'chair_mail:sent-messages' conf_pk=conference.pk %}">sent</a></li>
+  <li class="breadcrumb-item active">#{{ msg.pk }}</li>
+{% endblock %}
+
+{% block largeScreenBreadcrumbItems %}
+  <li class="breadcrumb-item"><a href="{% url 'chair_mail:overview' conf_pk=conference.pk %}">messages</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'chair_mail:sent-messages' conf_pk=conference.pk %}">sent</a></li>
+  <li class="breadcrumb-item active">#{{ msg.pk }}</li>
+{% endblock %}
+
+
+{% block tabViewContent %}
+  {% include 'chair_mail/components/group_message.html' with msg=msg %}
+  <hr>
+  {% include 'chair_mail/components/message_list.html' with msg_inst_list=msg.messages.all conference=conference show_user_names=1 %}
+{% endblock %}

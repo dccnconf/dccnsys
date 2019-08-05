@@ -9,6 +9,9 @@
   <title>{% block title %}Page Title{% endblock %}</title>
   <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link rel="stylesheet" href="{% static 'css/dccn-ui.css' %}">
+  <link href="{% static 'css/quill.snow.css' %}" rel="stylesheet">
+  <link href="{% static 'css/quill.bubble.css' %}" rel="stylesheet">
+  <script src="{% static 'scripts/jquery.min.js' %}"></script>
   {% block css %}
   {% endblock %}
 </head>
@@ -24,7 +27,6 @@
   {% block footer %}
   {% endblock %}
 
-  <script src="{% static 'scripts/jquery.min.js' %}"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   <script>
     $.widget.bridge('uitooltip', $.ui.tooltip);
@@ -34,6 +36,7 @@
   <script src="{% static 'scripts/Chart.bundle.min.js' %}"></script>
   <script src="{% static 'scripts/math.js' %}"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@8"></script>
+  <script src="{% static 'scripts/quill.js' %}"></script>
   <script src="{% static 'scripts/dccn-ui.js' %}"></script>
 
   {% block script %}

@@ -3,7 +3,7 @@
 {#                                                                         #}
 {# CONTEXT:                                                                #}
 {# - `conference`                                                          #}
-{# - `template`: the default conference email template                     #}
+{# - `frame`: the default conference email frame template                  #}
 {# - `active`: a string indicating which tab is currently active.          #}
 {###########################################################################}
 <ul class="nav nav-pills justify-content-start">
@@ -14,14 +14,14 @@
     </a>
   </li>
   <li class="nav-item">
-    <a href="{% url 'chair_mail:message-template' conf_pk=conference.pk %}"
-       class="nav-link {% if active == 'template' %}active{% endif %} {% if not template %}disabled text-dark-2{% endif %}">
-      Template
+    <a href="{% url 'chair_mail:frame-details' conf_pk=conference.pk %}"
+       class="nav-link {% if active == 'frame' %}active{% endif %} {% if not frame %}disabled text-dark-2{% endif %}">
+      Frame
     </a>
   </li>
   <li class="nav-item">
-    <a href="{% url 'chair_mail:sent-messages-list' conf_pk=conference.pk %}"
-       class="nav-link {% if active == 'messages' %}active{% endif %} {% if not template %}disabled text-dark-2{% endif %}">
+    <a href="{% url 'chair_mail:sent-messages' conf_pk=conference.pk %}"
+       class="nav-link {% if active == 'messages' %}active{% endif %}">
       Sent messages
     </a>
   </li>
