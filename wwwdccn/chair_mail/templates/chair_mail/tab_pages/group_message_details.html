@@ -11,11 +11,7 @@
 {# - `template`: the default conference email template                     #}
 {###########################################################################}
 {% extends "chair_mail/_base.html" %}
-{% load bootstrap4 %}
-{% load submission_extras %}
-
-{% block css %}
-{% endblock %}
+{% load gears_extras %}
 
 {% block smallScreenBreadcrumbItems %}
   <li class="breadcrumb-item"><a href="{% url 'chair_mail:overview' conf_pk=conference.pk %}">messages</a></li>
@@ -31,7 +27,70 @@
 
 
 {% block tabViewContent %}
-  {% include 'chair_mail/components/group_message.html' with msg=msg %}
+  {% with template=msg.template %}
+    <div>
+      <h1 class="dccn-text-large my-3">{{ template.subject }}</h1>
+      <p class="dccn-text-smaller">
+        <span class="font-weight-bold">Sender:</span>
+        {{ msg.sent_by.profile.get_full_name }}
+      </p>
+      <p class="dccn-text-smaller">
+        <span class="font-weight-bold">To:</span>
+        {% for u in msg.users_to.all %}
+          <span>
+            <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=u.pk %}">{{ u.profile.get_full_name }}</a>
+          </span>
+          {% if not forloop.last %},{% endif %}
+        {% endfor %}
+      </p>
+      <p class="dccn-text-smaller">
+        <span class="font-weight-bold">Sent at:</span>
+        {{ msg.sent_at|date:"d.m.Y G:i" }}
+      </p>
+      <p class="dccn-text-smaller">
+        <span class="font-weight-bold">Message type:</span>
+        {{ template.msg_type }}
+      </p>
+
+      <ul class="nav nav-tabs mt-4">
+        <li class="nav-item">
+          <a class="nav-link active" href="#html_tab" data-toggle="tab" role="tab">Preview</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#md_tab" data-toggle="tab" role="tab">Markdown</a>
+        </li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="html_tab">
+          <div class="border rounded m-3 p-2">
+            {{ template.body|md2html|safe }}
+          </div>
+        </div>
+        <div class="tab-pane fade" id="md_tab">
+          <textarea id="text_md">{{ template.body }}</textarea>
+        </div>
+      </div>
+    </div>
+  {% endwith %}
   <hr>
   {% include 'chair_mail/components/message_list.html' with msg_inst_list=msg.messages.all conference=conference show_user_names=1 %}
+{% endblock %}
+
+{% block chairMailScript %}
+<script>
+$(document).ready(function () {
+  requirejs([
+    'codemirror/lib/codemirror', 'codemirror/mode/markdown/markdown', 'codemirror/addon/scroll/simplescrollbars'
+  ], function (CodeMirror) {
+    CodeMirror.fromTextArea(document.getElementById('text_md'), {
+      mode: 'markdown',
+      theme: 'monokai',
+      scrollbarStyle: "simple",
+      lineWrapping: true,
+      readOnly: true,
+      nocursor: true
+    });
+  });
+});
+</script>
 {% endblock %}

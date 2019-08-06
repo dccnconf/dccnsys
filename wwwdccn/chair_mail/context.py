@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from collections import namedtuple
 
-from chair_mail.utility import get_html_ul, get_absolute_url
+from chair_mail.utility import get_html_ul, get_absolute_url, get_anchor_string
 from review.models import Review
 from submissions.models import Submission
 
@@ -34,8 +34,8 @@ def get_conference_context(conference):
         CONF_FULL_NAME.name: conference.full_name,
         CONF_START_DATE.name: conference.start_date,
         CONF_END_DATE.name: conference.close_date,
-        CONF_SITE_URL.name: conference.site_url,
-        CONF_EMAIL.name: conference.contact_email,
+        CONF_SITE_URL.name: get_anchor_string(conference.site_url),
+        CONF_EMAIL.name: get_anchor_string(conference.contact_email, 'mailto:'),
         SUBMISSION_END_DATETIME.name: conference.submission_stage.end_date,
         REVIEW_END_DATETIME.name: conference.review_stage.end_date,
     }
@@ -254,9 +254,9 @@ SUBMISSION_VARS = tuple((var.name, var.description) for var in (
 def get_submission_context(submission):
     return {
         SUB_ID.name: submission.pk,
-        SUB_TITLE: submission.title,
-        SUB_ABSTRACT: submission.abstract,
-        SUB_AUTHORS: submission.get_authors_display(),
-        SUB_URL: get_absolute_url(
-            reverse('submissions:overview', kwargs={'pk': submission.pk})),
+        SUB_TITLE.name: submission.title,
+        SUB_ABSTRACT.name: submission.abstract,
+        SUB_AUTHORS.name: submission.get_authors_display(),
+        SUB_URL.name: get_anchor_string(get_absolute_url(
+            reverse('submissions:overview', kwargs={'pk': submission.pk}))),
     }

@@ -4,6 +4,7 @@ from django.db import models
 from django.template import Template, Context
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+from markdown import markdown
 from html2text import html2text
 
 from conferences.models import Conference
@@ -131,7 +132,8 @@ class GroupEmailMessage(models.Model):
         #    and then build the whole message by inserting this body into
         #    the frame. Plain-text version is also formed from HTML.
         frame = self.conference.email_settings.frame
-        body_template = Template(self.template.body)
+        body_html_template = Template(markdown(self.template.body))
+        body_plain_template = Template(self.template.body)
         subject_template = Template(self.template.subject)
         for user in self.users_to.all():
             # Building context:
@@ -140,8 +142,8 @@ class GroupEmailMessage(models.Model):
                 ctx.update(user_context[user])
             _ctx = Context(ctx, autoescape=False)
             # Rendering body and subject:
-            body_html = body_template.render(_ctx)
-            body_plain = html2text(body_html)
+            body_html = body_html_template.render(_ctx)
+            body_plain = body_plain_template.render(_ctx)
             subject = subject_template.render(_ctx)
             # Rendering full email with frame and building mail instance:
             text_html = frame.render_html(subject, body_html)

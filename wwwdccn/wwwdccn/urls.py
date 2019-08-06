@@ -28,6 +28,7 @@ urlpatterns = [
     path('chair/', include('chair.urls')),
     path('chair_mail/', include('chair_mail.urls')),
     path('review/', include('review.urls')),
+    path('gears/', include('gears.urls')),
 ]
 
 if settings.USE_LOCAL_MEDIA:

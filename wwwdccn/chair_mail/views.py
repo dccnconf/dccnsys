@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
@@ -163,6 +165,7 @@ def compose_to_submission(request, conf_pk, sub_pk):
         **get_conference_context(conference),
         **get_submission_context(submission),
     }
+    pprint(context)
     user_context = {u: get_user_context(u, conference) for u in users_to}
     variables = CONFERENCE_VARS + SUBMISSION_VARS + USER_VARS
 
@@ -202,7 +205,6 @@ def _compose(request, conference, users_to, dest_name, msg_type, context=None,
             request.POST,
             conference=conference, created_by=request.user, msg_type=msg_type
         )
-        context = {}
         if form.is_valid():
             template = form.save()
             message = GroupEmailMessage.create(template, users_to)

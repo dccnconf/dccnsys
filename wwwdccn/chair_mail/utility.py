@@ -29,8 +29,8 @@ def get_absolute_url(url):
     return f'{protocol}://{domain}{"/" if need_slash else ""}{url}'
 
 
-def get_anchor_string(url):
-    return f'<a href="{url}">{url}</a>'
+def get_anchor_string(url, href_prefix=''):
+    return f'<a href="{href_prefix}{url}">{url}</a>'
 
 
 def get_html_ul(items, value=None, url=None):
@@ -48,8 +48,6 @@ def get_html_ul(items, value=None, url=None):
         def get_value(item):
             _val = str(_get_value(item))
             return _val if _val.strip() else url(item)
-
-        print(get_value(items[0]))
 
         list_items = [
             f'<li><a href="{url(item)}">{get_value(item)}</a></li>'

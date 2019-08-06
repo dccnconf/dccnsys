@@ -10,7 +10,7 @@
 {# - `active_tab`                                                          #}
 {###########################################################################}
 {% extends 'chair/users/_base.html' %}
-{% load conferences_extras %}
+{% load gears_extras %}
 
 {% block tabViewContent %}
   <a href="{% url 'chair_mail:compose-user' conf_pk=conference.pk user_pk=u.pk %}?next={{ request.get_full_path|urlencode }}"

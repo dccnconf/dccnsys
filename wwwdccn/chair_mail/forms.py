@@ -50,9 +50,7 @@ class EmailTemplateForm(forms.ModelForm):
     class Meta:
         model = EmailTemplate
         fields = ('body', 'subject')
-        widgets = {
-            'body': forms.HiddenInput()
-        }
+
 
     # This field is not related to EmailTemplate, but used to store URL
     # of the page from which we came to the page containing the form.

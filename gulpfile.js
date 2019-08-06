@@ -38,16 +38,13 @@ const paths = {
         'node_modules/math/math.js',
         'node_modules/chart.js/dist/Chart.bundle.min.js',
         'node_modules/requirejs/require.js',
-        'node_modules/quill/dist/quill.js',
         'node_modules/trix/dist/trix.js',
     ],
     externalStyles: [
         'node_modules/sweetalert2/dist/sweetalert2.min.css',
-        'node_modules/quill/dist/quill.bubble.css',
-        'node_modules/quill/dist/quill.snow.css',
         'node_modules/trix/dist/trix.css',
     ],
-    codeMirror: 'node_modules/codemirror'
+    codeMirror: 'node_modules/codemirror',
 };
 
 function fonts() {
@@ -82,6 +79,14 @@ function copyNodeModules() {
     ], {
         base: 'node_modules/'
     }).pipe(gulp.dest(DESTINATION));
+}
+
+function copyAssets() {
+    return gulp.src([
+      `${SOURCE}/assets/**`,
+    ], {
+        base: SOURCE
+    }).pipe(gulp.dest(DESTINATION))
 }
 
 function copyExternalStyles() {
@@ -122,7 +127,7 @@ function serve() {
     gulp.watch(paths.images.source, images);
 }
 
-const copyExternals = gulp.parallel(copyExternalScripts, copyExternalStyles, copyNodeModules);
+const copyExternals = gulp.parallel(copyExternalScripts, copyExternalStyles, copyNodeModules, copyAssets);
 
 const build = gulp.parallel(styles, scripts, images, fonts, copyExternals);
 
