@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>{{ subject }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+
+<body style="margin: 0; padding: 0;">
+<table>
+  <tr>
+    <td>
+      {{ body }}
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <p style="margin: 20px 0 0 10px; padding: 0;">
+        Happy conferencing,<br>
+        {{ conf_short_name }} Organizing Committee<br>
+        Contact Us: <a href="{{ conf_email }}">{{ conf_email }}</a>
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      <p>
+        ----
+        <br>
+        This email was generated automatically due to actions performed at
+        <a href="{{ site_url }}">{{ site_url }}</a>.
+        <br>
+        If you received this email unintentionally, please
+        <a href="{{ contact_mail }}">contact us</a> and delete this message.
+      </p>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

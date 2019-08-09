@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template import Template, Context
+from django.template.loader import get_template
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
@@ -44,9 +45,13 @@ def create_frame(request, conf_pk):
         messages.success(request, 'Created email settings')
     email_settings = conference.email_settings
     frame = email_settings.frame
+    template_html = get_template(
+        'chair_mail/email/default_frame_html.html').template
+    template_plain = get_template(
+        'chair_mail/email/default_frame_plain.txt').template
     if frame:
-        frame.text_html = DEFAULT_TEMPLATE_HTML
-        frame.text_plain = DEFAULT_TEMPLATE_PLAIN
+        frame.text_html = template_html.source
+        frame.text_plain = template_plain.source
         frame.created_at = timezone.now()
         frame.updated_at = timezone.now()
         frame.created_by = request.user
@@ -56,8 +61,8 @@ def create_frame(request, conf_pk):
         frame = EmailFrame.objects.create(
             conference=conference,
             created_by=request.user,
-            text_plain=DEFAULT_TEMPLATE_PLAIN,
-            text_html=DEFAULT_TEMPLATE_HTML,
+            text_plain=template_plain.source,
+            text_html=template_html.source,
         )
         email_settings.frame = frame
         email_settings.save()
@@ -237,57 +242,9 @@ def compose_to_submission(request, conf_pk, sub_pk):
         })
 
 
-def _compose(request, conference, users_to, dest_name, msg_type,
-             select_preview_form, send_message_url, context=None,
-             user_context=None, variables=None):
-    """Process GET and POST requests for message composing views.
-
-    This function expects that chair access is already validated, and the
-    actual users are known. Assumes that form `EmailMessageForm` is used.
-
-    :param request:
-    :param conference:
-    :param users_to:
-    :param dest_name:
-    :param msg_type:
-    :param select_preview_form:
-    :param send_message_url:
-    :param context:
-    :param user_context
-    :return:
-    """
-    if request.method == 'POST':
-        next_url = request.POST.get('next', reverse('chair:home', kwargs={
-            'conf_pk': conference.pk
-        }))
-        form = EmailTemplateForm(request.POST)
-        if form.is_valid():
-            template = form.save(conference=conference, sender=request.user,
-                                 msg_type=msg_type)
-            message = GroupEmailMessage.create(template, users_to)
-            context = context if context is not None else {}
-            user_context = user_context if user_context is not None else {}
-            message.send(request.user, context, user_context)
-            return redirect(next_url)
-        else:
-            messages.error(request, 'Error sending message')
-    else:
-        form = EmailTemplateForm()
-        next_url = request.GET['next']
-
-    variables = variables if variables is not None else {}
-    return render(
-        request, 'chair_mail/preview_pages/compose_message.html', context={
-            'form': form,
-            'conference': conference,
-            'next': next_url,
-            'variables': variables,
-            'destination_name': dest_name,
-            'select_preview_form': select_preview_form,
-            'actions': {
-                'send': send_message_url,
-            }
-        })
+@require_GET
+def render_submission_message_preview(request, conf_pk, sub_pk):
+    pass
 
 
 @require_GET
@@ -312,67 +269,3 @@ def message_details(request, conf_pk, msg_pk):
                       'msg': msg,
                       'next': next_url,
                   })
-
-
-#############################################################################
-# MESSAGE CONTEXT VARIABLES AND FUNCTIONS
-#############################################################################
-
-
-DEFAULT_TEMPLATE_PLAIN = """
-{{ body}}
-
-Happy conferencing,
-{{ conf_short_name }} Organization Committee
-Contact us: {{ conf_email }}
-
-----
-This email was generated automatically due to actions performed at {{ site_url }}.
-If you received this email unintentionally, please contact us via {{ conf_email }} 
-and delete this message.
-"""
-
-DEFAULT_TEMPLATE_HTML = """
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <title>{{ subject }}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-</head>
-
-<body style="margin: 0; padding: 0;">
-<table>
-  <tr>
-    <td>
-      {{ body }}
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <p style="margin: 20px 0 0 10px; padding: 0;">
-        Happy conferencing,<br>
-        {{ conf_short_name }} Organizing Committee<br>
-        Contact Us: <a href="{{ conf_email }}">{{ conf_email }}</a>
-      </p>
-    </td>
-  </tr>
-
-  <tr>
-    <td>
-      <p>
-        ----
-        <br>
-        This email was generated automatically due to actions performed at 
-        <a href="{{ site_url }}">{{ site_url }}</a>.
-        <br>
-        If you received this email unintentionally, please 
-        <a href="{{ contact_mail }}">contact us</a> and delete this message.
-      </p>
-    </td>
-  </tr>
-</table>
-</body>
-</html>
-"""
