@@ -19,18 +19,34 @@
 
 
 {% block previewTabContent %}
-  {# TODO: fill data-source URL below: #}
-  <div id="previewContent" class="border p-3" data-source=""></div>
+  <form id="previewForm" method="GET">
+    {% bootstrap_field preview_form.user show_label=False %}
+  </form>
+  <div id="previewContent" class="border p-3 message-preview-area"
+       data-source="{% url 'chair_mail:api-render-preview-submission' conf_pk=conference.pk sub_pk=submission.pk %}">
+  </div>
 {% endblock %}
 
 
 {% block composeMessageScript %}
   <script>
-  $(document).ready(function () {
-    const previewContent = $('#previewContent');
-    const updatePreview = function () {
-      // TODO: write this function
-    };
+  const previewContent = $('#previewContent');
+  const dataSourceURL = previewContent.attr('data-source');
+  const previewForm = $('#previewForm');
+  const updatePreview = function () {
+    const body = cmedit.getValue();
+    const formData = previewForm.serializeArray();
+    formData.push({name: 'body', value: body});
+    $.get(dataSourceURL, $.param(formData), function (data) {
+      previewContent.html(data['body']);
+    });
+  };
+
+  $('#previewTabLink').on('shown.bs.tab', function () {
+    updatePreview();
+  });
+  $('#id_user').change(function () {
+    updatePreview();
   });
   </script>
 {% endblock %}

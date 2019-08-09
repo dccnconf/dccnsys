@@ -71,6 +71,16 @@ class PreviewUserMessageForm(forms.Form):
     body = forms.CharField(widget=forms.Textarea(), required=False)
 
 
+class PreviewSubmissionMessageForm(forms.Form):
+    body = forms.CharField(widget=forms.Textarea(), required=False)
+    user = forms.ChoiceField()
+
+    def __init__(self, *args, users=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['user'].choices = [
+            (u.pk, u.profile.get_full_name()) for u in users
+        ]
+
 # class _ComposeEmailFormBase(forms.Form):
 #     subject = forms.CharField()
 #     body = forms.CharField(widget=forms.Textarea(), required=False)

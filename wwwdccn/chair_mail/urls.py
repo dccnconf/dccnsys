@@ -47,5 +47,10 @@ urlpatterns = [
         '/<int:conf_pk>/api/compose/preview/user/<int:user_pk>/',
         views.render_user_message_preview,
         name='api-render-preview-user',
-    )
+    ),
+    path(
+        '/<int:conf_pk>/api/compose/preview/submission/<int:sub_pk>/',
+        views.render_submission_message_preview,
+        name='api-render-preview-submission',
+    ),
 ]

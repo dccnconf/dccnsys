@@ -17,9 +17,8 @@
 
 
 {% block previewTabContent %}
-  <div id="previewContent" class="border p-3"
-       data-source="{% url 'chair_mail:api-render-preview-user' conf_pk=conference.pk user_pk=user_to.pk %}"
-       style="height: 60vh; overflow: scroll;">
+  <div id="previewContent" class="border p-3 message-preview-area"
+       data-source="{% url 'chair_mail:api-render-preview-user' conf_pk=conference.pk user_pk=user_to.pk %}">
     {########################################################}
     {# Content is filled with AJAX call on tab being shown. #}
     {########################################################}
