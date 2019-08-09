@@ -3,16 +3,18 @@ from pprint import pprint
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.template import Template, Context
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
+from markdown import markdown
 
 from chair.utility import validate_chair_access
 from chair_mail.context import get_user_context, USER_VARS, \
     get_conference_context, CONFERENCE_VARS, get_submission_context, \
     SUBMISSION_VARS
 from chair_mail.forms import EmailFrameUpdateForm, EmailFrameTestForm, \
-    EmailTemplateForm
+    EmailTemplateForm, PreviewUserMessageForm
 from chair_mail.models import EmailSettings, EmailFrame, EmailTemplate, \
     EmailMessage, GroupEmailMessage
 from chair_mail.utility import get_email_frame, get_email_frame_or_404
@@ -141,17 +143,57 @@ def compose_to_user(request, conf_pk, user_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     user_to = get_object_or_404(User, pk=user_pk)
-    profile = user_to.profile
-    return _compose(
-        request,
-        conference=conference,
-        users_to=[user_to],
-        dest_name=profile.get_full_name(),
-        msg_type=EmailTemplate.TYPE_USER,
-        context=get_conference_context(conference),
-        user_context={user_to: get_user_context(user_to, conference)},
-        variables=(CONFERENCE_VARS + USER_VARS)
-    )
+
+    if request.method == 'POST':
+        next_url = request.POST.get(
+            'next', reverse('chair:home', kwargs={'conf_pk': conf_pk}))
+        form = EmailTemplateForm(request.POST)
+        if form.is_valid():
+            template = form.save(
+                conference=conference,
+                msg_type=EmailTemplate.TYPE_USER,
+                sender=request.user
+            )
+            context = get_conference_context(conference)
+            user_context = {user_to: get_user_context(user_to, conference)}
+            message = GroupEmailMessage.create(template, [user_to])
+            message.send(request.user, context, user_context)
+            return redirect(next_url)
+        else:
+            messages.error(request, 'Error sending message')
+    else:
+        form = EmailTemplateForm()
+        next_url = request.GET['next']
+
+    variables = CONFERENCE_VARS + USER_VARS
+    return render(
+        request, 'chair_mail/compose/compose_to_user.html', context={
+            'msg_form': form,
+            'msg_type': EmailTemplate.TYPE_USER,
+            'conference': conference,
+            'next': next_url,
+            'variables': variables,
+            'user_to': user_to,
+        })
+
+
+@require_GET
+def render_user_message_preview(request, conf_pk, user_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    user_to = get_object_or_404(User, pk=user_pk)
+    form = PreviewUserMessageForm(request.GET)
+    if form.is_valid():
+        ctx = {
+            **get_conference_context(conference),
+            **get_user_context(user_to, conference),
+        }
+        body_html = markdown(form.cleaned_data['body'])
+        body_html = Template(body_html).render(Context(ctx, autoescape=False))
+        return JsonResponse({
+            'body': body_html,
+        })
+    return JsonResponse({}, status=400)
 
 
 def compose_to_submission(request, conf_pk, sub_pk):
@@ -161,27 +203,42 @@ def compose_to_submission(request, conf_pk, sub_pk):
     authors = submission.authors
     users_to = User.objects.filter(pk__in=authors.values('user__pk'))
 
-    context = {
-        **get_conference_context(conference),
-        **get_submission_context(submission),
-    }
-    pprint(context)
-    user_context = {u: get_user_context(u, conference) for u in users_to}
-    variables = CONFERENCE_VARS + SUBMISSION_VARS + USER_VARS
+    if request.method == 'POST':
+        next_url = request.POST.get(
+            'next', reverse('chair:home', kwargs={'conf_pk': conf_pk}))
+        form = EmailTemplateForm(request.POST)
+        if form.is_valid():
+            template = form.save(
+                conference=conference,
+                msg_type=EmailTemplate.TYPE_USER,
+                sender=request.user
+            )
+            context = get_conference_context(conference)
+            user_context = {
+                u: get_user_context(u, conference) for u in users_to}
+            message = GroupEmailMessage.create(template, users_to)
+            message.send(request.user, context, user_context)
+            return redirect(next_url)
+        else:
+            messages.error(request, 'Error sending message')
+    else:
+        form = EmailTemplateForm()
+        next_url = request.GET['next']
 
-    return _compose(
-        request,
-        conference=conference,
-        users_to=users_to,
-        dest_name=f'submission #{submission.pk}',
-        msg_type=EmailTemplate.TYPE_USER,
-        context=context,
-        user_context=user_context,
-        variables=variables,
-    )
+    variables = CONFERENCE_VARS + USER_VARS
+    return render(
+        request, 'chair_mail/compose/compose_to_submission.html', context={
+            'msg_form': form,
+            'msg_type': EmailTemplate.TYPE_SUBMISSION,
+            'conference': conference,
+            'next': next_url,
+            'variables': variables,
+            'submission': submission,
+        })
 
 
-def _compose(request, conference, users_to, dest_name, msg_type, context=None,
+def _compose(request, conference, users_to, dest_name, msg_type,
+             select_preview_form, send_message_url, context=None,
              user_context=None, variables=None):
     """Process GET and POST requests for message composing views.
 
@@ -193,6 +250,8 @@ def _compose(request, conference, users_to, dest_name, msg_type, context=None,
     :param users_to:
     :param dest_name:
     :param msg_type:
+    :param select_preview_form:
+    :param send_message_url:
     :param context:
     :param user_context
     :return:
@@ -201,12 +260,10 @@ def _compose(request, conference, users_to, dest_name, msg_type, context=None,
         next_url = request.POST.get('next', reverse('chair:home', kwargs={
             'conf_pk': conference.pk
         }))
-        form = EmailTemplateForm(
-            request.POST,
-            conference=conference, created_by=request.user, msg_type=msg_type
-        )
+        form = EmailTemplateForm(request.POST)
         if form.is_valid():
-            template = form.save()
+            template = form.save(conference=conference, sender=request.user,
+                                 msg_type=msg_type)
             message = GroupEmailMessage.create(template, users_to)
             context = context if context is not None else {}
             user_context = user_context if user_context is not None else {}
@@ -226,6 +283,10 @@ def _compose(request, conference, users_to, dest_name, msg_type, context=None,
             'next': next_url,
             'variables': variables,
             'destination_name': dest_name,
+            'select_preview_form': select_preview_form,
+            'actions': {
+                'send': send_message_url,
+            }
         })
 
 

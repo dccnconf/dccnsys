@@ -1,0 +1,46 @@
+{###########################################################################}
+{# CONTEXT:                                                                #}
+{# - user_to: User the message is sent to                                  #}
+{###########################################################################}
+{% extends 'chair_mail/compose/_base.html' %}
+{% load bootstrap4 %}
+
+{% block composeMessageStyle %}
+{% endblock %}
+
+
+{% block composeTarget %}
+  <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=user_to.pk %}">
+    {{ user_to.profile.get_full_name }}
+  </a>
+{% endblock %}
+
+
+{% block previewTabContent %}
+  <div id="previewContent" class="border p-3"
+       data-source="{% url 'chair_mail:api-render-preview-user' conf_pk=conference.pk user_pk=user_to.pk %}"
+       style="height: 60vh; overflow: scroll;">
+    {########################################################}
+    {# Content is filled with AJAX call on tab being shown. #}
+    {########################################################}
+  </div>
+{% endblock %}
+
+
+{% block composeMessageScript %}
+  <script>
+  const previewContent = $('#previewContent');
+  const dataSourceURL = previewContent.attr('data-source');
+
+  const updatePreview = function () {
+    const body = cmedit.getValue();
+    $.get(dataSourceURL, {body: body}, function (data) {
+      previewContent.html(data['body']);
+    });
+  };
+
+  $('#previewTabLink').on('shown.bs.tab', function () {
+    updatePreview();
+  });
+  </script>
+{% endblock %}

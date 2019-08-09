@@ -1,0 +1,167 @@
+{###########################################################################}
+{# Compose email frame. Its defines the editor, subject input.             #}
+{# In derived templates should define:                                     #}
+{# - preview area and its controls;                                        #}
+{# - target (a link, submission ID and authors or a combo box).            #}
+{#                                                                         #}
+{# BLOCKS:                                                                 #}
+{# - composeMessageStyle: additional CSS goes here.                        #}
+{# - composeTarget: defines a block with a list of targets.                #}
+{# - previewTabContent: what should be seen in the preview tab.            #}
+{# - composeMessageScript: additional JS goes here.                        #}
+{#                                                                         #}
+{# IMPORTANT ELEMENT IDS:                                                  #}
+{# - 'previewTabLink': ID of the tab (a[data-toggle="tab"]) for preview.   #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `msg_form`: a form with `body` and `subject` fields.                  #}
+{# - `msg_type`: [optional] message type                                   #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `next`: URL where to go after this preview is closed.                 #}
+{###########################################################################}
+{% extends "chair/base/preview_page.html" %}
+{% load bootstrap4 %}
+{% load static %}
+
+{% block panelTitle %}
+  Compose message
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}">
+  <link rel="stylesheet" href="{% static 'codemirror/theme/monokai.css' %}">
+  <link rel="stylesheet" href="{% static 'codemirror/addon/scroll/simplescrollbars.css' %}">
+
+  <style>
+  .CodeMirror {
+    min-height: 60vh;
+  }
+  .tab-content {
+    min-height: 60vh;
+  }
+  </style>
+
+  {% block composeMessageStyle %}
+    {################################}
+    {#  Additional style goes here. #}
+    {################################}
+  {% endblock %}
+{% endblock %}
+
+
+{% block content %}
+
+  <div class="d-flex mb-3">
+    <div class="dccn-text-0 font-weight-bold mr-2">To: </div>
+    <div>
+      {% block composeTarget %}
+        {#################################################}
+        {#  In this block will be eigther fixed string   #}
+        {# (e.g., when composing to user or submission), #}
+        {# or a selection of messaging lists.            #}
+        {#################################################}
+      {% endblock %}
+    </div>
+    <div class="ml-auto bg-success-16 text-light font-weight-bold border rounded px-2">{{ msg_type }}</div>
+  </div>
+
+  <form action="" id="newMessageForm" method="POST" novalidate>
+    {% csrf_token %}
+
+    {# Next (hidden field) #}
+    <input type="hidden" name="next" id="id_next" value="{{ next }}" form="newMessageForm">
+
+    {# Subject field #}
+    <div class="form-group">
+      {% bootstrap_field msg_form.subject show_label=False %}
+    </div>
+  </form>
+
+  {# Tabs with Markdown and preview #}
+  <ul class="nav nav-tabs mt-4">
+    <li class="nav-item">
+      <a class="nav-link active" href="#md-tab" data-toggle="tab" role="tab">
+        Markdown
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link text-secondary" href="#preview-tab" data-toggle="tab" role="tab" id="previewTabLink">
+        Preview
+      </a>
+    </li>
+  </ul>
+
+  {# Tab contents for Markdown editor and preview window #}
+  <div class="tab-content">
+
+    {# Markdown editor #}
+    <div class="tab-pane fade show active" id="md-tab">
+      <textarea name="body" id="id_body" cols="30" rows="10" form="newMessageForm"></textarea>
+    </div>
+
+    {# Preview window #}
+    <div class="tab-pane fade py-3" id="preview-tab">
+      {% block previewTabContent %}
+        {#########################################}
+        {# Defines how the preview tab content.  #}
+        {# It may contain controls for selecting #}
+        {# objects (submissions, users) and the  #}
+        {# preview area itself.                  #}
+        {#########################################}
+      {% endblock %}
+    </div>
+
+  </div>
+
+  {# Help text #}
+  <div class="form-text text-muted dccn-text-small">
+    <p>
+      You can use variables, e.g. <strong>{% verbatim %}{{ var }}{% endverbatim %}</strong>.
+      <a href="#availableVars" data-toggle="collapse">Show available variables...</a>
+    </p>
+    <ul class="collapse" id="availableVars">
+      {% for var in variables %}
+        <li><span class="text-info font-weight-bold">{{ var.0 }}</span>: {{ var.1 }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  {# Action buttons #}
+  <div class="form-group d-flex">
+    <button type="submit" class="btn btn-primary" id="sendMessageButton" form="newMessageForm">
+      Send message
+    </button>
+    <a href="{{ next }}" class="btn btn-outline-secondary ml-auto">Cancel</a>
+  </div>
+
+{% endblock %}
+
+{% block script %}
+  <script src="{% static 'codemirror/lib/codemirror.js' %}"></script>
+  <script src="{% static 'codemirror/addon/scroll/simplescrollbars.js' %}"></script>
+  <script src="{% static 'scripts/require.js' %}" data-main="{% static '' %}"></script>
+
+  <script>
+  let cmedit;
+    requirejs([
+      'codemirror/lib/codemirror', 'codemirror/mode/markdown/markdown', 'codemirror/addon/scroll/simplescrollbars'
+    ], function (CodeMirror) {
+      cmedit = CodeMirror.fromTextArea(document.getElementById('id_body'), {
+        mode: 'markdown',
+        theme: 'monokai',
+        highlightFormatting: true,
+        scrollbarStyle: "simple",
+        lineWrapping: true,
+      });
+    });
+  </script>
+
+  {% block composeMessageScript %}
+    {##################################}
+    {#  Additional scripts goes here. #}
+    {##################################}
+  {% endblock %}
+{% endblock %}
+

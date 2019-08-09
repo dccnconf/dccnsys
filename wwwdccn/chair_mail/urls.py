@@ -43,4 +43,9 @@ urlpatterns = [
         views.compose_to_submission,
         name='compose-paper'
     ),
+    path(
+        '/<int:conf_pk>/api/compose/preview/user/<int:user_pk>/',
+        views.render_user_message_preview,
+        name='api-render-preview-user',
+    )
 ]

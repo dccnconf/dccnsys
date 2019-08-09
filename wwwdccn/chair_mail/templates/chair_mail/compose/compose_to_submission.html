@@ -1,0 +1,36 @@
+{###########################################################################}
+{# CONTEXT:                                                                #}
+{# - preview_form: form with fields `user` and `body`                      #}
+{# - submission: User the message is sent to                               #}
+{###########################################################################}
+{% extends 'chair_mail/compose/_base.html' %}
+{% load bootstrap4 %}
+
+{% block composeMessageStyle %}
+{% endblock %}
+
+
+{% block composeTarget %}
+  <a href="{% url 'chair:submission-overview' conf_pk=conference.pk sub_pk=submission.pk %}" class="dccn-link"
+     data-toggle="tooltip" data-placement="bottom" title="{{ submission.get_authors_display }}">
+    "{{ submission.title }}" (#{{ submission.pk }})
+  </a>
+{% endblock %}
+
+
+{% block previewTabContent %}
+  {# TODO: fill data-source URL below: #}
+  <div id="previewContent" class="border p-3" data-source=""></div>
+{% endblock %}
+
+
+{% block composeMessageScript %}
+  <script>
+  $(document).ready(function () {
+    const previewContent = $('#previewContent');
+    const updatePreview = function () {
+      // TODO: write this function
+    };
+  });
+  </script>
+{% endblock %}

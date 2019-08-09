@@ -1,10 +1,16 @@
 from django import forms
 from django.conf import settings
 from django.core.mail import send_mail
+from django.template import Template, Context
 from django.utils import timezone
 from html2text import html2text
+from markdown import markdown
 
-from .models import EmailTemplate, EmailFrame
+from chair_mail.context import get_conference_context, get_user_context, \
+    get_submission_context
+from submissions.models import Submission
+from users.models import User
+from .models import EmailTemplate, EmailFrame, GroupEmailMessage
 
 
 class EmailFrameUpdateForm(forms.ModelForm):
@@ -49,28 +55,99 @@ class EmailFrameTestForm(forms.Form):
 class EmailTemplateForm(forms.ModelForm):
     class Meta:
         model = EmailTemplate
-        fields = ('body', 'subject')
+        fields = ('subject', 'body')
 
-
-    # This field is not related to EmailTemplate, but used to store URL
-    # of the page from which we came to the page containing the form.
-    next = forms.CharField(widget=forms.TextInput, required=False)
-
-    def __init__(self, *args, conference=None, msg_type=None, created_by=None,
-                 **kwargs):
-        super().__init__(*args, **kwargs)
-        self.conference = conference
-        self.msg_type = msg_type
-        self.created_by = created_by
-
-    def save(self, commit=True):
-        template = super().save(commit=False)
-        if self.msg_type:
-            template.msg_type = self.msg_type
+    def save(self, commit=True, conference=None, sender=None, msg_type=None):
+        template = super().save(False)
         if commit:
-            if self.conference:
-                template.conference = self.conference
-            if self.created_by:
-                template.created_by = self.created_by
+            template.conference = conference
+            template.created_by = sender
+            template.msg_type = msg_type
             template.save()
         return template
+
+
+class PreviewUserMessageForm(forms.Form):
+    body = forms.CharField(widget=forms.Textarea(), required=False)
+
+
+# class _ComposeEmailFormBase(forms.Form):
+#     subject = forms.CharField()
+#     body = forms.CharField(widget=forms.Textarea(), required=False)
+#
+#     def __init__(self, *args, msg_type=None, conference=None, chair_user=None,
+#                  **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.msg_type = msg_type
+#         self.conference = conference
+#         self.chair_user = chair_user
+#
+#     def send(self, users_to, context=None, user_context=None):
+#         template = EmailTemplate.objects.create(
+#             subject=self.cleaned_data['subject'],
+#             body=self.cleaned_data['body'],
+#             conference=self.conference,
+#             created_by=self.chair_user,
+#         )
+#         message = GroupEmailMessage.create(template, users_to)
+#         if context is None:
+#             context = {}
+#         if user_context is None:
+#             user_context = {}
+#         message.send(self.chair_user, context, user_context)
+#
+#     def build_preview_context(self):
+#         """Build context for the preview depending on selected preview objects.
+#
+#         :return: dictionary-like object with context variables
+#         """
+#         raise NotImplementedError
+#
+#     def render_preview(self):
+#         context = self.build_context()
+#         template = Template(markdown(self.cleaned_data['body']))
+#         html = template.render(Context(context, autoescape=False))
+#         return html
+#
+#
+# class ComposeUserEmail(_ComposeEmailFormBase):
+#     user = forms.ChoiceField()
+#
+#     def __init__(self, *args, conference, chair_user, users, **kwargs):
+#         super().__init__(*args, conference=conference, chair_user=chair_user,
+#                          msg_type=EmailTemplate.TYPE_USER, **kwargs)
+#         self.fields['user'].choices = [
+#             (u.pk, u.profile.get_full_name()) for u in users
+#         ]
+#
+#     def build_preview_context(self):
+#         user_pk = self.cleaned_data['user']
+#         user = User.objects.get(pk=user_pk)
+#         return {
+#             **get_conference_context(self.conference),
+#             **get_user_context(user, self.conference)
+#         }
+#
+#
+# class ComposeSubmissionEmail(_ComposeEmailFormBase):
+#     submission = forms.ChoiceField()
+#     user = forms.ChoiceField()
+#
+#     def __init__(self, *args, conference, chair_user, submissions, **kwargs):
+#         super().__init__(*args, conference=conference, chair_user=chair_user,
+#                          msg_type=EmailTemplate.TYPE_USER, **kwargs)
+#         self.fields['submission'].choices = [
+#             (sub.pk, sub.title) for sub in submissions
+#         ]
+#         # User choice field is filled via AJAX calls
+#
+#     def build_preview_context(self):
+#         sub_pk = self.cleaned_data['submission']
+#         user_pk = self.cleaned_data['user']
+#         submission = Submission.objects.get(pk=sub_pk)
+#         user = User.objects.get(pk=user_pk)
+#         return {
+#             **get_conference_context(self.conference),
+#             **get_submission_context(submission),
+#             **get_user_context(user, self.conference)
+#         }
