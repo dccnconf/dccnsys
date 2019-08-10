@@ -6,6 +6,7 @@
 {% extends 'chair_mail/compose/_base.html' %}
 {% load bootstrap4 %}
 
+
 {% block composeMessageStyle %}
 {% endblock %}
 
@@ -15,8 +16,4 @@
      data-toggle="tooltip" data-placement="bottom" title="{{ submission.get_authors_display }}">
     "{{ submission.title }}" (#{{ submission.pk }})
   </a>
-{% endblock %}
-
-
-{% block composeMessageScript %}
 {% endblock %}

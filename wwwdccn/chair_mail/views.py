@@ -1,14 +1,10 @@
-from pprint import pprint
-
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.template import Template, Context
 from django.template.loader import get_template
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
-from markdown import markdown
 
 from chair.utility import validate_chair_access
 from chair_mail.context import get_user_context, USER_VARS, \
@@ -189,26 +185,12 @@ def compose_to_user(request, conf_pk, user_pk):
         })
 
 
-@require_GET
-def render_user_message_preview(request, conf_pk, user_pk):
-    conference = get_object_or_404(Conference, pk=conf_pk)
-    validate_chair_access(request.user, conference)
-    user_to = get_object_or_404(User, pk=user_pk)
-    form = PreviewUserMessageForm(request.GET, users=[user_to])
-    if form.is_valid():
-        data = form.render_html(conference)
-        return JsonResponse(data)
-    print('form is invalid: ', form)
-    return JsonResponse({}, status=400)
-
-
 def compose_to_submission(request, conf_pk, sub_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     submission = get_object_or_404(Submission, pk=sub_pk)
     authors = submission.authors
     users_to = User.objects.filter(pk__in=authors.values('user__pk'))
-    preview_form = PreviewSubmissionMessageForm(users=users_to)
 
     if request.method == 'POST':
         next_url = request.POST.get(
@@ -236,7 +218,12 @@ def compose_to_submission(request, conf_pk, sub_pk):
         msg_form = EmailTemplateForm()
         next_url = request.GET['next']
 
-    variables = CONFERENCE_VARS + USER_VARS
+    variables = SUBMISSION_VARS + CONFERENCE_VARS + USER_VARS
+    preview_form = PreviewSubmissionMessageForm(submissions=[submission])
+    preview_url = reverse('chair_mail:api-render-preview-submission', kwargs={
+        'conf_pk': conf_pk, 'sub_pk': sub_pk,
+    })
+
     return render(
         request, 'chair_mail/compose/compose_to_submission.html', context={
             'msg_form': msg_form,
@@ -246,7 +233,20 @@ def compose_to_submission(request, conf_pk, sub_pk):
             'variables': variables,
             'submission': submission,
             'preview_form': preview_form,
+            'preview_url': preview_url,
         })
+
+
+@require_GET
+def render_user_message_preview(request, conf_pk, user_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    user_to = get_object_or_404(User, pk=user_pk)
+    form = PreviewUserMessageForm(request.GET, users=[user_to])
+    if form.is_valid():
+        data = form.render_html(conference)
+        return JsonResponse(data)
+    return JsonResponse({}, status=400)
 
 
 @require_GET
@@ -254,21 +254,10 @@ def render_submission_message_preview(request, conf_pk, sub_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     submission = get_object_or_404(Submission, pk=sub_pk)
-    authors = submission.authors
-    users_to = User.objects.filter(pk__in=authors.values('user__pk'))
-    form = PreviewSubmissionMessageForm(request.GET, users=users_to)
+    form = PreviewSubmissionMessageForm(request.GET, submissions=[submission])
     if form.is_valid():
-        user = User.objects.get(pk=form.cleaned_data['user'])
-        ctx = {
-            **get_conference_context(conference),
-            **get_submission_context(submission),
-            **get_user_context(user, conference),
-        }
-        body_html = markdown(form.cleaned_data['body'])
-        body_html = Template(body_html).render(Context(ctx, autoescape=False))
-        return JsonResponse({
-            'body': body_html,
-        })
+        data = form.render_html(conference)
+        return JsonResponse(data)
     return JsonResponse({}, status=400)
 
 

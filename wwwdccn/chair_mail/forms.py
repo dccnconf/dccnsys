@@ -10,7 +10,7 @@ from chair_mail.context import get_conference_context, get_user_context, \
     get_submission_context
 from submissions.models import Submission
 from users.models import User
-from .models import EmailTemplate, EmailFrame, GroupEmailMessage
+from .models import EmailTemplate, EmailFrame
 
 
 class EmailFrameUpdateForm(forms.ModelForm):
@@ -68,8 +68,19 @@ class EmailTemplateForm(forms.ModelForm):
 
 
 class PreviewFormBase(forms.Form):
-    subject = forms.CharField(required=False)
-    body = forms.CharField(widget=forms.Textarea(), required=False)
+    subject = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'hidden': True
+        })
+    )
+
+    body = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'hidden': True
+        })
+    )
 
     def get_context(self, conference):
         raise NotImplementedError
@@ -104,12 +115,29 @@ class PreviewUserMessageForm(PreviewFormBase):
         }
 
 
-class PreviewSubmissionMessageForm(forms.Form):
-    body = forms.CharField(widget=forms.Textarea(), required=False)
+class PreviewSubmissionMessageForm(PreviewFormBase):
+    submission = forms.ChoiceField()
     user = forms.ChoiceField()
 
-    def __init__(self, *args, users=None, **kwargs):
+    def __init__(self, *args, submissions=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['user'].choices = [
-            (u.pk, u.profile.get_full_name()) for u in users
+        self.fields['submission'].choices = [
+            (sub.pk, sub.title) for sub in submissions
         ]
+        if len(submissions) == 1:
+            self.fields['submission'].widget.attrs['hidden'] = True
+        first_submission_users = [
+            author.user for author in submissions[0].authors.all()
+        ]
+        self.fields['user'].choices = [
+            (u.pk, u.profile.get_full_name()) for u in first_submission_users
+        ]
+
+    def get_context(self, conference):
+        submission = Submission.objects.get(pk=self.cleaned_data['submission'])
+        user = User.objects.get(pk=self.cleaned_data['user'])
+        return {
+            **get_conference_context(conference),
+            **get_submission_context(submission),
+            **get_user_context(user, conference),
+        }

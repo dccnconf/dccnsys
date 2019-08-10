@@ -109,7 +109,7 @@
     {# Preview window #}
     <div class="tab-pane fade py-3" id="preview-tab">
       <form id="previewForm" method="GET" action="{{ preview_url }}">
-        {% bootstrap_field preview_form.user show_label=False %}
+        {% bootstrap_form preview_form show_label=False %}
       </form>
       <hr>
       <div id="previewContent" class="border rounded p-3 message-preview-area bg-light text-dark">
@@ -169,33 +169,7 @@ $(document).ready(function () {
   });
 
   //
-  // 2. Warn user when leaving page via some link:
-  //
-  let formSubmitting = false;
-  let setFormSubmitting = function() { formSubmitting = true; };
-
-  window.onload = function() {
-    window.addEventListener("beforeunload", function (e) {
-      if (formSubmitting) {
-          return undefined;
-      }
-
-      const confirmationMessage = 'It looks like you have been editing something. '
-        + 'If you leave before saving, your changes will be lost.';
-
-      e.returnValue = confirmationMessage; //Gecko + IE
-      return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
-    });
-  };
-
-  // If the user is leaving the page due to form submission, don't warn him:
-  $('#newMessageForm').submit(function () {
-    setFormSubmitting();
-    return true;
-  });
-
-  //
-  // 3. Bind preview loading:
+  // 2. Bind preview loading:
   //
   const subjectInput = $('#id_subject');
   const previewContent = $('#previewContent');
