@@ -67,8 +67,41 @@ class EmailTemplateForm(forms.ModelForm):
         return template
 
 
-class PreviewUserMessageForm(forms.Form):
+class PreviewFormBase(forms.Form):
+    subject = forms.CharField(required=False)
     body = forms.CharField(widget=forms.Textarea(), required=False)
+
+    def get_context(self, conference):
+        raise NotImplementedError
+
+    def render_html(self, conference):
+        ctx_data = self.get_context(conference)
+        context = Context(ctx_data, autoescape=False)
+        body_template = Template(markdown(self.cleaned_data['body']))
+        subject_template = Template(self.cleaned_data['subject'])
+        return {
+            'body': body_template.render(context),
+            'subject': subject_template.render(context)
+        }
+
+
+class PreviewUserMessageForm(PreviewFormBase):
+    user = forms.ChoiceField()
+
+    def __init__(self, *args, users=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['user'].choices = [
+            (u.pk, u.profile.get_full_name()) for u in users
+        ]
+        if len(users) == 1:
+            self.fields['user'].widget.attrs['hidden'] = True
+
+    def get_context(self, conference):
+        user = User.objects.get(pk=self.cleaned_data['user'])
+        return {
+            **get_conference_context(conference),
+            **get_user_context(user, conference),
+        }
 
 
 class PreviewSubmissionMessageForm(forms.Form):

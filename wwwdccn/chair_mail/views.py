@@ -171,6 +171,11 @@ def compose_to_user(request, conf_pk, user_pk):
         next_url = request.GET['next']
 
     variables = CONFERENCE_VARS + USER_VARS
+    preview_form = PreviewUserMessageForm(users=[user_to])
+    preview_url = reverse('chair_mail:api-render-preview-user', kwargs={
+        'conf_pk': conf_pk, 'user_pk': user_pk,
+    })
+    print(preview_url)
     return render(
         request, 'chair_mail/compose/compose_to_user.html', context={
             'msg_form': form,
@@ -179,6 +184,8 @@ def compose_to_user(request, conf_pk, user_pk):
             'next': next_url,
             'variables': variables,
             'user_to': user_to,
+            'preview_form': preview_form,
+            'preview_url': preview_url,
         })
 
 
@@ -187,17 +194,11 @@ def render_user_message_preview(request, conf_pk, user_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     user_to = get_object_or_404(User, pk=user_pk)
-    form = PreviewUserMessageForm(request.GET)
+    form = PreviewUserMessageForm(request.GET, users=[user_to])
     if form.is_valid():
-        ctx = {
-            **get_conference_context(conference),
-            **get_user_context(user_to, conference),
-        }
-        body_html = markdown(form.cleaned_data['body'])
-        body_html = Template(body_html).render(Context(ctx, autoescape=False))
-        return JsonResponse({
-            'body': body_html,
-        })
+        data = form.render_html(conference)
+        return JsonResponse(data)
+    print('form is invalid: ', form)
     return JsonResponse({}, status=400)
 
 

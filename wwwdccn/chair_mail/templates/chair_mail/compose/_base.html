@@ -108,14 +108,16 @@
 
     {# Preview window #}
     <div class="tab-pane fade py-3" id="preview-tab">
-      {% block previewTabContent %}
-        {#########################################}
-        {# Defines how the preview tab content.  #}
-        {# It may contain controls for selecting #}
-        {# objects (submissions, users) and the  #}
-        {# preview area itself.                  #}
-        {#########################################}
-      {% endblock %}
+      <form id="previewForm" method="GET" action="{{ preview_url }}">
+        {% bootstrap_field preview_form.user show_label=False %}
+      </form>
+      <hr>
+      <div id="previewContent" class="border rounded p-3 message-preview-area bg-light text-dark">
+        <p class="dccn-text-0 my-3 pb-2 border-bottom">
+          <span class="font-weight-bold mr-3">Subject: </span><span id="previewContentSubject"></span>
+        </p>
+        <div id="previewContentBody"></div>
+      </div>
     </div>
 
   </div>
@@ -144,48 +146,116 @@
 {% endblock %}
 
 {% block script %}
-  <script src="{% static 'codemirror/lib/codemirror.js' %}"></script>
-  <script src="{% static 'codemirror/addon/scroll/simplescrollbars.js' %}"></script>
-  <script src="{% static 'scripts/require.js' %}" data-main="{% static '' %}"></script>
+<script src="{% static 'codemirror/lib/codemirror.js' %}"></script>
+<script src="{% static 'codemirror/addon/scroll/simplescrollbars.js' %}"></script>
+<script src="{% static 'scripts/require.js' %}" data-main="{% static '' %}"></script>
 
-  <script>
+<script>
+$(document).ready(function () {
+  //
+  // 1. Bind CodeMirror editor:
+  //
   let cmedit;
-    requirejs([
-      'codemirror/lib/codemirror', 'codemirror/mode/markdown/markdown', 'codemirror/addon/scroll/simplescrollbars'
-    ], function (CodeMirror) {
-      cmedit = CodeMirror.fromTextArea(document.getElementById('id_body'), {
-        mode: 'markdown',
-        theme: 'monokai',
-        highlightFormatting: true,
-        scrollbarStyle: "simple",
-        lineWrapping: true,
-      });
+  requirejs([
+    'codemirror/lib/codemirror', 'codemirror/mode/markdown/markdown', 'codemirror/addon/scroll/simplescrollbars'
+  ], function (CodeMirror) {
+    cmedit = CodeMirror.fromTextArea(document.getElementById('id_body'), {
+      mode: 'markdown',
+      theme: 'monokai',
+      highlightFormatting: true,
+      scrollbarStyle: "simple",
+      lineWrapping: true,
     });
+  });
 
-    // Warn user when leaving page via some link:
-    let formSubmitting = false;
-    let setFormSubmitting = function() { formSubmitting = true; };
+  //
+  // 2. Warn user when leaving page via some link:
+  //
+  let formSubmitting = false;
+  let setFormSubmitting = function() { formSubmitting = true; };
 
-    window.onload = function() {
-      window.addEventListener("beforeunload", function (e) {
-        if (formSubmitting) {
-            return undefined;
-        }
+  window.onload = function() {
+    window.addEventListener("beforeunload", function (e) {
+      if (formSubmitting) {
+          return undefined;
+      }
 
-        const confirmationMessage = 'It looks like you have been editing something. '
-          + 'If you leave before saving, your changes will be lost.';
+      const confirmationMessage = 'It looks like you have been editing something. '
+        + 'If you leave before saving, your changes will be lost.';
 
-        (e || window.event).returnValue = confirmationMessage; //Gecko + IE
-        return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
-      });
-    };
-
-    $('#newMessageForm').submit(function () {
-      setFormSubmitting();
-      return true;
+      e.returnValue = confirmationMessage; //Gecko + IE
+      return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
     });
+  };
 
-  </script>
+  // If the user is leaving the page due to form submission, don't warn him:
+  $('#newMessageForm').submit(function () {
+    setFormSubmitting();
+    return true;
+  });
+
+  //
+  // 3. Bind preview loading:
+  //
+  const subjectInput = $('#id_subject');
+  const previewContent = $('#previewContent');
+  const previewForm = $('#previewForm');
+  const dataSourceURL = previewForm.attr('action');
+
+  const updatePreview = function () {
+    const body = cmedit.getValue();
+    const subject = subjectInput.val();
+    const formData = previewForm.serializeArray();
+    formData.push({name: 'body', value: body});
+    formData.push({name: 'subject', value: subject});
+    $.get(dataSourceURL, $.param(formData), function (data) {
+      console.log(data);
+      previewContent.find('#previewContentSubject').text(data['subject']);
+      previewContent.find('#previewContentBody').html(data['body']);
+    });
+  };
+
+  // When 'preview' tab is shown, we need to update the preview. We also
+  // track the state of the tab since subject can be edited while preview
+  // is shown:
+  const previewTabLink = $('#previewTabLink');
+  let previewTabIsActive = previewTabLink.hasClass('active');
+  let updateSubjectTimeout = undefined;
+
+  previewTabLink.on('shown.bs.tab', function () {
+    previewTabIsActive = true;
+    updatePreview();
+  });
+  previewTabLink.on('hidden.bs.tab', function () {
+    previewTabIsActive = false;
+    if (updateSubjectTimeout !== undefined) {
+      clearTimeout(updateSubjectTimeout);
+    }
+  });
+
+  // Any change in any <select> in the preview dialog will cause re-rendering:
+  previewForm.find('select').change(updatePreview);
+
+  // When subject is updated, we need to update the preview. However, to
+  // reduce the system load, we update it only each 500ms and only if the preview
+  // tab is active:
+  const updatePreviewOnSubjectChange = function () {
+    // Remove previously set timeout:
+    if (updateSubjectTimeout !== undefined) {
+      clearTimeout(updateSubjectTimeout);
+    }
+    // Update only if preview tab is active:
+    if (previewTabIsActive) {
+      updateSubjectTimeout = setTimeout(function () {
+        updatePreview();
+        updateSubjectTimeout = undefined;
+      }, 500);
+    }
+  };
+  subjectInput.on('input', updatePreviewOnSubjectChange);
+  subjectInput.on('propertychange', updatePreviewOnSubjectChange);
+});
+</script>
 
   {% block composeMessageScript %}
     {##################################}
