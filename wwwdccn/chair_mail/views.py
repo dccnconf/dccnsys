@@ -96,7 +96,7 @@ def sent_messages(request, conf_pk):
     validate_chair_access(request.user, conference)
     frame = get_email_frame(conference)
     msg_list = conference.sent_group_emails.all().order_by('-sent_at')
-    return render(request, 'chair_mail/tab_pages/sent_messages.html', context={
+    return render(request, 'chair_mail/tab_pages/messages.html', context={
         'conference': conference,
         'active_tab': 'messages',
         'frame': frame,
@@ -239,6 +239,7 @@ def compose_to_submission(request, conf_pk, sub_pk):
 
 @require_GET
 def render_user_message_preview(request, conf_pk, user_pk):
+    # TODO: refactor me after implement sending to user lists
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     user_to = get_object_or_404(User, pk=user_pk)

@@ -13,10 +13,30 @@
 {% load static %}
 
 {% block tabViewContent %}
-  <h1 class="dccn-text-larger-light mb-4">Sent messages</h1>
+  <h1 class="dccn-text-larger-light mb-4">Messages</h1>
   <div class="d-flex mb-3">
-    <a href="#"
-       class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> New</a>
+    <div class="dropdown">
+      <button class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" type="button">
+        Compose
+      </button>
+      <div class="dropdown-menu" style="max-width: 400px; min-width: 300px;">
+        <a href="#" class="dropdown-item dccn-text-small px-3 py-2" style="white-space: normal;">
+          <h6 class="dccn-text-small font-weight-bold pb-2">Compose to users list</h6>
+          <p class="dccn-text-smaller">
+            Message for predefined users list. You can use conference and user variables.
+            Each user will receive a single copy of this letter.
+          </p>
+        </a>
+        <div class="dropdown-divider"></div>
+        <a href="#" class="dropdown-item dccn-text-small px-3 py-2" style="white-space: normal;">
+          <h6 class="dccn-text-small font-weight-bold pb-2">Compose to submissions list</h6>
+          <p class="dccn-text-smaller">
+            Message for authors of predefined list of submissions. You can use all available variables.
+            Each user will receive a letter for each submission in the list he/she is author of.
+          </p>
+        </a>
+      </div>
+    </div>
   </div>
   <div class="list-group">
     {% for msg in msg_list %}
