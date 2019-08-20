@@ -1,17 +1,220 @@
-{###########################################################################}
-{# CONTEXT:                                                                #}
-{# - user_to: User the message is sent to                                  #}
-{###########################################################################}
-{% extends 'chair_mail/compose/_base.html' %}
+{% extends "chair/base/preview_page.html" %}
 {% load bootstrap4 %}
+{% load static %}
 
+{% block panelTitle %}
+  Compose user-message
+{% endblock %}
 
-{% block composeMessageStyle %}
+{% block css %}
+  <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}">
+  <link rel="stylesheet" href="{% static 'codemirror/theme/monokai.css' %}">
+  <link rel="stylesheet" href="{% static 'codemirror/addon/scroll/simplescrollbars.css' %}">
+
+  <!--suppress CssUnusedSymbol -->
+  <style>
+  .CodeMirror {
+    min-height: 55vh;
+  }
+  /*
+  .compose-working-area {
+    min-height: 60vh;
+  }
+   */
+  .compose-tabs > .tab-pane {
+    min-height: 60.5vh;
+  }
+  .compose-tabs > .tab-pane .tab-working-area {
+    max-height: 55vh;
+    overflow: scroll;
+  }
+  .message-preview-area {
+    height: 55vh;
+    overflow: scroll;
+  }
+  .compose-to-area {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .compose-to-item {
+    display: flex;
+    align-items: center;
+    border: 1px solid #eee;
+    border-radius: 15px;
+    padding: 5px 10px;
+    margin: 0 10px 3px 0;
+  }
+  .user-search-results {
+    height: 70vh;
+    overflow: scroll;
+  }
+  .list-users-modal-content {
+    max-height: 70vh;
+    overflow: scroll;
+  }
+  .compose-var {
+    cursor: pointer;
+  }
+  .compose-var:hover {
+    text-decoration: underline;
+  }
+
+  .message-editor-insert-text.dropdown-item {
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: bold;
+    color: #555;
+  }
+  .message-editor-insert-text p {
+    margin: 0;
+    padding: 0;
+  }
+  </style>
 {% endblock %}
 
 
-{% block composeTarget %}
-  <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=user_to.pk %}">
-    {{ user_to.profile.get_full_name }}
-  </a>
+{% block content %}
+
+  <form action="" id="newMessageForm" method="POST" novalidate>
+    {% csrf_token %}
+
+    {#################################################################################################################}
+    {# SELECTING USERS AND MAILING LISTS                                                                             #}
+    {#################################################################################################################}
+    <div class="compose-to" id="composeTo"
+         data-list-mailing-lists-url="{% url 'chair_mail:list-mailing-lists' conf_pk=conference.pk %}"
+         data-list-users-url="{% url 'chair_mail:list-users' conf_pk=conference.pk %}">
+
+      <div class="d-flex mb-3 align-items-start">
+        {{ msg_form.users }}
+        {{ msg_form.lists }}
+        <div class="dccn-text-0 font-weight-bold mr-2 pt-1">To:</div>
+        <div class="compose-to-area" id="composeToArea"></div>
+      </div>
+
+      <!-- Controls: -->
+      <div class="d-flex mb-3 align-items-center">
+        <button type="button" class="btn btn-sm btn-outline-secondary mr-2" id="addUserBtn">
+          <span data-toggle="tooltip" data-placement="bottom" title="Add users">
+            <i class="fas fa-plus mr-1"></i><i class="fas fa-user"></i>
+          </span>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary mr-2"
+                data-toggle="modal" data-target="#addListModal">
+          <span data-toggle="tooltip" data-placement="bottom" title="Add mailing lists">
+            <i class="fas fa-plus mr-1"></i><i class="fas fa-list"></i>
+          </span>
+        </button>
+        <button type="button" class="btn btn-link dccn-link ml-auto" id="showRecipientBtn">
+          Show recipient users
+        </button>
+      </div>
+
+      <!-- Modal for selecting lists -->
+      <div class="modal fade" tabindex="-1" role="dialog" id="addListModal">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Add mailing list</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              {############################################################}
+              {# Modal content is filled from data obtained via AJAX call #}
+              {############################################################}
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    {#################################################################################################################}
+    {# ... end of 'to' section                                                                                       #}
+    {#################################################################################################################}
+    <hr>
+
+    {# Next (hidden field) #}
+    <input type="hidden" name="next" id="id_next" value="{{ next }}" form="newMessageForm">
+
+    {#################################################################################################################}
+    {# SUBJECT                                                                                                       #}
+    {#################################################################################################################}
+    <div class="form-group">
+      {% bootstrap_field msg_form.subject show_label=False %}
+    </div>
+
+    {#################################################################################################################}
+    {# MESSAGE EDIT AND PREVIEW                                                                                      #}
+    {#################################################################################################################}
+    {# Tabs with Markdown and preview #}
+    <ul class="nav nav-tabs mt-4">
+      <li class="nav-item">
+        <a class="nav-link active text-secondary" href="#md-tab" data-toggle="tab" role="tab">
+          Markdown
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-secondary" href="#preview-tab" data-toggle="tab" role="tab" id="previewTabLink">
+          Preview
+        </a>
+      </li>
+      <li class="nav-item ml-auto">
+        <a class="text-secondary dccn-link" href="{% url 'chair_mail:help-compose' %}" target="_blank" role="tab">
+          <i class="fas fa-question-circle"></i> Help
+        </a>
+      </li>
+    </ul>
+
+    {# Tabs content #}
+    <div class="tab-content flex-fill compose-tabs">
+      {# Markdown editor #}
+      <div class="tab-pane fade show active" id="md-tab">
+        <div class="message-editor">
+          {% include 'chair_mail/compose/_editor_toolbar.html' %}
+        </div>
+        <div class="tab-working-area">
+          <textarea name="body" id="id_body" cols="30" rows="10" form="newMessageForm"></textarea>
+        </div>
+      </div>
+      {# Preview window #}
+      <div class="tab-pane fade py-3" id="preview-tab" data-preview-url="{{ preview_url }}">
+        <div class="d-flex">
+          <select name="preview_user" id="id_preview_user" class="form-control mr-2 flex-fill"></select>
+          <button type="button" class="btn btn-success btn-sm" id="updatePreviewBtn">Update</button>
+        </div>
+        <div class="tab-working-area">
+          <div class="border rounded p-3 bg-light text-dark mt-3 preview-message">
+            <p class="dccn-text-0 my-3 pb-2 border-bottom">
+              <span class="font-weight-bold mr-3">Subject: </span><span class="preview-message-subject"></span>
+            </p>
+            <div class="preview-message-body"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {#################################################################################################################}
+    {# ACTIONS                                                                                                       #}
+    {#################################################################################################################}
+    <div class="form-group d-flex">
+      <button type="submit" class="btn btn-primary" id="sendMessageButton">
+        Send message
+      </button>
+      <a href="{{ next }}" class="btn btn-outline-secondary ml-auto">Cancel</a>
+    </div>
+  </form>
+
+{% endblock %}
+
+{% block script %}
+<script src="{% static 'codemirror/lib/codemirror.js' %}"></script>
+<script src="{% static 'codemirror/addon/scroll/simplescrollbars.js' %}"></script>
+<script src="{% static 'scripts/require.js' %}" data-main="{% static '' %}"></script>
+<script src="{% static 'chair_mail/message_editor.js' %}"></script>
+<script src="{% static 'chair_mail/compose.js' %}"></script>
 {% endblock %}

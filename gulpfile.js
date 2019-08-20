@@ -38,6 +38,7 @@ const paths = {
         'node_modules/math/math.js',
         'node_modules/chart.js/dist/Chart.bundle.min.js',
         'node_modules/requirejs/require.js',
+        'node_modules/bootbox/dist/bootbox.min.js',
     ],
     externalStyles: [
         'node_modules/sweetalert2/dist/sweetalert2.min.css',

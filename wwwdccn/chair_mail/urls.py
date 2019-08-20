@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import views, api
 
 
 app_name = 'chair_mail'
@@ -33,24 +33,28 @@ urlpatterns = [
         views.message_details,
         name='instance-details'
     ),
-    path(
-        '<int:conf_pk>/compose/user/<int:user_pk>/',
-        views.compose_to_user,
-        name='compose-user'
-    ),
+    path('<int:conf_pk>/compose/user/', views.compose_user, name='compose-user'),
     path(
         '<int:conf_pk>/compose/paper/<int:sub_pk>/',
         views.compose_to_submission,
         name='compose-paper'
     ),
     path(
-        '<int:conf_pk>/api/compose/preview/user/<int:user_pk>/',
-        views.render_user_message_preview,
-        name='api-render-preview-user',
-    ),
-    path(
         '<int:conf_pk>/api/compose/preview/submission/<int:sub_pk>/',
         views.render_submission_message_preview,
         name='api-render-preview-submission',
     ),
+    path(
+        '<int:conf_pk>/api/compose/form_parts/',
+        views.get_compose_form_components,
+        name='api-get-compose-form-components',
+    ),
+    path('help/compose/', views.help_compose, name='help-compose'),
+
+    #########################################################################
+    path('<int:conf_pk>/api/mailing_lists/', api.list_mailing_lists, name='list-mailing-lists'),
+    path('<int:conf_pk>/api/mailing_lists/<str:name>/', api.mailing_list_details, name='mailing-list-details'),
+    path('<int:conf_pk>/api/users/', api.list_users, name='list-users'),
+    path('<int:conf_pk>/api/preview/user/', api.render_user_message_preview, name='render-preview-user'),
+    # path('<int:conf_pk>/api/users/search/', api.search_users, name='search-users'),
 ]

@@ -3,12 +3,17 @@ from django.core.mail import send_mail
 from django.db import models
 from django.template import Template, Context
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
 from markdown import markdown
 from html2text import html2text
 
+from chair_mail.context import get_conference_context, get_user_context, \
+    get_submission_context
 from conferences.models import Conference
+from submissions.models import Submission
 from users.models import User
+
+MSG_TYPE_USER = 'user'
+MSG_TYPE_SUBMISSION = 'submission'
 
 
 class EmailFrame(models.Model):
@@ -52,49 +57,14 @@ class EmailSettings(models.Model):
     )
 
 
-class EmailTemplate(models.Model):
-    TYPE_USER = 'user'
-    TYPE_SUBMISSION = 'submission'
-
-    MSG_TYPE_CHOICES = (
-        (None, _('Select message type')),
-        (TYPE_USER, _('Message for user')),
-        (TYPE_SUBMISSION, _('Message for submission authors')),
-    )
-
+class GroupMessage(models.Model):
     subject = models.CharField(max_length=1024)
     body = models.TextField()
     conference = models.ForeignKey(
         Conference,
         on_delete=models.CASCADE,
-        related_name='email_templates',
-    )
-    msg_type = models.CharField(
-        max_length=128,
-        choices=MSG_TYPE_CHOICES,
-        blank=True,
-    )
-
-    created_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True,
-        related_name='email_templates'
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-
-class GroupEmailMessage(models.Model):
-    template = models.ForeignKey(
-        EmailTemplate,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='sent_emails'
-    )
-    conference = models.ForeignKey(
-        Conference,
-        on_delete=models.CASCADE,
         related_name='sent_group_emails',
     )
-    users_to = models.ManyToManyField(User, related_name='group_emails')
     sent_at = models.DateTimeField(auto_now_add=True)
     sent_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True,
@@ -102,27 +72,31 @@ class GroupEmailMessage(models.Model):
     )
     sent = models.BooleanField(default=False)
 
+    @property
+    def message_type(self):
+        return ''
+
+
+class UserMessage(GroupMessage):
+    users_to = models.ManyToManyField(User, related_name='group_emails')
+
+    group_message = models.OneToOneField(
+        GroupMessage, on_delete=models.CASCADE, parent_link=True)
+
+    @property
+    def message_type(self):
+        return MSG_TYPE_USER
+
     @staticmethod
-    def create(template, users_to):
-        message = GroupEmailMessage.objects.create(
-            template=template,
-            conference=template.conference,
-        )
+    def create(subject, body, conference, users_to):
+        msg = UserMessage.objects.create(
+            subject=subject, body=body, conference=conference)
         for user in users_to:
-            message.users_to.add(user)
-        message.save()
-        return message
+            msg.users_to.add(user)
+        msg.save()
+        return msg
 
-    def send(self, sender, context=None, user_context=None):
-        """Create a bunch of messages for each user and send them.
-
-        :param sender: user that initiates message sending
-        :param context: context for template rendering.
-        :param user_context: `dict` with `User -> dict` items. Specific context
-            for each user, e.g. link to his login page or name.
-        :return: self
-        """
-
+    def send(self, sender):
         # 1) Update status and save sender chair user:
         self.sent = False
         self.sent_by = sender
@@ -132,30 +106,74 @@ class GroupEmailMessage(models.Model):
         #    and then build the whole message by inserting this body into
         #    the frame. Plain-text version is also formed from HTML.
         frame = self.conference.email_settings.frame
-        body_html_template = Template(markdown(self.template.body))
-        body_plain_template = Template(self.template.body)
-        subject_template = Template(self.template.subject)
+        conference_context = get_conference_context(self.conference)
         for user in self.users_to.all():
-            # Building context:
-            ctx = dict(context) if context is not None else {}
-            if user_context and user in user_context:
-                ctx.update(user_context[user])
-            _ctx = Context(ctx, autoescape=False)
-            # Rendering body and subject:
-            body_html = body_html_template.render(_ctx)
-            body_plain = body_plain_template.render(_ctx)
-            subject = subject_template.render(_ctx)
-            # Rendering full email with frame and building mail instance:
-            text_html = frame.render_html(subject, body_html)
-            text_plain = frame.render_plain(subject, body_plain)
-            message = EmailMessage.objects.create(
+            context = Context({
+                **conference_context,
+                **get_user_context(user, self.conference)
+            }, autoescape=False)
+            email = EmailMessage.create(
+                group_message=self.group_message,
                 user_to=user,
-                group_message=self,
-                subject=subject,
-                text_html=text_html,
-                text_plain=text_plain,
+                context=context,
+                frame=frame
             )
-            message.send(sender)
+            email.send(sender)
+
+        # 3) Update self status, write sending timestamp
+        self.sent_at = timezone.now()
+        self.sent = True
+        self.save()
+        return self
+
+
+class SubmissionMessage(GroupMessage):
+    submissions_to = models.ManyToManyField(
+        Submission, related_name='group_emails')
+
+    group_message = models.OneToOneField(
+        GroupMessage, on_delete=models.CASCADE, parent_link=True)
+
+    @property
+    def message_type(self):
+        return MSG_TYPE_SUBMISSION
+
+    @staticmethod
+    def create(subject, body, conference, submissions_to):
+        msg = SubmissionMessage.objects.create(
+            subject=subject, body=body, conference=conference)
+        for submission in submissions_to:
+            msg.submissions_to.add(submission)
+        msg.save()
+        return msg
+
+    def send(self, sender):
+        # 1) Update status and save sender chair user:
+        self.sent = False
+        self.sent_by = sender
+        self.save()
+
+        # 2) For each user, we render this template with the given context,
+        #    and then build the whole message by inserting this body into
+        #    the frame. Plain-text version is also formed from HTML.
+        frame = self.conference.email_settings.frame
+        conference_context = get_conference_context(self.conference)
+        for submission in self.submissions_to.all():
+            submission_context = get_submission_context(submission)
+            for author in submission.authors.all():
+                user = author.user
+                context = Context({
+                    **conference_context,
+                    **submission_context,
+                    **get_user_context(user, self.conference)
+                }, autoescape=False)
+                email = EmailMessage.create(
+                    group_message=self.group_message,
+                    user_to=user,
+                    context=context,
+                    frame=frame
+                )
+                email.send(sender)
 
         # 3) Update self status, write sending timestamp
         self.sent_at = timezone.now()
@@ -182,11 +200,26 @@ class EmailMessage(models.Model):
     )
 
     group_message = models.ForeignKey(
-        GroupEmailMessage,
+        GroupMessage,
         on_delete=models.SET_NULL,
         null=True,
         related_name='messages',
     )
+
+    @staticmethod
+    def create(group_message, user_to, context, frame):
+        template_body = Template(group_message.body)
+        template_subject = Template(group_message.subject)
+        body_md = template_body.render(context)
+        body_html = markdown(body_md)
+        subject = template_subject.render(context)
+        return EmailMessage.objects.create(
+            user_to=user_to,
+            group_message=group_message,
+            subject=subject,
+            text_html=frame.render_html(subject, body_html),
+            text_plain=frame.render_plain(subject, body_md),
+        )
 
     def send(self, sender):
         if not self.sent:

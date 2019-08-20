@@ -13,10 +13,11 @@
 {% load gears_extras %}
 
 {% block tabViewContent %}
-  <a href="{% url 'chair_mail:compose-user' conf_pk=conference.pk user_pk=u.pk %}?next={{ request.get_full_path|urlencode }}"
-     class="btn btn-outline-primary">
-    Compose new mail
-  </a>
+  <form action="{% url 'chair_mail:compose-user' conf_pk=conference.pk %}">
+    <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
+    <input type="hidden" name="users" value="{{ u.pk }}">
+    <button type="submit" class="btn btn-outline-primary"><i class="fas fa-plus"></i> New message</button>
+  </form>
 
   <hr>
 

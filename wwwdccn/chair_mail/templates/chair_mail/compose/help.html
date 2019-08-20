@@ -1,0 +1,221 @@
+{% extends "user_site/base.html" %}
+{% load bootstrap4 %}
+{% load static %}
+
+{% block title %}
+  Help | DCCN
+{% endblock %}
+{% block panelTitle %}
+  Help composing message
+{% endblock %}
+
+{% block css %}
+  <style>
+  p, ul, ol {
+    margin: 0 0 15px 0;
+    font-size: 1.0em;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  h2 {
+    font-size: 1.6em;
+    margin-bottom: 20px;
+  }
+  h3 {
+    font-size: 1.4em;
+    margin-bottom: 15px;
+    margin-top: 10px;
+  }
+  section {
+    padding: 10px 0;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  </style>
+{% endblock %}
+
+{% block body %}
+<div class="container dccn-panel dccn-work-panel" style="min-height: 90vh;">
+
+  <h1 class="dccn-panel-title">Composing messages</h1>
+
+  <section id="overview">
+    <h2>Overview</h2>
+
+    <p>Messaging subsystem allows chairs to compose and send messages to particular users, authors of given submissions
+      or all participants of mailing lists. Each message can be customized in a way that each user receives his/her
+      own copy with specific content.</p>
+
+    <p>Message editing is performed in
+      <a href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet" target="_blank">
+        Markdown <i class="fas fa-external-link-alt"></i>
+      </a>
+      language. Please note, that most of the Markdown features are <strong>not supported</strong> right now, and you
+      should use only basic formatting like marking headers, bold and italic font, hyper-links. In particular, tables are
+      yet not supported. However, support for most features will be added in future releases.</p>
+
+    <p>Besides markdown formatting, you can use <a href="#usingVars">template variables</a> and
+      <a href="#usingExpressions">template expressions</a> to specify message content for each user or submission.
+      Template variables represent different properties of a particular user (e.g., <code>first_name</code> or
+      <code>user_id</code>), his/her papers with different status, reviews written by that user. Other variables can target
+      specific submission, like <code>title</code>.  A set of variables depend on the type of a message you composing.
+      For instance, submission-specific template variables are available only when composing a message to a set of
+      submissions.</p>
+
+    <p>There are two types of messages:</p>
+    <ul>
+      <li><strong>User messages</strong>: message targeted at each user once, containing no information on particular
+        paper or review. If a user is added as recipient several times (e.g., he/she is a part of several mailing lists),
+        this user will still receive a single copy of a message.</li>
+      <li><strong>Submission messages:</strong> message targeted at specific submissions. While all context variables
+        used in user-messages still can be used here, you can also address a submission (e.g., specify its title,
+        abstract or ID). Since these messages are submission-centric, each user will receive as many letters, as
+        many times he/she is an author of submissions in the recipient list.</li>
+    </ul>
+  </section>
+
+  <section id="usingVars">
+    <h2>Using template variables</h2>
+    <p>To put a variable value into the letter, surround the variable name with double curly braces:
+      <code>{% verbatim %}{{ var }}{% endverbatim %}</code>. You can also use the variables in
+      <a href="#usingExpressions">expressions</a>.</p>
+
+    <p>Most variables have once of the following types:</p>
+    <ul>
+      <li><code>String</code>: most atomic variables are simply strings (e.g., <code>username</code> or
+        <code>user_id</code>). Note, that sometimes variables those look like numbers, should be assumed as strings.
+      </li>
+
+      <li><code>Integer</code>: variables representing a number of something, e.g. <code>num_papers</code>.</li>
+
+      <li><code>Hyperlink</code>: variables like <code>conf_email</code> or <code>conf_site_url</code> are replaced
+        with corresponding links. <strong>Important:</strong> do not put such variables in markdown links!</li>
+
+      <li><code>List</code>: variables like <code>papers_list</code> are replaced with an unordered list of
+        items. When these items relate to system objects (like in case of <code>papers_list</code>), they will provide
+        hyper-links to these objects.</li>
+
+      <li><code>Date</code>: variables representing date (without time). Most notably, <code>conf_start_date</code>
+        and <code>conf_end_date</code> are dates.</li>
+
+      <li><code>Datetime</code>: these variables represent both date and time.</li>
+    </ul>
+  </section>
+
+  <section id="usingExpressions">
+    <h2>Template expressions</h2>
+
+    <p>Email rendering is based on Django Templates engine, so you can use most of the expressions and filters available
+      there. You can read more about Django Templates
+      <a href="https://docs.djangoproject.com/en/2.2/ref/templates/builtins/" target="_blank">here <i class="fas fa-external-link-alt"></i></a>.
+      However, when using these expressions note the following:</p>.
+
+    <ol>
+      <li>Any <code>List</code> variable is evaluated as a <code>String</code> containing HTML unordered lists with
+        anchor tags. <strong>You should NOT iterate over it.</strong>.
+      <li>Variables of <code>Hyperlink</code> type are evaluated as <code>String</code> containing HTML with an
+        anchor tag.</li>
+    </ol>
+
+    To simplify things, we added a toolbar with most often used expressions and variables.
+
+    <h3>Conditional expressions</h3>
+
+    <p>You can use conditional expressions to display a block of text if the condition is true, and optionally display
+      another block of text otherwise. Conditional expressions take one of two forms:</p>
+
+    <ul>
+      <li>Simple form: <code>{% verbatim %}{% if condition %} some text {% endif %}{% endverbatim %}</code></li>
+      <li>Normal form: <code>{% verbatim %}{% if condition %} some text {% else %} another text {% endif %}{% endverbatim %}</code></li>
+    </ul>
+
+    <p>Usually you will use conditions like <code>var == 0</code> and <code>var != 0</code> to check whether a user
+      has or has not some types of papers or reviews. Example:</p>
+
+    <p>
+      <code>
+        {% verbatim %}
+        You have {% if num_papers != 0 %}{{ num_papers }}{% else %}no{% endif %} papers.
+        {% endverbatim %}
+      </code>
+    </p>
+
+    <p>This block will output a string <code>"You have 5 papers"</code> if <code>num_papers = 5</code>, and
+      <code>"You have no papers"</code> otherwise.</p>
+
+    <h3>Pluralization</h3>
+
+    <p>Often you need to add some suffix in plural form (most often, <em>-s</em>). You can use pluralization expressions
+      to do that: <code>{% verbatim %}{{ var|pluralize }}{% endverbatim %} </code> will print <code>-s</code> if
+      <code>var</code> is not equal to <code>1</code>, and nothing otherwise.</p>
+
+    <P>If you need another type suffix in plural form, you can specify it right after <code>pluralize</code>. For
+      instance, adding <em>-es</em> suffix in plural form looks like this:
+      <code>{% verbatim %}{{ var|pluralize:"es" }}{% endverbatim %}</code></p>
+
+    <p>Finally, if you need different suffixes in plural and singular form, you can specify both of them separated
+      with comma (singular first):
+      <code>{% verbatim %}You have {{ var }} matri{{ var|pluralize:"x,ces" }}{% endverbatim %}</code>.</p>
+
+    <h3>Date and Time</h3>
+
+    <p>You can use <code>date</code> and <code>time</code> filters to specify the format in which you want to represent
+      date or time part of the variable. Read more about format specifiers at
+      <a href="https://docs.djangoproject.com/en/2.2/ref/templates/builtins/#date" target="_blank">Django documentation.</a>
+    </p>
+  </section>
+
+  <section id="mailingLists">
+    <h2>Mailing Lists</h2>
+    <p>While you can specify users and submissions to send the message to manually, you can also use mailing lists
+      which contain a list of users or submissions with some property.</p>
+    <p>To this moment, you can use the following mailing lists:</p>
+
+    <table class="table table-sm table-bordered">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Type</th>
+          <th scope="col">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ml in mailing_lists %}
+          <tr>
+            <th scope="row">{{ ml.name }}</th>
+            <td>{{ ml.type }}</td>
+            <td>{{ ml.details }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </section>
+
+  <section id="varsList">
+    <h2>List of template variables</h2>
+    <p>You can use the following variables in your templates. Please, note that submission variables can be used
+      only in messages sent to submission authors, not in user messages.</p>
+
+    {% for var_item in variables %}
+      <h3>{{ var_item.0 }}</h3>
+      <table class="table table-sm table-bordered">
+        <thead>
+          <tr>
+            <th scope="col">Variable</th>
+            <th scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for var in var_item.1 %}
+            <tr>
+              <td><code>{{ var.0 }}</code></td>
+              <td>{{ var.1 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endfor %}
+  </section>
+
+</div>
+{% endblock %}

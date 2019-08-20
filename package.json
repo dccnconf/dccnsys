@@ -25,6 +25,7 @@
   "homepage": "https://github.com/dccnconf/dccnsys#readme",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.8.2",
+    "bootbox": "^5.3.1",
     "bootstrap": "^4.3.1",
     "bootstrap4": "0.0.1-security",
     "codemirror": "^5.48.0",

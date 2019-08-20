@@ -7,20 +7,22 @@
 {# INHERITED CONTEXT:                                                      #}
 {# - `conference`                                                          #}
 {# - `active_tab`: value of `active` context variable for tab navigation   #}
-{# - `frame`: the default conference email frame template                  #}
 {###########################################################################}
 {% extends 'chair_mail/_base.html' %}
 {% load static %}
+{% load chair_mail_extras %}
 
 {% block tabViewContent %}
   <h1 class="dccn-text-larger-light mb-4">Messages</h1>
+
   <div class="d-flex mb-3">
     <div class="dropdown">
       <button class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" type="button">
         Compose
       </button>
       <div class="dropdown-menu" style="max-width: 400px; min-width: 300px;">
-        <a href="#" class="dropdown-item dccn-text-small px-3 py-2" style="white-space: normal;">
+        <a href="{% url 'chair_mail:compose-user' conf_pk=conference.pk %}?next={{ request.get_full_path|urlencode }}"
+           class="dropdown-item dccn-text-small px-3 py-2" style="white-space: normal;">
           <h6 class="dccn-text-small font-weight-bold pb-2">Compose to users list</h6>
           <p class="dccn-text-smaller">
             Message for predefined users list. You can use conference and user variables.
@@ -38,20 +40,20 @@
       </div>
     </div>
   </div>
+
   <div class="list-group">
     {% for msg in msg_list %}
-      {% with template=msg.template %}
-        <a class="d-flex list-group-item list-group-item-action py-1"
-           href="{% url 'chair_mail:message-details' conf_pk=conference.pk msg_pk=msg.pk %}?next={{ request.get_full_path|urlencode }}">
-          <div>
-            <span class="dccn-text-small text-muted mr-2">{{ msg.sent_at|date:"d.m.Y G:i" }}</span>
-            <span class="dccn-text-0 font-weight-bold">{{ template.subject }}</span>
-          </div>
-          <div class="ml-auto"><span class="badge badge-info">{{ template.msg_type }}</span></div>
-        </a>
-      {% endwith %}
+      <a class="d-flex list-group-item list-group-item-action py-1"
+         href="{% url 'chair_mail:message-details' conf_pk=conference.pk msg_pk=msg.pk %}?next={{ request.get_full_path|urlencode }}">
+        <div>
+          <span class="dccn-text-small text-muted mr-2">{{ msg.sent_at|date:"d.m.Y G:i" }}</span>
+          <span class="dccn-text-0 font-weight-bold">{{ msg.subject }}</span>
+        </div>
+        <div class="ml-auto"><span class="badge badge-info">{{ msg|msgtype }}</span></div>
+      </a>
     {% empty %}
       <p class="dccn-text-0 text-center">No messages.</p>
     {% endfor %}
   </div>
+
 {% endblock %}

@@ -1,0 +1,91 @@
+{###########################################################################}
+{# This fragment is inserted in 'Help' tab in the compose window.          #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - variables                                                             #}
+{###########################################################################}
+<div class="btn-toolbar mt-3 mb-1 message-editor-toolbar">
+  <div class="btn-group dropdown mr-2">
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
+      <span class="font-weight-bold">Expression</span>
+    </button>
+    <div class="dropdown-menu p-3" style="max-height: 40vh; overflow: scroll;">
+      <div class="dropdown-header">Variable value</div>
+      <div class="dropdown-item message-editor-insert-text"
+            data-text="{% verbatim %}{{  }}{% endverbatim %}" data-offset="3">
+        Evaluate variable: <code>{% verbatim %}{{ var }}{% endverbatim %}</code>
+      </div>
+      <div class="dropdown-divider"></div>
+
+      <div class="dropdown-header">Conditional expressions</div>
+      <div class="dropdown-item message-editor-insert-text"
+            data-text="{% verbatim %}{% if  %}  {% endif %}{% endverbatim %}" data-offset="6">
+        <p>Simple conditional</p>
+        <p><code>{% verbatim %}{% if expr %} text {% endif %}{% endverbatim %}</code></p>
+      </div>
+      <div class="dropdown-item message-editor-insert-text"
+            data-text="{% verbatim %}{% if  %}  {% else %}  {% endif %}{% endverbatim %}" data-offset="6">
+        <p>If..else conditional</p>
+        <p><code>{% verbatim %}{% if expr %} text {% else %} text {% endif %}{% endverbatim %}</code></p>
+      </div>
+      <div class="dropdown-divider"></div>
+
+      <div class="dropdown-header">Pluralization</div>
+      <div class="dropdown-item message-editor-insert-text"
+            data-text="{% verbatim %}{{ |pluralize }}{% endverbatim %}" data-offset="3">
+        <p>Print <span class="font-weight-normal">-s</span> in plural form</p>
+        <p><code>{% verbatim %}{{ var|pluralize }}{% endverbatim %}</code></p>
+      </div>
+      <div class="dropdown-item message-editor-insert-text"
+            data-text='{% verbatim %}{{ |pluralize:"es" }}{% endverbatim %}' data-offset="3">
+        <p>Print <span class="font-weight-normal">-es</span> in plural form</p>
+        <code>{% verbatim %}{{ var|pluralize:"es" }}{% endverbatim %}</code>
+      </div>
+      <div class="dropdown-item message-editor-insert-text"
+            data-text='{% verbatim %}{{ |pluralize:"y,es" }}{% endverbatim %}' data-offset="3">
+        <p>Print <span class="font-weight-normal">-es</span> in plural and
+          <span class="font-weight-normal">-y</span> in singular form</p>
+        <code>{% verbatim %}{{ var|pluralize:"y,es" }}{% endverbatim %}</code>
+      </div>
+      <div class="dropdown-divider"></div>
+
+      <div class="dropdown-header">Dates and Time</div>
+      <div class="dropdown-item message-editor-insert-text"
+            data-text='{% verbatim %}{{ |date:"j M Y" }}{% endverbatim %}' data-offset="3">
+        <p>Print date in format "day month year"</p>
+        <code>{% verbatim %}{{ var|date:"j M Y" }}{% endverbatim %}</code>
+      </div>
+      <div class="dropdown-item message-editor-insert-text"
+            data-text='{% verbatim %}{{ |time:"H:i:s" }}{% endverbatim %}' data-offset="3">
+        <p>Print time in format "hour:minute"</p>
+        <code>{% verbatim %}{{ var|time:"H:i" }}{% endverbatim %}</code>
+      </div>
+      <div class="dropdown-item message-editor-insert-text"
+            data-text='{% verbatim %}{% now "jS F Y H:i" %}{% endverbatim %}'>
+        <p>Print current date and time</p>
+        <code>{% verbatim %}{% now "jS F Y H:i" %}{% endverbatim %}</code>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="btn-group dropdown">
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
+      <span class="font-weight-bold">Insert var</span>
+    </button>
+    <div class="dropdown-menu p-3" style="max-height: 40vh; overflow: scroll;">
+      {% for var_group in variables %}
+        <div class="dropdown-header">{{ var_group.0 }}</div>
+        {% for var in var_group.1 %}
+          <span class="dropdown-item message-editor-insert-text" data-text="{{ var.0 }}">
+            <code>{{ var.0 }}</code>
+          </span>
+        {% endfor %}
+        {% if not forloop.last %}
+          <div class="dropdown-divider"></div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+</div>

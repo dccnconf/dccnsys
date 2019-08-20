@@ -99,8 +99,17 @@
 
 
   <div class="dccn-feed-item-footer mt-2">
-    <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}" class="dccn-feed-item-link"><i class="fas fa-bars"></i> View</a>
-    <a href="{% url 'chair_mail:compose-user' conf_pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}" class="dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</a>
+    <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=item.pk %}?next={{ request.get_full_path|urlencode }}"
+       class="dccn-feed-item-link">
+      <i class="fas fa-bars"></i> View
+    </a>
+    <form action="{% url 'chair_mail:compose-user' conf_pk=conference.pk %}" method="GET" class="mr-2">
+      <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
+      <input type="hidden" name="users" value="{{ item.pk }}">
+      <button class="btn btn-link dccn-feed-item-link">
+        <i class="fas fa-envelope"></i> Contact
+      </button>
+    </form>
     {% if item.is_reviewer %}
       <button type="submit" class="btn btn-link dccn-feed-item-link text-danger" data-toggle="modal" data-target="#revokeModal-{{ item.pk }}">
         <i class="fas fa-minus-circle"></i> Revoke reviewer
@@ -144,7 +153,7 @@
 {#---------------------------------------------------------------------------#}
 {% block filterPanel %}
   <div class="dccn-chair-workspace-filter">
-    <form action="{% url 'chair:users' pk=conference.pk %}" method="GET" class="m-2">
+    <form action="{% url 'chair:users' conf_pk=conference.pk %}" method="GET" class="m-2">
       {% bootstrap_field filter_form.term show_label=False bound_css_class='' %}
 
       <a href="#detailedFilterFormFields" class="d-block dccn-link mb-3" data-toggle="collapse" id="detailedFilterFormToggler">
@@ -179,7 +188,7 @@
 
       <div class="form-group mt-2">
         <button type="submit" class="btn btn-outline-info">Apply</button>
-        <a href="{% url 'chair:users' pk=conference.pk %}" class="btn btn-link dccn-link ml-3">Clear filter</a>
+        <a href="{% url 'chair:users' conf_pk=conference.pk %}" class="btn btn-link dccn-link ml-3">Clear filter</a>
       </div>
 
     </form>

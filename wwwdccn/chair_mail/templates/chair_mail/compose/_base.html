@@ -58,22 +58,24 @@
 
 {% block content %}
 
-  <div class="d-flex mb-3">
-    <div class="dccn-text-0 font-weight-bold mr-2">To: </div>
-    <div>
-      {% block composeTarget %}
-        {#################################################}
-        {#  In this block will be eigther fixed string   #}
-        {# (e.g., when composing to user or submission), #}
-        {# or a selection of messaging lists.            #}
-        {#################################################}
-      {% endblock %}
-    </div>
-    <div class="ml-auto bg-success-16 text-light font-weight-bold border rounded px-2">{{ msg_type }}</div>
-  </div>
-
   <form action="" id="newMessageForm" method="POST" novalidate>
     {% csrf_token %}
+
+    <div class="d-flex mb-3 align-items-center">
+      <div class="dccn-text-0 font-weight-bold mr-2">To: </div>
+      <div class="flex-fill mr-2">
+        {% block composeTarget %}
+          {#################################################}
+          {#  In this block will be eigther fixed string   #}
+          {# (e.g., when composing to user or submission), #}
+          {# or a selection of messaging lists.            #}
+          {#################################################}
+        {% endblock %}
+      </div>
+      <div class="bg-success-16 ml-auto text-light font-weight-bold border rounded px-2" id="msgTypeLabel">
+        {{ msg_type }}
+      </div>
+    </div>
 
     {# Next (hidden field) #}
     <input type="hidden" name="next" id="id_next" value="{{ next }}" form="newMessageForm">

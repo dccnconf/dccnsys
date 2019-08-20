@@ -29,7 +29,7 @@ urlpatterns = [
     path('chair_mail/', include('chair_mail.urls')),
     path('review/', include('review.urls')),
     path('gears/', include('gears.urls')),
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.USE_LOCAL_MEDIA:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

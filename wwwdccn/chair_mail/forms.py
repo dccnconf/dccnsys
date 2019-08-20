@@ -1,5 +1,6 @@
 from django import forms
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.template import Template, Context
 from django.utils import timezone
@@ -8,9 +9,21 @@ from markdown import markdown
 
 from chair_mail.context import get_conference_context, get_user_context, \
     get_submission_context
+from chair_mail.mailing_lists import find_list
 from submissions.models import Submission
 from users.models import User
-from .models import EmailTemplate, EmailFrame
+from .models import EmailFrame, MSG_TYPE_USER
+
+
+def parse_mailing_lists(names_string, separator=','):
+    names = names_string.split(separator)
+    names = [name for name in names if name.strip()]
+    return [find_list(name) for name in names]
+
+
+def parse_users(pks_string, separator=','):
+    pks = set(map(lambda s: int(s), pks_string.split(separator)))
+    return User.objects.filter(pk__in=pks)
 
 
 class EmailFrameUpdateForm(forms.ModelForm):
@@ -52,19 +65,38 @@ class EmailFrameTestForm(forms.Form):
         )
 
 
-class EmailTemplateForm(forms.ModelForm):
-    class Meta:
-        model = EmailTemplate
-        fields = ('subject', 'body')
+class MessageForm(forms.Form):
+    subject = forms.CharField()
+    body = forms.CharField(widget=forms.Textarea(), required=False)
+    lists = forms.CharField(
+        required=False, max_length=1000, widget=forms.HiddenInput)
 
-    def save(self, commit=True, conference=None, sender=None, msg_type=None):
-        template = super().save(False)
-        if commit:
-            template.conference = conference
-            template.created_by = sender
-            template.msg_type = msg_type
-            template.save()
-        return template
+    def __init__(self, *args, msg_type=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.msg_type = msg_type
+        self.cleaned_lists = []
+
+    def clean_lists(self):
+        _lists = parse_mailing_lists(self.cleaned_data['lists'])
+        for ml in _lists:
+            if ml.type != self.msg_type:
+                raise ValidationError(
+                    f'unexpected {ml.type} mailing list {ml.name}')
+        self.cleaned_lists = _lists
+        return self.cleaned_data['lists']
+
+
+class UserMessageForm(MessageForm):
+    users = forms.CharField(
+        required=False, max_length=10000, widget=forms.HiddenInput)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, msg_type=MSG_TYPE_USER, **kwargs)
+        self.cleaned_users = []
+
+    def clean_users(self):
+        self.cleaned_users = list(parse_users(self.cleaned_data['users']))
+        return self.cleaned_data['users']
 
 
 class PreviewFormBase(forms.Form):
@@ -88,24 +120,18 @@ class PreviewFormBase(forms.Form):
     def render_html(self, conference):
         ctx_data = self.get_context(conference)
         context = Context(ctx_data, autoescape=False)
-        body_template = Template(markdown(self.cleaned_data['body']))
         subject_template = Template(self.cleaned_data['subject'])
+        body_template = Template(self.cleaned_data['body'])
+        subject = subject_template.render(context)
+        body = markdown(body_template.render(context))
         return {
-            'body': body_template.render(context),
-            'subject': subject_template.render(context)
+            'body': body,
+            'subject': subject
         }
 
 
 class PreviewUserMessageForm(PreviewFormBase):
-    user = forms.ChoiceField()
-
-    def __init__(self, *args, users=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['user'].choices = [
-            (u.pk, u.profile.get_full_name()) for u in users
-        ]
-        if len(users) == 1:
-            self.fields['user'].widget.attrs['hidden'] = True
+    user = forms.CharField()  # Use simple CharField instead of choice!
 
     def get_context(self, conference):
         user = User.objects.get(pk=self.cleaned_data['user'])
