@@ -30,6 +30,8 @@
 {#---------------------------------------------------------------------------#}
 {% block content %}
   <div class="dccn-panel-toolbar mt-2">
+    {% block toolbar %}
+    {% endblock %}
     <p class="dccn-text-normal-light mb-3 mt-0">
       {{ num_items }}&nbsp;items found{% if num_items > 0 %}, showing from {{ first_index }} to {{ last_index }}{% endif %}
     </p>

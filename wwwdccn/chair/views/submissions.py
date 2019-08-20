@@ -21,7 +21,6 @@ from review.models import Review
 from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
     AuthorDeleteForm, AuthorsReorderForm, InviteAuthorForm
 from submissions.models import Submission, Author
-from submissions.templatetags.submission_extras import status_class
 from users.models import Profile
 
 

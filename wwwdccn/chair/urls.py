@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import dashboard, submissions, users
+from .views import dashboard, submissions, users, reviews
 
 
 app_name = 'chair'
@@ -31,7 +31,7 @@ urlpatterns = [
     path('<int:conf_pk>/submissions/export/csv/', submissions.export_csv, name='export-submissions-csv'),
 
     #
-    # Users listing
+    # Users
     #
     path('<int:conf_pk>/users/', users.list_users, name='users'),
     path('<int:conf_pk>/users/pages/<int:page>/', users.list_users, name='users-pages'),
@@ -40,4 +40,11 @@ urlpatterns = [
     path('<int:conf_pk>/reviewers/invite/<int:user_pk>/', users.create_reviewer, name='invite-reviewer'),
     path('<int:conf_pk>/reviewers/revoke/<int:user_pk>/', users.revoke_reviewer, name='revoke-reviewer'),
     path('<int:conf_pk>/authors/export/csv/', users.export_csv, name='export-authors-csv'),
+
+    #
+    # Reviews
+    #
+    path('<int:conf_pk>/reviews/', reviews.list_submissions, name='reviews'),
+    path('<int:conf_pk>/reviews/pages/<int:page>/', reviews.list_submissions, name='reviews-pages'),
+    path('<int:conf_pk>/reviews/export/docx/', reviews.export_doc, name='export-reviews-doc'),
 ]
