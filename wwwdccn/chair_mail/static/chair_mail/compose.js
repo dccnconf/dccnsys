@@ -292,6 +292,7 @@ const valuesListInput = function (elem) {
 
     /** Delete an item from the values list. */
     remove: item => {
+      item = String(item);
       const index = state.values.indexOf(item);
       if (index >= 0) {
         state.values.splice(index, 1);
