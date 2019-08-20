@@ -15,6 +15,14 @@
 
 
 {% block chairMailStyle %}
+  <style>
+  #htmlEditor {
+    min-height: 70vh;
+  }
+  #htmlEditor .CodeMirror {
+    min-height: 69vh;
+  }
+  </style>
 {% endblock %}
 
 {% block tabViewContent %}
@@ -24,7 +32,7 @@
           class="mt-3 w-100">
       {% csrf_token %}
       <div class="form-group" id="htmlFormGroup">
-        <div class="mr-0 mr-lg-2">
+        <div class="mr-0 mr-lg-2" id="htmlEditor">
           {% bootstrap_field form.text_html %}
         </div>
       </div>
