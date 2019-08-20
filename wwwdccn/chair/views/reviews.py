@@ -13,6 +13,9 @@ from conferences.models import Conference
 from submissions.models import Submission
 from users.models import User
 
+import logging
+logger = logging.getLogger(__name__)
+
 QUALITY_COLOR = {
     'excellent': 'success',
     'good': 'info',
@@ -29,6 +32,23 @@ QUALITY_ICON_CLASS = {
     '?': 'fas fa-question',
 }
 
+
+import re
+from django.utils.six import unichr
+def remove_control_characters(text):
+    def str_to_int(s, default, base=10):
+        if int(s, base) < 0x10000:
+            return unichr(int(s, base))
+        return default
+    text = re.sub("&#(\d+);?", lambda c: str_to_int(c.group(1), c.group(0)), text)
+    text = re.sub("&#[xX]([0-9a-fA-F]+);?", lambda c: str_to_int(c.group(1), c.group(0), base=16), text)
+    text = re.sub("[\x00-\x08\x0b\x0e-\x1f\x7f]", "", text)
+    return text
+
+
+import unicodedata
+def remove_control_characters(s):
+    return "".join(ch for ch in s if unicodedata.category(ch)[0]!="C")
 
 def get_review_stats(conference, stype=None):
     submissions = conference.submission_set.exclude(status=Submission.SUBMITTED)
@@ -303,5 +323,7 @@ def export_doc(request, conf_pk):
         f'attachment; filename=reviews-{timestamp}.docx'
     document.save(response)
 
+    logger.error(
+        f'exported reviews in docx, content length is {len(response.content)}')
     return response
 
