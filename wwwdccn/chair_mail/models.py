@@ -7,7 +7,7 @@ from markdown import markdown
 from html2text import html2text
 
 from chair_mail.context import get_conference_context, get_user_context, \
-    get_submission_context
+    get_submission_context, get_frame_context
 from conferences.models import Conference
 from submissions.models import Submission
 from users.models import User
@@ -26,14 +26,9 @@ class EmailFrame(models.Model):
 
     @staticmethod
     def render(frame_template, conference, subject, body):
-        return Template(frame_template).render(Context({
-            'subject': subject,
-            'body': body,
-            'conf_email': conference.contact_email,
-            'conf_logo': "",
-            'conf_full_name': conference.full_name,
-            'conf_short_name': conference.short_name,
-        }, autoescape=False))
+        context_data = get_frame_context(conference, subject, body)
+        context = Context(context_data, autoescape=False)
+        return Template(frame_template).render(context)
 
     def render_html(self, subject, body):
         return EmailFrame.render(
