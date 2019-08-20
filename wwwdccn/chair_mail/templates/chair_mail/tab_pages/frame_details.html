@@ -28,14 +28,6 @@
           {% bootstrap_field form.text_html %}
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Preview:</label>
-        <div class="border">
-          <div id="preview" data-src="{{ form.text_html.auto_id }}">
-            {{ frame.text_html|safe }}
-          </div>
-        </div>
-      </div>
       <div class="form-group" id="plainTextFormGroup">
         {% bootstrap_field form.text_plain %}
       </div>
@@ -47,7 +39,18 @@
         Send me test message
       </button>
     </div>
-    {% include 'chair_mail/components/frame_help.html' %}
+    <div class="help">
+      <p class="dccn-text-small">
+        Message frame templates define how the messages look like. They only define structure, however, all the content is
+        specified in separate blocks:
+      </p>
+      <ul>
+        {% for var in variables %}
+          <li class="dccn-text-small"><span class="text-info">{{ var.0 }}</span>: {{ var.1 }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
     <hr>
     <div class="d-flex mt-4">
       <div class="dccn-text-smaller text-muted">
@@ -113,10 +116,6 @@ $(document).ready(function () {
       ...defaultProps,
     });
     CodeMirror.fromTextArea(document.getElementById('id_text_plain'), defaultProps);
-
-    htmlEditor.on('change', function (cm) {
-      preview.html(cm.getValue());
-    });
 
     /*
      * Bind "Send me test message" button to sending the test message action.

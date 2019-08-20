@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
@@ -8,6 +9,48 @@ from review.models import Review
 from submissions.models import Submission
 
 Var = namedtuple('Var', ('name', 'description'))
+
+
+#
+# FRAME CONTEXT (DO NOT USE IT IN GROUP MESSAGE RENDERING!!!)
+#
+FRAME_SUBJECT = Var('subject', _('subject defined when writing a new letter'))
+FRAME_BODY = Var('body', _('body of the letter'))
+FRAME_SITE_URL = Var('site_url', _('link to the registration system site'))
+FRAME_CONF_EMAIL = Var('conf_email', _('email for contacting organizers'))
+FRAME_CONF_SITE_URL = Var('conf_site_url', _('URL of the conference web site'))
+FRAME_CONF_FULL_NAME = Var('conf_full_name', _('full name of the conference'))
+FRAME_CONF_SHORT_NAME = Var('conf_short_name', _('short name of the conference'))
+FRAME_CONF_LOGO_URL = Var(
+    'conf_logo_url',
+    _('URL of the conference logotype. Note, that it better should be located '
+      'at some well-known source (like Google Drive or Amazon S3), since some '
+      'email clients may cut images from suspicious sources.'))
+
+FRAME_VARS = tuple((var.name, var.description) for var in (
+    FRAME_SUBJECT, FRAME_BODY, FRAME_SITE_URL, FRAME_CONF_EMAIL,
+    FRAME_CONF_SITE_URL, FRAME_CONF_FULL_NAME, FRAME_CONF_SHORT_NAME,
+    FRAME_CONF_LOGO_URL
+))
+
+
+def get_frame_context(conference, subject, body):
+    """Build frame context. It differs from GroupMessage rendering since
+    frame is separately defined in HTML and plain-text: we don't need
+    to enclose references in Markdown or HTML.
+    """
+    return {
+        FRAME_SUBJECT.name: subject,
+        FRAME_BODY.name: body,
+        FRAME_SITE_URL.name:
+            f'{settings.SITE_PROTOCOL}://{settings.SITE_DOMAIN}',
+        FRAME_CONF_EMAIL.name: conference.contact_email,
+        FRAME_CONF_SITE_URL.name: conference.site_url,
+        FRAME_CONF_FULL_NAME.name: conference.full_name,
+        FRAME_CONF_SHORT_NAME.name: conference.short_name,
+        FRAME_CONF_LOGO_URL.name:
+            conference.logotype.url if conference.logotype else ''
+    }
 
 
 #

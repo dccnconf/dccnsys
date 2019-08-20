@@ -7,7 +7,8 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from chair.utility import validate_chair_access
-from chair_mail.context import USER_VARS, CONFERENCE_VARS, SUBMISSION_VARS
+from chair_mail.context import USER_VARS, CONFERENCE_VARS, SUBMISSION_VARS, \
+    FRAME_VARS
 from chair_mail.forms import EmailFrameUpdateForm, EmailFrameTestForm, \
     PreviewSubmissionMessageForm, MessageForm, UserMessageForm
 from chair_mail.mailing_lists import ALL_LISTS
@@ -86,6 +87,7 @@ def frame_details(request, conf_pk):
         'frame': frame,
         'active_tab': 'frame',
         'form': form,
+        'variables': FRAME_VARS,
     })
 
 
