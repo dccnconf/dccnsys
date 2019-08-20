@@ -33,23 +33,6 @@ QUALITY_ICON_CLASS = {
 }
 
 
-import re
-from django.utils.six import unichr
-def remove_control_characters(text):
-    def str_to_int(s, default, base=10):
-        if int(s, base) < 0x10000:
-            return unichr(int(s, base))
-        return default
-    text = re.sub("&#(\d+);?", lambda c: str_to_int(c.group(1), c.group(0)), text)
-    text = re.sub("&#[xX]([0-9a-fA-F]+);?", lambda c: str_to_int(c.group(1), c.group(0), base=16), text)
-    text = re.sub("[\x00-\x08\x0b\x0e-\x1f\x7f]", "", text)
-    return text
-
-
-import unicodedata
-def remove_control_characters(s):
-    return "".join(ch for ch in s if unicodedata.category(ch)[0]!="C")
-
 def get_review_stats(conference, stype=None):
     submissions = conference.submission_set.exclude(status=Submission.SUBMITTED)
     if stype is not None:
@@ -239,11 +222,11 @@ def export_doc(request, conf_pk):
             ('average', 'lq', 'median', 'hq',
              'num_review_submissions', 'num_complete',
              'num_assigned_incomplete', 'num_not_assigned'),
-            ('Average score', 'Q1', 'Q2 (median)', 'Q3',
+            ('Average score', 'Q3', 'Q2 (median)', 'Q1',
              'Number of submissions under review',
              'Number of submissions with complete reviews',
-             'Number of submissions with partially not assigned reviewers',
-             'Number of submissions with assigned, but incomplete reviews'),
+             'Number of submissions with assigned, but incomplete reviews',
+             'Number of submissions with partially not assigned reviewers'),
             ('float', 'float', 'float', 'float', 'int', 'int', 'int', 'int')
     )):
         table.rows[i + 1].cells[0].text = details
@@ -268,7 +251,14 @@ def export_doc(request, conf_pk):
         record = reviews[submission]
         scores_str_list = [
             f'{sc:.1f}' if sc != '?' else '?' for sc in record['scores_list']]
-        document.add_heading(f'#{submission.pk}: {submission.title}', level=1)
+        try:
+            document.add_heading(
+                f'#{submission.pk}: {submission.title}', level=1)
+        except ValueError:
+            document.add_heading(
+                f'#{submission.pk}: [title hidden due to illegal characters]',
+                level=1)
+
         p = document.add_paragraph()
         p.add_run('Review Score: ').bold = True
         p.add_run(f'{record["score"]:.2f} ({record["quality"]}, scores: '
@@ -314,7 +304,13 @@ def export_doc(request, conf_pk):
             for row in table.rows:
                 row.height_rule = WD_ROW_HEIGHT_RULE.EXACTLY
                 row.height = Cm(0.7)
-            document.add_paragraph(review.details)
+            try:
+                document.add_paragraph(review.details)
+            except ValueError:
+                p = document.add_paragraph()
+                p.add_run('[Review details hidden since they contain illegal '
+                          'characters and can not be processed in .docx '
+                          'format]').italic = True
 
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.'
@@ -323,7 +319,5 @@ def export_doc(request, conf_pk):
         f'attachment; filename=reviews-{timestamp}.docx'
     document.save(response)
 
-    logger.error(
-        f'exported reviews in docx, content length is {len(response.content)}')
     return response
 
