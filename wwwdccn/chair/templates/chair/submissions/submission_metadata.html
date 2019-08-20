@@ -1,0 +1,24 @@
+{###########################################################################}
+{# Edit submission metadata (title, abstract, topics, etc.)                #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `form`                                                                #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `submission`                                                          #}
+{# - `active_tab`                                                          #}
+{###########################################################################}
+{% extends 'chair/submissions/_base.html' %}
+{% load gears_extras %}
+{% load submission_extras %}
+{% load bootstrap4 %}
+
+{% block tabViewContent %}
+  <form action="{% url 'chair:submission-metadata' conf_pk=conference.pk sub_pk=submission.pk %}" method="POST">
+    {% bootstrap_messages %}
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    <button class="btn btn-primary mt-3">Save</button>
+  </form>
+{% endblock %}

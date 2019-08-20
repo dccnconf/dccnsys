@@ -25,8 +25,10 @@
   "homepage": "https://github.com/dccnconf/dccnsys#readme",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.8.2",
+    "bootbox": "^5.3.1",
     "bootstrap": "^4.3.1",
     "bootstrap4": "0.0.1-security",
+    "codemirror": "^5.48.0",
     "del": "^4.1.1",
     "gulp": "^4.0.2",
     "gulp-concat": "^2.6.1",
@@ -37,10 +39,11 @@
     "jquery-ui": "^1.12.1",
     "package.json": "^2.0.1",
     "popper.js": "^1.15.0",
+    "requirejs": "^2.3.6",
     "yargs": "^13.2.4"
   },
   "devDependencies": {
-    "browser-sync": "^2.26.5",
+    "browser-sync": "^2.26.7",
     "chart.js": "^2.8.0",
     "math": "0.0.3",
     "sweetalert2": "^8.11.1",

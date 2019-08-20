@@ -1,0 +1,122 @@
+{###########################################################################}
+{# Base for chair pages providing paged lists of items.                    #}
+{#                                                                         #}
+{# BLOCKS:                                                                 #}
+{# - `listViewContent`: this block shold contains list items.              #}
+{#                                                                         #}
+{# INHERITED BLOCKS:                                                       #}
+{# - `smallScreenBreadcrumbItems`                                          #}
+{# - `largeScreenBreadcrumbItems`                                          #}
+{# - `navigation`: left-side navigation.                                   #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `num_items`: number of items shown on the page.                       #}
+{# - `curr_page`: index (1-based) of the current page.                     #}
+{# - `page_urls`: a list of all pages URLs.                                #}
+{# - `first_index`: index (1-based) of the first item being shown.         #}
+{# - `last_index`: index (1-based) of the last item being shown.           #}
+{# - `prev_page_url`: URL of the previous page, if exists.                 #}
+{# - `next_page_url`: URL of the next page, if exists.                     #}
+{# - `first_page_url`: URL of the first page, if exists.                   #}
+{# - `last_page_url`: URL of the last page, if exists.                     #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{###########################################################################}
+{% extends 'chair/base/generic_page.html' %}
+
+{#---------------------------------------------------------------------------#}
+{# Main content                                                              #}
+{#---------------------------------------------------------------------------#}
+{% block content %}
+  <div class="dccn-panel-toolbar mt-2">
+    {% block toolbar %}
+    {% endblock %}
+    <p class="dccn-text-normal-light mb-3 mt-0">
+      {{ num_items }}&nbsp;items found{% if num_items > 0 %}, showing from {{ first_index }} to {{ last_index }}{% endif %}
+    </p>
+    <div class="row">
+      <a href="{{ prev_page_url }}" class="btn btn-outline-secondary mr-auto {% if not prev_page_url %}disabled{% endif %}">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+      <a href="{{ next_page_url }}"  class="btn btn-outline-secondary ml-auto {% if not next_page_url %}disabled{% endif %}">
+        <i class="fas fa-chevron-right"></i>
+      </a>
+    </div>
+  </div>
+
+  {% block listViewContent %}
+  {% endblock %}
+
+  <nav>
+    <ul class="pagination d-flex justify-content-center flex-wrap">
+      <li class="page-item {% if not first_page_url %}disabled{% endif %}">
+        <a class="page-link" href="{{ first_page_url }}" aria-label="Previous"><i class="fas fa-angle-double-left"></i></a>
+      </li>
+      <li class="page-item {% if not prev_page_url %}disabled{% endif %}">
+        <a class="page-link" href="{{ prev_page_url }}" aria-label="Previous"><i class="fas fa-angle-left"></i></a>
+      </li>
+
+      {% for page_url in page_urls %}
+        <li class="page-item {% if forloop.counter == curr_page %}active{% endif %}">
+          <a href="{{ page_url }}" class="page-link">{{ forloop.counter }}</a>
+        </li>
+      {% endfor %}
+
+      <li class="page-item {% if not next_page_url %}disabled{% endif %}">
+        <a class="page-link" href="{{ next_page_url }}" aria-label="Previous"><i class="fas fa-angle-right"></i></a>
+      </li>
+      <li class="page-item {% if not last_page_url %}disabled{% endif %}">
+        <a class="page-link" href="{{ last_page_url }}" aria-label="Previous"><i class="fas fa-angle-double-right"></i></a>
+      </li>
+    </ul>
+  </nav>
+{% endblock %}
+
+
+{% block script %}
+<script>
+const detailedFilter = $('#detailedFilterFormFields');
+const detailedFilterTogglerIcon = $('#detailedFilterFormToggler i');
+
+detailedFilter.on('hidden.bs.collapse', function () {
+  detailedFilterTogglerIcon.removeClass('fa-chevron-down');
+  detailedFilterTogglerIcon.addClass('fa-chevron-right');
+});
+
+detailedFilter.on('shown.bs.collapse', function () {
+  detailedFilterTogglerIcon.removeClass('fa-chevron-right');
+  detailedFilterTogglerIcon.addClass('fa-chevron-down');
+});
+
+$('.clear-cb-btn').on('click', function () {
+  const parent = $(this).parent().parent();
+  parent.find('.form-check input').prop('checked', false);
+});
+
+$('.select-all-cb-btn').on('click', function () {
+  const parent = $(this).parent().parent();
+  parent.find('.form-check input').prop('checked', true);
+});
+
+$(document).ready(function () {
+  const formFilled = detailedFilter.attr('data-form-filled') === 'True';
+  if (formFilled) {
+    detailedFilter.collapse('show');
+  } else {
+    detailedFilter.collapse('hide');
+  }
+});
+
+// Get modal body content on modal show:
+const modals = $('.modal[data-src]');
+modals.on('show.bs.modal', function () {
+  const thisModal = $(this);
+  $(this).find('.modal-body').load(thisModal.attr('data-src'));
+});
+</script>
+
+{% block listPageScript %}
+{% endblock %}
+
+{% endblock %}

@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import time
+
 from django.urls import reverse_lazy
 
 
@@ -75,6 +77,7 @@ INSTALLED_APPS = [
     'public_site',
     'user_site',
     'chair',
+    'chair_mail',
     'review',
 ]
 
@@ -345,3 +348,4 @@ LOGGING = {
         },
     },
 }
+

@@ -1,0 +1,43 @@
+{###########################################################################}
+{# Base page for submission details tabs. It fills breadcrumbs with the    #}
+{# submission PK after 'submissions', and also defines a panel at the      #}
+{# workspace area with navigation. Active tab is given with `active_tab`   #}
+{# variable, tabs navigation is specified in '_tab_nav.html'.              #}
+{#                                                                         #}
+{# BLOCKS:                                                                 #}
+{# - `tabViewContent`: content of the container inside the active tab.     #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `active_tab`: value of `active` context variable for tab navigation   #}
+{# - `submission`                                                          #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{###########################################################################}
+{% extends 'chair/base/generic_page.html' %}
+{% load gears_extras %}
+{% load submission_extras %}
+
+{% block navigation %}
+  {% include 'chair/components/navigation.html' with active='submissions' %}
+{% endblock %}
+
+{% block smallScreenBreadcrumbItems %}
+  <li class="breadcrumb-item"><a href="{% url 'chair:submissions' conf_pk=conference.pk %}">submissions</a></li>
+  <li class="breadcrumb-item active">#{{ submission.pk }}</li>
+{% endblock %}
+
+{% block largeScreenBreadcrumbItems %}
+  <li class="breadcrumb-item"><a href="{% url 'chair:submissions' conf_pk=conference.pk %}">submissions</a></li>
+  <li class="breadcrumb-item active">#{{ submission.pk }}</li>
+{% endblock %}
+
+{% block content %}
+  <div class="dccn-panel-body">
+    {% include 'chair/submissions/_tab_nav.html' with active=active_tab %}
+    <div class="container py-3">
+      {% block tabViewContent %}
+      {% endblock %}
+    </div>
+  </div>
+{% endblock %}

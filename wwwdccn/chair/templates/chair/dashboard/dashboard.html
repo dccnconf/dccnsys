@@ -1,0 +1,66 @@
+{###########################################################################}
+{# CONTEXT:                                                                #}
+{# - `conference`                                                          #}
+{# - `num_submissions`: number of submissions                              #}
+{# - `num_authors`: number of people authoring at least one submission     #}
+{###########################################################################}
+{% extends 'chair/base/generic_page.html' %}
+{% load gears_extras %}
+
+
+{#---------------------------------------------------------------------------#}
+{# Navigation and breadcrumbs                                                #}
+{#   - no breadcrumbs defined here since this is the root of the conference  #}
+{#---------------------------------------------------------------------------#}
+{% block navigation %}
+  {% include 'chair/components/navigation.html' with conf_pk=confernece.pk active='home' %}
+{% endblock %}
+
+
+{#---------------------------------------------------------------------------#}
+{# Main content                                                              #}
+{#---------------------------------------------------------------------------#}
+{% block content %}
+  <div class="container">
+
+    {#  Number of papers and authors #}
+    <div class="row">
+      <div class="col-12 col-md-6 p-3">
+        <div class="border border-light rounded mx-3">
+          <div class="row align-items-center">
+            <p class="ml-3 mr-auto">
+              <span class="dccn-text-larger text-success">{{ num_submissions }}</span>
+              &nbsp;
+              <span class="dccn-text-5">submissions</span>
+            </p>
+            <a class="btn btn-outline-info" href="{% url 'chair:export-submissions-csv' conf_pk=conference.pk %}" target="_blank">
+              <i class="fas fa-2x fa-file-csv text-info"></i>
+            </a>
+          </div>
+          <ul class="list-unstyled ml-5">
+            {% for stype in conference.submissiontype_set.all %}
+              <li>
+                <span class="dccn-text-large text-success">{{ stype.submissions.count }}</span>
+                &nbsp;
+                <span class="dccn-text-3">{{ stype.name }}</span></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 p-3">
+        <div class="border border-light rounded mx-3" style="height: 100%;">
+          <div class="row align-items-center">
+            <p class="ml-3 mr-auto">
+              <span class="dccn-text-larger text-success">{{ num_authors }}</span>
+              &nbsp;
+              <span class="dccn-text-5">authors</span>
+            </p>
+            <a class="btn btn-outline-info" href="{% url 'chair:export-authors-csv' conf_pk=conference.pk %}" target="_blank">
+              <i class="fas fa-2x fa-file-csv text-info"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -36,11 +36,14 @@ const paths = {
         'node_modules/bootstrap/dist/js/bootstrap.bundle.js',
         'node_modules/sweetalert2/dist/sweetalert2.min.js',
         'node_modules/math/math.js',
-        'node_modules/chart.js/dist/Chart.bundle.min.js'
+        'node_modules/chart.js/dist/Chart.bundle.min.js',
+        'node_modules/requirejs/require.js',
+        'node_modules/bootbox/dist/bootbox.min.js',
     ],
     externalStyles: [
-        'node_modules/sweetalert2/dist/sweetalert2.min.css'
+        'node_modules/sweetalert2/dist/sweetalert2.min.css',
     ],
+    codeMirror: 'node_modules/codemirror',
 };
 
 function fonts() {
@@ -69,6 +72,22 @@ function copyExternalScripts() {
     .pipe(gulp.dest(paths.scripts.destination));
 }
 
+function copyNodeModules() {
+    return gulp.src([
+      `node_modules/codemirror/**`,
+    ], {
+        base: 'node_modules/'
+    }).pipe(gulp.dest(DESTINATION));
+}
+
+function copyAssets() {
+    return gulp.src([
+      `${SOURCE}/assets/**`,
+    ], {
+        base: SOURCE
+    }).pipe(gulp.dest(DESTINATION))
+}
+
 function copyExternalStyles() {
     return gulp.src(paths.externalStyles)
         .pipe(gulp.dest(paths.styles.destination));
@@ -92,7 +111,10 @@ function images() {
 function clean(cb) {
     del([`${paths.styles.destination}`]);
     del([`${paths.scripts.destination}`]);
-    // del([`${paths.html.destination}`]);
+    del([`${paths.images.destination}`]);
+    del([`${DESTINATION}/webfonts`]);
+    // Remove modules:
+    del([`${DESTINATION}/codemirror`]);
     cb();
 }
 
@@ -104,7 +126,9 @@ function serve() {
     gulp.watch(paths.images.source, images);
 }
 
-const build = gulp.parallel(styles, scripts, images, fonts, copyExternalScripts, copyExternalStyles);
+const copyExternals = gulp.parallel(copyExternalScripts, copyExternalStyles, copyNodeModules, copyAssets);
+
+const build = gulp.parallel(styles, scripts, images, fonts, copyExternals);
 
 exports.build = build;
 exports.clean = clean;

@@ -1,0 +1,170 @@
+{###########################################################################}
+{# View and edit submission authors.                                       #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `authors`: a list of records with the following fields:               #}
+{#   * `pk`: ID of the author                                              #}
+{#   * `full_name`: full name in English                                   #}
+{#   * `affiliation`:  author affiliation                                  #}
+{#   * `avatar_url`: URL of the corresponding profile avatar               #}
+{#   * `is_creator`: this author is the creator of the submission          #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `submission`                                                          #}
+{# - `conference`                                                          #}
+{# - `active_tab`                                                          #}
+{###########################################################################}
+{% extends 'chair/submissions/_base.html' %}
+{% load gears_extras %}
+{% load submission_extras %}
+{% load bootstrap4 %}
+
+{% block tabViewContent %}
+  <div class="dccn-authors-editor dccn-reorder" id="authorsEditor">
+    <ul class="dccn-authors-editor-list dccn-reorder-list" id="authorsList">
+    {% for author in submission.authors.all %}
+      {% with profile=author.user.profile %}
+        <li class="dccn-authors-editor-author dccn-reorder-list-item" data-id="{{ author.pk }}">
+          <img src="{{ profile.avatar.url }}" alt="{{ profile.get_full_name }} profile image" class="rounded-circle">
+          <div>
+            <h4 class="dccn-text-3-light">{{ profile.get_full_name }}</h4>
+            <p class="dccn-text-small text-muted">{{ profile.affiliation }}</p>
+          </div>
+
+          {% if profile.user != submission.created_by %}
+            <!-- Delete author modal toggle: -->
+            <button class="btn btn-link dccn-link ml-auto" data-toggle="modal"  data-target="#delAuthor-{{ author.pk }}">
+              <i class="fas fa-times-circle"></i> Delete
+            </button>
+
+            <!-- Delete author modal dialog: -->
+            <div class="modal fade" id="delAuthor-{{ author.pk }}">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-header bg-danger text-light">
+                    <h5 class="modal-title">Confirm delete author</h5>
+                    <button class="close" data-dismiss="modal">
+                      <span>&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <p class="dccn-text-0-light">
+                      Are you sure you want to delete {{ profile.get_full_name }} from the co-authors list?
+                    </p>
+                    <form action="{% url 'chair:submission-author-delete' conf_pk=conference.pk sub_pk=submission.pk %}"
+                          method="POST">
+                      {% csrf_token %}
+                      <input type="hidden" name="author_pk" value="{{ author.pk }}">
+                      <div class="form-row">
+                        <div class="mx-auto">
+                          <input type="submit" value="Delete" class="btn btn-danger btn-lg">
+                          <button class="btn btn-outline-secondary btn-lg" data-dismiss="modal">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- End of modal dialog -->
+          {% endif %}
+
+        </li>
+      {% endwith %}
+    {% endfor %}
+    </ul>
+
+    <form action="{% url 'chair:submission-authors-reorder' conf_pk=conference.pk sub_pk=submission.pk %}"
+          method="POST" class="dccn-reorder-form" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="pks" class="dccn-reorder-form-input">
+    </form>
+  </div>
+
+  <div class="dccn-authors-search" id="addNewAuthor" data-source="{% url 'users:search' %}">
+    <div class="dccn-authors-search-content">
+      <form class="dccn-authors-search-form d-flex">
+        <input type="search" name="q" id="searchInput" class="form-control form-control-lg flex-fill mr-1"
+               placeholder="Start typing">
+        <button type="button" name="button" class="dccn-action-hide btn btn-link btn-lg px-2">
+          <i class="fas fa-times"></i>
+        </button>
+      </form>
+      <div class="dccn-authors-search-preview">
+        <div class="dccn-placeholder active">
+          <h4 class="h3 text-center mt-2">No authors found</h4>
+          <p class="mt-3 dccn-text-small-light text-muted text-center">
+            Only registered users can be added as authors.
+            If you can not find your co-author in our database, then, perhaps, he or she hasn't
+            registered yet. You can send an invitation, and come back here after your co-author
+            finishes registration.
+          </p>
+          <div class="row mt-3">
+            <button class="btn btn-link dccn-link mx-auto" data-toggle="modal"
+                    data-target="#inviteUserDialog">
+              <i class="fas fa-plus-circle"></i> Invite user
+            </button>
+          </div>
+        </div>
+        <div class="dccn-content">
+        </div>
+      </div>
+
+      <form action="{% url 'chair:submission-author-create' conf_pk=conference.pk sub_pk=submission.pk %}" method="POST"
+            class="dccn-hidden-form" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="user_pk" id="user_pk">
+      </form>
+
+    </div>
+
+    <button class="btn btn-link dccn-link dccn-action-show">
+      <i class="fas fa-plus-circle"></i> Add co-author
+    </button>
+  </div>
+
+  <div class="modal fade" id="inviteUserDialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Invite new author</h5>
+          <button class="close" data-dismiss="modal">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form action="{% url 'chair:submission-author-invite' conf_pk=conference.pk sub_pk=submission.pk %}"
+                method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="email">Enter user email:</label>
+              <input type="email" name="email" class="form-control form-control-lg"
+                     placeholder="user@example.com">
+            </div>
+            <div class="form-row form-group">
+              <div class="col-md-6">
+                <label for="first_name">First name (in English):</label>
+                <input type="text" name="first_name" class="form-control form-control-lg" id="first_name">
+              </div>
+              <div class="col-md-6">
+                <label for="last_name">Last name (in English):</label>
+                <input type="text" name="last_name" class="form-control form-control-lg" id="last_name">
+              </div>
+            </div>
+            <div class="form-row mt-4">
+              <div class="mx-auto">
+                <button type="submit" class="btn btn-success btn-lg">Invite</button>
+                <button class="btn btn-outline-secondary btn-lg" data-dismiss="modal">Cancel</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block script %}
+{% endblock %}

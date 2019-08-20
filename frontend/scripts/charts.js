@@ -47,7 +47,6 @@
 
     if (valid) {
       // 3) If data is valid, we estimate average scores:
-      console.log(allScores);
       const averages = math.divide(math.add(...allScores), numReviews);
 
       // 4) Define data sets:

@@ -1,0 +1,54 @@
+{###########################################################################}
+{# This is the base view for all chair applications pages. It only defines #}
+{# the basic layout.                                                       #}
+{#                                                                         #}
+{# BLOCKS:                                                                 #}
+{# - `leftColumnTop`: a place on top of navigation in the left column.     #}
+{# - `workspace`: main content, a central and larges panel.                #}
+{# - `navigation`: left-side navigation.                                   #}
+{# - `filter`: right-side optional filter panel.                           #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `conference`                                                          #}
+{###########################################################################}
+{% extends 'user_site/base.html' %}
+
+{% block title %}
+  Conference #{{ conference.pk }} | DCCN
+{% endblock %}
+
+{% block body %}
+  <main class="container-fluid py-3">
+    <div class="d-flex flex-column flex-md-row">
+      {# Left-side column: --> #}
+      <div class="dccn-panel dccn-panel-nav dccn-panel-nav-sm">
+        {#  Redefine this block if you need to put something on top of the left-side column, before navigation: #}
+        {% block leftColumnTop %}
+        {% endblock %}
+        <nav class="collapse" id="chairNav">
+          <div class="dccn-panel-head d-none d-md-block">
+            <h5 class="dccn-title">DCCN'19</h5>
+            <p class="dccn-subtitle">Administration</p>
+          </div>
+          {# Left-side navigation, should generally include `_tab_nav.html`, but with `active=some_value`. #}
+          {% block navigation %}
+            {% include 'chair/components/navigation.html' with active='' %}
+          {% endblock %}
+        </nav>
+      </div>
+      {# <-- End of left-side column #}
+      {# Main area: --> #}
+      <div class="dccn-chair-workspace">
+        <div class="dccn-chair-workspace-center">
+          {# Main content, differs for generic and preview pages. #}
+          {% block workspace %}
+          {% endblock %}
+        </div>
+        {# If the page has a filter, put it in this block. #}
+        {% block filter %}
+        {% endblock %}
+      </div>
+      {# <-- End of main area #}
+    </div>
+  </main>
+{% endblock %}

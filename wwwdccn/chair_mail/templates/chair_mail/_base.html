@@ -1,0 +1,65 @@
+{###########################################################################}
+{# Base page for mail system tabs. It fills breadcrumbs and also defines a #}
+{# panel at the workspace area with navigation. Active tab is given with   #}
+{# `active_tab` variable, tabs navigation is specified in '_tab_nav.html'. #}
+{#                                                                         #}
+{# BLOCKS:                                                                 #}
+{# - `tabViewContent`: content of the container inside the active tab.     #}
+{# - `chairMailStyle`: block for additional styles.                        #}
+{# - `chairMailScript`: block for additional scripts.                      #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `active_tab`: value of `active` context variable for tab navigation   #}
+{# - `hide_tabs`: if not falsy, tabs are not shown.                        #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{###########################################################################}
+{% extends 'chair/base/generic_page.html' %}
+{% load static %}
+
+{% block css %}
+  {# Load codemirror: #}
+  <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}">
+  <link rel="stylesheet" href="{% static 'codemirror/theme/monokai.css' %}">
+  <link rel="stylesheet" href="{% static 'codemirror/addon/scroll/simplescrollbars.css' %}">
+  {% block chairMailStyle %}
+  {% endblock %}
+{% endblock %}
+
+{#---------------------------------------------------------------------------#}
+{# Navigation and breadcrumbs                                                #}
+{#---------------------------------------------------------------------------#}
+{% block navigation %}
+  {% include 'chair/components/navigation.html' with active='messages' %}
+{% endblock %}
+
+{% block smallScreenBreadcrumbItems %}
+  <li class="breadcrumb-item active">messages</li>
+{% endblock %}
+
+{% block largeScreenBreadcrumbItems %}
+  <li class="breadcrumb-item active">messages</li>
+{% endblock %}
+
+{% block content %}
+  <div class="dccn-panel-body">
+    {% if not hide_tabs %}
+      {% include 'chair_mail/_tab_nav.html' with active=active_tab %}
+    {% endif %}
+    <div class="container py-3">
+      {% block tabViewContent %}
+      {% endblock %}
+    </div>
+  </div>
+{% endblock %}
+
+
+{% block script %}
+  <script src="{% static 'codemirror/lib/codemirror.js' %}"></script>
+  <script src="{% static 'codemirror/mode/htmlmixed/htmlmixed.js' %}"></script>
+  <script src="{% static 'codemirror/addon/scroll/simplescrollbars.js' %}"></script>
+  <script src="{% static 'scripts/require.js' %}" data-main="{% static '' %}"></script>
+  {% block chairMailScript %}
+  {% endblock %}
+{% endblock %}

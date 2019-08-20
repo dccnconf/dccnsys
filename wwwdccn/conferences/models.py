@@ -59,6 +59,8 @@ class Conference(models.Model):
         blank=True,
     )
 
+    contact_email = models.EmailField(blank=True, default='')
+
     def __str__(self):
         return f'{self.full_name} ({self.short_name})'
 

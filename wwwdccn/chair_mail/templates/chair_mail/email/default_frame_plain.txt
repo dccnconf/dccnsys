@@ -1,0 +1,10 @@
+{{ body}}
+
+Happy conferencing,
+{{ conf_short_name }} Organization Committee
+Contact us: {{ conf_email }}
+
+----
+This email was generated automatically due to actions performed at {{ site_url }}.
+If you received this email unintentionally, please contact us via {{ conf_email }}
+and delete this message.

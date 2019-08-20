@@ -1,0 +1,20 @@
+{###########################################################################}
+{# View all messages sent regarding this submission.                       #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `submission`                                                          #}
+{# - `active_tab`                                                          #}
+{###########################################################################}
+{% extends 'chair/submissions/_base.html' %}
+{% load gears_extras %}
+{% load bootstrap4 %}
+
+
+{% block tabViewContent %}
+  <a href="{% url 'chair_mail:compose-paper' conf_pk=conference.pk sub_pk=submission.pk %}?next={{ request.get_full_path|urlencode }}"
+     class="btn btn-outline-primary">
+    Compose new mail
+  </a>
+  <hr>
+{% endblock %}

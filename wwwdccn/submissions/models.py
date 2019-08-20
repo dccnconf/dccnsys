@@ -160,6 +160,11 @@ class Submission(models.Model):
             w.append('Missing submission title')
         return w
 
+    def get_authors_profiles(self):
+        return tuple(
+            author.user.profile for author in self.authors.order_by('order')
+        )
+
 
 class Author(models.Model):
     class Meta:

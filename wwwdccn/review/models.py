@@ -169,7 +169,6 @@ def create_review(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Review)
 def delete_review(sender, instance, **kwargs):
-    assert isinstance(instance, Review)
     user = instance.reviewer.user
     profile = user.profile
     context = {

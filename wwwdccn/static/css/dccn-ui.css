@@ -21018,8 +21018,7 @@ ul.dccn-authors-editor-list > li:hover {
 .dccn-panel .dccn-panel-title,
 .dccn-chair-workspace .dccn-chair-workspace-main .dccn-panel-title,
 .dccn-chair-workspace .dccn-chair-workspace-filter .dccn-panel-title {
-  font-size: 2.2rem;
-  font-weight: 200;
+  font-size: 2.0rem;
   margin: 15px 0 10px 0;
   text-align: center;
 }

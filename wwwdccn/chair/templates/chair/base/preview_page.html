@@ -1,0 +1,42 @@
+{###########################################################################}
+{# Base for preview pages. These pages contain a left-side navigation, and #}
+{# their central part is shown as a very large modal with 'X' button shown #}
+{# in the up-right corner. These pages define no breadcrumb navigation or  #}
+{# filters.                                                                #}
+{#                                                                         #}
+{# It also has `bootstrap_messages` included, they are shown at the top of #}
+{# the panel.                                                              #}
+{#                                                                         #}
+{# BLOCKS:                                                                 #}
+{# - `content`: main preview area inside `workspace` base block.           #}
+{# - `panelTitle`: title of the preview panel.                             #}
+{# - `navigation`: left-side navigation (inherited).                       #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `next`: URL where to go after this preview is closed.                 #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{###########################################################################}
+{% extends 'chair/base/base.html' %}
+{% load bootstrap4 %}
+
+
+{% block header %}
+  {% include 'user_site/components/navigation.html' with active='' %}
+{% endblock %}
+
+
+{% block workspace %}
+  <div class="dccn-panel dccn-chair-workspace-main dccn-panel-screen mt-0" style="min-height: 100vh;">
+    <div class="dccn-panel-header">
+      <h1 class="dccn-panel-title">{% block panelTitle %}{% endblock %}</h1>
+      <a href="{{ next }}" class="dccn-panel-close-btn"><i class="fas fa-times fa-2x"></i></a>
+    </div>
+    <div class="dccn-panel-body">
+      {% bootstrap_messages %}
+      {% block content %}
+      {% endblock %}
+    </div>
+  </div>
+{% endblock %}
