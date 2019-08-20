@@ -151,7 +151,7 @@
 {#---------------------------------------------------------------------------#}
 {# Filter                                                                    #}
 {#---------------------------------------------------------------------------#}
-{% block filterPanel %}
+{% block filter %}
   <div class="dccn-chair-workspace-filter">
     <form action="{% url 'chair:users' conf_pk=conference.pk %}" method="GET" class="m-2">
       {% bootstrap_field filter_form.term show_label=False bound_css_class='' %}
