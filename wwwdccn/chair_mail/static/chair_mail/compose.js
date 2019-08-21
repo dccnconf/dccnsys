@@ -450,18 +450,17 @@ $.fn.composeToArea = function ({usersInput, listsInput, onUserDeleted, onListDel
  *
  * @return this
  */
-$.fn.addListModal = function ({getLists, onClick}) {
-  if (!this.hasClass('modal')) {
-    throw "Must be called on a modal dialog, class 'modal' not found";
-  }
+const addListModal = function ({getLists, onClick}) {
+  const DIALOG_DATA_CLASS = 'dialog-data';
 
-  const elements = {
-    dialog: this,
-    body: this.find('.modal-body')
+  const state = {
+    dialog: undefined,
   };
 
   const api = {
-    getListHTML: mailing_list => {
+    getBody: () => state.dialog.find(`.${DIALOG_DATA_CLASS}`),
+
+    getItemHTML: mailing_list => {
       const icon = mailing_list.checked ? 'fa-check-square' : 'fa-square';
       return`
 <button class="list-group-item list-group-item-action d-flex align-items-center" 
@@ -477,24 +476,39 @@ $.fn.addListModal = function ({getLists, onClick}) {
     },
 
     render: () => {
-      const items = getLists().map(api.getListHTML);
-      elements.body.html(`<div class="list-group">${items.join('\n')}</div>`);
+      const items = getLists().map(api.getItemHTML);
+      api.getBody().html(`<div class="list-group">${items.join('\n')}</div>`);
       },
 
-    /** Bind `show.bs.modal` event to rendering content and process click events with toggling selection. */
-    initialize: () => {
-      // Render when the dialog is shown:
-      elements.dialog.on('show.bs.modal', api.render);
+    show: () => {
+      state.dialog = bootbox.alert({
+        title: 'Mailing lists',
+        message: `<div class="${DIALOG_DATA_CLASS}"></div>`,
+        onEscape: true,
+        animate: false,
+        size: 'lg',
+        buttons: {ok: {label: 'Close', className: 'btn-outline-secondary'}},
+      });
 
-      // When user clicks a button inside the modal body, we call `onClicked(name)` handler:
-      this.on('click', 'button[data-id]', (event) => onClick($(event.currentTarget).attr('data-id')));
-    },
+      // Setup elements and bind handlers to them:
+      api.getBody().on('click', 'button[data-id]', (event) => onClick($(event.currentTarget).attr('data-id')));
+
+      state.dialog.on('shown.bs.modal', api.render);
+      state.dialog.on('hidden.bs.modal', api.hide);
+
+      api.render();
+      },
+
+    hide: () => {
+      state.dialog = undefined;
+      },
+
   };
 
-  api.initialize();
   return {
-    render: api.render,
-    modal: this.modal,
+    show: () => { if (state.dialog === undefined) api.show(); },
+    hide: () => { if (state.dialog !== undefined) api.hide(); },
+    render: () => { if (state.dialog !== undefined) api.render(); },
   }
 };
 
@@ -509,6 +523,8 @@ $.fn.addListModal = function ({getLists, onClick}) {
  * @param getUsers: get all users
  */
 const addUserModal = function ({delay = 250, onClick, isPartOfCheckedList, searchUsers, getUsers}) {
+  const DIALOG_DATA_CLASS = 'dialog-data';
+
   const state = {
     timeoutEventID: undefined,
     dialog: undefined,
@@ -517,7 +533,7 @@ const addUserModal = function ({delay = 250, onClick, isPartOfCheckedList, searc
 
   const api = {
     getSearchInput: () => state.dialog.find('input[type="search"]'),
-    getResultsArea: () => state.dialog.find('.user-search-results'),
+    getResultsArea: () => state.dialog.find(`.${DIALOG_DATA_CLASS}`),
 
     /** Renders user object (id, name, url, checked) into HTML button */
     getUserHtml: ({user, matches = []}) => {
@@ -617,7 +633,7 @@ const addUserModal = function ({delay = 250, onClick, isPartOfCheckedList, searc
         title: 'Search users',
         message: `
 <input type="search" class="form-control form-control-lg" placeholder="Start typing..." value="">
-<div class="user-search-results"></div>`,
+<div class=${DIALOG_DATA_CLASS}></div>`,
         onEscape: true,
         animate: false,
         size: 'xl',
@@ -812,7 +828,7 @@ const controller = (function () {
             getList: name => state.model.lists.get(name),
           });
           // 1.2) Create mailing list modal plugin:
-          components.addListModal = elements.addListModal.addListModal({
+          components.addListModal = addListModal({
             onClick: name => state.model.lists.toggle(name),
             getLists: () => state.model.lists.all(),
           });
@@ -855,6 +871,7 @@ const controller = (function () {
 
       // 4) Bind dialogs to buttons:
       $('#addUserBtn').on('click', () => components.addUserModal.show());
+      $('#addListBtn').on('click', () => components.addListModal.show());
 
       // 4) Initialize the model:
       state.model.initialize();

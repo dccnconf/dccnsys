@@ -99,8 +99,7 @@
             <i class="fas fa-plus mr-1"></i><i class="fas fa-user"></i>
           </span>
         </button>
-        <button type="button" class="btn btn-sm btn-outline-secondary mr-2"
-                data-toggle="modal" data-target="#addListModal">
+        <button type="button" class="btn btn-sm btn-outline-secondary mr-2" id="addListBtn">
           <span data-toggle="tooltip" data-placement="bottom" title="Add mailing lists">
             <i class="fas fa-plus mr-1"></i><i class="fas fa-list"></i>
           </span>
@@ -108,28 +107,6 @@
         <button type="button" class="btn btn-link dccn-link ml-auto" id="showRecipientBtn">
           Show recipient users
         </button>
-      </div>
-
-      <!-- Modal for selecting lists -->
-      <div class="modal fade" tabindex="-1" role="dialog" id="addListModal">
-        <div class="modal-dialog modal-lg" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Add mailing list</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body">
-              {############################################################}
-              {# Modal content is filled from data obtained via AJAX call #}
-              {############################################################}
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-          </div>
-        </div>
       </div>
 
     </div>
