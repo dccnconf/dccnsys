@@ -46,6 +46,98 @@ const addClassOnce = function (elem, klass) {
 };
 
 
+/**
+ * A jQuery plugin on top of `<input>` element that stores a list of values.
+ *
+ * It stores data in two ways:
+ * - in a list (in memory), and
+ * - as a comma-separated string in `<input>` element value.
+ *
+ * Any change in stored values is reflected into `<input>` value. This controller
+ * provides an easy way to manage the list by providing add, remove and get operations.
+ *
+ * Returns a public API:
+ * - `add(item)`: add item to the values list (prefer to use strings!)
+ * - `remove(item)`: remove item from the values;
+ * - `all()`: get a copy of all stored values;
+ * - `has(item)`: check whether the item is already stored;
+ * - `elem`: reference to the `<input>`.
+ *
+ * @param elem: `<input>` element.
+ */
+const valuesListInput = function (elem) {
+  const input = elem;
+  const state = {
+    values: [],
+  };
+
+  //
+  // PRIVATE API
+  //
+  const api = {
+    /** Initialize the view by loading values from <input> into memory. */
+    initialize: () => {
+      const inputValue = input.val().trim();
+      state.values = inputValue === '' ? [] : inputValue.split(',');
+      state.values = state.values.filter(x => x !== '');
+      },
+
+    /** Reflect current stored values into <input> value. */
+    updateInputValue: () => {
+      input.val(state.values.join(','));
+      },
+
+    /** Add an item into the values list. To be consistent, values are casted to strings. */
+    add: item => {
+      item = String(item);  // we should make sure that we store data in fixed format,
+                            // otherwise we may fail when searching for this item later.
+      if (state.values.indexOf(item) < 0) {
+        state.values.push(item);
+        api.updateInputValue();
+      }
+      },
+
+    /** Delete an item from the values list. */
+    remove: item => {
+      item = String(item);
+      const index = state.values.indexOf(item);
+      if (index >= 0) {
+        state.values.splice(index, 1);
+        api.updateInputValue();
+      }
+      },
+  };
+
+  // We run initialization immediately, but user can also call it later via public API:
+  api.initialize();
+
+  //
+  // PUBLIC API
+  //
+  return {
+    initialize: api.initialize,
+    add: api.add,
+    remove: api.remove,
+    all: () => state.values.map(x => x),
+    elem: input,
+  };
+};
+
+
+const getUserHTML = function (user, rawData = undefined) {
+  const nameInRus = 'nameInRus' in user ? `<span class="font-weight-light">(${user.nameInRus})</span>` : '';
+  const rawObject = rawData !== undefined ? rawData : user;
+  return `
+<img src="${rawObject.avatarURL}" alt="${rawObject.name} profile image" 
+     class="rounded-circle mr-3" style="width: 48px; height: 48px;">
+<div>
+  <p class="dccn-text-0 font-weight-bold">${user.name}${nameInRus}</p>
+  <p class="dccn-text-small">${user.country}, ${user.city}, ${user.affiliation}</p>
+</div>
+<div class="align-self-start ml-auto dccn-text-small">#${user.id}</div>`;
+};
+
+
 /*
  **************************************************************************
  * MODELS AND DATA MANAGERS
@@ -151,7 +243,7 @@ const Model = function ({listMailingListsURL, listUsersURL, onUserChecked, onUse
             if (field in u) {
               const fieldValue =  typeof u[field] === 'string' ? u[field] : String(u[field]);
               const index = fieldValue.toLowerCase().indexOf(word);
-              if (index >= 0) found.push({field: field, startIndex: index, length: word.length});
+              if (index >= 0) found.push({fieldName: field, startIndex: index, length: word.length});
             }
           });
           if (found.length > 0) {
@@ -239,82 +331,6 @@ const Model = function ({listMailingListsURL, listUsersURL, onUserChecked, onUse
  * VIEW CONTROLLERS
  **************************************************************************
  */
-/**
- * A view controller on top of `<input>` element that stores a list of values.
- *
- * It stores data in two ways:
- * - in a list (in memory), and
- * - as a comma-separated string in `<input>` element value.
- *
- * Any change in stored values is reflected into `<input>` value. This controller
- * provides an easy way to manage the list by providing add, remove and get operations.
- *
- * Returns a public API:
- * - `add(item)`: add item to the values list (prefer to use strings!)
- * - `remove(item)`: remove item from the values;
- * - `all()`: get a copy of all stored values;
- * - `has(item)`: check whether the item is already stored;
- * - `elem`: reference to the `<input>`.
- *
- * @param elem: `<input>` element.
- */
-const valuesListInput = function (elem) {
-  const input = elem;
-  const state = {
-    values: [],
-  };
-
-  //
-  // PRIVATE API
-  //
-  const api = {
-    /** Initialize the view by loading values from <input> into memory. */
-    initialize: () => {
-      const inputValue = input.val().trim();
-      state.values = inputValue === '' ? [] : inputValue.split(',');
-      state.values = state.values.filter(x => x !== '');
-      },
-
-    /** Reflect current stored values into <input> value. */
-    updateInputValue: () => {
-      input.val(state.values.join(','));
-      },
-
-    /** Add an item into the values list. To be consistent, values are casted to strings. */
-    add: item => {
-      item = String(item);  // we should make sure that we store data in fixed format,
-                            // otherwise we may fail when searching for this item later.
-      if (state.values.indexOf(item) < 0) {
-        state.values.push(item);
-        api.updateInputValue();
-      }
-      },
-
-    /** Delete an item from the values list. */
-    remove: item => {
-      item = String(item);
-      const index = state.values.indexOf(item);
-      if (index >= 0) {
-        state.values.splice(index, 1);
-        api.updateInputValue();
-      }
-      },
-  };
-
-  // We run initialization immediately, but user can also call it later via public API:
-  api.initialize();
-
-  //
-  // PUBLIC API
-  //
-  return {
-    initialize: api.initialize,
-    add: api.add,
-    remove: api.remove,
-    all: () => state.values.map(x => x),
-    elem: input,
-  };
-};
 
 
 /**
@@ -520,9 +536,10 @@ const addListModal = function ({getLists, onClick}) {
  * @param onClick: a handler called when a list is clicked
  * @param isPartOfCheckedList: a function for checking whether a user is participated in any list
  * @param searchUsers: a function for querying list of users
- * @param getUsers: get all users
+ * @param getObjects: get all objects
  */
-const addUserModal = function ({delay = 250, onClick, isPartOfCheckedList, searchUsers, getUsers}) {
+const chooseObjectsDialog = function ({delay = 250, onClick, isItemDisabled = undefined, search,
+                                        getObjects, getObjectHTML, modalTitle}) {
   const DIALOG_DATA_CLASS = 'dialog-data';
 
   const state = {
@@ -536,20 +553,21 @@ const addUserModal = function ({delay = 250, onClick, isPartOfCheckedList, searc
     getResultsArea: () => state.dialog.find(`.${DIALOG_DATA_CLASS}`),
 
     /** Renders user object (id, name, url, checked) into HTML button */
-    getUserHtml: ({user, matches = []}) => {
-      const isPartOfList = isPartOfCheckedList(user.id);
-      /* First we inspect all matches and build an object `markedUser`, in which fields
+    getItemHTML: ({object, matches = []}) => {
+      const disabled = isItemDisabled !== undefined ? isItemDisabled(object.id) : false;
+
+      /* First we inspect all matches and build an object `markedObject`, in which fields
          are either strings as in original `user` object, or strings with `<mark>...</mark>`
          tags bounding matching substring.
        */
-      const markedUser = {};
-      Object.keys(user).forEach(fieldName => {
-        const fieldValue = String(user[fieldName]);
+      const markedObject = {_rawObject: object};  // all rendering methods need this to refer to non-marked fields
+      Object.keys(object).forEach(fieldName => {
+        const fieldValue = String(object[fieldName]);
         // Retrieve matches related to current field only, order them with match start index and
         // build non-overlapping regions:
         const regions = [];
-        const fieldMatches = matches
-          .filter(m => m.field === fieldName)
+        matches
+          .filter(match => match.fieldName === fieldName)
           .sort((x, y) => x.startIndex - y.startIndex)
           .forEach(match => {
             const matchEnd = match.startIndex + match.length;
@@ -571,36 +589,31 @@ const addUserModal = function ({delay = 250, onClick, isPartOfCheckedList, searc
         });
         parts.push(fieldValue.slice(index));
         // Finally, we join parts without spaces and put this as the value of marked object field:
-        markedUser[fieldName] = parts.join('');
+        markedObject[fieldName] = parts.join('');
       });
+
       /* Prepare some optional or logic fields */
-      const checked = user.checked || isPartOfList;
-      const nameInRus = 'nameInRus' in markedUser ?
-        ` <span class="font-weight-light">(${markedUser.nameInRus})</span>` : '';
-      /* Rendering HTML for user item: */
+      const checked = object.checked || disabled;
+      const objectHTML = getObjectHTML(markedObject);
+
       return `
-<button class="list-group-item list-group-item-action d-flex align-items-center ${isPartOfList ? 'disabled' : ''}" 
-      type="button" data-id="${user.id}">
-<i class="far fa-2x mr-3 ${checked ? 'fa-check-square' : 'fa-square'}"></i>
-<img src="${user.avatarURL}" alt="${user.name} profile image" 
-     class="rounded-circle mr-3" style="width: 48px; height: 48px;">
-<div>
-  <p class="dccn-text-0 font-weight-bold">${markedUser.name}${nameInRus}</p>
-  <p class="dccn-text-small">${markedUser.country}, ${markedUser.city}, ${markedUser.affiliation}</p>
-</div>
-<div class="align-self-start ml-auto dccn-text-small">#${markedUser.id}</div>
-</button>`;
+<button class="list-group-item list-group-item-action d-flex align-items-center ${disabled ? 'disabled' : ''}" 
+        type="button" data-id="${markedObject._rawObject.id}">
+  <i class="far fa-2x mr-3 ${checked ? 'fa-check-square' : 'fa-square'}"></i>
+  ${objectHTML}
+</button>
+`;
       },
 
-    /** Render the found users list */
+    /** Render the found objects list */
     render: () => {
-      const value = api.getSearchInput(state.dialog).val().trim();
-      const resultsArea = api.getResultsArea(state.dialog);
+      const value = api.getSearchInput().val().trim();
+      const resultsArea = api.getResultsArea();
       let items = [];
       if (state.searchResults.length > 0) {
-        items = state.searchResults.map(api.getUserHtml);
+        items = state.searchResults.map(api.getItemHTML);
       } else if (value === '') {
-        items = getUsers().map(u => api.getUserHtml({user: u}));
+        items = getObjects().map(object => api.getItemHTML({object: object}));
       }
       if (items.length > 0) {
         resultsArea.html(`<div class="list-group">${items.join('\n')}</div>`);
@@ -611,7 +624,7 @@ const addUserModal = function ({delay = 250, onClick, isPartOfCheckedList, searc
 
     /** Send search request, store results and render found records */
     search: value => {
-      state.searchResults = searchUsers(value);
+      state.searchResults = search(value);
       api.render();
       },
 
@@ -630,7 +643,7 @@ const addUserModal = function ({delay = 250, onClick, isPartOfCheckedList, searc
 
     show: () => {
       state.dialog = bootbox.alert({
-        title: 'Search users',
+        title: modalTitle,
         message: `
 <input type="search" class="form-control form-control-lg" placeholder="Start typing..." value="">
 <div class=${DIALOG_DATA_CLASS}></div>`,
@@ -755,7 +768,7 @@ const controller = (function () {
   const components = {
     composeToArea: undefined,
     addListModal: undefined,
-    addUserModal: undefined,
+    usersDialog: undefined,
     previewSelect: undefined,
     previewTab: undefined,
     editor: undefined,
@@ -769,7 +782,6 @@ const controller = (function () {
       listsInput: $('#id_lists'),
       subjectInput: $('#id_subject'),
       addListModal: $('#addListModal'),
-      addUserModal: $('#addUserModal'),
       previewSelect: $('#id_preview_user'),
       showRecipientBtn: $('#showRecipientBtn'),
       updatePreviewBtn: $('#updatePreviewBtn'),
@@ -794,24 +806,24 @@ const controller = (function () {
         listUsersURL: elements.composeTo.attr('data-list-users-url'),
         onUserChecked: (id) => {
           components.composeToArea.users.add(id);
-          components.addUserModal.render();
+          components.usersDialog.render();
           components.previewSelect.render();
         },
         onUserUnchecked: (id) => {
           components.composeToArea.users.remove(id);
-          components.addUserModal.render();
+          components.usersDialog.render();
           components.previewSelect.render();
         },
         onListChecked: (id) => {
           components.composeToArea.lists.add(id);
           components.addListModal.render();
-          components.addUserModal.render();
+          components.usersDialog.render();
           components.previewSelect.render();
         },
         onListUnchecked: (id) => {
           components.composeToArea.lists.remove(id);
           components.addListModal.render();
-          components.addUserModal.render();
+          components.usersDialog.render();
           components.previewSelect.render();
         },
         onLoaded: () => {
@@ -833,12 +845,14 @@ const controller = (function () {
             getLists: () => state.model.lists.all(),
           });
           // 1.3) Create users list modal plugin:
-          components.addUserModal = addUserModal({
+          components.usersDialog = chooseObjectsDialog({
             // searchResults: elements.userSearchResults,
             onClick: id => state.model.users.toggle(id),
-            isPartOfCheckedList: userID => state.model.users.isPartOfCheckedList(userID),
-            searchUsers: q => state.model.users.search(q),
-            getUsers: () => state.model.users.all(),
+            isItemDisabled: userID => state.model.users.isPartOfCheckedList(userID),
+            search: q => state.model.users.search(q),
+            getObjects: () => state.model.users.all(),
+            getObjectHTML: getUserHTML,
+            modalTitle: 'Search users',
           });
           // 1.4) Create preview selector component:
           components.previewSelect = elements.previewSelect.previewSelect({
@@ -870,7 +884,7 @@ const controller = (function () {
       elements.updatePreviewBtn.on('click', () => components.previewTab.update());
 
       // 4) Bind dialogs to buttons:
-      $('#addUserBtn').on('click', () => components.addUserModal.show());
+      $('#addUserBtn').on('click', () => components.usersDialog.show());
       $('#addListBtn').on('click', () => components.addListModal.show());
 
       // 4) Initialize the model:
