@@ -1,9 +1,25 @@
+{###########################################################################}
+{# Compose email page. Its defines the editor, subject input.              #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `msg_form`: a form with `body` and `subject` fields.                  #}
+{# - `msg_type`: message type ('user', 'submission')                       #}
+{# - `list_objects_url`: endpoint for AJAX GET for list of objects         #}
+{#        (depending on msg_type, users or submissions)                    #}
+{# - `object_icon_class`: a CSS class string for icon ad add object btn    #}
+{# - `preview_url`: endpoint for AJAX GET for preview rendering            #}
+{# - `preview_form`: a form with fields for selecting users or submissions #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `next`: URL where to go after this preview is closed.                 #}
+{###########################################################################}
 {% extends "chair/base/preview_page.html" %}
 {% load bootstrap4 %}
 {% load static %}
 
 {% block panelTitle %}
-  Compose user-message
+  Compose message to {{ msg_type }}s
 {% endblock %}
 
 {% block css %}
@@ -15,7 +31,6 @@
 
 
 {% block content %}
-
   <form action="" id="newMessageForm" method="POST" novalidate>
     {% csrf_token %}
 
@@ -23,8 +38,8 @@
     {# SELECTING USERS AND MAILING LISTS                                                                             #}
     {#################################################################################################################}
     <div class="compose-to" id="composeTo"
-         data-list-mailing-lists-url="{% url 'chair_mail:list-mailing-lists' conf_pk=conference.pk %}?type=user"
-         data-list-objects-url="{% url 'chair_mail:list-users' conf_pk=conference.pk %}">
+         data-list-mailing-lists-url="{% url 'chair_mail:list-mailing-lists' conf_pk=conference.pk %}?type={{ msg_type }}"
+         data-list-objects-url="{{ list_objects_url }}">
 
       <div class="d-flex mb-3 align-items-start">
         {{ msg_form.objects }}
@@ -36,17 +51,17 @@
       <!-- Controls: -->
       <div class="d-flex mb-3 align-items-center">
         <button type="button" class="btn btn-sm btn-outline-secondary mr-2 choose-objects-btn">
-          <span data-toggle="tooltip" data-placement="bottom" title="Add users">
-            <i class="fas fa-plus mr-1"></i><i class="fas fa-user"></i>
+          <span data-toggle="tooltip" data-placement="bottom" title="Choose {{ msg_type }}s">
+            <i class="fas fa-plus mr-1"></i><i class="{{ object_icon_class }}"></i>
           </span>
         </button>
         <button type="button" class="btn btn-sm btn-outline-secondary mr-2 choose-lists-btn">
-          <span data-toggle="tooltip" data-placement="bottom" title="Add mailing lists">
+          <span data-toggle="tooltip" data-placement="bottom" title="Choose mailing lists">
             <i class="fas fa-plus mr-1"></i><i class="fas fa-list"></i>
           </span>
         </button>
         <button type="button" class="btn btn-link dccn-link ml-auto" id="showRecipientBtn">
-          Show recipient users
+          Show recipients
         </button>
       </div>
     </div>
@@ -102,8 +117,8 @@
     </div>
     {# Preview window #}
     <div class="tab-pane fade py-3" id="preview-tab">
-      <form class="preview-form preview-user-form" method="GET" action="{{ preview_url }}">
-        <select name="user" id="id_user" class="form-control my-2"></select>
+      <form class="preview-form preview-{{ msg_type }}-form" method="GET" action="{{ preview_url }}">
+        {% bootstrap_form preview_form show_label=False exclude='subject,body' %}
         <button type="submit" class="btn btn-success btn-sm my-2 btn-block">Update</button>
       </form>
       <div class="tab-working-area">

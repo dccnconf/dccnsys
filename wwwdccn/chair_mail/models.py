@@ -83,10 +83,10 @@ class UserMessage(GroupMessage):
         return MSG_TYPE_USER
 
     @staticmethod
-    def create(subject, body, conference, users_to):
+    def create(subject, body, conference, objects_to):
         msg = UserMessage.objects.create(
             subject=subject, body=body, conference=conference)
-        for user in users_to:
+        for user in objects_to:
             msg.users_to.add(user)
         msg.save()
         return msg
@@ -134,10 +134,10 @@ class SubmissionMessage(GroupMessage):
         return MSG_TYPE_SUBMISSION
 
     @staticmethod
-    def create(subject, body, conference, submissions_to):
+    def create(subject, body, conference, objects_to):
         msg = SubmissionMessage.objects.create(
             subject=subject, body=body, conference=conference)
-        for submission in submissions_to:
+        for submission in objects_to:
             msg.submissions_to.add(submission)
         msg.save()
         return msg

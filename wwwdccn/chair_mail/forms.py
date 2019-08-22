@@ -133,7 +133,7 @@ class PreviewFormBase(forms.Form):
 
 
 class PreviewUserMessageForm(PreviewFormBase):
-    user = forms.CharField()  # Use simple CharField instead of choice!
+    user = forms.CharField(widget=forms.Select)  # Use simple CharField instead of choice!
 
     def get_context(self, conference):
         user = User.objects.get(pk=self.cleaned_data['user'])
