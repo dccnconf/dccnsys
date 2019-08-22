@@ -1,5 +1,6 @@
 from django.urls import path
 
+from chair_mail import forms
 from . import views, api
 
 
@@ -34,27 +35,20 @@ urlpatterns = [
         name='instance-details'
     ),
     path('<int:conf_pk>/compose/user/', views.compose_user, name='compose-user'),
-    path(
-        '<int:conf_pk>/compose/paper/<int:sub_pk>/',
-        views.compose_to_submission,
-        name='compose-paper'
-    ),
-    path(
-        '<int:conf_pk>/api/compose/preview/submission/<int:sub_pk>/',
-        views.render_submission_message_preview,
-        name='api-render-preview-submission',
-    ),
-    path(
-        '<int:conf_pk>/api/compose/form_parts/',
-        views.get_compose_form_components,
-        name='api-get-compose-form-components',
-    ),
+    path('<int:conf_pk>/compose/submission/', views.compose_submission, name='compose-submission'),
     path('help/compose/', views.help_compose, name='help-compose'),
 
     #########################################################################
     path('<int:conf_pk>/api/mailing_lists/', api.list_mailing_lists, name='list-mailing-lists'),
     path('<int:conf_pk>/api/mailing_lists/<str:name>/', api.mailing_list_details, name='mailing-list-details'),
     path('<int:conf_pk>/api/users/', api.list_users, name='list-users'),
-    path('<int:conf_pk>/api/preview/user/', api.render_user_message_preview, name='render-preview-user'),
-    # path('<int:conf_pk>/api/users/search/', api.search_users, name='search-users'),
+    path('<int:conf_pk>/api/submissions/', api.list_submissions, name='list-submissions'),
+    path(
+        '<int:conf_pk>/api/preview/user/',
+        api.create_preview_view(forms.PreviewUserMessageForm),
+        name='render-preview-user'),
+    path(
+        '<int:conf_pk>/api/preview/submission/',
+        api.create_preview_view(forms.PreviewSubmissionMessageForm),
+        name='render-preview-submission'),
 ]

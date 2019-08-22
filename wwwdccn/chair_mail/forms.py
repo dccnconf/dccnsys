@@ -26,6 +26,11 @@ def parse_users(pks_string, separator=','):
     return User.objects.filter(pk__in=pks)
 
 
+def parse_submissions(pks_string, separator=','):
+    pks = set(map(lambda s: int(s), pks_string.split(separator)))
+    return Submission.objects.filter(pk__in=pks)
+
+
 class EmailFrameUpdateForm(forms.ModelForm):
     class Meta:
         model = EmailFrame
@@ -70,11 +75,15 @@ class MessageForm(forms.Form):
     body = forms.CharField(widget=forms.Textarea(), required=False)
     lists = forms.CharField(
         required=False, max_length=1000, widget=forms.HiddenInput)
+    objects = forms.CharField(
+        required=False, max_length=10000, widget=forms.HiddenInput)
 
-    def __init__(self, *args, msg_type=None, **kwargs):
+    def __init__(self, *args, msg_type=None, object_type=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.msg_type = msg_type
+        self.object_type = object_type
         self.cleaned_lists = []
+        self.cleaned_objects = []
 
     def clean_lists(self):
         _lists = parse_mailing_lists(self.cleaned_data['lists'])
@@ -85,18 +94,11 @@ class MessageForm(forms.Form):
         self.cleaned_lists = _lists
         return self.cleaned_data['lists']
 
-
-class UserMessageForm(MessageForm):
-    users = forms.CharField(
-        required=False, max_length=10000, widget=forms.HiddenInput)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, msg_type=MSG_TYPE_USER, **kwargs)
-        self.cleaned_users = []
-
-    def clean_users(self):
-        self.cleaned_users = list(parse_users(self.cleaned_data['users']))
-        return self.cleaned_data['users']
+    def clean_objects(self):
+        pks = set(map(
+            lambda s: int(s), self.cleaned_data['objects'].split(',')))
+        self.cleaned_objects = list(self.object_type.objects.filter(pk__in=pks))
+        return self.cleaned_data['objects']
 
 
 class PreviewFormBase(forms.Form):
@@ -142,22 +144,8 @@ class PreviewUserMessageForm(PreviewFormBase):
 
 
 class PreviewSubmissionMessageForm(PreviewFormBase):
-    submission = forms.ChoiceField()
-    user = forms.ChoiceField()
-
-    def __init__(self, *args, submissions=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['submission'].choices = [
-            (sub.pk, sub.title) for sub in submissions
-        ]
-        if len(submissions) == 1:
-            self.fields['submission'].widget.attrs['hidden'] = True
-        first_submission_users = [
-            author.user for author in submissions[0].authors.all()
-        ]
-        self.fields['user'].choices = [
-            (u.pk, u.profile.get_full_name()) for u in first_submission_users
-        ]
+    submission = forms.CharField()
+    user = forms.CharField()
 
     def get_context(self, conference):
         submission = Submission.objects.get(pk=self.cleaned_data['submission'])

@@ -15,36 +15,22 @@ const prettifyListName = function (name) {
     .capitalize();
 };
 
-const showUserListModal = function ({users, title, size = 'lg'}) {
-  const items = users.map(user => `
-<li class="list-group-item d-flex align-items-center">
-<i class="far fa-2x mr-3 fa-check-square"></i>
-<img src="${user.avatarURL}" alt="${user.name} profile image" 
-     class="rounded-circle mr-3" style="width: 48px; height: 48px;">
-<div>
-  <p class="dccn-text-0 font-weight-bold">${user.name}</p>
-  <p class="dccn-text-small">${user.country}, ${user.city}, ${user.affiliation}</p>
-</div>
-<div class="align-self-start ml-auto dccn-text-small">#${user.id}</div>
-</li>`);
-  const content = items.join('');
-  const body = `
-<div class="list-users-modal-content">
-<p class="font-weight-bold"><span class="text-info">${items.length}</span> users</p>
-<ul class="list-group">${content}</ul>
-</div>`;
-  bootbox.alert({
-    size: size,
-    title: title,
-    message: body,
-    buttons: {ok: {label: 'Close', className: 'btn-outline-primary'}}
-  });
-};
 
 const addClassOnce = function (elem, klass) {
   if (!elem.hasClass(klass)) elem.addClass(klass);
 };
 
+
+const renderSelect = function (select, objects, emptyOptionName = 'select value') {
+  const prevID = select.val();
+  const items = [`<option value="">${emptyOptionName}</option>`];
+  items.push(...objects.map(object => `<option value="${object.id}">${object.name} (ID: ${object.id})</option>`));
+  select.html(Object.values(items).join(''));
+  const nextID = objects.filter(o => String(o.id) === prevID).length === 0 ? '' : prevID;
+  if (nextID !== prevID)
+    select.change();
+  select.val(nextID);
+};
 
 /**
  * A jQuery plugin on top of `<input>` element that stores a list of values.
@@ -124,17 +110,76 @@ const valuesListInput = function (elem) {
 };
 
 
-const getUserHTML = function (user, rawData = undefined) {
-  const nameInRus = 'nameInRus' in user ? `<span class="font-weight-light">(${user.nameInRus})</span>` : '';
+const getUserDialogHTML = function (user, rawData = undefined) {
+  const nameInRus = 'nameInRus' in user ? `<span class="font-weight-light"> [${user.nameInRus}]</span>` : '';
   const rawObject = rawData !== undefined ? rawData : user;
   return `
 <img src="${rawObject.avatarURL}" alt="${rawObject.name} profile image" 
      class="rounded-circle mr-3" style="width: 48px; height: 48px;">
 <div>
-  <p class="dccn-text-0 font-weight-bold">${user.name}${nameInRus}</p>
+  <p class="dccn-text-0 font-weight-bold">
+    ${user.name}${nameInRus} 
+    (<a href="${rawObject.url}" class="dccn-text-small font-weight-bold" target="_blank" data-disable-check="1">View...</a>)
+  </p>
   <p class="dccn-text-small">${user.country}, ${user.city}, ${user.affiliation}</p>
 </div>
 <div class="align-self-start ml-auto dccn-text-small">#${user.id}</div>`;
+};
+
+
+const getListDialogHTML = function (object, rawData = undefined) {
+  const rawObject = rawData !== undefined ? rawData : object;
+  return `
+<div class="dccn-text-0">
+  <h6 class="font-weight-bold dccn-text-0"> ${object.name} (${rawObject.objects.length} items)
+  </h6>
+  <p class="m-0 p-0">${object.details}</p>
+</div>`;
+};
+
+
+const getSubmissionDialogHTML = function (submission, rawData = undefined) {
+  const rawObject = rawData !== undefined ? rawData : submission;
+  const authors = rawObject.authors.map(author => author.name).join(', ');
+  const title = submission.name ? submission.name : '<span class="text-danger">[No title]</span>';
+  return `
+<div class="dccn-text-0">
+  <p class="font-weight-bold dccn-text-0">
+    ${title}
+    (<a href="${rawObject.url}" class="dccn-text-small font-weight-bold" target="_blank" data-disable-check="1">View...</a>)
+  </p>
+  <p class="dccn-text-small m-0 p-0">${authors}</p>
+</div>`;
+};
+
+
+const getObjectDialogHTML = (object, rawData = undefined) => {
+  const type = object['object_type'];
+  if (type === 'user')
+    return getUserDialogHTML(object, rawData);
+  else if (type === 'submission')
+    return getSubmissionDialogHTML(object, rawData);
+  else if (type === 'mailing_list')
+    return getListDialogHTML(object, rawData);
+  throw `unexpected object type "${type}"`;
+};
+
+
+const showObjectsListModal = function ({objects, title, size = 'lg'}) {
+  const items = objects.map(object =>
+    `<li class="list-group-item d-flex align-items-center">${getObjectDialogHTML(object)}</li>`);
+  const content = items.join('');
+  const body = `
+<div class="list-users-modal-content">
+<p class="font-weight-bold"><span class="text-info">${items.length}</span> objects</p>
+<ul class="list-group">${content}</ul>
+</div>`;
+  bootbox.alert({
+    size: size,
+    title: title,
+    message: body,
+    buttons: {ok: {label: 'Close', className: 'btn-outline-primary'}}
+  });
 };
 
 
@@ -148,9 +193,9 @@ const getUserHTML = function (user, rawData = undefined) {
  * users, caches received data.
  *
  * @param listMailingListsURL: a URL to send HTTP GET request to for reading the mailing lists
- * @param listUsersURL: a URL to send HTTP GET request to for reading the list of users
- * @param onUserChecked: handler taking `userID` as the input called when a user is checked
- * @param onUserUnchecked: handler taking `userID` as the input called when a user is unchecked
+ * @param listObjectsURL: a URL to send HTTP GET request to for reading the list of objects (users or submissions)
+ * @param onObjectChecked: handler taking `userID` as the input called when a user is checked
+ * @param onObjectUnchecked: handler taking `userID` as the input called when a user is unchecked
  * @param onListChecked: handler taking `name` as the input called when a list is checked
  * @param onListUnchecked: handler taking `name` as the input called when a list is unchecked
  * @param onLoaded: optional handler without arguments, called when the model loads all data from the server
@@ -161,101 +206,153 @@ const getUserHTML = function (user, rawData = undefined) {
  * Returns a public API split into `lists` and `users` parts with methods for getting,
  * checking and un-checking items.
  */
-const Model = function ({listMailingListsURL, listUsersURL, onUserChecked, onUserUnchecked,
+const Model = function ({listMailingListsURL, listObjectsURL, onObjectChecked, onObjectUnchecked,
                           onListChecked, onListUnchecked, onLoaded=()=>{}}) {
   const state = {
-    lists: {},  // name -> {name, type, details, users, [submissions], checked}
-    users: {},  // id -> {id, name, [nameInRus], url, checked, lists}
+    lists: {},  // name -> {name, type, details, objects, checked}
+    objects: {},  // id -> [submission|user]
+    objectType: undefined,
   };
 
   const api = {
-    /** Load all users into `state.users` */
-    _loadUsers: (success=undefined) => {
-      $.get(listUsersURL, data => {
-        data.users.forEach(u => {
-          if (!(u.id in state.users)) {
-            const aUser = {
-              id: u['id'],
-              name: u['name'],
-              url: u['url'],
-              avatarURL: u['avatar_url'],
-              affiliation: u['affiliation'],
-              country: u['country'],
-              city: u['city'],
-              role: u['role'],
-              degree: u['degree'],
-              checked: false,
-              lists: []
-            };
-            if ('name_rus' in u)  aUser.nameInRus = u['name_rus'];
-            state.users[u.id] = aUser;
-          }
+    createUserFromJSON: object => {
+      const user = {
+        object_type: 'user',
+        id: object['id'],
+        name: object['name'],
+        url: object['url'],
+        avatarURL: object['avatar_url'],
+        affiliation: object['affiliation'],
+        country: object['country'],
+        city: object['city'],
+        role: object['role'],
+        degree: object['degree'],
+        checked: false,
+        lists: []
+      };
+      if ('name_rus' in object)
+        user.nameInRus = object['name_rus'];
+      return user;
+      },
+
+    createSubmissionFromJSON: object => {
+      return {
+        object_type: 'submission',
+        id: object['id'],
+        name: object['title'],
+        url: object['url'],
+        authors: object['authors'].map(author => {
+          return {id: author['id'], name: author['name']};
+        }),
+        lists: [],
+        checked: false
+      }
+      },
+
+    createMailingListFromJSON: object => {
+      return {
+        object_type: 'mailing_list',
+        id: object['name'],
+        name: prettifyListName(object['name']),
+        type: object['type'],
+        details: object['details'],
+        objects: object['objects'].map(id => id),
+        checked: false
+      }
+      },
+
+    createObjectFromJSON: (type, object) => {
+      if (type === 'user')
+        return api.createUserFromJSON(object);
+      else if (type === 'mailing_list')
+        return api.createMailingListFromJSON(object);
+      else if (type === 'submission')
+        return api.createSubmissionFromJSON(object);
+      throw `unrecognized object type "${type}`;
+      },
+
+    loadObjects: (url, onFinish = undefined) => {
+      $.get(url, data => {
+        const type = data['type'];
+        let container;
+        if (type === 'mailing_list') {
+          state.lists = [];
+          container = state.lists;
+        } else {
+          state.objects = [];
+          container = state.objects;
+          state.objectType = type;
+        }
+        data['objects'].forEach(receivedObject => {
+          const object = api.createObjectFromJSON(type, receivedObject);
+          container[object['id']] = object;
         });
-        if (success) success();
+        if (onFinish !== undefined)
+          onFinish();
       });
     },
 
-    /** Load all mailing lists into `state.lists` */
-    _loadLists: (success=undefined) => {
-      $.get(listMailingListsURL, {type: 'user'}, data => {
-        data.lists.forEach(ml => {
-          if (!(ml.name in state.lists)) {
-            state.lists[ml.name] = {
-              id: ml['name'],
-              name: ml['name'],
-              type: ml['type'],
-              details: ml['details'],
-              users: ml['users'].map(userID => userID),
-              checked: false,
-            };
-          }
-        });
-        if (success) success();
+    /** Add lists names to `object.lists` fields for each user in the list, for all lists **/
+    bindObjectsToLists: () => {
+      Object.values(state.objects).forEach(obj => obj.lists = []);
+      Object.values(state.lists).forEach(ml => {
+        ml.objects.forEach(id => state.objects[id].lists.push(ml.id))
       });
-    },
-
-    /** Add lists names to `user.list` fields for each user in the list, for all lists **/
-    _bindUsersToLists: () => {
-      Object.values(state.users).forEach(u => u.lists = []);
-      Object.values(state.lists).forEach(l => l.users.forEach(id => state.users[id].lists.push(l.name)));
     },
 
     /** Load lists and users into `state`, bind lists to users */
     load: (success=undefined) => {
-      api._loadUsers(() => api._loadLists(() => {
-        api._bindUsersToLists();
-        if (success) success();
-      }));
+      api.loadObjects(listObjectsURL, () => {
+        api.loadObjects(listMailingListsURL, () => {
+          api.bindObjectsToLists();
+          if (success) success();
+        });
+      });
     },
 
-    /** Search for users by a string */
-    searchUsers: (query) => {
+    _search: (query, objects, fields) => {
       query = query.trim().toLowerCase();
       const words = query === '' ? [] : query.split(/\s+/);
-      let users = Object.values(state.users);
+      let _objects = objects;
       const matches = {};
-      users.forEach(u => matches[u.id] = []); // each match is an object: {field, startIndex, length}
+      _objects.forEach(object => matches[object.id] = []); // each match: {fieldName, startIndex, length}
       words.forEach(word => {
-        const matchingUsers = [];
-        users.forEach(u => {
+        const matchingObjects = [];
+        _objects.forEach(object => {
           const found = [];
-          ['name', 'nameInRus', 'city', 'affiliation', 'country', 'id'].forEach(field => {
-            if (field in u) {
-              const fieldValue =  typeof u[field] === 'string' ? u[field] : String(u[field]);
-              const index = fieldValue.toLowerCase().indexOf(word);
+          fields.forEach(field => {
+            if (field in object) {
+              const value =  typeof object[field] === 'string' ? object[field] : String(object[field]);
+              const index = value.toLowerCase().indexOf(word);
               if (index >= 0) found.push({fieldName: field, startIndex: index, length: word.length});
             }
           });
           if (found.length > 0) {
-            matchingUsers.push(u);
-            matches[u.id].push(...found);
+            matchingObjects.push(object);
+            matches[object.id].push(...found);
           }
         });
-        users = matchingUsers;
+        _objects = matchingObjects;
       });
-      return users.map(u => {
-        return {user: u, matches: matches[u.id]};
+      return _objects.map(object => {
+        return {object: object, matches: matches[object.id]};
       });
+    },
+
+    /** Search for users by a string */
+    searchObjects: query => {
+      let fields;
+      if (state.objectType === 'user')
+        fields = ['name', 'nameInRus', 'city', 'affiliation', 'country', 'id'];
+      else if (state.objectType === 'submission')
+        fields = ['name', 'id'];
+      return api._search(query, Object.values(state.objects), fields);
+    },
+
+    /** Search mailing lists */
+    searchLists: query => {
+      const fields = ['name', 'details'];
+      return api._search(query, Object.values(state.lists), fields);
     },
 
     check: (obj, handler) => {
@@ -286,9 +383,9 @@ const Model = function ({listMailingListsURL, listUsersURL, onUserChecked, onUse
       }
     },
 
-    isUserPartOfCheckedList: userID => state.users[userID].lists.some(list_name => state.lists[list_name].checked),
+    isPartOfCheckedList: objectID => state.objects[objectID].lists.some(name => state.lists[name].checked),
 
-    getAllSelectedUsers: () => Object.values(state.users).filter(u => u.checked || api.isUserPartOfCheckedList(u.id)),
+    getAllSelectedObjects: () => Object.values(state.objects).filter(o => o.checked || api.isPartOfCheckedList(o.id)),
 
     /** Initialization */
     initialize: () => {
@@ -301,15 +398,15 @@ const Model = function ({listMailingListsURL, listUsersURL, onUserChecked, onUse
   //
   return {
     initialize: api.initialize,
-    users: {
-      check: userID => api.check(state.users[userID], onUserChecked),
-      uncheck: userID => api.uncheck(state.users[userID], onUserUnchecked),
-      toggle: userID => api.toggleCheck(state.users[userID], onUserChecked, onUserUnchecked),
-      get: userID => state.users[userID],
-      all: () => Object.values(state.users),
-      checked: userID => state.users[userID].checked,
-      search: query => api.searchUsers(query),
-      isPartOfCheckedList: userID => api.isUserPartOfCheckedList(userID),
+    objects: {
+      check: id => api.check(state.objects[id], onObjectChecked),
+      uncheck: id => api.uncheck(state.objects[id], onObjectChecked),
+      toggle: id => api.toggleCheck(state.objects[id], onObjectChecked, onObjectUnchecked),
+      get: id => state.objects[id],
+      all: () => Object.values(state.objects),
+      checked: id => state.objects[id].checked,
+      search: query => api.searchObjects(query),
+      isPartOfCheckedList: id => api.isPartOfCheckedList(id),
     },
     lists: {
       check: name => api.check(state.lists[name], onListChecked),
@@ -318,10 +415,12 @@ const Model = function ({listMailingListsURL, listUsersURL, onUserChecked, onUse
       get: name => state.lists[name],
       all: () => Object.values(state.lists),
       checked: name => state.lists[name].checked,
-      getUsers: name => name in state.lists ? state.lists[name].users.map(id => state.users[id]) : [],
+      search: query => api.searchLists(query),
+      getObjects: name => name in state.lists ? state.lists[name].objects.map(id => state.objects[id]) : [],
     },
     /** Return a list of all users, either checked directly or included in a checked list */
-    allSelectedUsers: () => api.getAllSelectedUsers(),
+    allSelectedObjects: () => api.getAllSelectedObjects(),
+    getObjectsType: () => state.objectType,
   };
 };
 
@@ -357,49 +456,60 @@ const Model = function ({listMailingListsURL, listUsersURL, onUserChecked, onUse
  *  - `all()`
  *  - `has(id)`
  */
-$.fn.composeToArea = function ({usersInput, listsInput, onUserDeleted, onListDeleted, onUserAdded, onListAdded,
-                                 getList, getUsersOf, getUser}) {
+$.fn.composeToArea = function ({objectsInput, listsInput, onObjectDeleted, onListDeleted, onObjectAdded, onListAdded,
+                                 getList, getObjectsOf, getObject, objectsType}) {
+
+  const getUserItemHTML = user => {
+    return`
+<div class="compose-to-item" data-type="object" data-id="${user.id}">
+<img src="${user.avatarURL}" style="width: 24px; height: 24px;" class="rounded-circle mr-2" alt="user avatar">
+<a href="${user.url}" class="dccn-link font-weight-bold">${user.name}</a>
+<button class="btn btn-link ml-2 dccn-link" type="button" data-toggle="remove"><i class="fas fa-times"></i></button>
+</div>`;
+  };
+
+  const getSubmissionItemHTML = submission => {
+    return `
+<div class="compose-to-item" data-type="object" data-id="${submission.id}">
+<i class="fas fa-file mr-2"></i>
+<a href="${submission.url}" class="dccn-link font-weight-bold">${submission.name}</a>
+<button class="btn btn-link ml-2 dccn-link" type="button" data-toggle="remove"><i class="fas fa-times"></i></button>
+</div>`;
+  };
+
+  const getListItemHTML = ml => {
+    return`
+<div class="compose-to-item" data-type="list" data-id="${ml.id}">
+<i class="fas fa-list mr-2"></i><a href="#" class="dccn-link font-weight-bold">${ml.name}</a>
+<button class="btn btn-link ml-2 dccn-link" type="button" data-toggle="remove"><i class="fas fa-times"></i></button>
+</div>`;
+  };
+
   const state = {
-    user: {
-      items: valuesListInput($(usersInput)),
-      onItemDeleted: onUserDeleted,
-      onItemAdded: onUserAdded,
-      icon: 'user',
+    object: {
+      items: valuesListInput($(objectsInput)),
+      onItemDeleted: onObjectDeleted,
+      onItemAdded: onObjectAdded,
+      icon: objectsType === 'user' ? 'user' : 'file',
+      getHTML: objectsType === 'user' ? getUserItemHTML : getSubmissionItemHTML,
     },
     list: {
       items: valuesListInput($(listsInput)),
       onItemDeleted: onListDeleted,
       onItemAdded: onListAdded,
       icon: 'list',
+      getHTML: getListItemHTML,
     },
   };
 
   const api = {
-    /** Build HTML for a user item. */
-    getUserItemHTML: (user) => {
-      return`
-<div class="compose-to-item" data-type="user" data-id="${user.id}">
-<img src="${user.avatarURL}" style="width: 24px; height: 24px;" class="rounded-circle mr-2" alt="user avatar">
-<a href="${user.url}" class="dccn-link font-weight-bold">${user.name}</a>
-<button class="btn btn-link ml-2 dccn-link" type="button" data-toggle="remove"><i class="fas fa-times"></i></button>
-</div>`;
-      },
-
-    /** Build HTML for a user item. */
-    getListItemHTML: (ml) => {
-      return`
-<div class="compose-to-item" data-type="list" data-id="${ml.id}">
-<i class="fas fa-list mr-2"></i><a href="#" class="dccn-link font-weight-bold">${prettifyListName(ml.name)}</a>
-<button class="btn btn-link ml-2 dccn-link" type="button" data-toggle="remove"><i class="fas fa-times"></i></button>
-</div>`;
-      },
 
     /** Build a modal window HTML with a list of users. */
-    showListUsersModal: (name) => showUserListModal({
-      users: getUsersOf(name), title: prettifyListName(name), size: 'lg'
+    showListItems: id => showObjectsListModal({
+      objects: getObjectsOf(id), title: getList(id).name, size: 'lg'
     }),
 
-    /** Remove an item of a given type ('user' or 'list'). If `internal=true`, call `onItemDeleted(id)` handler. */
+    /** Remove an item of a given type ('object' or 'list'). If `internal=true`, call `onItemDeleted(id)` handler. */
     remove: (type, id, internal=false) => {
       const item = this.find(`.compose-to-item[data-type="${type}"][data-id="${id}"]`);
       item.remove();
@@ -408,15 +518,15 @@ $.fn.composeToArea = function ({usersInput, listsInput, onUserDeleted, onListDel
         state[type].onItemDeleted(id);
       },
 
-    /** Add a user with a given ID. */
-    addUser: (id) => {
-      this.append(api.getUserItemHTML(getUser(id)));
-      state.user.items.add(id);
+    /** Add am object with a given ID. */
+    addObject: (id) => {
+      this.append(state.object.getHTML(getObject(id)));
+      state.object.items.add(id);
       },
 
     /** Add a list with a given ID (name).`. */
     addList: (id) => {
-      this.append(api.getListItemHTML(getList(id)));
+      this.append(state.list.getHTML(getList(id)));
       state.list.items.add(id);
       },
 
@@ -431,7 +541,7 @@ $.fn.composeToArea = function ({usersInput, listsInput, onUserDeleted, onListDel
       // Bind 'click' event to anchors in .compose-to-item's to showing modals with a list of users:
       this.on('click', '.compose-to-item[data-type="list"]', (event) => {
         const item = $(event.currentTarget);
-        api.showListUsersModal(item.attr(`data-id`));
+        api.showListItems(item.attr(`data-id`));
         event.stopPropagation();
         return false;
       });
@@ -442,11 +552,11 @@ $.fn.composeToArea = function ({usersInput, listsInput, onUserDeleted, onListDel
 
   return {
     initialize: api.initialize,
-    users: {
-      add: (id) => api.addUser(id),
-      remove: id => api.remove('user', id),
-      all: () => state.user.items.all(),
-      has: id => state.user.items.has(id),
+    objects: {
+      add: (id) => api.addObject(id),
+      remove: id => api.remove('object', id),
+      all: () => state.object.items.all(),
+      has: id => state.object.items.has(id),
     },
     lists: {
       add: name => api.addList(name),
@@ -459,87 +569,17 @@ $.fn.composeToArea = function ({usersInput, listsInput, onUserDeleted, onListDel
 
 
 /**
- * View controller defined as a JQuery plugin for compose page modal for mailing lists selection.
- *
- * @param getLists - get all mailing lists
- * @param onClick - handle click event, signature: `(userID) => ()`
- *
- * @return this
- */
-const addListModal = function ({getLists, onClick}) {
-  const DIALOG_DATA_CLASS = 'dialog-data';
-
-  const state = {
-    dialog: undefined,
-  };
-
-  const api = {
-    getBody: () => state.dialog.find(`.${DIALOG_DATA_CLASS}`),
-
-    getItemHTML: mailing_list => {
-      const icon = mailing_list.checked ? 'fa-check-square' : 'fa-square';
-      return`
-<button class="list-group-item list-group-item-action d-flex align-items-center" 
-      type="button" data-id="${mailing_list.name}">
-<i class="far fa-2x mr-3 ${icon}"></i>
-<div class="dccn-text-0">
-  <h6 class="font-weight-bold dccn-text-0">
-    ${prettifyListName(mailing_list.name)} (${mailing_list.users.length} users)
-  </h6>
-  <p class="m-0 p-0">${mailing_list.details}</p>
-</div>
-</button>`;
-    },
-
-    render: () => {
-      const items = getLists().map(api.getItemHTML);
-      api.getBody().html(`<div class="list-group">${items.join('\n')}</div>`);
-      },
-
-    show: () => {
-      state.dialog = bootbox.alert({
-        title: 'Mailing lists',
-        message: `<div class="${DIALOG_DATA_CLASS}"></div>`,
-        onEscape: true,
-        animate: false,
-        size: 'lg',
-        buttons: {ok: {label: 'Close', className: 'btn-outline-secondary'}},
-      });
-
-      // Setup elements and bind handlers to them:
-      api.getBody().on('click', 'button[data-id]', (event) => onClick($(event.currentTarget).attr('data-id')));
-
-      state.dialog.on('shown.bs.modal', api.render);
-      state.dialog.on('hidden.bs.modal', api.hide);
-
-      api.render();
-      },
-
-    hide: () => {
-      state.dialog = undefined;
-      },
-
-  };
-
-  return {
-    show: () => { if (state.dialog === undefined) api.show(); },
-    hide: () => { if (state.dialog !== undefined) api.hide(); },
-    render: () => { if (state.dialog !== undefined) api.render(); },
-  }
-};
-
-
-/**
  * View controller defined for compose page modal for users selection.
  *
  * @param delay: delay in milliseconds before calling `usersAPI.search()` (by default, 500ms)
  * @param onClick: a handler called when a list is clicked
- * @param isPartOfCheckedList: a function for checking whether a user is participated in any list
- * @param searchUsers: a function for querying list of users
+ * @param isItemDisabled: check that particular item is pre-selected and can not be checked/unchecked
+ * @param search: a function for querying list of objects
  * @param getObjects: get all objects
+ * @param modalTitle: dialog title
  */
 const chooseObjectsDialog = function ({delay = 250, onClick, isItemDisabled = undefined, search,
-                                        getObjects, getObjectHTML, modalTitle}) {
+                                        getObjects, modalTitle}) {
   const DIALOG_DATA_CLASS = 'dialog-data';
 
   const state = {
@@ -594,7 +634,7 @@ const chooseObjectsDialog = function ({delay = 250, onClick, isItemDisabled = un
 
       /* Prepare some optional or logic fields */
       const checked = object.checked || disabled;
-      const objectHTML = getObjectHTML(markedObject);
+      const objectHTML = getObjectDialogHTML(markedObject, object);
 
       return `
 <button class="list-group-item list-group-item-action d-flex align-items-center ${disabled ? 'disabled' : ''}" 
@@ -616,9 +656,9 @@ const chooseObjectsDialog = function ({delay = 250, onClick, isItemDisabled = un
         items = getObjects().map(object => api.getItemHTML({object: object}));
       }
       if (items.length > 0) {
-        resultsArea.html(`<div class="list-group">${items.join('\n')}</div>`);
+        resultsArea.html(`<div class="list-group mt-3">${items.join('\n')}</div>`);
       } else {
-        resultsArea.html(`<p class="text-center text-info my-3">No users found</p>`);
+        resultsArea.html(`<p class="text-center text-info my-3">Nothing found</p>`);
       }
       },
 
@@ -659,7 +699,12 @@ const chooseObjectsDialog = function ({delay = 250, onClick, isItemDisabled = un
       input.on('propertychange', api.handleSearchInputUpdated);
 
       const resultsArea = api.getResultsArea();
-      resultsArea.on('click', 'button[data-id]', (event) => onClick($(event.currentTarget).attr('data-id')));
+      resultsArea.on('click', 'button[data-id]', (event) => {
+        const disableCheckAttr = $(event.target).attr('data-disable-check');
+        if (disableCheckAttr !== '1') {
+          onClick($(event.currentTarget).attr('data-id'))
+        }
+      });
 
       state.dialog.on('shown.bs.modal', api.render);
       state.dialog.on('hidden.bs.modal', api.hide);
@@ -685,72 +730,125 @@ const chooseObjectsDialog = function ({delay = 250, onClick, isItemDisabled = un
 };
 
 
-$.fn.previewSelect = function ({getUsers}) {
-  const EMPTY_OPTION_HTML = '<option value="">Select a user</option>';
+const submitPreviewForm = function ({form, validate, subject, body, previewArea}) {
+  if (validate()) {
+    const formData = form.serializeArray();
+    formData.push({name: 'body', value: body});
+    formData.push({name: 'subject', value: subject});
+    $.get(form.attr('action'), formData, data => {
+      previewArea.render(data);
+    });
+  } else {
+    previewArea.render({subject: '', body: ''});
+  }
+  return false;  // to prevent submitting in normal way
+};
+
+
+$.fn.previewSubmissionForm = function ({getObjects, getSubmission, getBody, getSubject, getPreviewArea}) {
+  const elements = {
+    submissionSelect: this.find('select[name="submission"]'),
+    userSelect: this.find('select[name="user"]'),
+  };
 
   const api = {
-    getUserHTML: user => `<option value="${user.id}">${user.name} (ID: ${user.id})</option>`,
+    update: () => {
+      renderSelect(elements.submissionSelect, getObjects(), 'Select submission');
+      },
 
-    render: () => {
-      const prevID = this.val();
-      const users = getUsers();
-      const items = [EMPTY_OPTION_HTML];
-      items.push(...users.map(api.getUserHTML));
-      this.html(Object.values(items).join(''));
-      const nextID = users.filter(u => String(u.id) === prevID).length === 0 ? '' : prevID;
-      if (nextID !== prevID) this.change();
-      this.val(nextID);
+    validateInput: () => {
+      let result = true;
+      [elements.submissionSelect, elements.userSelect].forEach(select => {
+        if (select.val() === '') {
+          addClassOnce(select, 'is-invalid');
+          result = false;
+        } else {
+          select.removeClass('is-invalid');
+        }
+      });
+      return result;
       },
 
     initialize: () => {
       // Render options:
-      api.render();
+      elements.submissionSelect.on('change', () => {
+        const subID = elements.submissionSelect.val();
+        let users = [];
+        if (subID !== '') {
+          users = getSubmission(subID).authors;
+        }
+        renderSelect(elements.userSelect, users, 'Select user');
+      });
+
+      this.on('submit', () => submitPreviewForm({
+        form: this, validate: api.validateInput, subject: getSubject(), body: getBody(),
+        previewArea: getPreviewArea()
+      }));
+
+      api.update();
     },
   };
 
   api.initialize();
   return {
-    render: api.render,
+    update: api.update,
   }
 };
 
 
-$.fn.previewTab = function ({userSelect, subjectInput, codeMirrorEditor}) {
+$.fn.previewUserForm = function ({getObjects, getBody, getSubject, getPreviewArea}) {
+  const elements = {
+    userSelect: this.find('select[name="user"]'),
+  };
+
+  const api = {
+    update: () => {
+      renderSelect(elements.userSelect, getObjects(), 'Select user');
+      },
+
+    validateInput: () => {
+      if (elements.userSelect.val() === '') {
+        addClassOnce(elements.userSelect, 'is-invalid');
+        return false;
+      }
+      elements.userSelect.removeClass('is-invalid');
+      return true;
+      },
+
+    initialize: () => {
+      this.on('submit', () => submitPreviewForm({
+        form: this, validate: api.validateInput, subject: getSubject(), body: getBody(),
+        previewArea: getPreviewArea()
+      }));
+
+      api.update();
+    },
+  };
+
+  api.initialize();
+  return {
+    update: api.update,
+  }
+};
+
+
+
+
+$.fn.previewArea = function ({}) {
   const elements = {
     previewSubjectField: this.find('.preview-message-subject'),
     previewBodyField: this.find('.preview-message-body')
   };
 
-  const previewUrl = this.attr('data-preview-url');
-
   const api = {
-    initialize: () => {
-      },
-
     render: (subject, body) => {
-      elements.subject.text(subject);
-      elements.body.html(body);
-    },
-
-    update: () => {
-      const user = userSelect.val();
-      if (user === '') {
-        addClassOnce(userSelect, 'is-invalid');
-      } else {
-        userSelect.removeClass('is-invalid');
-        const body = codeMirrorEditor.getValue();
-        const subject = subjectInput.val();
-        const formData = {'user': user, 'body': body, 'subject': subject};
-        $.get(previewUrl, $.param(formData), data => {
-          elements.previewSubjectField.text(data.subject);
-          elements.previewBodyField.html(data.body);
-        });
-      }
+      elements.previewSubjectField.text(subject);
+      elements.previewBodyField.html(body);
     },
   };
 
   return {
-    update: () => api.update(),
+    render: ({subject, body}) => api.render(subject, body),
   }
 };
 
@@ -767,10 +865,10 @@ const controller = (function () {
 
   const components = {
     composeToArea: undefined,
-    addListModal: undefined,
-    usersDialog: undefined,
-    previewSelect: undefined,
-    previewTab: undefined,
+    listsDialog: undefined,
+    objectsDialog: undefined,
+    previewForm: undefined,
+    previewArea: undefined,
     editor: undefined,
   };
 
@@ -778,14 +876,13 @@ const controller = (function () {
     return {
       composeTo: $('#composeTo'),
       composeToArea: $('#composeToArea'),
-      usersInput: $('#id_users'),
+      objectsInput: $('#id_objects'),
       listsInput: $('#id_lists'),
       subjectInput: $('#id_subject'),
-      addListModal: $('#addListModal'),
-      previewSelect: $('#id_preview_user'),
+      previewForm: $('.preview-form'),
+      previewArea: $('.preview-message'),
       showRecipientBtn: $('#showRecipientBtn'),
       updatePreviewBtn: $('#updatePreviewBtn'),
-      previewTab: $('#preview-tab'),
       userSearchResults: $('.user-search-results'),
     }
   };
@@ -803,65 +900,76 @@ const controller = (function () {
       // 1) Build the model, and create other components when data is loaded:
       state.model = Model({
         listMailingListsURL: elements.composeTo.attr('data-list-mailing-lists-url'),
-        listUsersURL: elements.composeTo.attr('data-list-users-url'),
-        onUserChecked: (id) => {
-          components.composeToArea.users.add(id);
-          components.usersDialog.render();
-          components.previewSelect.render();
+        listObjectsURL: elements.composeTo.attr('data-list-objects-url'),
+        onObjectChecked: (id) => {
+          components.composeToArea.objects.add(id);
+          components.objectsDialog.render();
+          components.previewForm.update();
         },
-        onUserUnchecked: (id) => {
-          components.composeToArea.users.remove(id);
-          components.usersDialog.render();
-          components.previewSelect.render();
+        onObjectUnchecked: (id) => {
+          components.composeToArea.objects.remove(id);
+          components.objectsDialog.render();
+          components.previewForm.update();
         },
         onListChecked: (id) => {
           components.composeToArea.lists.add(id);
-          components.addListModal.render();
-          components.usersDialog.render();
-          components.previewSelect.render();
+          components.listsDialog.render();
+          components.objectsDialog.render();
+          components.previewForm.update();
         },
         onListUnchecked: (id) => {
           components.composeToArea.lists.remove(id);
-          components.addListModal.render();
-          components.usersDialog.render();
-          components.previewSelect.render();
+          components.listsDialog.render();
+          components.objectsDialog.render();
+          components.previewForm.update();
         },
         onLoaded: () => {
           // 1.1) Create `composeTo` plugin:
           components.composeToArea = elements.composeToArea.composeToArea({
-            usersInput: elements.usersInput,
+            objectsInput: elements.objectsInput,
             listsInput: elements.listsInput,
-            onUserDeleted: id => state.model.users.uncheck(id),
+            onObjectDeleted: id => state.model.objects.uncheck(id),
             onListDeleted: id => state.model.lists.uncheck(id),
-            onUserAdded: id => state.model.users.check(id),
+            onObjectAdded: id => state.model.objects.check(id),
             onListAdded: id => state.model.lists.check(id),
-            getUser: id => state.model.users.get(id),
-            getUsersOf: name => state.model.lists.getUsers(name),
+            getObject: id => state.model.objects.get(id),
+            getObjectsOf: name => state.model.lists.getObjects(name),
             getList: name => state.model.lists.get(name),
+            objectsType: state.model.getObjectsType(),
           });
-          // 1.2) Create mailing list modal plugin:
-          components.addListModal = addListModal({
-            onClick: name => state.model.lists.toggle(name),
-            getLists: () => state.model.lists.all(),
+          components.listsDialog = chooseObjectsDialog({
+            onClick: state.model.lists.toggle,
+            search: state.model.lists.search,
+            getObjects: state.model.lists.all,
+            modalTitle: 'Search mailing lists',
           });
           // 1.3) Create users list modal plugin:
-          components.usersDialog = chooseObjectsDialog({
-            // searchResults: elements.userSearchResults,
-            onClick: id => state.model.users.toggle(id),
-            isItemDisabled: userID => state.model.users.isPartOfCheckedList(userID),
-            search: q => state.model.users.search(q),
-            getObjects: () => state.model.users.all(),
-            getObjectHTML: getUserHTML,
-            modalTitle: 'Search users',
+          components.objectsDialog = chooseObjectsDialog({
+            onClick: id => state.model.objects.toggle(id),
+            isItemDisabled: id => state.model.objects.isPartOfCheckedList(id),
+            search: state.model.objects.search,
+            getObjects: () => state.model.objects.all(),
+            modalTitle: 'Search items',
           });
-          // 1.4) Create preview selector component:
-          components.previewSelect = elements.previewSelect.previewSelect({
-            getUsers: () => state.model.allSelectedUsers(),
-          });
-          components.previewTab = elements.previewTab.previewTab({
-            userSelect: elements.previewSelect,
-            subjectInput: elements.subjectInput,
-            codeMirrorEditor: components.editor.getCM(),
+          // 1.4) Create preview selector form component:
+          if (elements.previewForm.is('.preview-submission-form')) {
+            components.previewForm = elements.previewForm.previewSubmissionForm({
+              getObjects: state.model.allSelectedObjects,
+              getSubmission: state.model.objects.get,
+              getBody: () => components.editor.getCM().getValue(),
+              getSubject: () => elements.subjectInput.val(),
+              getPreviewArea: () => components.previewArea,
+            });
+          } else if (elements.previewForm.is('.preview-user-form')) {
+            components.previewForm = elements.previewForm.previewUserForm({
+              getObjects: state.model.allSelectedObjects,
+              getBody: () => components.editor.getCM().getValue(),
+              getSubject: () => elements.subjectInput.val(),
+              getPreviewArea: () => components.previewArea,
+            });
+          }
+          // 1.5) Create preview area component:
+          components.previewArea = elements.previewArea.previewArea({
           });
 
           // 1.5) Initialize the composeToArea component, since it expects other components being ready:
@@ -869,23 +977,22 @@ const controller = (function () {
         },
       });
 
+      // -----
+
       // 2) Bind 'Show recipient users' button to displaying a modal with all selected users:
       elements.showRecipientBtn.on('click', (event) => {
-        showUserListModal({
-          users: state.model.allSelectedUsers(),
+        showObjectsListModal({
+          objects: state.model.allSelectedObjects(),
           title: 'Recipients',
-          size: 'lg'
+          size: 'lg',
         });
         event.stopPropagation();
         return false;
       });
 
-      // 3) Bind 'Update' button for updating preview in the preview tab:
-      elements.updatePreviewBtn.on('click', () => components.previewTab.update());
-
-      // 4) Bind dialogs to buttons:
-      $('#addUserBtn').on('click', () => components.usersDialog.show());
-      $('#addListBtn').on('click', () => components.addListModal.show());
+      // 3) Bind dialogs to buttons:
+      $('.choose-objects-btn').on('click', () => components.objectsDialog.show());
+      $('.choose-lists-btn').on('click', () => components.listsDialog.show());
 
       // 4) Initialize the model:
       state.model.initialize();
@@ -897,6 +1004,5 @@ $(document).ready(function () {
   /**************************************************************************
    * BINDING METHODS TO DOM EVENTS AND BINDING PLUGINS
    *************************************************************************/
-  console.log($('#id_lists'));
   controller.initialize();
 });

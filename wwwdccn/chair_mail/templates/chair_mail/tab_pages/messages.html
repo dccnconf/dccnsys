@@ -30,7 +30,8 @@
           </p>
         </a>
         <div class="dropdown-divider"></div>
-        <a href="#" class="dropdown-item dccn-text-small px-3 py-2" style="white-space: normal;">
+        <a href="{% url 'chair_mail:compose-submission' conf_pk=conference.pk %}?next={{ request.get_full_path|urlencode }}"
+           class="dropdown-item dccn-text-small px-3 py-2" style="white-space: normal;">
           <h6 class="dccn-text-small font-weight-bold pb-2">Compose to submissions list</h6>
           <p class="dccn-text-smaller">
             Message for authors of predefined list of submissions. You can use all available variables.

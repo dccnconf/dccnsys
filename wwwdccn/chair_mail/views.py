@@ -10,7 +10,7 @@ from chair.utility import validate_chair_access
 from chair_mail.context import USER_VARS, CONFERENCE_VARS, SUBMISSION_VARS, \
     FRAME_VARS
 from chair_mail.forms import EmailFrameUpdateForm, EmailFrameTestForm, \
-    PreviewSubmissionMessageForm, MessageForm, UserMessageForm
+    PreviewSubmissionMessageForm, MessageForm
 from chair_mail.mailing_lists import ALL_LISTS
 from chair_mail.models import EmailSettings, EmailFrame, EmailMessage, \
     GroupMessage, UserMessage, MSG_TYPE_USER, SubmissionMessage, \
@@ -147,7 +147,7 @@ def compose_user(request, conf_pk):
 
     if request.method == 'POST':
         next_url = request.POST.get('next', default_url)
-        form = UserMessageForm(request.POST)
+        form = MessageForm(request.POST)
         if form.is_valid():
             all_users_to = list(form.cleaned_users)
             for ml in form.cleaned_lists:
@@ -165,8 +165,8 @@ def compose_user(request, conf_pk):
         else:
             messages.error(request, 'Error sending message')
     else:
-        form = UserMessageForm(initial={
-            'users': request.GET.get('users', ''),
+        form = MessageForm(initial={
+            'objects': request.GET.get('objects', ''),
             'lists': request.GET.get('lists', ''),
         })
         next_url = request.GET.get('next', default_url)
@@ -179,6 +179,56 @@ def compose_user(request, conf_pk):
         'chair_mail:render-preview-user', kwargs={'conf_pk': conf_pk})
     return render(
         request, 'chair_mail/compose/compose_to_user.html', context={
+            'msg_form': form,
+            'msg_type': MSG_TYPE_USER,
+            'conference': conference,
+            'next': next_url,
+            'variables': variables,
+            'preview_url': preview_url,
+        })
+
+
+def compose_submission(request, conf_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    default_url = reverse('chair:home', kwargs={'conf_pk': conf_pk})
+
+    if request.method == 'POST':
+        next_url = request.POST.get('next', default_url)
+        form = MessageForm(
+            request.POST, msg_type=MSG_TYPE_SUBMISSION, object_type=Submission)
+        if form.is_valid():
+            all_submissions_to = list(form.cleaned_objects)
+            for ml in form.cleaned_lists:
+                all_submissions_to.extend(list(ml.query(conference)))
+            submissions_to = list(set(all_submissions_to))
+
+            msg = SubmissionMessage.create(
+                subject=form.cleaned_data['subject'],
+                body=form.cleaned_data['body'],
+                conference=conference,
+                submissions_to=submissions_to,
+            )
+            msg.send(request.user)
+            return redirect(next_url)
+        else:
+            messages.error(request, 'Error sending message')
+    else:
+        form = MessageForm(initial={
+            'objects': request.GET.get('objects', ''),
+            'lists': request.GET.get('lists', ''),
+        }, msg_type=MSG_TYPE_SUBMISSION, object_type=Submission)
+        next_url = request.GET.get('next', default_url)
+
+    variables = (
+            ('Conference variables', CONFERENCE_VARS),
+            ('User variables', USER_VARS),
+            ('Submission variables', SUBMISSION_VARS),
+    )
+    preview_url = reverse(
+        'chair_mail:render-preview-submission', kwargs={'conf_pk': conf_pk})
+    return render(
+        request, 'chair_mail/compose/compose_to_submission.html', context={
             'msg_form': form,
             'msg_type': MSG_TYPE_USER,
             'conference': conference,

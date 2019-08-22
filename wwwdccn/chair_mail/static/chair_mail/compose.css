@@ -1,0 +1,46 @@
+.CodeMirror {
+    min-height: 55vh;
+}
+.compose-tabs > .tab-pane {
+    min-height: 60.5vh;
+}
+.compose-tabs > .tab-pane .tab-working-area {
+    max-height: 55vh;
+    overflow: scroll;
+}
+.message-preview-area {
+    height: 55vh;
+    overflow: scroll;
+}
+.compose-to-area {
+    display: flex;
+    flex-wrap: wrap;
+}
+.compose-to-item {
+    display: flex;
+    align-items: center;
+    border: 1px solid #eee;
+    border-radius: 15px;
+    padding: 5px 10px;
+    margin: 0 10px 3px 0;
+}
+.dialog-data {
+    max-height: 70vh;
+    overflow: scroll;
+}
+.compose-var {
+    cursor: pointer;
+}
+.compose-var:hover {
+    text-decoration: underline;
+}
+.message-editor-insert-text.dropdown-item {
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: bold;
+    color: #555;
+}
+.message-editor-insert-text p {
+    margin: 0;
+    padding: 0;
+}
