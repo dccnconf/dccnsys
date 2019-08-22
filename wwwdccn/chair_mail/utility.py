@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.http import Http404
+from django.urls import reverse
 
 
 def get_email_frame_or_404(conference):
@@ -55,3 +56,34 @@ def get_html_ul(items, value=None, url=None):
         ]
 
     return f'<ul>{"".join(list_items)}</ul>'
+
+
+def reverse_preview_url(msg_type, conference):
+    from .models import MSG_TYPE_USER, MSG_TYPE_SUBMISSION
+    kwargs = {'conf_pk': conference.pk}
+    if msg_type == MSG_TYPE_USER:
+        return reverse('chair_mail:render-preview-user', kwargs=kwargs)
+    elif msg_type == MSG_TYPE_SUBMISSION:
+        return reverse('chair_mail:render-preview-submission', kwargs=kwargs)
+    raise ValueError(f'unexpected message type "{msg_type}"')
+
+
+def reverse_list_objects_url(msg_type, conference):
+    from .models import MSG_TYPE_USER, MSG_TYPE_SUBMISSION
+    kwargs = {'conf_pk': conference.pk}
+    if msg_type == MSG_TYPE_USER:
+        return reverse('chair_mail:list-users', kwargs=kwargs)
+    elif msg_type == MSG_TYPE_SUBMISSION:
+        return reverse('chair_mail:list-submissions', kwargs=kwargs)
+    raise ValueError(f'unexpected message type "{msg_type}"')
+
+
+def get_object_model(msg_type):
+    from .models import MSG_TYPE_USER, MSG_TYPE_SUBMISSION
+    if msg_type == MSG_TYPE_USER:
+        from users.models import User
+        return User
+    elif msg_type == MSG_TYPE_SUBMISSION:
+        from submissions.models import Submission
+        return Submission
+    raise ValueError(f'unexpected message type "{msg_type}"')

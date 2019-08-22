@@ -177,6 +177,13 @@ class SubmissionMessage(GroupMessage):
         return self
 
 
+def get_group_message_model(msg_type):
+    return {
+        MSG_TYPE_USER: UserMessage,
+        MSG_TYPE_SUBMISSION: SubmissionMessage,
+    }[msg_type]
+
+
 class EmailMessage(models.Model):
     subject = models.TextField(max_length=1024)
     text_plain = models.TextField()

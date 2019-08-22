@@ -5,16 +5,20 @@
 {# - `conference`                                                          #}
 {# - `submission`                                                          #}
 {# - `active_tab`                                                          #}
+{# - `msg_list`                                                            #}
 {###########################################################################}
 {% extends 'chair/submissions/_base.html' %}
 {% load gears_extras %}
 {% load bootstrap4 %}
+{% load chair_mail_extras %}
 
 
 {% block tabViewContent %}
-  <a href="{% url 'chair_mail:compose-paper' conf_pk=conference.pk sub_pk=submission.pk %}?next={{ request.get_full_path|urlencode }}"
-     class="btn btn-outline-primary">
-    Compose new mail
-  </a>
+  <form action="{% url 'chair_mail:compose-submission' conf_pk=conference.pk %}">
+    <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
+    <input type="hidden" name="objects" value="{{ submission.pk }}">
+    <button type="submit" class="btn btn-outline-primary"><i class="fas fa-plus"></i> New message</button>
+  </form>
   <hr>
+  {% include 'chair_mail/components/group_message_list.html' with msg_list=msg_list %}
 {% endblock %}

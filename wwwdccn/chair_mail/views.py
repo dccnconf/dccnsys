@@ -10,14 +10,14 @@ from chair.utility import validate_chair_access
 from chair_mail.context import USER_VARS, CONFERENCE_VARS, SUBMISSION_VARS, \
     FRAME_VARS
 from chair_mail.forms import EmailFrameUpdateForm, EmailFrameTestForm, \
-    PreviewSubmissionMessageForm, MessageForm, PreviewUserMessageForm
+    MessageForm, get_preview_form_class
 from chair_mail.mailing_lists import ALL_LISTS
 from chair_mail.models import EmailSettings, EmailFrame, EmailMessage, \
-    GroupMessage, UserMessage, MSG_TYPE_USER, SubmissionMessage, \
-    MSG_TYPE_SUBMISSION
-from chair_mail.utility import get_email_frame, get_email_frame_or_404
+    GroupMessage, UserMessage, MSG_TYPE_USER, MSG_TYPE_SUBMISSION, \
+    get_group_message_model
+from chair_mail.utility import get_email_frame, get_email_frame_or_404, \
+    reverse_preview_url, reverse_list_objects_url
 from conferences.models import Conference
-from submissions.models import Submission
 
 
 def _get_grouped_vars(msg_type):
@@ -155,22 +155,23 @@ def group_message_details(request, conf_pk, msg_pk):
         })
 
 
-def create_compose_view(msg_type, preview_form_class, preview_url_name,
-                        list_objects_url_name, object_icon_class):
+def create_compose_view(msg_type, object_icon_class):
+    preview_form_class = get_preview_form_class(msg_type)
+    message_class = get_group_message_model(msg_type)
+
     def handler(request, conf_pk):
         conference = get_object_or_404(Conference, pk=conf_pk)
         validate_chair_access(request.user, conference)
-        default_url = reverse('chair:home', kwargs={'conf_pk': conf_pk})
+        default_next_url = reverse('chair:home', kwargs={'conf_pk': conf_pk})
 
         if request.method == 'POST':
-            next_url = request.POST.get('next', default_url)
-            form = MessageForm(request.POST)
+            next_url = request.POST.get('next', default_next_url)
+            form = MessageForm(request.POST, msg_type=msg_type)
             if form.is_valid():
                 all_objects_to = list(form.cleaned_objects)
                 for ml in form.cleaned_lists:
                     all_objects_to.extend(list(ml.query(conference)))
-
-                msg = UserMessage.create(
+                msg = message_class.create(
                     subject=form.cleaned_data['subject'],
                     body=form.cleaned_data['body'],
                     conference=conference,
@@ -184,44 +185,23 @@ def create_compose_view(msg_type, preview_form_class, preview_url_name,
             form = MessageForm(initial={
                 'objects': request.GET.get('objects', ''),
                 'lists': request.GET.get('lists', ''),
-            })
-            next_url = request.GET.get('next', default_url)
+            }, msg_type=msg_type)
+            next_url = request.GET.get('next', default_next_url)
 
-        variables = _get_grouped_vars(msg_type)
-        preview_form = preview_form_class()
-        preview_url = reverse(preview_url_name, kwargs={'conf_pk': conf_pk})
-        list_objects_url = reverse(
-            list_objects_url_name, kwargs={'conf_pk': conf_pk})
         return render(
             request, 'chair_mail/compose/compose.html', context={
                 'msg_form': form,
                 'msg_type': msg_type,
                 'conference': conference,
                 'next': next_url,
-                'variables': variables,
-                'preview_url': preview_url,
-                'preview_form': preview_form,
-                'list_objects_url': list_objects_url,
+                'variables': _get_grouped_vars(msg_type),
+                'preview_url': reverse_preview_url(msg_type, conference),
+                'preview_form': preview_form_class(),
+                'list_objects_url':
+                    reverse_list_objects_url(msg_type, conference),
                 'object_icon_class': object_icon_class,
             })
     return handler
-
-
-compose_user = create_compose_view(
-    msg_type=MSG_TYPE_USER,
-    preview_form_class=PreviewUserMessageForm,
-    preview_url_name='chair_mail:render-preview-user',
-    list_objects_url_name='chair_mail:list-users',
-    object_icon_class='fas fa-user',
-)
-
-compose_submission = create_compose_view(
-    msg_type=MSG_TYPE_SUBMISSION,
-    preview_form_class=PreviewSubmissionMessageForm,
-    preview_url_name='chair_mail:render-preview-submission',
-    list_objects_url_name='chair_mail:list-submissions',
-    object_icon_class='fas fa-scroll',
-)
 
 
 @require_GET
@@ -239,13 +219,12 @@ def message_details(request, conf_pk, msg_pk):
             'user_to': msg.user_to.pk,
         })
     next_url = request.GET.get('next', default='')
-    return render(request,
-                  'chair_mail/preview_pages/email_message_preview.html',
-                  context={
-                      'conference': conference,
-                      'msg': msg,
-                      'next': next_url,
-                  })
+    return render(
+        request, 'chair_mail/preview_pages/email_message_preview.html', context={
+            'conference': conference,
+            'msg': msg,
+            'next': next_url,
+        })
 
 
 def help_compose(request):

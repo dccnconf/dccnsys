@@ -105,7 +105,7 @@
     </a>
     <form action="{% url 'chair_mail:compose-user' conf_pk=conference.pk %}" method="GET" class="mr-2">
       <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
-      <input type="hidden" name="users" value="{{ item.pk }}">
+      <input type="hidden" name="objects" value="{{ item.pk }}">
       <button class="btn btn-link dccn-feed-item-link">
         <i class="fas fa-envelope"></i> Contact
       </button>

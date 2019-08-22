@@ -1,6 +1,7 @@
 from django.urls import path
 
 from chair_mail import forms
+from chair_mail.models import MSG_TYPE_USER, MSG_TYPE_SUBMISSION
 from . import views, api
 
 
@@ -34,8 +35,16 @@ urlpatterns = [
         views.message_details,
         name='instance-details'
     ),
-    path('<int:conf_pk>/compose/user/', views.compose_user, name='compose-user'),
-    path('<int:conf_pk>/compose/submission/', views.compose_submission, name='compose-submission'),
+    path(
+        '<int:conf_pk>/compose/user/',
+        views.create_compose_view(MSG_TYPE_USER, 'fas fa-user'),
+        name='compose-user'
+    ),
+    path(
+        '<int:conf_pk>/compose/submission/',
+        views.create_compose_view(MSG_TYPE_SUBMISSION, 'fas fa-scroll'),
+        name='compose-submission'
+    ),
     path('help/compose/', views.help_compose, name='help-compose'),
 
     #########################################################################

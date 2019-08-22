@@ -15,7 +15,7 @@
 {% block tabViewContent %}
   <form action="{% url 'chair_mail:compose-user' conf_pk=conference.pk %}">
     <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
-    <input type="hidden" name="users" value="{{ u.pk }}">
+    <input type="hidden" name="objects" value="{{ u.pk }}">
     <button type="submit" class="btn btn-outline-primary"><i class="fas fa-plus"></i> New message</button>
   </form>
 

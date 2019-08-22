@@ -127,9 +127,13 @@
     <a href="{% url 'chair:submission-overview' conf_pk=conference.pk sub_pk=item.pk %}" class="dccn-feed-item-link">
       <i class="fas fa-align-justify"></i> Details
     </a>
-    <a href="{% url 'chair_mail:compose-paper' conf_pk=conference.pk sub_pk=item.pk %}?next={{ request.get_full_path|urlencode }}" class="dccn-feed-item-link">
-      <i class="fas fa-envelope"></i> Contact
-    </a>
+    <form action="{% url 'chair_mail:compose-submission' conf_pk=conference.pk %}" method="GET" class="mr-2">
+      <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
+      <input type="hidden" name="objects" value="{{ item.pk }}">
+      <button class="btn btn-link dccn-feed-item-link">
+        <i class="fas fa-envelope"></i> Contact
+      </button>
+    </form>
     {% if item.actions.assign_reviewers %}
       <a href="{% url 'chair:submission-reviewers' conf_pk=conference.pk sub_pk=item.pk %}" class="dccn-feed-item-link">
         <i class="fas fa-glasses"></i> Select reviewers (<span class="{% if item.num_reviews < item.num_reviews_required %}text-danger{% endif %}">{{ item.num_reviews }}/{{ item.num_reviews_required }}</span>)

@@ -10,9 +10,10 @@ from markdown import markdown
 from chair_mail.context import get_conference_context, get_user_context, \
     get_submission_context
 from chair_mail.mailing_lists import find_list
+from chair_mail.utility import get_object_model
 from submissions.models import Submission
 from users.models import User
-from .models import EmailFrame, MSG_TYPE_USER
+from .models import EmailFrame, MSG_TYPE_USER, MSG_TYPE_SUBMISSION
 
 
 def parse_mailing_lists(names_string, separator=','):
@@ -78,10 +79,10 @@ class MessageForm(forms.Form):
     objects = forms.CharField(
         required=False, max_length=10000, widget=forms.HiddenInput)
 
-    def __init__(self, *args, msg_type=None, object_type=None, **kwargs):
+    def __init__(self, *args, msg_type=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.msg_type = msg_type
-        self.object_type = object_type
+        self.object_type = get_object_model(msg_type)
         self.cleaned_lists = []
         self.cleaned_objects = []
 
@@ -155,3 +156,12 @@ class PreviewSubmissionMessageForm(PreviewFormBase):
             **get_submission_context(submission),
             **get_user_context(user, conference),
         }
+
+
+def get_preview_form_class(msg_type):
+    if msg_type == MSG_TYPE_USER:
+        return PreviewUserMessageForm
+    elif msg_type == MSG_TYPE_SUBMISSION:
+        return PreviewSubmissionMessageForm
+    else:
+        raise ValueError(f'unexpected message type "{msg_type}"')
