@@ -4,7 +4,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from collections import namedtuple
 
-from chair_mail.utility import get_html_ul, get_absolute_url, get_anchor_string
+from chair_mail.utility import get_absolute_url, markdownify_link, \
+    markdownify_list
 from review.models import Review
 from submissions.models import Submission
 
@@ -77,8 +78,8 @@ def get_conference_context(conference):
         CONF_FULL_NAME.name: conference.full_name,
         CONF_START_DATE.name: conference.start_date,
         CONF_END_DATE.name: conference.close_date,
-        CONF_SITE_URL.name: get_anchor_string(conference.site_url),
-        CONF_EMAIL.name: get_anchor_string(conference.contact_email, 'mailto:'),
+        CONF_SITE_URL.name: markdownify_link(conference.site_url),
+        CONF_EMAIL.name: markdownify_link(conference.contact_email, 'mailto:'),
         SUBMISSION_END_DATETIME.name: conference.submission_stage.end_date,
         REVIEW_END_DATETIME.name: conference.review_stage.end_date,
     }
@@ -182,13 +183,20 @@ def _get_user_submissions_context(user, conference):
         'empty': _submitted.filter(title='')
     }
 
-    # Helper to build <ul>-representation of the queryset:
-    def ul(query):
-        return get_html_ul(
+    # Helper to build markdown representation of the queryset:
+    def get_displayed_title(submission):
+        title = submission.title
+        if not title:
+            return f'*no title*'
+        return f'{title}'
+
+    def ul(query, default_value=''):
+        return markdownify_list(
             query,
-            value=lambda sub: sub.title,
-            url=lambda sub: get_absolute_url(
-                reverse('submissions:overview', kwargs={'pk': sub.pk}))
+            get_item_value=get_displayed_title,
+            get_item_url=lambda sub: get_absolute_url(
+                reverse('submissions:overview', kwargs={'pk': sub.pk})),
+            default_value='no name',
         )
 
     return {
@@ -197,7 +205,7 @@ def _get_user_submissions_context(user, conference):
         NUM_SUBMITTED_PAPERS.name: submitted['all'].count(),
         SUBMITTED_PAPERS_LIST.name: ul(submitted['all']),
         NUM_COMPLETE_SUBMITTED_PAPERS.name: submitted['complete'].count(),
-        COMPLETE_SUBMITTED_PAPERS_LIST.name: ul(submitted['complete']),
+        COMPLETE_SUBMITTED_PAPERS_LIST.name:ul(submitted['complete']),
         NUM_INCOMPLETE_SUBMITTED_PAPERS.name: submitted['incomplete'].count(),
         INCOMPLETE_SUBMITTED_PAPERS_LIST.name: ul(submitted['incomplete']),
         NUM_EMPTY_PAPERS.name: submitted['empty'].count(),
@@ -247,10 +255,10 @@ def _get_user_review_context(user, conference):
 
     # Helper to build <ul>-representation of the queryset:
     def ul(query):
-        return get_html_ul(
+        return markdownify_list(
             query,
-            value=lambda rev: rev.paper.title,
-            url=lambda rev: get_absolute_url(
+            get_item_value=lambda rev: rev.paper.title,
+            get_item_url=lambda rev: get_absolute_url(
                 reverse('review:review-details', kwargs={'pk': rev.pk}))
         )
 
@@ -300,6 +308,6 @@ def get_submission_context(submission):
         SUB_TITLE.name: submission.title,
         SUB_ABSTRACT.name: submission.abstract,
         SUB_AUTHORS.name: submission.get_authors_display(),
-        SUB_URL.name: get_anchor_string(get_absolute_url(
+        SUB_URL.name: markdownify_link(get_absolute_url(
             reverse('submissions:overview', kwargs={'pk': submission.pk}))),
     }

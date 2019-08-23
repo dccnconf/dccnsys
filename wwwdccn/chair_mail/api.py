@@ -4,8 +4,6 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET
 
 from chair.utility import validate_chair_access
-from chair_mail.forms import PreviewUserMessageForm, \
-    PreviewSubmissionMessageForm
 from chair_mail.mailing_lists import USER_LISTS, SUBMISSION_LISTS, ALL_LISTS, \
     find_list
 from conferences.models import Conference
@@ -131,37 +129,6 @@ def create_preview_view(form_class):
         form = form_class(request.GET)
         if form.is_valid():
             data = form.render_html(conference)
-            print(data)
             return JsonResponse(data)
         return JsonResponse({}, status=400)
     return handler
-
-
-# @require_GET
-# def search_users(request, conf_pk):
-#     conference = get_object_or_404(Conference, pk=conf_pk)
-#     validate_chair_access(request.user, conference)
-#     q = request.GET.get('q', default='')
-#     words = q.split()
-#
-#     # In case of empty search, return nothing:
-#     if not words:
-#         return JsonResponse({'users': []})
-#
-#     profile_query = Profile.objects.all()
-#     for word in words:
-#         profile_query = profile_query.filter(
-#             Q(first_name__icontains=word) |
-#             Q(last_name__icontains=word) |
-#             Q(first_name_rus__icontains=word) |
-#             Q(last_name_rus__icontains=word)
-#         )
-#     return JsonResponse({
-#         'users': [{
-#             'id': profile.user_id,
-#             'name': profile.get_full_name(),
-#             'url': reverse(
-#                 'chair:user-overview',
-#                 kwargs={'conf_pk': conf_pk, 'user_pk': profile.user_id}),
-#         } for profile in profile_query]
-#     })
