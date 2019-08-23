@@ -10,47 +10,21 @@ app_name = 'chair_mail'
 urlpatterns = [
     path('<int:conf_pk>/overview/', views.overview, name='overview'),
     path('<int:conf_pk>/frame/', views.frame_details, name='frame-details'),
-    path(
-        '<int:conf_pk>/frame/create/',
-        views.create_frame,
-        name='create-frame'
-    ),
-    path(
-        '<int:conf_pk>/frame/send_test_message/',
-        views.send_frame_test_message,
-        name='send-frame-test'
-    ),
-    path(
-        '<int:conf_pk>/messages/',
-        views.sent_messages,
-        name='sent-messages'
-    ),
-    path(
-        '<int:conf_pk>/messages/<int:msg_pk>/',
-        views.group_message_details,
-        name='message-details'
-    ),
-    path(
-        '<int:conf_pk>/messages/instance/<int:msg_pk>/',
-        views.message_details,
-        name='instance-details'
-    ),
-    path(
-        '<int:conf_pk>/compose/user/',
-        views.create_compose_view(MSG_TYPE_USER, 'fas fa-user'),
-        name='compose-user'
-    ),
-    path(
-        '<int:conf_pk>/compose/submission/',
-        views.create_compose_view(MSG_TYPE_SUBMISSION, 'fas fa-scroll'),
-        name='compose-submission'
-    ),
-    path(
-        '<int:conf_pk>/messages/delete/',
-        views.delete_all_messages,
-        name='delete-all-messages'
-    ),
+    path('<int:conf_pk>/frame/create/', views.create_frame, name='create-frame'),
+    path('<int:conf_pk>/frame/send_test_message/', views.send_frame_test_message, name='send-frame-test'),
+    path('<int:conf_pk>/frame/preview/', views.render_frame_preview, name='render-frame-preview'),
+    path('<int:conf_pk>/messages/', views.sent_messages, name='sent-messages'),
+    path('<int:conf_pk>/messages/<int:msg_pk>/', views.group_message_details, name='message-details'),
+    path('<int:conf_pk>/messages/instance/<int:msg_pk>/', views.message_details, name='instance-details'),
+    path('<int:conf_pk>/messages/delete/', views.delete_all_messages, name='delete-all-messages'),
     path('help/compose/', views.help_compose, name='help-compose'),
+
+    path('<int:conf_pk>/compose/user/',
+         views.create_compose_view(MSG_TYPE_USER, 'fas fa-user'),
+         name='compose-user'),
+    path('<int:conf_pk>/compose/submission/',
+         views.create_compose_view(MSG_TYPE_SUBMISSION, 'fas fa-scroll'),
+         name='compose-submission'),
 
     #########################################################################
     path('<int:conf_pk>/api/mailing_lists/', api.list_mailing_lists, name='list-mailing-lists'),

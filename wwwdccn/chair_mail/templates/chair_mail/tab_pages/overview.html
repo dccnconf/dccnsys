@@ -9,6 +9,10 @@
 {% extends 'chair_mail/_base.html' %}
 {% load static %}
 
+{% block chairMailStyle %}
+  <link rel="stylesheet" href="{% static 'chair_mail/css/dashboard.css' %}">
+{% endblock %}
+
 {% block tabViewContent %}
   <h1 class="dccn-text-larger-light mb-4">Mail system overview</h1>
 
@@ -24,22 +28,32 @@
   <h2 class="dccn-text-large-light mb-3">Message frame template</h2>
 
   {% if frame %}
+    {###########################################}
     {# Display HTML template text and preview: #}
+    {###########################################}
     <div class="row mt-4">
+      {# HTML editor (read-only mode): #}
       <div class="col-lg-6 col-12">
         <div class="mr-0 mr-lg-3" id="htmlFrameGroup">
           <label for="text_html" class="form-label">HTML (read-only)</label>
           <textarea id="text_html" class="d-none">{{ frame.text_html }}</textarea>
         </div>
       </div>
+      {# HTML message preview: #}
       <div class="col-lg-6 col-12">
         <div class="ml-0 ml-lg-3 mt-4 mt-lg-0">
           <label class="form-label">Preview</label>
-          <div class="p-3 border border-light">{{ frame.text_html|safe }}</div>
+          <div class="embed-responsive embed-responsive-1by1">
+            <iframe class="p-3 border"
+                 src="{% url 'chair_mail:render-frame-preview' conf_pk=conference.pk %}">
+            </iframe>
+          </div>
         </div>
       </div>
     </div>
-    {# Display plain-text template: #}
+    {###########################################}
+    {# Display plain-text template:            #}
+    {###########################################}
     <div class="row mt-4">
       <div class="col-12">
         <div class="mr-0 mr-sm-3" id="plainTextFrameGroup">
@@ -48,12 +62,16 @@
         </div>
       </div>
     </div>
-    {# Control buttons: #}
+    {###########################################}
+    {# Control buttons                       : #}
+    {###########################################}
     <div class="mt-4 d-flex">
       <a href="{% url 'chair_mail:frame-details' conf_pk=conference.pk %}" class="btn btn-outline-info">Edit frame</a>
     </div>
   {% else %}
-    {#  If template is not created yet, show the button to create it: #}
+    {###########################################################################}
+    {# If frame doesn't exist, inform about it and show 'Create frame' button: #}
+    {###########################################################################}
     <p class="dccn-text-0 text-info">
       No message frame template for the conference is defined so far. You need to create one first.
     </p>
@@ -89,6 +107,16 @@ $(document).ready(function () {
       CodeMirror.fromTextArea(plainTextArea, defaultProps);
     }
   });
+
+  ////////////#######################
+  // Load content of frame preview:
+  /*
+  const framePreview = $('#framePreview');
+  $.get(framePreview.attr('data-source'), data => {
+    console.log(data);
+    framePreview.html(data);
+  });
+   */
 });
 </script>
 {% endblock %}

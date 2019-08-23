@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template.loader import get_template
 from django.urls import reverse
@@ -251,3 +251,18 @@ def delete_all_messages(request, conf_pk):
                  f'{num_email_messages} messages instances'
     )
     return redirect('chair_mail:sent-messages', conf_pk=conf_pk)
+
+
+@require_GET
+def render_frame_preview(request, conf_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    frame = get_email_frame(conference)
+    if frame:
+        body = f"<p>Dear {request.user.profile.get_full_name()},</p>" \
+               f"<p>this is a frame preview.</p>"
+        subject = 'Frame preview'
+        html = frame.render_html(subject, body)
+        print(html)
+        return HttpResponse(html)
+    return HttpResponse()
