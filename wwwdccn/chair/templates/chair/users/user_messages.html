@@ -21,7 +21,7 @@
 
   <hr>
 
-  {% include 'chair_mail/components/message_list.html' with msg_inst_list=email_messages conf_pk=conference.pk %}
+  {% include 'chair_mail/components/message_list.html' with msg_list=email_messages conf_pk=conference.pk %}
 {% endblock %}
 
 {% block script %}

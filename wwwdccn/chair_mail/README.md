@@ -80,3 +80,15 @@ You have **{{ num_incomplete_reviews }}** incomplete reviews.
 
 {{ incomplete_reviews_list }}
 ```
+
+## Additional sample for paper-message:
+
+```markdown
+## Paper
+
+- paper_id: {{ paper_id }}
+- paper_title: {{ paper_title }}
+- paper_abstract: {{ paper_abstract }}
+- paper_authors: {{ paper_authors }}
+- paper_url: {{ paper_url }}
+```
