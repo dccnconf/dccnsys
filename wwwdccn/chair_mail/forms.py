@@ -145,8 +145,8 @@ class PreviewUserMessageForm(PreviewFormBase):
 
 
 class PreviewSubmissionMessageForm(PreviewFormBase):
-    submission = forms.CharField()
-    user = forms.CharField()
+    submission = forms.CharField(widget=forms.Select)
+    user = forms.CharField(widget=forms.Select)
 
     def get_context(self, conference):
         submission = Submission.objects.get(pk=self.cleaned_data['submission'])

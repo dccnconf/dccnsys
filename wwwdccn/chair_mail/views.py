@@ -236,3 +236,18 @@ def help_compose(request):
         ),
         'mailing_lists': ALL_LISTS,
     })
+
+
+@require_POST
+def delete_all_messages(request, conf_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    num_group_messages = GroupMessage.objects.count()
+    num_email_messages = EmailMessage.objects.count()
+    GroupMessage.objects.all().delete()
+    EmailMessage.objects.all().delete()
+    messages.success(
+        request, f'Deleted {num_group_messages} group messages and '
+                 f'{num_email_messages} messages instances'
+    )
+    return redirect('chair_mail:sent-messages', conf_pk=conf_pk)

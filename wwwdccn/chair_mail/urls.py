@@ -45,6 +45,11 @@ urlpatterns = [
         views.create_compose_view(MSG_TYPE_SUBMISSION, 'fas fa-scroll'),
         name='compose-submission'
     ),
+    path(
+        '<int:conf_pk>/messages/delete/',
+        views.delete_all_messages,
+        name='delete-all-messages'
+    ),
     path('help/compose/', views.help_compose, name='help-compose'),
 
     #########################################################################

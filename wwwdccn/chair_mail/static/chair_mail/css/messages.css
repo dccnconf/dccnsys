@@ -1,0 +1,13 @@
+.messages-list-container {
+    min-height: 60vh;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+p.messages-list-container-empty {
+    font-size: 1.2rem;
+    padding-top: 10vh;
+    text-align: center;
+    font-weight: lighter;
+}
