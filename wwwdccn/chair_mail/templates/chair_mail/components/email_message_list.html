@@ -1,0 +1,36 @@
+{###########################################################################}
+{# A list of message instances.                                            #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `msg_list`: sequence of `EmailMessage` objects.                       #}
+{# - `conference`                                                          #}
+{# - `show_user_names`: if truelthy, display users each message sent to.   #}
+{###########################################################################}
+{% load static %}
+<link rel="stylesheet" href="{% static 'chair_mail/css/messages.css' %}">
+<div class="messages-list-container">
+  {% if msg_list|length > 0 %}
+  <div class="list-group">
+    {% for msg in msg_list %}
+    <a class="list-group-item list-group-item-action py-2 bg-light container"
+       href="{% url 'chair_mail:instance-details' conf_pk=conference.pk msg_pk=msg.pk %}?next={{ request.get_full_path|urlencode }}">
+      <div class="row">
+        <div class="col-xl-3 col-12 d-flex">
+          <div class="dccn-text-small text-muted mr-2">{{ msg.sent_at|date:"d.m.Y G:i" }}</div>
+          {% if show_user_names %}
+            <div class="dccn-text-small mr-2">
+              (<span class="text-info font-weight-bold">{{ msg.user_to.profile.get_full_name }}</span>)
+            </div>
+          {% endif %}
+        </div>
+        <div class="col-xl-9 col-12 dccn-text-0 font-weight-bold">{{ msg.subject }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="messages-list-container-empty text-info">
+    <i class="fas fa-ban"></i> You have not sent any messages yet.
+  </p>
+  {% endif %}
+</div>

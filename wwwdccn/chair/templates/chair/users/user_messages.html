@@ -15,13 +15,13 @@
 {% block tabViewContent %}
   <form action="{% url 'chair_mail:compose-user' conf_pk=conference.pk %}">
     <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
-    <input type="hidden" name="users" value="{{ u.pk }}">
+    <input type="hidden" name="objects" value="{{ u.pk }}">
     <button type="submit" class="btn btn-outline-primary"><i class="fas fa-plus"></i> New message</button>
   </form>
 
   <hr>
 
-  {% include 'chair_mail/components/message_list.html' with msg_inst_list=email_messages conf_pk=conference.pk %}
+  {% include 'chair_mail/components/email_message_list.html' with msg_list=email_messages conf_pk=conference.pk %}
 {% endblock %}
 
 {% block script %}

@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.http import Http404
+from django.urls import reverse
 
 
 def get_email_frame_or_404(conference):
@@ -29,29 +30,75 @@ def get_absolute_url(url):
     return f'{protocol}://{domain}{"/" if need_slash else ""}{url}'
 
 
-def get_anchor_string(url, href_prefix=''):
-    return f'<a href="{href_prefix}{url}">{url}</a>'
+def markdownify_link(url, text=None, href_prefix=''):
+    link_text = text if text is not None else url
+    link_url = f'{href_prefix}{url}'
+    return f'[{link_text}]({link_url})'
 
 
-def get_html_ul(items, value=None, url=None):
-    if not items:
-        return ''
+def markdownify_list(items, get_item_value=None, get_item_url=None,
+                     default_value=''):
+    if get_item_value is None:
+        get_item_value = (lambda x: x)
 
-    def identity(x):
-        return x
+    def get_text(an_item):
+        value = get_item_value(an_item)
+        return value if value else default_value
 
-    _get_value = identity if value is None else value
-
-    if url is None:
-        list_items = [f'<li>{_get_value(item)}</li>' for item in items]
+    if get_item_url is None:
+        lines = [get_text(item) for item in items]
     else:
-        def get_value(item):
-            _val = str(_get_value(item))
-            return _val if _val.strip() else url(item)
+        lines = [markdownify_link(get_item_url(item), get_text(item))
+                 for item in items]
+    return '\n'.join(f'- {line}' for line in lines)
 
-        list_items = [
-            f'<li><a href="{url(item)}">{get_value(item)}</a></li>'
-            for item in items
-        ]
 
-    return f'<ul>{"".join(list_items)}</ul>'
+def reverse_preview_url(msg_type, conference):
+    from .models import MSG_TYPE_USER, MSG_TYPE_SUBMISSION
+    kwargs = {'conf_pk': conference.pk}
+    if msg_type == MSG_TYPE_USER:
+        return reverse('chair_mail:render-preview-user', kwargs=kwargs)
+    elif msg_type == MSG_TYPE_SUBMISSION:
+        return reverse('chair_mail:render-preview-submission', kwargs=kwargs)
+    raise ValueError(f'unexpected message type "{msg_type}"')
+
+
+def reverse_list_objects_url(msg_type, conference):
+    from .models import MSG_TYPE_USER, MSG_TYPE_SUBMISSION
+    kwargs = {'conf_pk': conference.pk}
+    if msg_type == MSG_TYPE_USER:
+        return reverse('chair_mail:list-users', kwargs=kwargs)
+    elif msg_type == MSG_TYPE_SUBMISSION:
+        return reverse('chair_mail:list-submissions', kwargs=kwargs)
+    raise ValueError(f'unexpected message type "{msg_type}"')
+
+
+def get_object_url(msg_type, conference, obj):
+    from .models import MSG_TYPE_USER, MSG_TYPE_SUBMISSION
+    if msg_type == MSG_TYPE_USER:
+        return reverse('chair:user-overview', kwargs={
+            'conf_pk': conference.pk, 'user_pk': obj.pk})
+    elif msg_type == MSG_TYPE_SUBMISSION:
+        return reverse('chair:submission-overview', kwargs={
+            'conf_pk': conference.pk, 'sub_pk': obj.pk})
+    raise ValueError(f'unexpected message type "{msg_type}"')
+
+
+def get_object_name(msg_type, obj):
+    from .models import MSG_TYPE_USER, MSG_TYPE_SUBMISSION
+    if msg_type == MSG_TYPE_USER:
+        return obj.profile.get_full_name()
+    elif msg_type == MSG_TYPE_SUBMISSION:
+        return obj.title
+    raise ValueError(f'unexpected message type "{msg_type}"')
+
+
+def get_object_model(msg_type):
+    from .models import MSG_TYPE_USER, MSG_TYPE_SUBMISSION
+    if msg_type == MSG_TYPE_USER:
+        from users.models import User
+        return User
+    elif msg_type == MSG_TYPE_SUBMISSION:
+        from submissions.models import Submission
+        return Submission
+    raise ValueError(f'unexpected message type "{msg_type}"')

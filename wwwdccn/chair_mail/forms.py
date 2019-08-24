@@ -10,9 +10,10 @@ from markdown import markdown
 from chair_mail.context import get_conference_context, get_user_context, \
     get_submission_context
 from chair_mail.mailing_lists import find_list
+from chair_mail.utility import get_object_model
 from submissions.models import Submission
 from users.models import User
-from .models import EmailFrame, MSG_TYPE_USER
+from .models import EmailFrame, MSG_TYPE_USER, MSG_TYPE_SUBMISSION
 
 
 def parse_mailing_lists(names_string, separator=','):
@@ -21,9 +22,10 @@ def parse_mailing_lists(names_string, separator=','):
     return [find_list(name) for name in names]
 
 
-def parse_users(pks_string, separator=','):
-    pks = set(map(lambda s: int(s), pks_string.split(separator)))
-    return User.objects.filter(pk__in=pks)
+def parse_objects(obj_class, pks_string, separator=','):
+    int_pks = [s for s in pks_string.split(separator) if s.strip()]
+    pks = set(map(lambda s: int(s), int_pks))
+    return obj_class.objects.filter(pk__in=pks)
 
 
 class EmailFrameUpdateForm(forms.ModelForm):
@@ -70,11 +72,15 @@ class MessageForm(forms.Form):
     body = forms.CharField(widget=forms.Textarea(), required=False)
     lists = forms.CharField(
         required=False, max_length=1000, widget=forms.HiddenInput)
+    objects = forms.CharField(
+        required=False, max_length=10000, widget=forms.HiddenInput)
 
     def __init__(self, *args, msg_type=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.msg_type = msg_type
+        self.object_type = get_object_model(msg_type)
         self.cleaned_lists = []
+        self.cleaned_objects = []
 
     def clean_lists(self):
         _lists = parse_mailing_lists(self.cleaned_data['lists'])
@@ -85,21 +91,18 @@ class MessageForm(forms.Form):
         self.cleaned_lists = _lists
         return self.cleaned_data['lists']
 
+    def clean_objects(self):
+        self.cleaned_objects = parse_objects(
+            self.object_type, self.cleaned_data['objects'], ',')
+        return self.cleaned_data['objects']
 
-class UserMessageForm(MessageForm):
-    users = forms.CharField(
-        required=False, max_length=10000, widget=forms.HiddenInput)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, msg_type=MSG_TYPE_USER, **kwargs)
-        self.cleaned_users = []
-
-    def clean_users(self):
-        self.cleaned_users = list(parse_users(self.cleaned_data['users']))
-        return self.cleaned_data['users']
+    def clean(self):
+        if not self.cleaned_lists and not self.cleaned_objects:
+            raise ValidationError('You must specify at least one recipient')
+        return self.cleaned_data
 
 
-class PreviewFormBase(forms.Form):
+class PreviewMessageForm(forms.Form):
     subject = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={
@@ -130,8 +133,11 @@ class PreviewFormBase(forms.Form):
         }
 
 
-class PreviewUserMessageForm(PreviewFormBase):
-    user = forms.CharField()  # Use simple CharField instead of choice!
+class PreviewUserMessageForm(PreviewMessageForm):
+    # Since actual options in preview select are filled in JavaScript,
+    # here we use a simple CharField with Select widget, without using
+    # ChoiceField and providing any options:
+    user = forms.CharField(widget=forms.Select)
 
     def get_context(self, conference):
         user = User.objects.get(pk=self.cleaned_data['user'])
@@ -141,23 +147,14 @@ class PreviewUserMessageForm(PreviewFormBase):
         }
 
 
-class PreviewSubmissionMessageForm(PreviewFormBase):
-    submission = forms.ChoiceField()
-    user = forms.ChoiceField()
+class PreviewSubmissionMessageForm(PreviewMessageForm):
+    # Since actual options in preview select are filled in JavaScript,
+    # here we use a simple CharField with Select widget, without using
+    # ChoiceField and providing any options:
+    submission = forms.CharField(widget=forms.Select)
 
-    def __init__(self, *args, submissions=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['submission'].choices = [
-            (sub.pk, sub.title) for sub in submissions
-        ]
-        if len(submissions) == 1:
-            self.fields['submission'].widget.attrs['hidden'] = True
-        first_submission_users = [
-            author.user for author in submissions[0].authors.all()
-        ]
-        self.fields['user'].choices = [
-            (u.pk, u.profile.get_full_name()) for u in first_submission_users
-        ]
+    # The same comment as above here, actual options are filled in JS:
+    user = forms.CharField(widget=forms.Select)
 
     def get_context(self, conference):
         submission = Submission.objects.get(pk=self.cleaned_data['submission'])
@@ -167,3 +164,12 @@ class PreviewSubmissionMessageForm(PreviewFormBase):
             **get_submission_context(submission),
             **get_user_context(user, conference),
         }
+
+
+def get_preview_form_class(msg_type):
+    if msg_type == MSG_TYPE_USER:
+        return PreviewUserMessageForm
+    elif msg_type == MSG_TYPE_SUBMISSION:
+        return PreviewSubmissionMessageForm
+    else:
+        raise ValueError(f'unexpected message type "{msg_type}"')

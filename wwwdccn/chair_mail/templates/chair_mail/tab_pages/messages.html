@@ -12,12 +12,16 @@
 {% load static %}
 {% load chair_mail_extras %}
 
+{% block chairMailStyle %}
+  <link rel="stylesheet" href="{% static 'chair_mail/css/messages.css' %}">
+{% endblock %}
+
 {% block tabViewContent %}
   <h1 class="dccn-text-larger-light mb-4">Messages</h1>
 
   <div class="d-flex mb-3">
     <div class="dropdown">
-      <button class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" type="button">
+      <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown" type="button">
         Compose
       </button>
       <div class="dropdown-menu" style="max-width: 400px; min-width: 300px;">
@@ -30,7 +34,8 @@
           </p>
         </a>
         <div class="dropdown-divider"></div>
-        <a href="#" class="dropdown-item dccn-text-small px-3 py-2" style="white-space: normal;">
+        <a href="{% url 'chair_mail:compose-submission' conf_pk=conference.pk %}?next={{ request.get_full_path|urlencode }}"
+           class="dropdown-item dccn-text-small px-3 py-2" style="white-space: normal;">
           <h6 class="dccn-text-small font-weight-bold pb-2">Compose to submissions list</h6>
           <p class="dccn-text-smaller">
             Message for authors of predefined list of submissions. You can use all available variables.
@@ -39,21 +44,40 @@
         </a>
       </div>
     </div>
+
+    {# DELETE ALL MESSAGES BUTTON AND MODAL DIALOG #}
+    <button type="button" class="btn btn-outline-danger ml-auto" data-toggle="modal" data-target="#deleteAllMessagesModal"
+            {% if msg_list|length == 0 %}disabled{% endif %}>
+      Delete all messages
+    </button>
+    <div class="modal fade" tabindex="-1" role="dialog" id="deleteAllMessagesModal">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-light">
+            <h5 class="modal-title">Confirm action</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body d-flex">
+            <i class="fas fa-exclamation-triangle fa-3x mr-3 text-danger"></i>
+            <div>
+              <h6 class="dccn-text-1 font-weight-bold mb-2">Are you sure you want to delete all messages?</h6>
+              <p class="dccn-text-0">This action can not be undone.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <form action="{% url 'chair_mail:delete-all-messages' conf_pk=conference.pk %}" method="POST">
+                {% csrf_token %}
+                <input type="submit" class="btn btn-danger" value="Confirm">
+              </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="list-group">
-    {% for msg in msg_list %}
-      <a class="d-flex list-group-item list-group-item-action py-1"
-         href="{% url 'chair_mail:message-details' conf_pk=conference.pk msg_pk=msg.pk %}?next={{ request.get_full_path|urlencode }}">
-        <div>
-          <span class="dccn-text-small text-muted mr-2">{{ msg.sent_at|date:"d.m.Y G:i" }}</span>
-          <span class="dccn-text-0 font-weight-bold">{{ msg.subject }}</span>
-        </div>
-        <div class="ml-auto"><span class="badge badge-info">{{ msg|msgtype }}</span></div>
-      </a>
-    {% empty %}
-      <p class="dccn-text-0 text-center">No messages.</p>
-    {% endfor %}
-  </div>
+  {% include 'chair_mail/components/group_message_list.html' %}
 
 {% endblock %}

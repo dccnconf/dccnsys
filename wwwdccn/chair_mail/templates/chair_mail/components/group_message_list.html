@@ -1,0 +1,34 @@
+{###########################################################################}
+{# A list of group messages sent.                                          #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `msg_list`: sequence of `GroupMessage` objects.                       #}
+{# - `conference`                                                          #}
+{###########################################################################}
+{% load chair_mail_extras %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'chair_mail/css/messages.css' %}">
+<div class="messages-list-container">
+  {% if msg_list|length > 0 %}
+  <div class="list-group">
+    {% for msg in msg_list %}
+    <a class="list-group-item list-group-item-action py-2 bg-light container"
+       href="{% url 'chair_mail:message-details' conf_pk=conference.pk msg_pk=msg.pk %}?next={{ request.get_full_path|urlencode }}">
+      <div class="row">
+        <div class="dccn-text-small text-muted col-lg-2 col-6">
+          <span>{{ msg.sent_at|date:"d.m.Y G:i" }}</span>
+        </div>
+        <div class="dccn-text-0 font-weight-bold col-lg-8 col-12 order-3 order-lg-2">{{ msg.subject }}</div>
+        <div class="col-lg-2 col-6 order-2 order-lg-3 text-right">
+          <span class="badge badge-info">{{ msg|msgtype }}</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="messages-list-container-empty text-info">
+    <i class="fas fa-ban"></i> You have not sent any messages yet.
+  </p>
+  {% endif %}
+</div>

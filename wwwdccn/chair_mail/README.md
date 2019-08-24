@@ -24,3 +24,71 @@ Moreover, a set of possible values also depends on the selected destination: onl
 composing to a given user, single submission and all its authors - when composing to a given submission. And when
 composing to a selectable user list, possible values change when we change the value of the destination.
 
+## Sample user-message
+
+```markdown
+Dear {{ username }},
+
+this is a test message. Your context is:
+
+## Profile
+
+- username: {{ username }}
+- first_name: {{ first_name }}
+- last_name: {{ last_name }}
+- user_id: {{ user_id }}
+
+
+## Papers
+
+You have **{{ num_papers }}** papers.
+
+{{ papers_list }}
+
+You have **{{ num_submitted_papers }}** submitted papers.
+
+{{ submitted_papers_list }}
+
+You have **{{ num_incomplete_submitted_papers }}** incomplete papers.
+
+{{ incomplete_submitted_papers_list }}
+
+You have **{{ num_complete_submitted_papers }}** complete submitted papers.
+
+{{ complete_submitted_papers_list }}
+
+You have **{{ num_empty_papers }}** empty papers.
+
+{{ empty_papers_list }}
+
+You have **{{ num_under_review_papers }}** papers under review.
+
+{{ under_review_papers_list }}
+
+
+## Reviews
+
+You have **{{ num_reviews }}** reviews.
+
+{{ reviews_list }}
+
+You have **{{ num_complete_reviews }}** complete reviews.
+
+{{ complete_reviews_list }}
+
+You have **{{ num_incomplete_reviews }}** incomplete reviews.
+
+{{ incomplete_reviews_list }}
+```
+
+## Additional sample for paper-message:
+
+```markdown
+## Paper
+
+- paper_id: {{ paper_id }}
+- paper_title: {{ paper_title }}
+- paper_abstract: {{ paper_abstract }}
+- paper_authors: {{ paper_authors }}
+- paper_url: {{ paper_url }}
+```

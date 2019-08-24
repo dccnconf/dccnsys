@@ -4,6 +4,7 @@
 {#                                                                         #}
 {# CONTEXT:                                                                #}
 {# - `msg`: `GroupMessage` object                                          #}
+{# - `recipients`: a list of objects with 'url' and 'name' properties      #}
 {#                                                                         #}
 {# INHERITED CONTEXT:                                                      #}
 {# - `conference`                                                          #}
@@ -35,13 +36,8 @@
     </p>
     <p class="dccn-text-smaller">
       <span class="font-weight-bold">To:</span>
-      {% for mi in msg.messages.all %}
-        {% with u=mi.user_to %}
-          <span>
-            <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=u.pk %}">{{ u.profile.get_full_name }}</a>
-          </span>
-          {% if not forloop.last %},{% endif %}
-        {% endwith %}
+      {% for recipient in recipients %}
+        <a href="{{ recipient.url }}">{{ recipient.name }}</a>{% if not forloop.last %},{% endif %}
       {% endfor %}
     </p>
     <p class="dccn-text-smaller">
@@ -50,30 +46,17 @@
     </p>
     <p class="dccn-text-smaller">
       <span class="font-weight-bold">Message type:</span>
-      {{ msg|msgtype }}
+      <span class="badge badge-info p-1 dccn-text-smaller">{{ msg|msgtype }}</span>
     </p>
 
-    <ul class="nav nav-tabs mt-4">
-      <li class="nav-item">
-        <a class="nav-link active" href="#html_tab" data-toggle="tab" role="tab">Preview</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#md_tab" data-toggle="tab" role="tab">Markdown</a>
-      </li>
-    </ul>
-    <div class="tab-content">
-      <div class="tab-pane fade show active" id="html_tab">
-        <div class="border rounded m-3 p-2">
-          {{ msg.body|md2html|safe }}
-        </div>
-      </div>
-      <div class="tab-pane fade" id="md_tab">
-        <textarea id="text_md">{{ msg.body }}</textarea>
-      </div>
+    <div class="border rounded m-3 p-2 bg-light dccn-text-small">
+      <textarea id="id_body" class="d-none">{{ msg.body|safe }}</textarea>
+{#      <pre><code lang="markdown">{{ msg.body|safe }}</code></pre>#}
     </div>
   </div>
   <hr>
-  {% include 'chair_mail/components/message_list.html' with msg_inst_list=msg.messages.all conference=conference show_user_names=1 %}
+  <h6>Email messages sent:</h6>
+  {% include 'chair_mail/components/email_message_list.html' with msg_list=msg.messages.all conference=conference show_user_names=1 %}
 {% endblock %}
 
 {% block chairMailScript %}
@@ -82,7 +65,7 @@ $(document).ready(function () {
   requirejs([
     'codemirror/lib/codemirror', 'codemirror/mode/markdown/markdown', 'codemirror/addon/scroll/simplescrollbars'
   ], function (CodeMirror) {
-    CodeMirror.fromTextArea(document.getElementById('text_md'), {
+    CodeMirror.fromTextArea(document.getElementById('id_body'), {
       mode: 'markdown',
       theme: 'monokai',
       scrollbarStyle: "simple",

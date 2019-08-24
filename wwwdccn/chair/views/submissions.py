@@ -20,7 +20,7 @@ from conferences.models import Conference
 from review.models import Review
 from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
     AuthorDeleteForm, AuthorsReorderForm, InviteAuthorForm
-from submissions.models import Submission, Author
+from submissions.models import Submission
 from users.models import Profile
 
 
@@ -359,6 +359,7 @@ def emails(request, conference, submission):
     return render(request, 'chair/submissions/submission_emails.html', context={
         'submission': submission,
         'conference': conference,
+        'msg_list': submission.group_emails.all().order_by('-sent_at'),
     })
 
 
