@@ -22,14 +22,10 @@ def parse_mailing_lists(names_string, separator=','):
     return [find_list(name) for name in names]
 
 
-def parse_users(pks_string, separator=','):
-    pks = set(map(lambda s: int(s), pks_string.split(separator)))
-    return User.objects.filter(pk__in=pks)
-
-
-def parse_submissions(pks_string, separator=','):
-    pks = set(map(lambda s: int(s), pks_string.split(separator)))
-    return Submission.objects.filter(pk__in=pks)
+def parse_objects(obj_class, pks_string, separator=','):
+    int_pks = [s for s in pks_string.split(separator) if s.strip()]
+    pks = set(map(lambda s: int(s), int_pks))
+    return obj_class.objects.filter(pk__in=pks)
 
 
 class EmailFrameUpdateForm(forms.ModelForm):
@@ -96,13 +92,17 @@ class MessageForm(forms.Form):
         return self.cleaned_data['lists']
 
     def clean_objects(self):
-        pks = set(map(
-            lambda s: int(s), self.cleaned_data['objects'].split(',')))
-        self.cleaned_objects = list(self.object_type.objects.filter(pk__in=pks))
+        self.cleaned_objects = parse_objects(
+            self.object_type, self.cleaned_data['objects'], ',')
         return self.cleaned_data['objects']
 
+    def clean(self):
+        if not self.cleaned_lists and not self.cleaned_objects:
+            raise ValidationError('You must specify at least one recipient')
+        return self.cleaned_data
 
-class PreviewFormBase(forms.Form):
+
+class PreviewMessageForm(forms.Form):
     subject = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={
@@ -133,8 +133,11 @@ class PreviewFormBase(forms.Form):
         }
 
 
-class PreviewUserMessageForm(PreviewFormBase):
-    user = forms.CharField(widget=forms.Select)  # Use simple CharField instead of choice!
+class PreviewUserMessageForm(PreviewMessageForm):
+    # Since actual options in preview select are filled in JavaScript,
+    # here we use a simple CharField with Select widget, without using
+    # ChoiceField and providing any options:
+    user = forms.CharField(widget=forms.Select)
 
     def get_context(self, conference):
         user = User.objects.get(pk=self.cleaned_data['user'])
@@ -144,8 +147,13 @@ class PreviewUserMessageForm(PreviewFormBase):
         }
 
 
-class PreviewSubmissionMessageForm(PreviewFormBase):
+class PreviewSubmissionMessageForm(PreviewMessageForm):
+    # Since actual options in preview select are filled in JavaScript,
+    # here we use a simple CharField with Select widget, without using
+    # ChoiceField and providing any options:
     submission = forms.CharField(widget=forms.Select)
+
+    # The same comment as above here, actual options are filled in JS:
     user = forms.CharField(widget=forms.Select)
 
     def get_context(self, conference):

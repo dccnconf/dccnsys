@@ -73,6 +73,26 @@ def reverse_list_objects_url(msg_type, conference):
     raise ValueError(f'unexpected message type "{msg_type}"')
 
 
+def get_object_url(msg_type, conference, obj):
+    from .models import MSG_TYPE_USER, MSG_TYPE_SUBMISSION
+    if msg_type == MSG_TYPE_USER:
+        return reverse('chair:user-overview', kwargs={
+            'conf_pk': conference.pk, 'user_pk': obj.pk})
+    elif msg_type == MSG_TYPE_SUBMISSION:
+        return reverse('chair:submission-overview', kwargs={
+            'conf_pk': conference.pk, 'sub_pk': obj.pk})
+    raise ValueError(f'unexpected message type "{msg_type}"')
+
+
+def get_object_name(msg_type, obj):
+    from .models import MSG_TYPE_USER, MSG_TYPE_SUBMISSION
+    if msg_type == MSG_TYPE_USER:
+        return obj.profile.get_full_name()
+    elif msg_type == MSG_TYPE_SUBMISSION:
+        return obj.title
+    raise ValueError(f'unexpected message type "{msg_type}"')
+
+
 def get_object_model(msg_type):
     from .models import MSG_TYPE_USER, MSG_TYPE_SUBMISSION
     if msg_type == MSG_TYPE_USER:

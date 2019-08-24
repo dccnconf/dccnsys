@@ -73,7 +73,7 @@ class GroupMessage(models.Model):
 
 
 class UserMessage(GroupMessage):
-    users_to = models.ManyToManyField(User, related_name='group_emails')
+    recipients = models.ManyToManyField(User, related_name='group_emails')
 
     group_message = models.OneToOneField(
         GroupMessage, on_delete=models.CASCADE, parent_link=True)
@@ -102,7 +102,7 @@ class UserMessage(GroupMessage):
         #    the frame. Plain-text version is also formed from HTML.
         frame = self.conference.email_settings.frame
         conference_context = get_conference_context(self.conference)
-        for user in self.users_to.all():
+        for user in self.recipients.all():
             context = Context({
                 **conference_context,
                 **get_user_context(user, self.conference)
@@ -123,7 +123,7 @@ class UserMessage(GroupMessage):
 
 
 class SubmissionMessage(GroupMessage):
-    submissions_to = models.ManyToManyField(
+    recipients = models.ManyToManyField(
         Submission, related_name='group_emails')
 
     group_message = models.OneToOneField(
@@ -153,7 +153,7 @@ class SubmissionMessage(GroupMessage):
         #    the frame. Plain-text version is also formed from HTML.
         frame = self.conference.email_settings.frame
         conference_context = get_conference_context(self.conference)
-        for submission in self.submissions_to.all():
+        for submission in self.recipients.all():
             submission_context = get_submission_context(submission)
             for author in submission.authors.all():
                 user = author.user
@@ -182,6 +182,21 @@ def get_group_message_model(msg_type):
         MSG_TYPE_USER: UserMessage,
         MSG_TYPE_SUBMISSION: SubmissionMessage,
     }[msg_type]
+
+
+def get_message_leaf_model(msg):
+    """If provided a `GroupMessage` instance, check the inheritance, find
+    the most descent child and return it. Now the possible leaf models are
+    `UserMessage` and `SubmissionMessage`."""
+    if hasattr(msg, 'usermessage'):
+        return msg.usermessage
+    elif hasattr(msg, 'submissionmessage'):
+        return msg.submissionmessage
+    # Also check, maybe a message is already a leaf:
+    if isinstance(msg, UserMessage) or isinstance(msg, SubmissionMessage):
+        return msg
+    # If neither succeeded, raise an error:
+    raise TypeError(f'Not a group message: type(msg)')
 
 
 class EmailMessage(models.Model):

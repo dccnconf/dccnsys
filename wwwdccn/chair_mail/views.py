@@ -13,10 +13,11 @@ from chair_mail.forms import EmailFrameUpdateForm, EmailFrameTestForm, \
     MessageForm, get_preview_form_class
 from chair_mail.mailing_lists import ALL_LISTS
 from chair_mail.models import EmailSettings, EmailFrame, EmailMessage, \
-    GroupMessage, UserMessage, MSG_TYPE_USER, MSG_TYPE_SUBMISSION, \
-    get_group_message_model
+    GroupMessage, MSG_TYPE_USER, MSG_TYPE_SUBMISSION, get_group_message_model, \
+    get_message_leaf_model
 from chair_mail.utility import get_email_frame, get_email_frame_or_404, \
-    reverse_preview_url, reverse_list_objects_url
+    reverse_preview_url, reverse_list_objects_url, get_object_name, \
+    get_object_url
 from conferences.models import Conference
 
 
@@ -53,7 +54,6 @@ def create_frame(request, conf_pk):
     validate_chair_access(request.user, conference)
     if not hasattr(conference, 'email_settings'):
         EmailSettings.objects.create(conference=conference)
-        messages.success(request, 'Created email settings')
     email_settings = conference.email_settings
     frame = email_settings.frame
     template_html = get_template(
@@ -138,20 +138,26 @@ def group_message_details(request, conf_pk, msg_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     msg = get_object_or_404(GroupMessage, pk=msg_pk)
+    leaf_msg = get_message_leaf_model(msg)
+    recipients = [{
+        'name': get_object_name(leaf_msg.message_type, obj),
+        'url': get_object_url(leaf_msg.message_type, conference, obj),
+    } for obj in leaf_msg.recipients.all()]
+
     if request.is_ajax():
         return JsonResponse({
             'body': msg.body,
             'subject': msg.subject,
             'sent_at': msg.sent_at,
             'sent_by': msg.sent_by.pk,
-            'users_to': [],  # TODO
         })
     return render(
-        request, 'chair_mail/tab_pages/group_message_details.html', context={
+        request, 'chair_mail/tab_pages/message_details.html', context={
             'conference': conference,
             'conf_pk': conference.pk,
             'msg': msg,
             'hide_tabs': True,
+            'recipients': recipients,
         })
 
 
@@ -180,7 +186,13 @@ def create_compose_view(msg_type, object_icon_class):
                 msg.send(sender=request.user)
                 return redirect(next_url)
             else:
-                messages.error(request, 'Error sending message')
+                errors = form.non_field_errors()
+                if len(errors) == 1:
+                    messages.error(request, errors[0])
+                elif len(errors) > 1:
+                    messages.error(request, errors)
+                else:
+                    messages.error(request, 'Error sending message')
         else:
             form = MessageForm(initial={
                 'objects': request.GET.get('objects', ''),
@@ -220,7 +232,8 @@ def message_details(request, conf_pk, msg_pk):
         })
     next_url = request.GET.get('next', default='')
     return render(
-        request, 'chair_mail/preview_pages/email_message_preview.html', context={
+        request, 'chair_mail/preview_pages/email_message_preview.html',
+        context={
             'conference': conference,
             'msg': msg,
             'next': next_url,
