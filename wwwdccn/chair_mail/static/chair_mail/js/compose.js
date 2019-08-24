@@ -149,7 +149,8 @@ const getSubmissionDialogHTML = function (submission, rawData = undefined) {
     (<a href="${rawObject.url}" class="dccn-text-small font-weight-bold" target="_blank" data-disable-check="1">View...</a>)
   </p>
   <p class="dccn-text-small m-0 p-0">${authors}</p>
-</div>`;
+</div>
+<div class="align-self-start ml-auto dccn-text-small">#${submission.id}</div>`;
 };
 
 

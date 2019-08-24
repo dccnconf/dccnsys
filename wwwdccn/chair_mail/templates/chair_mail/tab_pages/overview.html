@@ -44,8 +44,7 @@
         <div class="ml-0 ml-lg-3 mt-4 mt-lg-0">
           <label class="form-label">Preview</label>
           <div class="embed-responsive embed-responsive-1by1">
-            <iframe class="p-3 border"
-                 src="{% url 'chair_mail:render-frame-preview' conf_pk=conference.pk %}">
+            <iframe class="p-3 border" src="{% url 'chair_mail:render-frame-preview' conf_pk=conference.pk %}">
             </iframe>
           </div>
         </div>
@@ -108,15 +107,6 @@ $(document).ready(function () {
     }
   });
 
-  ////////////#######################
-  // Load content of frame preview:
-  /*
-  const framePreview = $('#framePreview');
-  $.get(framePreview.attr('data-source'), data => {
-    console.log(data);
-    framePreview.html(data);
-  });
-   */
 });
 </script>
 {% endblock %}

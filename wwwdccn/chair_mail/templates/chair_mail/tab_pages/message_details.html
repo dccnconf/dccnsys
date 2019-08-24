@@ -50,7 +50,8 @@
     </p>
 
     <div class="border rounded m-3 p-2 bg-light dccn-text-small">
-      <pre><code lang="markdown">{{ msg.body|safe }}</code></pre>
+      <textarea id="id_body" class="d-none">{{ msg.body|safe }}</textarea>
+{#      <pre><code lang="markdown">{{ msg.body|safe }}</code></pre>#}
     </div>
   </div>
   <hr>
@@ -64,7 +65,7 @@ $(document).ready(function () {
   requirejs([
     'codemirror/lib/codemirror', 'codemirror/mode/markdown/markdown', 'codemirror/addon/scroll/simplescrollbars'
   ], function (CodeMirror) {
-    CodeMirror.fromTextArea(document.getElementById('text_md'), {
+    CodeMirror.fromTextArea(document.getElementById('id_body'), {
       mode: 'markdown',
       theme: 'monokai',
       scrollbarStyle: "simple",

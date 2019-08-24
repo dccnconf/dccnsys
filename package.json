@@ -39,6 +39,7 @@
     "jquery-ui": "^1.12.1",
     "package.json": "^2.0.1",
     "popper.js": "^1.15.0",
+    "prismjs": "^1.17.1",
     "requirejs": "^2.3.6",
     "yargs": "^13.2.4"
   },

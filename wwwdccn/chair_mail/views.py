@@ -276,6 +276,5 @@ def render_frame_preview(request, conf_pk):
                f"<p>this is a frame preview.</p>"
         subject = 'Frame preview'
         html = frame.render_html(subject, body)
-        print(html)
         return HttpResponse(html)
     return HttpResponse()

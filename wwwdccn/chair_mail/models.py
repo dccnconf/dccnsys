@@ -87,7 +87,7 @@ class UserMessage(GroupMessage):
         msg = UserMessage.objects.create(
             subject=subject, body=body, conference=conference)
         for user in objects_to:
-            msg.users_to.add(user)
+            msg.recipients.add(user)
         msg.save()
         return msg
 
@@ -138,7 +138,7 @@ class SubmissionMessage(GroupMessage):
         msg = SubmissionMessage.objects.create(
             subject=subject, body=body, conference=conference)
         for submission in objects_to:
-            msg.submissions_to.add(submission)
+            msg.recipients.add(submission)
         msg.save()
         return msg
 
