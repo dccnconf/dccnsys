@@ -1,12 +1,14 @@
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import models
+from django.db.models import Model, CharField, ForeignKey, CASCADE, SET_NULL, \
+    BooleanField
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 
-from conferences.models import Conference
+from conferences.models import Conference, ProceedingType, ProceedingVolume
 from submissions.models import Submission
 from users.models import User
 
@@ -176,3 +178,68 @@ def delete_review(sender, instance, **kwargs):
         f"[DCCN2019] Review cancelled for submission #{instance.paper.pk}",
         template_html='review/email/cancel_review.html',
         template_plain='review/email/cancel_review.txt')
+
+
+class Decision(Model):
+    UNDEFINED = 'UNDEFINED'
+    ACCEPT = 'ACCEPT'
+    REJECT = 'REJECT'
+
+    DECISION_CHOICES = (
+        (UNDEFINED, 'No decision'),
+        (ACCEPT, 'Accept submission'),
+        (REJECT, 'Reject submission')
+    )
+
+    decision = CharField(choices=DECISION_CHOICES, default=UNDEFINED,
+                         max_length=10)
+    submission = ForeignKey(Submission, on_delete=CASCADE,
+                            related_name='review_decision')
+    proc_type = ForeignKey(ProceedingType, on_delete=SET_NULL, null=True,
+                           blank=True)
+    volume = ForeignKey(ProceedingVolume, on_delete=SET_NULL, null=True,
+                        blank=True)
+    committed = BooleanField(default=False)
+
+    def commit(self, silent=False):
+        """Change submission status depending on decision.
+
+        - if decision is UNDEFINED, submission will go to REVIEW state;
+        - if decision is ACCEPT, submission will go to ACCEPTED state;
+        - if decision is REJECT, submission will go to REJECTED state.
+
+        If submission status was already IN_PRINT, it won't be changed.
+        """
+        if self.committed:
+            return   # do nothing if already committed
+        status = self.submission.status
+        # Update submission status if needed
+        decision_status = {
+            Decision.UNDEFINED: Submission.UNDER_REVIEW,
+            Decision.ACCEPT: Submission.ACCEPTED,
+            Decision.REJECT: Submission.REJECTED,
+        }
+        if status != Submission.IN_PRINT:
+            new_status = decision_status[self.decision]
+            update_status = status != new_status
+            self.submission.status = new_status
+            # TODO: either here, or in submission.save() add/del Contribution
+            self.submission.save()
+            if update_status and self.decision != Decision.UNDEFINED:
+                # TODO: inform user about proc_type or volume change
+                # (we are here if status didn't change, so Submission.save()
+                # will not emit an email due to status change; so we need to
+                # inform user manually)
+                if not silent:
+                    pass
+        self.committed = True
+        self.save()
+
+    def save(self, *args, **kwargs):
+        old = Decision.objects.filter(pk=self.pk).first()
+        if old:
+            fields = ['decision', 'volume', 'proc_type']
+            for field in fields:
+                if getattr(self, field) != getattr(old, field):
+                    self.committed = False
+        return super().save(*args, **kwargs)
