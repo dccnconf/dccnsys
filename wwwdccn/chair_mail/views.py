@@ -290,6 +290,7 @@ def notifications_list(request, conf_pk):
     validate_chair_access(request.user, conference)
     return render(request, 'chair_mail/tab_pages/notifications.html', context={
         'conference': conference,
+        'frame': get_email_frame(conference),
         'active_tab': 'notifications',
     })
 

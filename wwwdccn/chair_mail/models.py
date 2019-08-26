@@ -306,16 +306,19 @@ DEFAULT_NOTIFICATIONS_DATA = {
         'type': MSG_TYPE_SUBMISSION,
         'body': '''Dear {{ username }},
 
-your submission #{{ paper_id }} "{{ paper_title }}" is assigned for the review.
+your submission #{{ paper_id }} **"{{ paper_title }}"** is assigned for the review.
 
-Reviews are expected to be ready at **{{ end_rev_date }}**.'''
+Reviews are expected to be ready at **{{ rev_end_date|time:"H:i:s" }}**.'''
     },
     SystemNotification.ASSIGN_STATUS_SUBMIT: {
-        'subject': 'Submission #{{ paper_id }} status is SUBMIT',
+        'subject': 'Submission #{{ paper_id }} is in draft editing state',
         'type': MSG_TYPE_SUBMISSION,
         'body': '''Dear {{ username }},
 
-your submission #{{ paper_id }} "{{ paper_title }}" is now SUBMIT. At this stage
-you can modify review manuscript, title and other data if you need.'''
+your submission #{{ paper_id }} **"{{ paper_title }}"** is in draft editing 
+state. 
+
+At this point you can modify review manuscript, title and other data if you 
+need.'''
     },
 }
