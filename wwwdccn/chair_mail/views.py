@@ -294,7 +294,7 @@ def notifications_list(request, conf_pk):
 
 
 @require_POST
-def notifications_reset(request, conf_pk):
+def reset_all_notifications(request, conf_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     # Purging all existing notifications:
@@ -303,4 +303,17 @@ def notifications_reset(request, conf_pk):
     for name, kwargs in DEFAULT_NOTIFICATIONS_DATA.items():
         SystemNotification.objects.create(name=name, conference=conference,
                                           **kwargs)
+    return redirect('chair_mail:notifications', conf_pk)
+
+
+@require_POST
+def reset_notification(request, conf_pk, notif_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    notification = get_object_or_404(SystemNotification, pk=notif_pk)
+    data = DEFAULT_NOTIFICATIONS_DATA[notification.name]
+    notification.subject = data['subject']
+    notification.type = data['type']
+    notification.body = data['body']
+    notification.save()
     return redirect('chair_mail:notifications', conf_pk)

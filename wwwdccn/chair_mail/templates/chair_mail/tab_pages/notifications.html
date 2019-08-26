@@ -20,12 +20,25 @@
 
   {% for notification in conference.notifications.all %}
     <div class="border-bottom my-3 p-2">
-      <div class="d-flex align-items-center">
+      <div class="d-flex align-items-center mb-2">
         <h5>{{ notification.get_name_display }}</h5>
-        <div class="badge badge-info ml-auto py-1">{{ notification.type }}</div>
+        <div class="badge badge-info ml-auto py-1 px-2 dccn-text-small">{{ notification.type }}</div>
       </div>
-      <p><b>Subject: </b>{{ notification.subject }}</p>
+      {% if notificaiton.is_active %}
+      <p class="dccn-text-0 mb-3 text-success"><i class="fas fa-toggle-on"></i> Enabled</p>
+      {% else %}
+      <p class="dccn-text-0 mb-3 text-danger"><i class="fas fa-toggle-off"></i> Disabled</p>
+      {% endif %}
+      <p class="dccn-text-0 mb-3"><b>Subject: </b>{{ notification.subject }}</p>
       <pre class="border p-3"><code lang="markdown">{{ notification.body }}</code></pre>
+      <div class="d-flex mb-3">
+        <a href="#" class="btn btn-sm btn-primary"><i class="far fa-edit"></i> Edit</a>
+        <form action="{% url 'chair_mail:reset-notification' conf_pk=conference.pk notif_pk=notification.pk %}"
+              method="POST" class="ml-auto">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-danger">Reset</button>
+        </form>
+      </div>
     </div>
   {% endfor %}
 
