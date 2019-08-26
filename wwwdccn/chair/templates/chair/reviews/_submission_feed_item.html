@@ -1,0 +1,157 @@
+{###########################################################################}
+{# Submission feed item content.                                           #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `conference`: a conference model instance                             #}
+{# - `submission`: a submission dictionary object                          #}
+{###########################################################################}
+{% load submission_extras %}
+<div>
+{% with reviews=submission.reviews conf_pk=conference.pk sub_pk=submission.pk authors=submission.authors warnings=submission.warnings %}
+  {# 1. Top row: status and actions #}
+  <div class="dccn-feed-item-row">
+    {# 1.1. Submission status indicator #}
+    <div class="dccn-feed-item-label dccn-feed-item-status">
+      <i class="fas fa-circle {{ submission|status_class }}"></i> {{ submission.status_display }}
+    </div>
+    {# 1.2. Submission warnings, or, if no warnings, review status #}
+    {% if warnings %}
+      <div class="dccn-feed-item-label mx-2" data-toggle="tooltip" data-placement="bottom" data-html="true"
+           title="<ul class='list-unstyled'>{% for warning in warnings %}<li class='text-left dccn-text-smallest'>{{ warning }}{% if forloop.last %}.{% else %};{% endif %}</li>{% endfor %}</ul>">
+        <i class="fas fa-exclamation-triangle text-warning"></i> {{ warnings|length }}
+      </div>
+    {% endif %}
+  </div>
+
+  {# 2. Submission body: title and authors (left part) and review score with controls (right part) #}
+  <div class="row">
+    {# 2.1. Title and authors #}
+    <div class="col-12 col-md-4 col-lg-5">
+      <p class="mb-1 pr-3">
+        <a href="{% url 'chair:submission-overview' conf_pk=conf_pk sub_pk=sub_pk %}"
+           class="dccn-link dccn-text-4 font-weight-normal">
+          {% if submission.title %}{{ submission.title }}{% else %}<span class="bg-warning">No Title</span>{% endif %}
+        </a>
+      </p>
+      <div>
+        <p class="dccn-text-0 mr-3">
+          {% for author in authors %}
+            <span>
+              <a href="{% url 'chair:user-overview' conf_pk=conf_pk user_pk=author.user_pk %}?next={{ request.get_full_path|urlencode }}"
+                 class="dccn-link dccn-text-small font-weight-light">
+                {{ author.name }}</a>{% if not forloop.last %},&nbsp;{% endif %}
+            </span>
+          {% endfor %}
+        </p>
+      </div>
+    </div>
+    {# 2.2. Score and decision form #}
+    <div class="col-12 col-sm-6 col-md-4 col-lg-2 mt-3 mt-md-0 pr-3 border-left">
+      <div class="d-flex flex-md-column align-items-center mr-auto mr-3 p-2">
+        <p class="mb-0 mb-md-1 mr-3 mr-md-0">
+        {% if not warnings %}
+        <i class="fa-2x {{ reviews.icon_class }} text-{{ reviews.score_color }} mr-2"></i>
+        {% endif %}
+        <span class="dccn-text-larger text-{{ reviews.score_color }}">{{ reviews.score_str }}</span>
+        </p>
+        <p class="mb-0 dccn-text-0">{% for score in reviews.scores_list_str %}{{ score }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-4 col-lg-4 mt-3 mt-md-0">
+      {% with form_data=submission.decision_form_data %}
+      <div class="ml-3">
+        <form action="" class="mx-3" name="updateDecisionForm_{{ sub_pk }}" id="updateDecisionForm_{{ sub_pk }}" novalidate>
+          <input type="hidden" name="decision" value="{{ form_data.decision.value }}">
+          <input type="hidden" name="proc_type" value="{{ form_data.proc_type.value }}">
+          <input type="hidden" name="volume" value="{{ form_data.volume.value }}">
+        </form>
+        {% if not form_data.decision.hidden %}
+        <div>
+          <b>Decision: </b>
+          <span class="dropdown-left">
+            <a href="#" data-toggle="dropdown" class="dccn-link font-weight-bold text-info">{{ form_data.decision.display }}</a>
+            <span class="dropdown-menu">
+              {% for option in form_data.decision.options %}
+                <button class="dropdown-item" data-form-id="#updateDecisionForm_{{ sub_pk }}" data-name="decision"
+                        data-value="{{ option.0 }}">
+                  {{ option.1 }}
+                </button>
+              {% endfor %}
+            </span>
+          </span>
+        </div>
+        {% endif %}
+        {% if not form_data.proc_type.hidden %}
+        <div class="mt-1">
+          <b>Proceedings: </b>
+          <span class="dropdown">
+            <a href="#" data-toggle="dropdown" class="dccn-link font-weight-bold text-info">{{ form_data.proc_type.display }}</a>
+            <span class="dropdown-menu">
+              {% for option in form_data.proc_type.options %}
+                <button class="dropdown-item" data-form-id="#updateDecisionForm_{{ sub_pk }}" data-name="proc_type"
+                        data-value="{{ option.0 }}">{{ option.1 }}</button>
+              {% endfor %}
+            </span>
+          </span>
+        </div>
+        {% endif %}
+        {% if not form_data.volume.hidden %}
+        <div class="mt-1">
+          <b>Volume: </b>
+          <span class="dropdown">
+            <a href="#" data-toggle="dropdown" class="dccn-link font-weight-bold text-info">{{ form_data.volume.display }}</a>
+            <span class="dropdown-menu">
+              {% for option in form_data.volume.options %}
+                <button class="dropdown-item" data-form-id="#updateDecisionForm_{{ sub_pk }}" data-name="volume"
+                        data-value="{{ option.0 }}">{{ option.1 }}</button>
+              {% endfor %}
+            </span>
+          </span>
+        </div>
+        {% endif %}
+        <div class="d-flex mt-2 align-items-center">
+          <button class="btn btn-sm btn-outline-info mr-2" data-commit-url="">Commit</button>
+          <p class="font-weight-bold my-0 ml-auto text-warning-15">
+            <i class="fas fa-exclamation-circle"></i> changes not committed
+          </p>
+        </div>
+      </div>
+      {% endwith %}
+{#        <div class="input-group">#}
+{#          <select name="decision_{{ sub_pk }}" id="id_decision_{{ sub_pk }}" class="custom-select">#}
+{#            <option value="UNDEFINED" selected>Undefined</option>#}
+{#            <option value="ACCEPT">Accept</option>#}
+{#            <option value="REJECT">Reject</option>#}
+{#          </select>#}
+{#        </div>#}
+{#        <div class="input-group">#}
+{#          <select name="proc_{{ sub_pk }}" id="id_proc_{{ sub_pk }}" class="custom-select">#}
+{#            <option value="1">RSCI proceedings</option>#}
+{#            <option value="2" selected>Springer proceedings</option>#}
+{#          </select>#}
+{#        </div>#}
+{#        <div class="input-group">#}
+{#          <select name="volume_{{ sub_pk }}" id="id_volume_{{ sub_pk }}" class="custom-select">#}
+{#            <option value="1" selected>CCIS</option>#}
+{#            <option value="2">LNCS</option>#}
+{#          </select>#}
+{#        </div>#}
+    </div>
+  </div>
+
+  <div class="mt-2"></div>
+
+  {# 3. Bottom row: view, delete, etc. - actions those do not depend on current status and refs #}
+  <div class="dccn-feed-item-footer mt-4">
+    <a href="{% url 'chair:submission-overview' conf_pk=conf_pk sub_pk=sub_pk %}" class="dccn-feed-item-link">
+      <i class="fas fa-align-justify"></i> Details
+    </a>
+    <form action="{% url 'chair_mail:compose-submission' conf_pk=conf_pk %}" method="GET" class="mr-2">
+      <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
+      <input type="hidden" name="objects" value="{{ sub_pk }}">
+      <button class="btn btn-link dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</button>
+    </form>
+    <div class="dccn-feed-item-id ml-auto">#{{ sub_pk }}</div>
+  </div>
+{% endwith %}
+</div>

@@ -10,6 +10,7 @@ from docx.shared import Cm
 
 from chair.utility import validate_chair_access, build_paged_view_context
 from conferences.models import Conference
+from review.models import Decision
 from submissions.models import Submission
 from users.models import User
 
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 QUALITY_COLOR = {
     'excellent': 'success',
     'good': 'info',
-    'average': 'warning',
+    'average': 'warning-13',
     'poor': 'danger',
     '?': 'danger',
 }
@@ -181,6 +182,26 @@ def list_submissions(request, conf_pk, page=1):
         'status_display': sub.get_status_display(),
         'reviews': review_stats[sub],
         'warnings': warnings[sub],
+        'decision_form_data': {
+            'decision': {
+                'options': Decision.DECISION_CHOICES,
+                'display': Decision.ACCEPT,
+                'value': Decision.ACCEPT,
+                'hidden': False,
+            },
+            'proc_type': {
+                'options': [('', 'Not selected')] + [(ptype.pk, ptype.name) for ptype in sub.stype.possible_proceedings.all()],
+                'display': sub.stype.possible_proceedings.first().name,
+                'value': sub.stype.possible_proceedings.first().pk,
+                'hidden': False,
+            },
+            'volume': {
+                'options': [('', 'Not selected')] + [(vol.pk, vol.name) for vol in sub.stype.possible_proceedings.first().volumes.all()],
+                'display': sub.stype.possible_proceedings.first().volumes.first().name,
+                'value': sub.stype.possible_proceedings.first().volumes.first().pk,
+                'hidden': False,
+            }
+        }
     } for sub in submissions]
 
     def get_order_key(item):
