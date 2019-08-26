@@ -39,8 +39,6 @@
   <form action="" method="POST" id="editNotificationForm">
     {% csrf_token %}
 
-    {% bootstrap_field notif_form.is_active %}
-
     {#################################################################################################################}
     {# SUBJECT                                                                                                       #}
     {#################################################################################################################}
@@ -104,7 +102,7 @@
   {#################################################################################################################}
   <div class="form-group d-flex mt-4">
     <button type="submit" class="btn btn-primary" form="editNotificationForm">Save</button>
-    <a href="{% url 'chair_mail:notifications' conf_pk=conference.pk %}" class="btn btn-outline-secondary ml-auto">Cancel</a>
+    <a href="{% url 'chair_mail:notifications' conf_pk=conference.pk %}" class="btn btn-outline-secondary ml-auto">Back</a>
   </div>
 
 {% endblock %}

@@ -17,7 +17,7 @@
   {% for notification in conference.notifications.all %}
     <div class="border-bottom my-3 p-2">
       <div class="d-flex align-items-center mb-2">
-        <h5>{{ notification.get_name_display }}</h5>
+        <h5>{{ notification.name }}: <span class="font-weight-light">{{ notification.get_name_display|lower }}</span></h5>
         <div class="badge badge-info ml-auto py-1 px-2 dccn-text-smallest">{{ notification.type }}</div>
       </div>
 
@@ -36,28 +36,89 @@
           </button>
         {% endif %}
       </form>
+
       <p class="dccn-text-small mb-3 {% if not notification.is_active %}text-secondary{% endif %}">
         <b>Subject: </b>{{ notification.subject }}
       </p>
       <pre class="border dccn-text-smallest p-3 {% if not notification.is_active %}text-secondary{% endif %}"><code lang="markdown">{{ notification.body }}</code></pre>
       <div class="d-flex my-3">
         <a href="{% url 'chair_mail:notification-details' conf_pk=conference.pk notif_pk=notification.pk %}"
-           class="btn btn-sm btn-primary"><i class="far fa-edit"></i> Edit</a>
-        <form action="{% url 'chair_mail:reset-notification' conf_pk=conference.pk notif_pk=notification.pk %}"
-              method="POST" class="ml-auto">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-sm btn-outline-danger">Reset</button>
-        </form>
+           class="btn btn-sm btn-outline-primary"><i class="far fa-edit"></i> Edit</a>
+        <button type="submit" class="btn btn-sm btn-outline-danger ml-auto"
+                data-toggle="modal" data-target="#resetModal-{{ notification.pk }}">
+          Reset
+        </button>
+      </div>
+    </div>
+
+    {#####################################}
+    {# MODAL FOR NOTIFICATION RESET      #}
+    {#####################################}
+    <div class="modal" tabindex="-1" role="dialog" id="resetModal-{{ notification.pk }}">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-light">
+            <h5 class="modal-title">Confirm notification reset</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle fa-4x text-danger mr-3"></i>
+            <div>
+              <p class="dccn-text-small">Are you sure you want to reset notification <b>{{ notification.name }}</b>?</p>
+              <p class="mt-2 dccn-text-small">All your changes will be lost.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+            <form action="{% url 'chair_mail:reset-notification' conf_pk=conference.pk notif_pk=notification.pk %}" method="POST">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger">Confirm reset</button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   {% endfor %}
 
-  {# COMMON ACTIONS #}
+  {#####################################}
+  {# COMMON ACTIONS                    #}
+  {#####################################}
   <div class="d-flex">
-    <form action="{% url 'chair_mail:reset-notifications' conf_pk=conference.pk %}" method="POST" class="ml-auto">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-outline-danger">Reset all notifications</button>
-    </form>
+    <button type="button" class="btn btn-outline-danger ml-auto" data-toggle="modal" data-target="#resetAllModal">
+      Reset all notifications
+    </button>
+  </div>
+
+  {#####################################}
+  {# MODAL FOR RESET ALL NOTIFICATIONS #}
+  {#####################################}
+  <div class="modal" tabindex="-1" role="dialog" id="resetAllModal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-light">
+          <h5 class="modal-title">Confirm notification reset</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body d-flex align-items-center">
+          <i class="fas fa-exclamation-triangle fa-4x text-danger mr-3"></i>
+          <div>
+            <p class="dccn-text-small">Are you sure you want to reset all notifications?</p>
+            <p class="mt-2 dccn-text-small">All your changes will be lost.</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+          <form action="{% url 'chair_mail:reset-notifications' conf_pk=conference.pk %}" method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger">Confirm reset</button>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 
 {% endblock %}

@@ -179,7 +179,7 @@ def get_preview_form_class(msg_type):
 class EditNotificationForm(forms.ModelForm):
     class Meta:
         model = SystemNotification
-        fields = ('is_active', 'subject', 'body')
+        fields = ('subject', 'body')
 
 
 class UpdateNotificationStateForm(forms.ModelForm):
