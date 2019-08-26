@@ -14,7 +14,7 @@ from chair_mail.forms import EmailFrameUpdateForm, EmailFrameTestForm, \
 from chair_mail.mailing_lists import ALL_LISTS
 from chair_mail.models import EmailSettings, EmailFrame, EmailMessage, \
     GroupMessage, MSG_TYPE_USER, MSG_TYPE_SUBMISSION, get_group_message_model, \
-    get_message_leaf_model
+    get_message_leaf_model, SystemNotification, DEFAULT_NOTIFICATIONS_DATA
 from chair_mail.utility import get_email_frame, get_email_frame_or_404, \
     reverse_preview_url, reverse_list_objects_url, get_object_name, \
     get_object_url
@@ -278,3 +278,29 @@ def render_frame_preview(request, conf_pk):
         html = frame.render_html(subject, body)
         return HttpResponse(html)
     return HttpResponse()
+
+
+#
+# Notifications
+#
+@require_GET
+def notifications_list(request, conf_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    return render(request, 'chair_mail/tab_pages/notifications.html', context={
+        'conference': conference,
+        'active_tab': 'notifications',
+    })
+
+
+@require_POST
+def notifications_reset(request, conf_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    # Purging all existing notifications:
+    conference.notifications.all().delete()
+    # Creating default notifications:
+    for name, kwargs in DEFAULT_NOTIFICATIONS_DATA.items():
+        SystemNotification.objects.create(name=name, conference=conference,
+                                          **kwargs)
+    return redirect('chair_mail:notifications', conf_pk)

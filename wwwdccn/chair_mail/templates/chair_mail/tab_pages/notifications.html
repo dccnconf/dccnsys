@@ -1,0 +1,40 @@
+{###########################################################################}
+{# List of sent group emails.                                              #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `active_tab`: value of `active` context variable for tab navigation   #}
+{###########################################################################}
+{% extends 'chair_mail/_base.html' %}
+{% load static %}
+{% load chair_mail_extras %}
+
+{% block chairMailStyle %}
+  <link rel="stylesheet" href="{% static 'chair_mail/css/messages.css' %}">
+{% endblock %}
+
+{% block tabViewContent %}
+  <h1 class="dccn-text-larger-light mb-4">System notifications</h1>
+
+  {% for notification in conference.notifications.all %}
+    <div class="border-bottom my-3 p-2">
+      <div class="d-flex align-items-center">
+        <h5>{{ notification.get_name_display }}</h5>
+        <div class="badge badge-info ml-auto py-1">{{ notification.type }}</div>
+      </div>
+      <p><b>Subject: </b>{{ notification.subject }}</p>
+      <pre class="border p-3"><code lang="markdown">{{ notification.body }}</code></pre>
+    </div>
+  {% endfor %}
+
+  {# COMMON ACTIONS #}
+  <div class="d-flex">
+    <form action="{% url 'chair_mail:reset-notifications' conf_pk=conference.pk %}" method="POST" class="ml-auto">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline-danger">Reset all notifications</button>
+    </form>
+  </div>
+
+{% endblock %}

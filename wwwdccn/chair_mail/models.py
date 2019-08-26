@@ -271,8 +271,15 @@ class SystemNotification(models.Model):
 
     Notification can also be turned off with `is_active` flag field.
     """
-    name = CharField(max_length=64, blank=False)
-    description = TextField(blank=True)
+    ASSIGN_STATUS_SUBMIT = 'assign_status_submit'
+    ASSIGN_STATUS_REVIEW = 'assign_status_review'
+
+    NAME_CHOICES = (
+        (ASSIGN_STATUS_REVIEW, 'Assign status review to the paper'),
+        (ASSIGN_STATUS_SUBMIT, 'Assign status submit to the paper'),
+    )
+
+    name = CharField(max_length=64, choices=NAME_CHOICES)
     subject = CharField(max_length=1024, blank=True)
     is_active = BooleanField(default=False)
     type = CharField(max_length=64, choices=MESSAGE_TYPE_CHOICES, blank=False)
@@ -293,10 +300,8 @@ class SystemNotification(models.Model):
             message.send(sender)
 
 
-DEFAULT_NOTIFICATIONS = {
-    'set_status_review': {
-        'name': 'set_status_review',
-        'description': 'Notification fired when submission is set to review',
+DEFAULT_NOTIFICATIONS_DATA = {
+    SystemNotification.ASSIGN_STATUS_REVIEW: {
         'subject': 'Submission #{{ paper_id }} is under review',
         'type': MSG_TYPE_SUBMISSION,
         'body': '''Dear {{ username }},
@@ -305,10 +310,7 @@ your submission #{{ paper_id }} "{{ paper_title }}" is assigned for the review.
 
 Reviews are expected to be ready at **{{ end_rev_date }}**.'''
     },
-    'set_status_submit': {
-        'name': 'set_status_submit',
-        'description':
-            'Notification fired when submission status is set to submit',
+    SystemNotification.ASSIGN_STATUS_SUBMIT: {
         'subject': 'Submission #{{ paper_id }} status is SUBMIT',
         'type': MSG_TYPE_SUBMISSION,
         'body': '''Dear {{ username }},

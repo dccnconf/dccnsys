@@ -25,4 +25,10 @@
       Messages
     </a>
   </li>
+  <li class="nav-item">
+    <a href="{% url 'chair_mail:notifications' conf_pk=conference.pk %}"
+       class="nav-link {% if active == 'notifications' %}active{% endif %}">
+      Notifications
+    </a>
+  </li>
 </ul>

@@ -39,6 +39,12 @@ urlpatterns = [
          name='compose-submission'),
     path('help/compose/', views.help_compose, name='help-compose'),
 
+    # Notifications:
+    path('<int:conf_pk>/notifications/', views.notifications_list,
+         name='notifications'),
+    path('<int:conf_pk>/notifications/reset/', views.notifications_reset,
+         name='reset-notifications'),
+
     #########################################################################
     path('<int:conf_pk>/api/mailing_lists/',
          api.list_mailing_lists,
