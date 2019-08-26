@@ -102,3 +102,22 @@ def get_object_model(msg_type):
         from submissions.models import Submission
         return Submission
     raise ValueError(f'unexpected message type "{msg_type}"')
+
+
+def send_notification_message(conference, name, recipients, sender=None):
+    from .models import SystemNotification
+    notif = SystemNotification.objects.get(conference=conference, name=name)
+    notif.send(recipients, sender=sender)
+
+
+def send_submission_status_notification_message(submission):
+    from submissions.models import Submission
+    from .models import SystemNotification
+    status = submission.status
+    if status == Submission.SUBMITTED:
+        name = SystemNotification.ASSIGN_STATUS_SUBMIT
+    elif status == Submission.UNDER_REVIEW:
+        name = SystemNotification.ASSIGN_STATUS_REVIEW
+    else:
+        return
+    send_notification_message(submission.conference, name, [submission])

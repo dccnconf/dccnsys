@@ -98,6 +98,15 @@ class Submission(models.Model):
 
     # Authors are filled from Author model
 
+    def save(self, *args, **kwargs):
+        from chair_mail.utility import \
+            send_submission_status_notification_message
+        old = Submission.objects.filter(pk=self.pk).first()
+        status_updated = old is None or old.status != self.status
+        super().save(*args, **kwargs)
+        if status_updated:
+            send_submission_status_notification_message(self)
+
     def __str__(self):
         if not self.title:
             title_prefix = '(no title)'
