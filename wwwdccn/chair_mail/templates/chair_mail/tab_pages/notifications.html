@@ -11,10 +11,6 @@
 {% load static %}
 {% load chair_mail_extras %}
 
-{% block chairMailStyle %}
-  <link rel="stylesheet" href="{% static 'chair_mail/css/messages.css' %}">
-{% endblock %}
-
 {% block tabViewContent %}
   <h1 class="dccn-text-larger-light mb-4">System notifications</h1>
 
@@ -22,17 +18,31 @@
     <div class="border-bottom my-3 p-2">
       <div class="d-flex align-items-center mb-2">
         <h5>{{ notification.get_name_display }}</h5>
-        <div class="badge badge-info ml-auto py-1 px-2 dccn-text-small">{{ notification.type }}</div>
+        <div class="badge badge-info ml-auto py-1 px-2 dccn-text-smallest">{{ notification.type }}</div>
       </div>
-      {% if notificaiton.is_active %}
-      <p class="dccn-text-0 mb-3 text-success"><i class="fas fa-toggle-on"></i> Enabled</p>
-      {% else %}
-      <p class="dccn-text-0 mb-3 text-danger"><i class="fas fa-toggle-off"></i> Disabled</p>
-      {% endif %}
-      <p class="dccn-text-0 mb-3"><b>Subject: </b>{{ notification.subject }}</p>
-      <pre class="border p-3"><code lang="markdown">{{ notification.body }}</code></pre>
-      <div class="d-flex mb-3">
-        <a href="#" class="btn btn-sm btn-primary"><i class="far fa-edit"></i> Edit</a>
+
+      <form action="{% url 'chair_mail:update-notification-state' conf_pk=conference.pk notif_pk=notification.pk %}" method="POST">
+        {% csrf_token %}
+        {% if notification.is_active == True %}
+          <input type="hidden" name="is_active" value="False">
+          <button type="submit" class="btn btn-link dccn-text-small mb-3 text-success">
+            <i class="fas fa-toggle-on"></i> Enabled
+          </button>
+        {% else %}
+          {% csrf_token %}
+          <input type="hidden" name="is_active" value="True">
+          <button type="submit" class="btn btn-link dccn-text-small mb-3 text-danger">
+            <i class="fas fa-toggle-off"></i> Disabled
+          </button>
+        {% endif %}
+      </form>
+      <p class="dccn-text-small mb-3 {% if not notification.is_active %}text-secondary{% endif %}">
+        <b>Subject: </b>{{ notification.subject }}
+      </p>
+      <pre class="border dccn-text-smallest p-3 {% if not notification.is_active %}text-secondary{% endif %}"><code lang="markdown">{{ notification.body }}</code></pre>
+      <div class="d-flex my-3">
+        <a href="{% url 'chair_mail:notification-details' conf_pk=conference.pk notif_pk=notification.pk %}"
+           class="btn btn-sm btn-primary"><i class="far fa-edit"></i> Edit</a>
         <form action="{% url 'chair_mail:reset-notification' conf_pk=conference.pk notif_pk=notification.pk %}"
               method="POST" class="ml-auto">
           {% csrf_token %}

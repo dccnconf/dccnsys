@@ -10,7 +10,8 @@ from chair.utility import validate_chair_access
 from chair_mail.context import USER_VARS, CONFERENCE_VARS, SUBMISSION_VARS, \
     FRAME_VARS
 from chair_mail.forms import EmailFrameUpdateForm, EmailFrameTestForm, \
-    MessageForm, get_preview_form_class
+    MessageForm, get_preview_form_class, EditNotificationForm, \
+    UpdateNotificationStateForm
 from chair_mail.mailing_lists import ALL_LISTS
 from chair_mail.models import EmailSettings, EmailFrame, EmailMessage, \
     GroupMessage, MSG_TYPE_USER, MSG_TYPE_SUBMISSION, get_group_message_model, \
@@ -316,4 +317,43 @@ def reset_notification(request, conf_pk, notif_pk):
     notification.type = data['type']
     notification.body = data['body']
     notification.save()
+    return redirect('chair_mail:notifications', conf_pk)
+
+
+def notification_details(request, conf_pk, notif_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    notification = get_object_or_404(SystemNotification, pk=notif_pk)
+    if request.method == 'POST':
+        notif_form = EditNotificationForm(request.POST, instance=notification)
+        if notif_form.is_valid():
+            notif_form.save()
+            messages.success(request, 'Your changes were saved')
+            return redirect(
+                'chair_mail:notification-details', conf_pk, notif_pk)
+    else:
+        notif_form = EditNotificationForm(instance=notification)
+
+    return render(
+        request, 'chair_mail/tab_pages/notification_details.html', context={
+            'conference': conference,
+            'notification': notification,
+            'hide_tabs': True,
+            'notif_form': notif_form,
+            'variables': _get_grouped_vars(notification.type),
+            'preview_url': reverse_preview_url(notification.type, conference),
+            'preview_form': get_preview_form_class(notification.type)(),
+            'list_objects_url':
+                reverse_list_objects_url(notification.type, conference),
+        })
+
+
+@require_POST
+def update_notification_state(request, conf_pk, notif_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    notification = get_object_or_404(SystemNotification, pk=notif_pk)
+    form = UpdateNotificationStateForm(request.POST, instance=notification)
+    if form.is_valid():
+        form.save()
     return redirect('chair_mail:notifications', conf_pk)

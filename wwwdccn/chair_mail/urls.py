@@ -42,10 +42,14 @@ urlpatterns = [
     # Notifications:
     path('<int:conf_pk>/notifications/', views.notifications_list,
          name='notifications'),
+    path('<int:conf_pk>/notifications/<int:notif_pk>/',
+         views.notification_details, name='notification-details'),
     path('<int:conf_pk>/notifications/reset/', views.reset_all_notifications,
          name='reset-notifications'),
     path('<int:conf_pk>/notifications/<int:notif_pk>/reset/',
          views.reset_notification, name='reset-notification'),
+    path('<int:conf_pk>/notifications/<int:notif_pk>/update_state/',
+         views.update_notification_state, name='update-notification-state'),
 
     #########################################################################
     path('<int:conf_pk>/api/mailing_lists/',

@@ -13,7 +13,8 @@ from chair_mail.mailing_lists import find_list
 from chair_mail.utility import get_object_model
 from submissions.models import Submission
 from users.models import User
-from .models import EmailFrame, MSG_TYPE_USER, MSG_TYPE_SUBMISSION
+from .models import EmailFrame, MSG_TYPE_USER, MSG_TYPE_SUBMISSION, \
+    SystemNotification
 
 
 def parse_mailing_lists(names_string, separator=','):
@@ -173,3 +174,15 @@ def get_preview_form_class(msg_type):
         return PreviewSubmissionMessageForm
     else:
         raise ValueError(f'unexpected message type "{msg_type}"')
+
+
+class EditNotificationForm(forms.ModelForm):
+    class Meta:
+        model = SystemNotification
+        fields = ('is_active', 'subject', 'body')
+
+
+class UpdateNotificationStateForm(forms.ModelForm):
+    class Meta:
+        model = SystemNotification
+        fields = ('is_active',)
