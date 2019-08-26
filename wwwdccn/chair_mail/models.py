@@ -1,6 +1,10 @@
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import models
+from django.db.models import ForeignKey, OneToOneField, TextField, CharField, \
+    SET_NULL, CASCADE, BooleanField, UniqueConstraint
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.template import Template, Context
 from django.utils import timezone
 from markdown import markdown
@@ -14,6 +18,11 @@ from users.models import User
 
 MSG_TYPE_USER = 'user'
 MSG_TYPE_SUBMISSION = 'submission'
+
+MESSAGE_TYPE_CHOICES = (
+    (MSG_TYPE_USER, 'Message to users'),
+    (MSG_TYPE_SUBMISSION, 'Message to submissions'),
+)
 
 
 class EmailFrame(models.Model):
@@ -248,3 +257,63 @@ class EmailMessage(models.Model):
             self.sent = True
             self.save()
         return self
+
+
+class SystemNotification(models.Model):
+    """This model represents a system notification fired on a specific event.
+
+    The model itself doesn't define the circumstances in which the message
+    must be sent, which are subject to views.
+
+    Notification is defined with a mandatory name, optional description,
+    subject and template. If template is not assigned or subject is not
+    specified, messages won't be sent.
+
+    Notification can also be turned off with `is_active` flag field.
+    """
+    name = CharField(max_length=64, blank=False)
+    description = TextField(blank=True)
+    subject = CharField(max_length=1024, blank=True)
+    is_active = BooleanField(default=False)
+    type = CharField(max_length=64, choices=MESSAGE_TYPE_CHOICES, blank=False)
+    body = TextField(blank=True)
+    conference = ForeignKey(Conference, related_name='notifications',
+                            on_delete=CASCADE)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['conference', 'name'], name='unique_name'),
+        ]
+
+    def send(self, recipients, sender=None):
+        if self.is_active and self.body and self.subject:
+            message_class = get_group_message_model(self.type)
+            message = message_class.create(
+                self.subject, self.body, self.conference, recipients)
+            message.send(sender)
+
+
+DEFAULT_NOTIFICATIONS = {
+    'set_status_review': {
+        'name': 'set_status_review',
+        'description': 'Notification fired when submission is set to review',
+        'subject': 'Submission #{{ paper_id }} is under review',
+        'type': MSG_TYPE_SUBMISSION,
+        'body': '''Dear {{ username }},
+
+your submission #{{ paper_id }} "{{ paper_title }}" is assigned for the review.
+
+Reviews are expected to be ready at **{{ end_rev_date }}**.'''
+    },
+    'set_status_submit': {
+        'name': 'set_status_submit',
+        'description':
+            'Notification fired when submission status is set to submit',
+        'subject': 'Submission #{{ paper_id }} status is SUBMIT',
+        'type': MSG_TYPE_SUBMISSION,
+        'body': '''Dear {{ username }},
+
+your submission #{{ paper_id }} "{{ paper_title }}" is now SUBMIT. At this stage
+you can modify review manuscript, title and other data if you need.'''
+    },
+}
