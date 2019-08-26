@@ -1,10 +1,11 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db.models import Max
+from django.forms import ModelForm, HiddenInput
 
 from gears.widgets import CustomFileInput
 from .models import Conference, SubmissionStage, ReviewStage, ProceedingType, \
-    SubmissionType, Topic
+    SubmissionType, Topic, ProceedingVolume
 
 
 class ConferenceForm(forms.ModelForm):
@@ -44,6 +45,12 @@ class ProceedingTypeForm(forms.ModelForm):
                 'btn_class': 'btn-outline-secondary btn-sm',
             })
         }
+
+
+class ProceedingVolumeForm(ModelForm):
+    class Meta:
+        model = ProceedingVolume
+        fields = ['name', 'description']
 
 
 class SubmissionTypeForm(forms.ModelForm):

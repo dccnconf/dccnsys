@@ -22,15 +22,20 @@
         {% if subtitle %}
           <h2 class="dccn-panel-subtitle">{{ subtitle }}</h2>
         {% endif %}
-        <form action="" method="POST" novalidate enctype="multipart/form-data">
+        <form action="" method="POST" novalidate enctype="multipart/form-data" id="editForm">
           {% bootstrap_messages %}
           {% csrf_token %}
           {% bootstrap_form form %}
-          <div class="form-group row">
-            <a href="{% url 'conferences:details' pk=conference.pk %}" class="btn btn-outline-secondary btn-sm ml-auto mr-2">Cancel</a>
+          <div class="form-row">
+            <a href="{% if back_url %}{{ back_url }}{% else %}{% url 'conferences:details' pk=conference.pk %}{% endif %}"
+               class="btn btn-outline-secondary btn-sm ml-auto mr-2">Back</a>
             <input type="submit" value="{{ submit_button_text|default:'Save' }}" class="btn btn-primary btn-sm">
           </div>
         </form>
+
+        {% block additionalElements %}
+        {% endblock %}
+
       </div>
     </div>
   </main>
