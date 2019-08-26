@@ -150,7 +150,7 @@ def group_message_details(request, conf_pk, msg_pk):
             'body': msg.body,
             'subject': msg.subject,
             'sent_at': msg.sent_at,
-            'sent_by': msg.sent_by.pk,
+            'sent_by': msg.sent_by.pk if msg.sent_by else '',
         })
     return render(
         request, 'chair_mail/tab_pages/message_details.html', context={
@@ -228,7 +228,7 @@ def message_details(request, conf_pk, msg_pk):
             'text_plain': msg.text_plain,
             'subject': msg.subject,
             'sent_at': msg.sent_at,
-            'sent_by': msg.sent_by.pk,
+            'sent_by': msg.sent_by.pk if msg.sent_by else '',
             'user_to': msg.user_to.pk,
         })
     next_url = request.GET.get('next', default='')
