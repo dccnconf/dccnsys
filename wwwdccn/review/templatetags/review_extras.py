@@ -26,7 +26,7 @@ def decision_color_class(string):
     elif string == Decision.UNDEFINED or string == '':
         return 'warning-13'
     else:
-        return 'info'
+        return 'secondary'
 
 
 @register.filter

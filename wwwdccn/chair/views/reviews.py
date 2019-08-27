@@ -1,10 +1,11 @@
 import statistics
 
 from django.http import HttpResponse
+from django.urls import reverse
 from django.utils.datetime_safe import datetime
 from docx import Document
-from django.shortcuts import get_object_or_404, render
-from django.views.decorators.http import require_GET
+from django.shortcuts import get_object_or_404, render, redirect
+from django.views.decorators.http import require_GET, require_POST
 from docx.enum.table import WD_ROW_HEIGHT_RULE
 from docx.shared import Cm
 
@@ -270,6 +271,18 @@ def decision_control_panel(request, conf_pk, sub_pk):
         'form_data': _get_decision_form_data(submission),
         'conf_pk': conf_pk, 'sub_pk': sub_pk,
     })
+
+
+@require_POST
+def commit_decision(request, conf_pk, sub_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    submission = Submission.objects.get(pk=sub_pk)
+    decision = submission.review_decision.first()
+    decision.commit()
+    next_url = request.POST.get('next') or reverse(
+        'chair:reviews-page', kwargs={'conf_pk': conf_pk})
+    return redirect(next_url)
 
 
 @require_GET

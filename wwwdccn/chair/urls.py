@@ -47,5 +47,6 @@ urlpatterns = [
     path('<int:conf_pk>/reviews/', reviews.list_submissions, name='reviews'),
     path('<int:conf_pk>/reviews/pages/<int:page>/', reviews.list_submissions, name='reviews-pages'),
     path('<int:conf_pk>/reviews/export/docx/', reviews.export_doc, name='export-reviews-doc'),
-    path('<int:conf_pk>/reviews/<int:sub_pk>/decision_control_panel/', reviews.decision_control_panel, name='review-decision-control')
+    path('<int:conf_pk>/reviews/<int:sub_pk>/decision_control_panel/', reviews.decision_control_panel, name='review-decision-control'),
+    path('<int:conf_pk>/reviews/<int:sub_pk>/commit_decision/', reviews.commit_decision, name='review-decision-commit'),
 ]

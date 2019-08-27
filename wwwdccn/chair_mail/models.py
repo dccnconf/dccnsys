@@ -273,10 +273,14 @@ class SystemNotification(models.Model):
     """
     ASSIGN_STATUS_SUBMIT = 'assign_status_submit'
     ASSIGN_STATUS_REVIEW = 'assign_status_review'
+    ASSIGN_STATUS_ACCEPT = 'assign_status_accept'
+    ASSIGN_STATUS_REJECT = 'assign_status_reject'
 
     NAME_CHOICES = (
-        (ASSIGN_STATUS_REVIEW, 'Assign status review to the paper'),
-        (ASSIGN_STATUS_SUBMIT, 'Assign status submit to the paper'),
+        (ASSIGN_STATUS_REVIEW, 'Assign status REVIEW to the paper'),
+        (ASSIGN_STATUS_SUBMIT, 'Assign status SUBMIT to the paper'),
+        (ASSIGN_STATUS_ACCEPT, 'Assign status ACCEPT to the paper'),
+        (ASSIGN_STATUS_REJECT, 'Assign status REJECT to the paper'),
     )
 
     name = CharField(max_length=64, choices=NAME_CHOICES)
@@ -320,5 +324,22 @@ state.
 
 At this point you can modify review manuscript, title and other data if you 
 need.'''
+    },
+    SystemNotification.ASSIGN_STATUS_ACCEPT: {
+        'subject': 'Submission #{{ paper_id }} was accepted',
+        'type': MSG_TYPE_SUBMISSION,
+        'body': '''Dear {{ username }},
+
+congratulations, your submission #{{ paper_id }} **"{{ paper_title }}"** was 
+accepted for the conference.'''
+    },
+    SystemNotification.ASSIGN_STATUS_REJECT: {
+        'subject': 'Submission #{{ paper_id }} was rejected',
+        'type': MSG_TYPE_SUBMISSION,
+        'body': '''Dear {{ username }},
+
+unfortunately your submission #{{ paper_id }} **"{{ paper_title }}"** 
+was rejected according to the double-blinded review. 
+'''
     },
 }
