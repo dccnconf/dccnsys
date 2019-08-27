@@ -11,7 +11,7 @@ $(document).ready(function () {
 
   body.on('submit', 'form.decision-control-form', event => {
     const form = $(event.target);
-    const container = form.parent();
+    const container = form.parents('.review-feed-item-controls');
     const formData = form.serialize();
     $.ajax({
       url: form.attr('action'),

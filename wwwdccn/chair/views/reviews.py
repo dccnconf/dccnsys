@@ -265,7 +265,6 @@ def decision_control_panel(request, conf_pk, sub_pk):
         decision = Decision.objects.create(submission=submission)
     form = UpdateDecisionForm(request.POST or None, instance=decision)
     if request.method == 'POST' and form.is_valid():
-        print('form is valid!')
         form.save()
     return render(request, 'chair/reviews/_decision_control.html', context={
         'form_data': _get_decision_form_data(submission),
@@ -280,9 +279,10 @@ def commit_decision(request, conf_pk, sub_pk):
     submission = Submission.objects.get(pk=sub_pk)
     decision = submission.review_decision.first()
     decision.commit()
-    next_url = request.POST.get('next') or reverse(
-        'chair:reviews-page', kwargs={'conf_pk': conf_pk})
-    return redirect(next_url)
+    return render(request, 'chair/reviews/_decision_control.html', context={
+        'form_data': _get_decision_form_data(submission),
+        'conf_pk': conf_pk, 'sub_pk': sub_pk,
+    })
 
 
 @require_GET

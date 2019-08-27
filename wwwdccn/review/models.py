@@ -242,6 +242,5 @@ class Decision(Model):
             for field in fields:
                 if getattr(self, field) != getattr(old, field):
                     self.committed = False
-                    print('found changed field')
                     break
         super().save(*args, **kwargs)

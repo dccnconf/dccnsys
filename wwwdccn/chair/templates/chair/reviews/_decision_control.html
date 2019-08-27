@@ -68,10 +68,9 @@
 </div>
 {% endif %}
 <div class="d-flex mt-2 align-items-center">
-  <form action="{% url 'chair:review-decision-commit' conf_pk=conf_pk sub_pk=sub_pk %}" method="POST" class="mr-2"
-        novalidate>
+  <form action="{% url 'chair:review-decision-commit' conf_pk=conf_pk sub_pk=sub_pk %}" method="POST"
+        class="mr-2 decision-control-form" novalidate>
     {% csrf_token %}
-    <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
     <input class="btn btn-sm btn-outline-info {% if form_data.committed %}disabled{% endif %}" type="submit"
            value="Commit" {% if form_data.committed %}disabled{% endif %}>
   </form>
