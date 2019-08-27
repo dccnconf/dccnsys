@@ -28,6 +28,8 @@ urlpatterns = [
     path('<int:conf_pk>/submissions/<int:sub_pk>/messages/', submissions.emails, name='submission-messages'),
     path('<int:conf_pk>/submissions/<int:sub_pk>/reviews/assign/', submissions.assign_reviewer, name='assign-reviewer'),
     path('<int:conf_pk>/submissions/<int:sub_pk>/reviews/<int:rev_pk>/delete/', submissions.delete_review, name='delete-review'),
+    path('<int:conf_pk>/submissions/create/', submissions.create_submission, name='submission-create'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/delete/', submissions.delete_submission, name='submission-delete'),
     path('<int:conf_pk>/submissions/export/csv/', submissions.export_csv, name='export-submissions-csv'),
 
     #
