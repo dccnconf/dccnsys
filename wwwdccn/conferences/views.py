@@ -2,13 +2,15 @@ from django.http import Http404, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.views.decorators.http import require_POST, require_GET
 
 from conferences.decorators import chair_required
 from conferences.forms import ConferenceForm, SubmissionStageForm, \
     ReviewStageForm, ProceedingTypeForm, DeleteForm, SubmissionTypeForm, \
-    TopicCreateForm, TopicsReorderForm, TopicEditForm
-from conferences.models import Conference, ProceedingType, SubmissionType, Topic
+    TopicCreateForm, TopicsReorderForm, TopicEditForm, ProceedingVolumeForm
+from conferences.models import Conference, ProceedingType, SubmissionType, \
+    Topic, ProceedingVolume
 from submissions.models import Submission
 
 
@@ -149,7 +151,7 @@ def conference_edit(request, pk):
         'conference': conference,
         'form': form,
         'subtitle': 'Settings',
-        'title': f'Edit conference #{pk}',
+        'title': f'Edit conference #{pk}'
     })
 
 
@@ -224,9 +226,10 @@ def proceedings_create(request, pk):
 
 
 @chair_required
-def proceedings_update(request, pk, proc_pk):
+def proceeding_type_details(request, pk, proc_pk):
     proceedings = get_object_or_404(ProceedingType, pk=proc_pk)
     conference = proceedings.conference
+
     if conference.pk != pk:
         raise Http404
     if request.method == 'POST':
@@ -235,14 +238,16 @@ def proceedings_update(request, pk, proc_pk):
         if form.is_valid():
             form.save()
             messages.success(request, f'{proceedings.name} updated')
-            return redirect('conferences:details', pk=pk)
+            return redirect('conferences:proceedings-update',
+                            pk=pk, proc_pk=proc_pk)
     else:
         form = ProceedingTypeForm(instance=proceedings)
-    return render(request, 'conferences/form.html', {
+    return render(request, 'conferences/proceeding_type_details.html', {
         'conference': conference,
         'form': form,
         'subtitle': f'Edit proceedings',
         'title': f'{conference.short_name} Conference',
+        'proceeding_type': proceedings,
     })
 
 
@@ -254,6 +259,65 @@ def proceedings_delete(request, pk, proc_pk):
     form.save()
     messages.success(request, f'Deleted proceedings')
     return redirect('conferences:details', pk=pk)
+
+
+@chair_required
+def proceeding_volume_create(request, pk, proc_pk):
+    ptype = get_object_or_404(ProceedingType, pk=proc_pk)
+    if request.method == 'POST':
+        form = ProceedingVolumeForm(request.POST)
+        if form.is_valid():
+            volume = form.save(commit=False)
+            volume.type = ptype
+            volume.save()
+            messages.success(request, 'Volume was created')
+            return redirect('conferences:proceedings-update',
+                            pk=pk, proc_pk=proc_pk)
+    else:
+        form = ProceedingVolumeForm()
+    return render(request, 'conferences/form.html', {
+        'conference': ptype.conference,
+        'form': form,
+        'subtitle': 'New volume',
+        'title': f'Conference #{ptype.conference_id}',
+    })
+
+
+@chair_required
+def proceeding_volume_details(request, pk, vol_pk):
+    volume = get_object_or_404(ProceedingVolume, pk=vol_pk)
+    ptype = volume.type
+
+    if ptype.conference_id != pk:
+        raise Http404
+
+    if request.method == 'POST':
+        form = ProceedingVolumeForm(request.POST, instance=volume)
+        if form.is_valid():
+            volume = form.save(commit=False)
+            volume.save()
+            messages.success(request, 'Volume was updated')
+            return redirect('conferences:volume-details', pk=pk, vol_pk=vol_pk)
+    else:
+        form = ProceedingVolumeForm(instance=volume)
+    return render(request, 'conferences/form.html', {
+        'conference': ptype.conference,
+        'form': form,
+        'subtitle': 'Edit volume #{}'.format(vol_pk),
+        'title': f'Conference #{ptype.conference_id}',
+        'back_url': reverse('conferences:proceedings-update',
+                            kwargs={'pk': pk, 'proc_pk': ptype.pk}),
+    })
+
+
+@chair_required
+@require_POST
+def proceeding_volume_delete(request, pk, vol_pk):
+    volume = get_object_or_404(ProceedingVolume, pk=vol_pk)
+    proc_pk = volume.type_id
+    volume.delete()
+    messages.warning(request, 'Deleted volume')
+    return redirect('conferences:proceedings-update', pk=pk, proc_pk=proc_pk)
 
 
 @chair_required
@@ -290,7 +354,7 @@ def submission_type_update(request, pk, sub_pk):
         if form.is_valid():
             form.save()
             messages.success(request, f'{stype.name} updated')
-            return redirect('conferences:details', pk=pk)
+            return redirect('conferences:stype-update', pk=pk, sub_pk=sub_pk)
     else:
         form = SubmissionTypeForm(instance=stype)
     return render(request, 'conferences/form.html', {

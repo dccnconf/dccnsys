@@ -32,14 +32,16 @@
   <div class="dccn-panel-toolbar mt-2">
     {% block toolbar %}
     {% endblock %}
-    <p class="dccn-text-normal-light mb-3 mt-0">
+    <p class="dccn-text-smaller-light mb-1 mt-0">
       {{ num_items }}&nbsp;items found{% if num_items > 0 %}, showing from {{ first_index }} to {{ last_index }}{% endif %}
     </p>
     <div class="row">
-      <a href="{{ prev_page_url }}" class="btn btn-outline-secondary mr-auto {% if not prev_page_url %}disabled{% endif %}">
+      <a href="{{ prev_page_url }}"
+         class="btn btn-outline-secondary btn-sm mr-auto {% if not prev_page_url %}disabled{% endif %}">
         <i class="fas fa-chevron-left"></i>
       </a>
-      <a href="{{ next_page_url }}"  class="btn btn-outline-secondary ml-auto {% if not next_page_url %}disabled{% endif %}">
+      <a href="{{ next_page_url }}"
+         class="btn btn-outline-secondary btn-sm ml-auto {% if not next_page_url %}disabled{% endif %}">
         <i class="fas fa-chevron-right"></i>
       </a>
     </div>

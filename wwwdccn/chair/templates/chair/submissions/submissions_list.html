@@ -49,6 +49,14 @@
   <li class="breadcrumb-item active">submissions</li>
 {% endblock %}
 
+{% block toolbar %}
+  <div class="d-flex my-3 pb-3 border-bottom">
+    <form action="{% url 'chair:submission-create' conf_pk=conference.pk %}" method="POST">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Create</button>
+    </form>
+  </div>
+{% endblock %}
 
 {#---------------------------------------------------------------------------#}
 {# List view content                                                         #}

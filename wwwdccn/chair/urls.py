@@ -28,6 +28,8 @@ urlpatterns = [
     path('<int:conf_pk>/submissions/<int:sub_pk>/messages/', submissions.emails, name='submission-messages'),
     path('<int:conf_pk>/submissions/<int:sub_pk>/reviews/assign/', submissions.assign_reviewer, name='assign-reviewer'),
     path('<int:conf_pk>/submissions/<int:sub_pk>/reviews/<int:rev_pk>/delete/', submissions.delete_review, name='delete-review'),
+    path('<int:conf_pk>/submissions/create/', submissions.create_submission, name='submission-create'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/delete/', submissions.delete_submission, name='submission-delete'),
     path('<int:conf_pk>/submissions/export/csv/', submissions.export_csv, name='export-submissions-csv'),
 
     #
@@ -47,4 +49,6 @@ urlpatterns = [
     path('<int:conf_pk>/reviews/', reviews.list_submissions, name='reviews'),
     path('<int:conf_pk>/reviews/pages/<int:page>/', reviews.list_submissions, name='reviews-pages'),
     path('<int:conf_pk>/reviews/export/docx/', reviews.export_doc, name='export-reviews-doc'),
+    path('<int:conf_pk>/reviews/<int:sub_pk>/decision_control_panel/', reviews.decision_control_panel, name='review-decision-control'),
+    path('<int:conf_pk>/reviews/<int:sub_pk>/commit_decision/', reviews.commit_decision, name='review-decision-commit'),
 ]

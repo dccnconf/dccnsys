@@ -1,0 +1,35 @@
+{% extends 'conferences/form.html' %}
+
+{% block additionalElements %}
+{# VOLUMES #}
+  <h3>Volumes</h3>
+
+  {% with volumes=proceeding_type.volumes.all %}
+    {% if volumes %}
+      <ol>
+        {% for volume in volumes %}
+          <li class="dccn-text-small">
+            <div class="d-flex my-2 p-2 align-items-center">
+              <b>{{ volume.name }}</b>: {{ volume.description }}
+              <a href="{% url 'conferences:volume-details' pk=conference.pk vol_pk=volume.pk %}"
+                 class="btn btn-sm btn-outline-success ml-auto mr-1">
+                <i class="fas fa-edit"></i>
+              </a>
+              <form action="{% url 'conferences:volume-delete' pk=conference.pk vol_pk=volume.pk %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-times"></i></button>
+              </form>
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="dccn-text-0 text-info">No volumes defined yet.</p>
+    {% endif %}
+    <div class="d-flex mt-3">
+      <a class="btn btn-sm btn-outline-success" href="{% url 'conferences:volume-create' pk=conference.pk proc_pk=proceeding_type.pk %}">
+        <i class="fas fa-plus"></i> Add
+      </a>
+    </div>
+  {% endwith %}
+{% endblock %}

@@ -4,6 +4,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from collections import namedtuple
 
+from markdown import markdown
+
 from chair_mail.utility import get_absolute_url, markdownify_link, \
     markdownify_list
 from review.models import Review
@@ -295,14 +297,36 @@ SUB_ABSTRACT = Var('paper_abstract', _('paper abstract'))
 SUB_AUTHORS = Var('paper_authors', _('paper authors string'))
 SUB_URL = Var('paper_url', _('URL of the paper'))
 # TODO: add variables for review results
-
+SUB_REVIEW_SCORE = Var('paper_review_score', _('Paper average score'))
+SUB_REVIEWS_LIST = Var('paper_reviews_list', _('List of reviews with scores'))
+SUB_REVIEW_DECISION = Var('paper_review_decision', _('Review decision'))
+SUB_PROC_TYPE = Var('paper_proc_type', _('Proceedings for accepted papers'))
+SUB_VOLUME = Var('paper_volume', _('Volume for accepted papers'))
 
 SUBMISSION_VARS = tuple((var.name, var.description) for var in (
     SUB_ID, SUB_TITLE, SUB_ABSTRACT, SUB_AUTHORS, SUB_URL,
+    SUB_REVIEW_SCORE, SUB_REVIEWS_LIST, SUB_PROC_TYPE, SUB_VOLUME,
 ))
 
 
 def get_submission_context(submission):
+    reviews = submission.reviews.filter(submitted=True)
+    avg_score = '-' if reviews.count() == 0 else \
+        f'{sum(r.average_score() for r in reviews) / reviews.count():.1f}'
+    decision = submission.review_decision.first()
+
+    review_lines = []
+    for n, r in enumerate(reviews):
+        scores = [
+            f'Technical merit: **{r.technical_merit}**',
+            f'originality: **{r.originality}**',
+            f'relevance: **{r.relevance}**',
+            f'clarity: **{r.clarity}**'
+        ]
+        review_lines.append(
+            f'**Review #{n + 1}**: {", ".join(scores)}\n\n'
+            f'{r.details}')
+
     return {
         SUB_ID.name: submission.pk,
         SUB_TITLE.name: submission.title,
@@ -310,4 +334,11 @@ def get_submission_context(submission):
         SUB_AUTHORS.name: submission.get_authors_display(),
         SUB_URL.name: markdownify_link(get_absolute_url(
             reverse('submissions:overview', kwargs={'pk': submission.pk}))),
+        SUB_REVIEW_SCORE.name: avg_score,
+        SUB_REVIEWS_LIST.name: '\n\n'.join(review_lines),
+        SUB_REVIEW_DECISION.name: decision.decision if decision else '',
+        SUB_PROC_TYPE.name:
+            decision.proc_type.name if decision and decision.proc_type else '',
+        SUB_VOLUME.name:
+            decision.volume.name if decision and decision.volume else '',
     }

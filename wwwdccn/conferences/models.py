@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import ForeignKey, CASCADE, CharField, Model, TextField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
@@ -120,6 +121,12 @@ class ProceedingType(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ProceedingVolume(Model):
+    type = ForeignKey(ProceedingType, on_delete=CASCADE, related_name='volumes')
+    name = CharField(max_length=256, verbose_name=_('Short name'))
+    description = TextField(verbose_name=_('Description'))
 
 
 class SubmissionType(models.Model):

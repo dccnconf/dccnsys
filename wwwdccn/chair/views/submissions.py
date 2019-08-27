@@ -410,3 +410,22 @@ def export_csv(request, conf_pk):
         number += 1
 
     return response
+
+
+@require_POST
+def create_submission(request, conf_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    submission = Submission.objects.create(conference=conference)
+    return redirect('chair:submission-metadata', conf_pk=conf_pk,
+                    sub_pk=submission.pk)
+
+
+@require_POST
+def delete_submission(request, conf_pk, sub_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    submission = get_object_or_404(Submission, pk=sub_pk)
+    submission.delete()
+    messages.warning(request, f'Submission #{sub_pk} deleted')
+    return redirect('chair:submissions', conf_pk=conf_pk)

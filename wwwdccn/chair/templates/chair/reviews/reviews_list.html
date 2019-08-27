@@ -33,6 +33,7 @@
 {% load gears_extras %}
 {% load bootstrap4 %}
 {% load submission_extras %}
+{% load static %}
 
 {#---------------------------------------------------------------------------#}
 {# Navigation and breadcrumbs                                                #}
@@ -63,100 +64,9 @@
 {#---------------------------------------------------------------------------#}
 {% block listViewContent %}
 {% for item in items %}
-<div class="dccn-feed-item pb-3">
-
-  {# 1. Top row: status and actions #}
-  <div class="dccn-feed-item-row">
-    {# 1.1. Submission status and warnings indicator #}
-    <div class="dccn-feed-item-label dccn-feed-item-status">
-      <i class="fas fa-circle {{ item|status_class }}"></i> {{ item.status_display }}
-    </div>
-    {% if item.warnings %}
-      <div class="dccn-feed-item-label mx-2" data-toggle="tooltip"
-           data-placement="bottom" data-html="true"
-           title="<ul class='list-unstyled'>{% for warning in item.warnings %}<li class='text-left dccn-text-smallest'>{{ warning }}{% if forloop.last %}.{% else %};{% endif %}</li>
-{% endfor %}</ul>">
-        <i class="fas fa-exclamation-triangle text-warning"></i> {{ item.warnings|length }}
-      </div>
-    {% else %}
-      <div class="dccn-feed-item-label mx-2">
-        <i class="{{ item.reviews.icon_class }} text-{{ item.reviews.score_color }}"></i>
-      </div>
-    {% endif %}
-
-
-    {# 1.2. Actions modifying submission state #}
-    <div class="ml-auto"></div>
-    {% if item.actions.review %}
-      <form action="{% url 'chair:start-review' conf_pk=conference.pk sub_pk=item.pk %}?next={{ request.get_full_path|urlencode }}"
-            method="POST" >
-        {% csrf_token %}
-        <button type="submit" class="btn btn-sm btn-outline-info"><i class="fas fa-check"></i> Start review</button>
-      </form>
-    {% endif %}
-    {% if item.actions.revoke_review %}
-      <form action="{% url 'chair:revoke-review' conf_pk=conference.pk sub_pk=item.pk %}?next={{ request.get_full_path|urlencode }}"
-            method="POST" >
-        {% csrf_token %}
-        <button type="submit" class="btn btn-sm btn-outline-warning"><i class="fas fa-times"></i> Revoke review</button>
-      </form>
-    {% endif %}
+  <div class="dccn-feed-item pb-3">
+    {% include 'chair/reviews/_submission_feed_item.html' with submission=item conference=conference %}
   </div>
-
-  {# 2. Submission body: title and authors #}
-  <div class="row">
-    <div class="col-6 border-right">
-      <p class="mb-1">
-        <a href="{% url 'chair:submission-overview' conf_pk=conference.pk sub_pk=item.pk %}"
-           class="dccn-link dccn-text-4 font-weight-normal">
-          {% if item.title %}{{ item.title }}{% else %}<span class="bg-warning">No Title</span>{% endif %}
-        </a>
-      </p>
-
-      <div>
-        <p class="dccn-text-0">
-          {% for author in item.authors %}
-            <span>
-              <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=author.user_pk %}?next={{ request.get_full_path|urlencode }}"
-                 class="dccn-link dccn-text-small font-weight-light">
-                {{ author.name }}</a>{% if not forloop.last %},&nbsp;{% endif %}
-            </span>
-          {% endfor %}
-        </p>
-      </div>
-    </div>
-    <div class="col-6">
-      <div class="ml-3">
-        <p class="dccn-text-larger text-{{ item.reviews.score_color }} font-italic">{{ item.reviews.score_str }}</p>
-        <p class="dccn-text-0 font-italic">{% for score in item.reviews.scores_list_str %}{{ score }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="mt-2"></div>
-
-  {# 3. Bottom row: view, delete, etc. - actions those do not depend on current status and refs #}
-  <div class="dccn-feed-item-footer mt-4">
-    <a href="{% url 'chair:submission-overview' conf_pk=conference.pk sub_pk=item.pk %}" class="dccn-feed-item-link">
-      <i class="fas fa-align-justify"></i> Details
-    </a>
-    <form action="{% url 'chair_mail:compose-submission' conf_pk=conference.pk %}" method="GET" class="mr-2">
-      <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
-      <input type="hidden" name="objects" value="{{ item.pk }}">
-      <button class="btn btn-link dccn-feed-item-link">
-        <i class="fas fa-envelope"></i> Contact
-      </button>
-    </form>
-    {% if item.actions.assign_reviewers %}
-      <a href="{% url 'chair:submission-reviewers' conf_pk=conference.pk sub_pk=item.pk %}" class="dccn-feed-item-link">
-        <i class="fas fa-glasses"></i> Select reviewers (<span class="{% if item.num_reviews < item.num_reviews_required %}text-danger{% endif %}">{{ item.num_reviews }}/{{ item.num_reviews_required }}</span>)
-      </a>
-    {% endif  %}
-
-    <div class="dccn-feed-item-id ml-auto">#{{ item.pk }}</div>
-  </div>
-
-</div>
 {% endfor %}
 {% endblock %}
 
@@ -164,6 +74,7 @@
 {#---------------------------------------------------------------------------#}
 {# Script                                                                    #}
 {#---------------------------------------------------------------------------#}
-{% block listItemScript %}
+{% block listPageScript %}
 {#  Put additional JS script here if needed #}
+  <script src="{% static 'chair/js/review_decision_control.js' %}"></script>
 {% endblock %}

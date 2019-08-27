@@ -77,6 +77,35 @@
         <button type="submit" class="btn btn-sm btn-outline-warning"><i class="fas fa-times"></i> Revoke review</button>
       </form>
     {% endif %}
+    <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#confirmDeleteModal">Delete submission</button>
+  </div>
+
+  {# CONFIRM DELETE MODAL DIALOG #}
+  <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-light">
+          <h5 class="modal-title" id="exampleModalLabel">Confirm submission delete</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body d-flex">
+          <i class="fas fa-exclamation-triangle fa-5x text-danger mr-4"></i>
+          <div class="dccn-text-small">
+            <p class="mb-1">Are you sure you want to delete submission #{{ submission.pk }} "{{ submission.title }}"?</p>
+            <p>If you proceed, reverting back will be impossible.</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Close</button>
+          <form action="{% url 'chair:submission-delete' conf_pk=conference.pk sub_pk=submission.pk %}" method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 {% endblock %}
 

@@ -126,7 +126,7 @@
         <!-- Proceedings Options section -->
 
         <div class="d-flex align-items-center bg-secondary text-light px-2 py-1 mt-4 mb-2">
-          <h3 class="dccn-title p-0 m-0">Proceedings Volumes</h3>
+          <h3 class="dccn-title p-0 m-0">Proceeding Types and Volumes</h3>
 
           {# TODO: change the following check to filter whether user is able to edit conference #}
           {% if user in conference.chairs.all %}
@@ -161,6 +161,12 @@
                   </div>
                 {% endif %}
                 <p class="dccn-text-small-light mt-3 text-justify">{{ proc.description }}</p>
+                <p class="dccn-text-small font-weight-bold mt-3">Volumes:</p>
+                <ol>
+                  {% for volume in proc.volumes.all %}
+                    <li class="dccn-text-smaller"><b>{{ volume.name }}</b> - {{ volume.description }}</li>
+                  {% endfor %}
+                </ol>
               </div>
               {# TODO: change the following check to filter whether user is able to edit conference #}
               {% if user in conference.chairs.all %}
@@ -241,13 +247,13 @@
                 <p class="dccn-text-small-light mt-1">
                   {% if st.blind_review %}Blind, {% endif %}{{ st.num_reviews }} reviews per submission
                 </p>
-                <h5 class="dccn-text-1 mt-3">Volumes:</h5>
-                <ul class="my-0">
+                <h5 class="dccn-text-1 mt-3">Possible proceeding types:</h5>
+                <ul class="mt-2">
                   {% for volume in st.possible_proceedings.all %}
                     <li class="dccn-text-small-light my-0">{{ volume }}</li>
                   {% endfor %}
                 </ul>
-                <p class="dccn-text-small-light text-muted mt-1">
+                <p class="dccn-text-small-light text-muted mt-3">
                   NOTE: acceptance to any volume depends on the score received from the reviewers.
                 </p>
               </div>

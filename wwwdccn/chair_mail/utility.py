@@ -118,6 +118,10 @@ def send_submission_status_notification_message(submission):
         name = SystemNotification.ASSIGN_STATUS_SUBMIT
     elif status == Submission.UNDER_REVIEW:
         name = SystemNotification.ASSIGN_STATUS_REVIEW
+    elif status == Submission.ACCEPTED:
+        name = SystemNotification.ASSIGN_STATUS_ACCEPT
+    elif status == Submission.REJECTED:
+        name = SystemNotification.ASSIGN_STATUS_REJECT
     else:
         return
     send_notification_message(submission.conference, name, [submission])
