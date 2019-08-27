@@ -58,84 +58,9 @@
       </div>
     </div>
     <div class="col-12 col-sm-6 col-md-4 col-lg-4 mt-3 mt-md-0">
-      {% with form_data=submission.decision_form_data %}
       <div class="ml-3">
-        <form action="" class="mx-3" name="updateDecisionForm_{{ sub_pk }}" id="updateDecisionForm_{{ sub_pk }}" novalidate>
-          <input type="hidden" name="decision" value="{{ form_data.decision.value }}">
-          <input type="hidden" name="proc_type" value="{{ form_data.proc_type.value }}">
-          <input type="hidden" name="volume" value="{{ form_data.volume.value }}">
-        </form>
-        {% if not form_data.decision.hidden %}
-        <div>
-          <b>Decision: </b>
-          <span class="dropdown-left">
-            <a href="#" data-toggle="dropdown" class="dccn-link font-weight-bold text-info">{{ form_data.decision.display }}</a>
-            <span class="dropdown-menu">
-              {% for option in form_data.decision.options %}
-                <button class="dropdown-item" data-form-id="#updateDecisionForm_{{ sub_pk }}" data-name="decision"
-                        data-value="{{ option.0 }}">
-                  {{ option.1 }}
-                </button>
-              {% endfor %}
-            </span>
-          </span>
-        </div>
-        {% endif %}
-        {% if not form_data.proc_type.hidden %}
-        <div class="mt-1">
-          <b>Proceedings: </b>
-          <span class="dropdown">
-            <a href="#" data-toggle="dropdown" class="dccn-link font-weight-bold text-info">{{ form_data.proc_type.display }}</a>
-            <span class="dropdown-menu">
-              {% for option in form_data.proc_type.options %}
-                <button class="dropdown-item" data-form-id="#updateDecisionForm_{{ sub_pk }}" data-name="proc_type"
-                        data-value="{{ option.0 }}">{{ option.1 }}</button>
-              {% endfor %}
-            </span>
-          </span>
-        </div>
-        {% endif %}
-        {% if not form_data.volume.hidden %}
-        <div class="mt-1">
-          <b>Volume: </b>
-          <span class="dropdown">
-            <a href="#" data-toggle="dropdown" class="dccn-link font-weight-bold text-info">{{ form_data.volume.display }}</a>
-            <span class="dropdown-menu">
-              {% for option in form_data.volume.options %}
-                <button class="dropdown-item" data-form-id="#updateDecisionForm_{{ sub_pk }}" data-name="volume"
-                        data-value="{{ option.0 }}">{{ option.1 }}</button>
-              {% endfor %}
-            </span>
-          </span>
-        </div>
-        {% endif %}
-        <div class="d-flex mt-2 align-items-center">
-          <button class="btn btn-sm btn-outline-info mr-2" data-commit-url="">Commit</button>
-          <p class="font-weight-bold my-0 ml-auto text-warning-15">
-            <i class="fas fa-exclamation-circle"></i> changes not committed
-          </p>
-        </div>
+        {% include 'chair/reviews/_decision_control.html' with form_data=submission.decision_form_data conf_pk=conference.pk sub_pk=submission.pk %}
       </div>
-      {% endwith %}
-{#        <div class="input-group">#}
-{#          <select name="decision_{{ sub_pk }}" id="id_decision_{{ sub_pk }}" class="custom-select">#}
-{#            <option value="UNDEFINED" selected>Undefined</option>#}
-{#            <option value="ACCEPT">Accept</option>#}
-{#            <option value="REJECT">Reject</option>#}
-{#          </select>#}
-{#        </div>#}
-{#        <div class="input-group">#}
-{#          <select name="proc_{{ sub_pk }}" id="id_proc_{{ sub_pk }}" class="custom-select">#}
-{#            <option value="1">RSCI proceedings</option>#}
-{#            <option value="2" selected>Springer proceedings</option>#}
-{#          </select>#}
-{#        </div>#}
-{#        <div class="input-group">#}
-{#          <select name="volume_{{ sub_pk }}" id="id_volume_{{ sub_pk }}" class="custom-select">#}
-{#            <option value="1" selected>CCIS</option>#}
-{#            <option value="2">LNCS</option>#}
-{#          </select>#}
-{#        </div>#}
     </div>
   </div>
 

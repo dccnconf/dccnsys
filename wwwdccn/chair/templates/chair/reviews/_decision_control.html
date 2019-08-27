@@ -1,0 +1,67 @@
+{###########################################################################}
+{# Decision control panel.                                                 #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `conf_pk`                                                             #}
+{# - `sub_pk`                                                              #}
+{# - `form_data`: form data object for decision control                    #}
+{###########################################################################}
+<form action="{% url 'chair:review-decision-control' conf_pk=conf_pk sub_pk=sub_pk %}" method="POST"
+      id="updateDecisionForm_{{ sub_pk }}" class="decision-control-form" novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="decision" value="{{ form_data.decision.value }}">
+  <input type="hidden" name="proc_type" value="{{ form_data.proc_type.value }}">
+  <input type="hidden" name="volume" value="{{ form_data.volume.value }}">
+</form>
+{% if not form_data.decision.hidden %}
+<div>
+  <b>Decision: </b>
+  <span class="dropdown-left">
+    <a href="#" data-toggle="dropdown" class="dccn-link font-weight-bold text-info">{{ form_data.decision.display }}</a>
+    <span class="dropdown-menu">
+      {% for option in form_data.decision.options %}
+        <button class="dropdown-item {% if form_data.decision.value == option.0 %}font-weight-bold{% endif %}"
+                data-form-id="#updateDecisionForm_{{ sub_pk }}" data-name="decision" data-value="{{ option.0 }}">
+          {{ option.1 }}
+        </button>
+      {% endfor %}
+    </span>
+  </span>
+</div>
+{% endif %}
+{% if not form_data.proc_type.hidden %}
+<div class="mt-1">
+  <b>Proceedings: </b>
+  <span class="dropdown">
+    <a href="#" data-toggle="dropdown" class="dccn-link font-weight-bold text-info">{{ form_data.proc_type.display }}</a>
+    <span class="dropdown-menu">
+      {% for option in form_data.proc_type.options %}
+        <button class="dropdown-item" data-form-id="#updateDecisionForm_{{ sub_pk }}" data-name="proc_type"
+                data-value="{{ option.0 }}">{{ option.1 }}</button>
+      {% endfor %}
+    </span>
+  </span>
+</div>
+{% endif %}
+{% if not form_data.volume.hidden %}
+<div class="mt-1">
+  <b>Volume: </b>
+  <span class="dropdown">
+    <a href="#" data-toggle="dropdown" class="dccn-link font-weight-bold text-info">{{ form_data.volume.display }}</a>
+    <span class="dropdown-menu">
+      {% for option in form_data.volume.options %}
+        <button class="dropdown-item" data-form-id="#updateDecisionForm_{{ sub_pk }}" data-name="volume"
+                data-value="{{ option.0 }}">{{ option.1 }}</button>
+      {% endfor %}
+    </span>
+  </span>
+</div>
+{% endif %}
+<div class="d-flex mt-2 align-items-center">
+  <button class="btn btn-sm btn-outline-info mr-2 {% if form_data.committed %}disabled{% endif %}" data-commit-url="">Commit</button>
+  {% if not form_data.committed %}
+  <p class="font-weight-bold my-0 ml-auto text-warning-15">
+    <i class="fas fa-exclamation-circle"></i> changes not committed
+  </p>
+  {% endif %}
+</div>

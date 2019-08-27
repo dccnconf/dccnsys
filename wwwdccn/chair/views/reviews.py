@@ -10,6 +10,7 @@ from docx.shared import Cm
 
 from chair.utility import validate_chair_access, build_paged_view_context
 from conferences.models import Conference
+from review.forms import UpdateDecisionForm
 from review.models import Decision
 from submissions.models import Submission
 from users.models import User
@@ -131,6 +132,54 @@ def get_review_stats(conference, stype=None):
     return submissions, rev_stats, stats
 
 
+def _get_decision_form_data(submission):
+    decision = submission.review_decision.first()
+    proc_type = decision.proc_type if decision else None
+    volume = decision.volume if decision else None
+    default_option = [('', 'Not selected')]
+
+    # 1) Filling data_decision value and display:
+    data_decision = {'hidden': False, 'options': Decision.DECISION_CHOICES}
+    decision_value = Decision.UNDEFINED if not decision else decision.decision
+    data_decision['value'] = decision_value
+    data_decision['display'] = [
+        opt[1] for opt in Decision.DECISION_CHOICES if opt[0] == decision_value
+    ][0]
+
+    # 2) Fill proceedings type if possible:
+    stype = submission.stype
+    data_proc_type = {
+        'hidden': decision_value != Decision.ACCEPT,
+        'value': '', 'display': default_option[0][-1],
+    }
+    if not data_proc_type['hidden']:
+        data_proc_type['options'] = default_option + [
+            (pt.pk, pt.name) for pt in stype.possible_proceedings.all()]
+        if proc_type:
+            data_proc_type.update({
+                'value': proc_type.pk, 'display': proc_type.name
+            })
+
+    # 3) Fill volumes if possible:
+    data_volume = {
+        'hidden': data_proc_type['value'] == '',
+        'value': '', 'display': default_option[0][-1],
+    }
+    if not data_volume['hidden']:
+        data_volume['options'] = default_option + [
+            (vol.pk, vol.name) for vol in proc_type.volumes.all()]
+        if volume:
+            data_volume.update({'value': volume.pk, 'display': volume.name})
+
+    # 4) Collect everything and output:
+    return {
+        'decision': data_decision,
+        'proc_type': data_proc_type,
+        'volume': data_volume,
+        'committed': decision.committed if decision else True
+    }
+
+
 @require_GET
 def list_submissions(request, conf_pk, page=1):
     conference = get_object_or_404(Conference, pk=conf_pk)
@@ -182,26 +231,7 @@ def list_submissions(request, conf_pk, page=1):
         'status_display': sub.get_status_display(),
         'reviews': review_stats[sub],
         'warnings': warnings[sub],
-        'decision_form_data': {
-            'decision': {
-                'options': Decision.DECISION_CHOICES,
-                'display': Decision.ACCEPT,
-                'value': Decision.ACCEPT,
-                'hidden': False,
-            },
-            'proc_type': {
-                'options': [('', 'Not selected')] + [(ptype.pk, ptype.name) for ptype in sub.stype.possible_proceedings.all()],
-                'display': sub.stype.possible_proceedings.first().name,
-                'value': sub.stype.possible_proceedings.first().pk,
-                'hidden': False,
-            },
-            'volume': {
-                'options': [('', 'Not selected')] + [(vol.pk, vol.name) for vol in sub.stype.possible_proceedings.first().volumes.all()],
-                'display': sub.stype.possible_proceedings.first().volumes.first().name,
-                'value': sub.stype.possible_proceedings.first().volumes.first().pk,
-                'hidden': False,
-            }
-        }
+        'decision_form_data': _get_decision_form_data(sub),
     } for sub in submissions]
 
     def get_order_key(item):
@@ -223,6 +253,23 @@ def list_submissions(request, conf_pk, page=1):
     })
     return render(request, 'chair/reviews/reviews_list.html',
                   context=context)
+
+
+def decision_control_panel(request, conf_pk, sub_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    submission = Submission.objects.get(pk=sub_pk)
+    decision = submission.review_decision.first()
+    if not decision:
+        decision = Decision.objects.create(submission=submission)
+    form = UpdateDecisionForm(request.POST or None, instance=decision)
+    if request.method == 'POST' and form.is_valid():
+        print('form is valid!')
+        form.save()
+    return render(request, 'chair/reviews/_decision_control.html', context={
+        'form_data': _get_decision_form_data(submission),
+        'conf_pk': conf_pk, 'sub_pk': sub_pk,
+    })
 
 
 @require_GET

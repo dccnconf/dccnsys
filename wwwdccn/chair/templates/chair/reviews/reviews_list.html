@@ -33,6 +33,7 @@
 {% load gears_extras %}
 {% load bootstrap4 %}
 {% load submission_extras %}
+{% load static %}
 
 {#---------------------------------------------------------------------------#}
 {# Navigation and breadcrumbs                                                #}
@@ -73,6 +74,7 @@
 {#---------------------------------------------------------------------------#}
 {# Script                                                                    #}
 {#---------------------------------------------------------------------------#}
-{% block listItemScript %}
+{% block listPageScript %}
 {#  Put additional JS script here if needed #}
+  <script src="{% static 'chair/js/review_decision_control.js' %}"></script>
 {% endblock %}
