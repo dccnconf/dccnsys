@@ -6,6 +6,7 @@
 {# - `sub_pk`                                                              #}
 {# - `form_data`: form data object for decision control                    #}
 {###########################################################################}
+{% load review_extras %}
 <form action="{% url 'chair:review-decision-control' conf_pk=conf_pk sub_pk=sub_pk %}" method="POST"
       id="updateDecisionForm_{{ sub_pk }}" class="decision-control-form" novalidate>
   {% csrf_token %}
@@ -17,7 +18,10 @@
 <div>
   <b>Decision: </b>
   <span class="dropdown-left">
-    <a href="#" data-toggle="dropdown" class="dccn-link font-weight-bold text-info">{{ form_data.decision.display }}</a>
+    <a href="#" data-toggle="dropdown"
+       class="dccn-link font-weight-normal text-{{ form_data.decision.value|decision_color_class }}">
+      {{ form_data.decision.display }} <i class="{{ form_data.decision.value|decision_icon_class }}"></i>
+    </a>
     <span class="dropdown-menu">
       {% for option in form_data.decision.options %}
         <button class="dropdown-item {% if form_data.decision.value == option.0 %}font-weight-bold{% endif %}"
@@ -33,7 +37,10 @@
 <div class="mt-1">
   <b>Proceedings: </b>
   <span class="dropdown">
-    <a href="#" data-toggle="dropdown" class="dccn-link font-weight-bold text-info">{{ form_data.proc_type.display }}</a>
+    <a href="#" data-toggle="dropdown"
+       class="dccn-link font-weight-normal text-{{ form_data.proc_type.value|decision_color_class }}">
+      {{ form_data.proc_type.display }}
+    </a>
     <span class="dropdown-menu">
       {% for option in form_data.proc_type.options %}
         <button class="dropdown-item" data-form-id="#updateDecisionForm_{{ sub_pk }}" data-name="proc_type"
@@ -47,7 +54,10 @@
 <div class="mt-1">
   <b>Volume: </b>
   <span class="dropdown">
-    <a href="#" data-toggle="dropdown" class="dccn-link font-weight-bold text-info">{{ form_data.volume.display }}</a>
+    <a href="#" data-toggle="dropdown"
+       class="dccn-link font-weight-normal text-{{ form_data.volume.value|decision_color_class }}">
+      {{ form_data.volume.display }}
+    </a>
     <span class="dropdown-menu">
       {% for option in form_data.volume.options %}
         <button class="dropdown-item" data-form-id="#updateDecisionForm_{{ sub_pk }}" data-name="volume"
