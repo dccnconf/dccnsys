@@ -1,3 +1,6 @@
+from review.models import ReviewStats
+
+
 def count_required_reviews(submission, cached_stypes=None):
     """Return the number of required reviews for the submission.
     If `cached_stypes` provided, it should contain a `stype.pk -> stype`
@@ -23,8 +26,20 @@ def review_finished(submission, cached_stypes=None):
     :param cached_stypes: optional mapping `stype.pk -> stype`
     :return `True` if the number of submitted reviews is equal to the required
     """
-    return (submission.reviews.filter(submitted=True).count() ==
+    return (submission.reviews.filter(submitted=True).count() >=
             count_required_reviews(submission, cached_stypes))
+
+
+def count_missing_reviews(submission, cached_stypes=None):
+    """Get the number of unfinished or unassigned reviews.
+
+    :param submission: `Submission` instance
+    :param cached_stypes: optional mapping `stype.pk -> stype`
+    :return number of missing reviews.
+    """
+    n = (count_required_reviews(submission, cached_stypes) -
+         submission.reviews.filter(submitted=True).count())
+    return max(n, 0)
 
 
 def get_average_score(obj):
@@ -53,3 +68,29 @@ def get_average_score(obj):
         # and estimate average score on the scores of parts
         scores = [score for score in scores if score > 0]
         return sum(scores) / len(scores) if scores else 0.0
+
+
+EXCELLENT_QUALITY = 'excellent'
+GOOD_QUALITY = 'good'
+AVERAGE_QUALITY = 'average'
+POOR_QUALITY = 'poor'
+UNKNOWN_QUALITY = ''
+
+
+def qualify_score(score, stats=None, conference=None):
+    if not stats:
+        stats, _ = ReviewStats.objects.get_or_create(conference=conference)
+    if 0 < score < stats.q1_score:
+        return POOR_QUALITY
+    if 0 < score < stats.median_score:
+        return AVERAGE_QUALITY
+    if 0 < score < stats.q3_score:
+        return GOOD_QUALITY
+    if score >= stats.q3_score:
+        return EXCELLENT_QUALITY
+    return UNKNOWN_QUALITY
+
+
+def get_quality(submission, stats=None):
+    score = get_average_score(submission)
+    return qualify_score(score, stats=stats, conference=submission.conference)

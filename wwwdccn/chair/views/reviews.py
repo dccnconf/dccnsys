@@ -1,133 +1,55 @@
-import statistics
-
 from django.http import HttpResponse
 from django.utils.datetime_safe import datetime
 from docx import Document
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET, require_POST
 from docx.enum.table import WD_ROW_HEIGHT_RULE
 from docx.shared import Cm
 
 from chair.utility import validate_chair_access, build_paged_view_context
-from conferences.models import Conference, SubmissionType
+from conferences.models import Conference
 from review.forms import UpdateDecisionForm
-from review.models import Decision
-from review.utilities import count_required_reviews
+from review.models import Decision, ReviewStats
+from review.utilities import get_average_score, qualify_score, \
+    count_required_reviews, UNKNOWN_QUALITY, count_missing_reviews
 from submissions.models import Submission
 from users.models import User
 
-import logging
-logger = logging.getLogger(__name__)
 
-QUALITY_COLOR = {
-    'excellent': 'success',
-    'good': 'info',
-    'average': 'warning-13',
-    'poor': 'danger',
-    '?': 'danger',
-}
+def _render_feed_item(request, submission, conference):
+    stats, _ = ReviewStats.objects.get_or_create(conference=conference)
 
-QUALITY_ICON_CLASS = {
-    'excellent': 'far fa-grin-stars',
-    'good': 'far fa-smile',
-    'average': 'far fa-meh',
-    'poor': 'far fa-frown',
-    '?': 'fas fa-question',
-}
+    # Fill reviews data - a list of scores with data, and warnings:
+    reviews_data = []
+    num_incomplete, num_missing = 0, 0
+    for review in submission.reviews.all():
+        score = review.average_score()
+        quality = qualify_score(score, stats=stats)
+        reviews_data.append({
+            'quality': quality,
+            'score': f'{score:.1f}' if score > 0 else '?',
+        })
+        if score == 0:
+            num_incomplete += 1
+    num_required = count_required_reviews(submission)
+    if num_required > len(reviews_data):
+        num_missing = num_required - len(reviews_data)
+        for _ in range(num_required - len(reviews_data)):
+            reviews_data.append({'quality': UNKNOWN_QUALITY, 'score': '-'})
 
+    warnings = []
+    if num_incomplete > 0:
+        warnings.append(f'{num_incomplete} reviews are not finished')
+    if num_missing > 0:
+        warnings.append(f'{num_missing} reviews are not assigned')
 
-def get_review_stats(conference, stype=None):
-    submissions = conference.submission_set.exclude(status=Submission.SUBMITTED)
-    stype_cache = {
-        stype.pk: stype
-        for stype in SubmissionType.objects.filter(conference=conference)
-    }
-    if stype is not None:
-        submissions = submissions.filter(stype=stype)
-
-    reviews = {sub: sub.reviews.all() for sub in submissions}
-
-    rev_stats = {
-        sub: {
-            'num_required': count_required_reviews(sub, stype_cache),
-            'num_assigned': reviews[sub].count(),
-        } for sub in submissions
-    }
-
-    all_scores = []
-    for sub in submissions:
-        record = rev_stats[sub]
-        assigned = reviews[sub]
-        finished = assigned.filter(submitted=True)
-        num_finished = finished.count()
-        scores = [r.average_score() if r.submitted else 0 for r in assigned]
-
-        record['assigned_reviews'] = assigned
-        record['finished_reviews'] = finished
-        record['num_finished'] = num_finished
-        record['complete'] = num_finished >= record['num_required']
-        record['scores_list'] = scores
-
-        if record['complete']:
-            record['score'] = sum(x for x in scores) / len(scores)
-            all_scores.append(record['score'])
-        else:
-            record['score'] = 0
-
-    #
-    # Estimate statistics:
-    #
-    if all_scores:
-        stats = {
-            'average': statistics.mean(all_scores),
-            'median': statistics.median(all_scores),
-        }
-    else:
-        stats = {'average': 0, 'median': 0}
-    upper_median_scores = [sc for sc in all_scores if sc >= stats['median']]
-    lower_median_scores = [sc for sc in all_scores if sc < stats['median']]
-    if upper_median_scores:
-        stats['hq'] = statistics.median(upper_median_scores)
-    else:
-        stats['hq'] = stats['median']
-    if lower_median_scores:
-        stats['lq'] = statistics.median(lower_median_scores)
-    else:
-        stats['lq'] = stats['median']
-
-    #
-    # Compute incomplete and not assigned submissions:
-    #
-    stats['num_not_assigned'] = sum(
-        1 if rev_stats[s]['num_assigned'] < rev_stats[s]['num_required'] else 0
-        for s in submissions)
-    stats['num_assigned_incomplete'] = sum(
-        (1 if (rev_stats[s]['num_assigned'] >= rev_stats[s]['num_required'] >
-               rev_stats[s]['num_finished']) else 0)
-        for s in submissions)
-    stats['num_complete'] = sum(
-        1 if rev_stats[s]['complete'] else 0 for s in submissions)
-    stats['num_review_submissions'] = len(submissions)
-
-    for sub in submissions:
-        record = rev_stats[sub]
-        if not record['complete']:
-            quality = '?'
-        else:
-            score = record['score']
-            if score >= stats['hq']:
-                quality = 'excellent'
-            elif score >= stats['median']:
-                quality = 'good'
-            elif score >= stats['lq']:
-                quality = 'average'
-            else:
-                quality = 'poor'
-        record['quality'] = quality
-        record['score_color'] = QUALITY_COLOR[quality]
-        record['icon_class'] = QUALITY_ICON_CLASS[quality]
-
-    return submissions, rev_stats, stats
+    return render(request, 'chair/reviews/_submission_feed_item.html', context={
+        'submission': submission,
+        'conf_pk': conference.pk,
+        'decision_data': _get_decision_form_data(submission),
+        'reviews_data': reviews_data,
+        'warnings': warnings,
+    })
 
 
 def _get_decision_form_data(submission):
@@ -183,74 +105,30 @@ def list_submissions(request, conf_pk, page=1):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
 
-    submissions, review_stats, global_stats = get_review_stats(conference)
-
-    for sub in submissions:
-        record = review_stats[sub]
-        record['scores_list_str'] = [
-            f'{x:.1f}' if x > 0 else '?' for x in record['scores_list']]
-        if record['complete']:
-            record['score_str'] = f"{record['score']:.1f}"
-        else:
-            record['score_str'] = '?'
-
-    scored_submissions = [
-        sub for sub in submissions if review_stats[sub]['complete']]
-    average_score = 0 if len(scored_submissions) == 0 else (
-        sum(review_stats[sub]['score'] for sub in scored_submissions) /
-        len(scored_submissions))
-
-    warnings = {}
-    for sub in submissions:
-        w = []
-        stats = review_stats[sub]
-        if sub.status == Submission.UNDER_REVIEW:
-            num_assigned = stats['num_assigned']
-            num_required = stats['num_required']
-            num_finished = stats['num_finished']
-            if num_assigned < num_required:
-                w.append(f'{num_required - num_assigned} reviews not assigned')
-            if num_finished < num_assigned:
-                w.append(f'{num_assigned - num_finished} reviews incomplete')
-
-        warnings[sub] = w
-
-    submissions = list(submissions)
-
-    items = [{
-        'object': sub,
-        'title': sub.title,
-        'authors': [{
-            'name': pr.get_full_name(),
-            'user_pk': pr.user.pk,
-        } for pr in sub.get_authors_profiles()],
-        'pk': sub.pk,
-        'status': sub.status,  # this is needed to make `status_class` work
-        'status_display': sub.get_status_display(),
-        'reviews': review_stats[sub],
-        'warnings': warnings[sub],
-        'decision_form_data': _get_decision_form_data(sub),
+    cached_stypes = {st.pk: st for st in conference.submissiontype_set.all()}
+    submissions = (conference.submission_set
+                   .exclude(status=Submission.SUBMITTED))
+    scores = [{
+        'pk': sub.pk, 'score': get_average_score(sub),
+        'num_missing': count_missing_reviews(sub, cached_stypes=cached_stypes)
     } for sub in submissions]
 
-    def get_order_key(item):
-        sub = item['object']
-        rs = review_stats[sub]
-        if rs['complete']:
-            return rs['score']
-        return -(rs['num_required'] - rs['num_finished'])
+    if scores:
+        max_pk = max([record['pk'] for record in scores])
 
-    items.sort(key=get_order_key, reverse=True)
+        def sort_key(score_record):
+            if score_record['score'] > 0 and score_record['num_missing'] == 0:
+                return score_record['score']
+            pk_diff = score_record['pk'] / max_pk  # always in 0..1!
+            return -score_record['num_missing'] - pk_diff
 
+        scores.sort(key=sort_key, reverse=True)
+
+    pks = [score_record['pk'] for score_record in scores]
     context = build_paged_view_context(
-        request, items, page, 'chair:reviews-pages', {'conf_pk': conf_pk}
-    )
-    context.update({
-        'conference': conference,
-        'average_score': average_score,
-        'stats': global_stats,
-    })
-    return render(request, 'chair/reviews/reviews_list.html',
-                  context=context)
+        request, pks, page, 'chair:reviews-pages', {'conf_pk': conf_pk})
+    context.update({'conference': conference})
+    return render(request, 'chair/reviews/reviews_list.html', context=context)
 
 
 def decision_control_panel(request, conf_pk, sub_pk):
@@ -263,10 +141,7 @@ def decision_control_panel(request, conf_pk, sub_pk):
     form = UpdateDecisionForm(request.POST or None, instance=decision)
     if request.method == 'POST' and form.is_valid():
         form.save()
-    return render(request, 'chair/reviews/_decision_control.html', context={
-        'form_data': _get_decision_form_data(submission),
-        'conf_pk': conf_pk, 'sub_pk': sub_pk,
-    })
+    return _render_feed_item(request, submission, conference)
 
 
 @require_POST
@@ -276,17 +151,15 @@ def commit_decision(request, conf_pk, sub_pk):
     submission = Submission.objects.get(pk=sub_pk)
     decision = submission.review_decision.first()
     decision.commit()
-    return render(request, 'chair/reviews/_decision_control.html', context={
-        'form_data': _get_decision_form_data(submission),
-        'conf_pk': conf_pk, 'sub_pk': sub_pk,
-    })
+    return _render_feed_item(request, submission, conference)
 
 
-def submission_list_item(request, conf_pk, sub_pk):
+@require_GET
+def list_item(request, conf_pk, sub_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     submission = Submission.objects.get(pk=sub_pk)
-    # TODO:
+    return _render_feed_item(request, submission, conference)
 
 
 @require_GET
@@ -294,7 +167,8 @@ def export_doc(request, conf_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
 
-    submissions, reviews, stats = get_review_stats(conference)
+    # submissions, reviews, stats = get_review_stats(conference)
+    submissions, reviews, stats = [], [], {}
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
 
     document = Document()

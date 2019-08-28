@@ -326,7 +326,6 @@ class ReviewStats(Model):
                 self.q3_score = statistics.median(upper_median_scores)
 
         # 3) Save!
-        print('saving stats')
         self.save()
 
 

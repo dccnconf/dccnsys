@@ -64,8 +64,7 @@
 {#---------------------------------------------------------------------------#}
 {% block listViewContent %}
 {% for item in items %}
-  <div class="dccn-feed-item pb-3">
-    {% include 'chair/reviews/_submission_feed_item.html' with submission=item conference=conference %}
+  <div class="dccn-feed-item pb-3" data-html-src="{% url 'chair:reviews-list-item-html' conf_pk=conference.pk sub_pk=item %}">
   </div>
 {% endfor %}
 {% endblock %}
@@ -77,4 +76,19 @@
 {% block listPageScript %}
 {#  Put additional JS script here if needed #}
   <script src="{% static 'chair/js/review_decision_control.js' %}"></script>
+  <script>
+$(document).ready(() => {
+  $.fn.loadHtml = function () {
+  };
+
+  $('[data-html-src]').each(function () {
+    const div = $(this);
+    const url = div.attr('data-html-src');
+    console.log('Sending data request to ', url);
+    $.get(url, data => {
+      div.html(data);
+    });
+  });
+});
+  </script>
 {% endblock %}

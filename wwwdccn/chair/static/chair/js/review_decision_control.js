@@ -11,16 +11,17 @@ $(document).ready(function () {
 
   body.on('submit', 'form.decision-control-form', event => {
     const form = $(event.target);
-    const container = form.parents('.review-feed-item-controls');
     const formData = form.serialize();
     $.ajax({
       url: form.attr('action'),
       method: form.attr('method'),
       data: formData,
     }).done(data => {
-      container.html(data);
+      form.parents('.dccn-feed-item').html(data);
     });
     event.stopPropagation();
     return false;
   });
+
+  console.log('Hello!');
 });
