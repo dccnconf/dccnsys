@@ -1,7 +1,6 @@
 import statistics
 
 from django.http import HttpResponse
-from django.urls import reverse
 from django.utils.datetime_safe import datetime
 from docx import Document
 from django.shortcuts import get_object_or_404, render, redirect
@@ -10,9 +9,10 @@ from docx.enum.table import WD_ROW_HEIGHT_RULE
 from docx.shared import Cm
 
 from chair.utility import validate_chair_access, build_paged_view_context
-from conferences.models import Conference
+from conferences.models import Conference, SubmissionType
 from review.forms import UpdateDecisionForm
 from review.models import Decision
+from review.utilities import count_required_reviews
 from submissions.models import Submission
 from users.models import User
 
@@ -38,21 +38,18 @@ QUALITY_ICON_CLASS = {
 
 def get_review_stats(conference, stype=None):
     submissions = conference.submission_set.exclude(status=Submission.SUBMITTED)
+    stype_cache = {
+        stype.pk: stype
+        for stype in SubmissionType.objects.filter(conference=conference)
+    }
     if stype is not None:
         submissions = submissions.filter(stype=stype)
 
     reviews = {sub: sub.reviews.all() for sub in submissions}
-    num_reviews_required = {
-        st.pk: st.num_reviews
-        for st in conference.submissiontype_set.all()
-    }
-
-    def get_num_reviews_required(sub):
-        return num_reviews_required[sub.stype_id] if sub.stype else 0
 
     rev_stats = {
         sub: {
-            'num_required': get_num_reviews_required(sub),
+            'num_required': count_required_reviews(sub, stype_cache),
             'num_assigned': reviews[sub].count(),
         } for sub in submissions
     }
@@ -283,6 +280,13 @@ def commit_decision(request, conf_pk, sub_pk):
         'form_data': _get_decision_form_data(submission),
         'conf_pk': conf_pk, 'sub_pk': sub_pk,
     })
+
+
+def submission_list_item(request, conf_pk, sub_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    submission = Submission.objects.get(pk=sub_pk)
+    # TODO:
 
 
 @require_GET
