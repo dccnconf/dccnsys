@@ -52,11 +52,12 @@
 
 
 {% block toolbar %}
-  <div class="my-3 d-flex">
-    <form action="{% url 'chair:export-reviews-doc' conf_pk=conference.pk %}" method="GET">
-      <button type="submit" class="btn btn-outline-primary">Export .docx</button>
-    </form>
-  </div>
+{#  FIXME: export not working now, should rebuild its view controller (Python) #}
+{#  <div class="my-3 d-flex">#}
+{#    <form action="{% url 'chair:export-reviews-doc' conf_pk=conference.pk %}" method="GET">#}
+{#      <button type="submit" class="btn btn-outline-primary">Export .docx</button>#}
+{#    </form>#}
+{#  </div>#}
 {% endblock %}
 
 {#---------------------------------------------------------------------------#}

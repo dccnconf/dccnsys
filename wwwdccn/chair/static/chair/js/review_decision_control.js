@@ -22,6 +22,4 @@ $(document).ready(function () {
     event.stopPropagation();
     return false;
   });
-
-  console.log('Hello!');
 });
