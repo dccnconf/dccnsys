@@ -42,4 +42,10 @@ urlpatterns = [
          views.proceeding_volume_delete, name='volume-delete'),
     path('<int:pk>/proceedings/volumes/<int:vol_pk>/',
          views.proceeding_volume_details, name='volume-details'),
+    path('<int:pk>/proceedings/<int:proc_pk>/artifacts/new/',
+         views.artifact_create, name='artifact-create'),
+    path('<int:pk>/proceedings/artifacts/<int:art_pk>/delete/',
+         views.artifact_delete, name='artifact-delete'),
+    path('<int:pk>/proceedings/artifacts/<int:art_pk>/',
+         views.artifact_details, name='artifact-details'),
 ]

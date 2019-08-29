@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import ForeignKey, CASCADE, CharField, Model, TextField, \
-    IntegerField
+    IntegerField, BooleanField, URLField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
@@ -149,8 +149,18 @@ class ArtifactDescriptor(Model):
                           max_length=8, verbose_name='Type of files expected')
     max_size_mb = IntegerField(verbose_name='Maximum size in MB', default=10)
     name = CharField(max_length=256)
-    code = CharField(max_length=8)  # code to add to filename
+
+    # Code to add to filename as a suffix
+    code = CharField(max_length=8, default='FINAL',
+                     verbose_name='Alphanumeric code to append to file name')
+
     description = TextField(verbose_name=_('Description of the artifact'))
+
+    materials_url = URLField(
+        verbose_name=_('URL with additional materials (templates, forms)'),
+        default="", blank=True,)
+
+    mandatory = BooleanField(verbose_name='Artifact is mandatory', default=True)
 
 
 class SubmissionType(models.Model):

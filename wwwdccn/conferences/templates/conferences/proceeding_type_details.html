@@ -32,4 +32,60 @@
       </a>
     </div>
   {% endwith %}
+
+  <h3 class="mt-4">Artifacts</h3>
+  {% with artifacts=proceeding_type.artifacts.all %}
+    {% if artifacts %}
+      <ol>
+        {% for artifact in artifacts %}
+          <li class="dccn-text-small">
+            <div class="d-flex my-2 p-2 align-items-start">
+              <div class="container">
+                <div class="row">
+                  <div class="col-12">
+                    <span class="font-weight-bold mr-2">{{ artifact.name }} {% if not artifact.mandatory %}[OPTIONAL]{% endif %} - </span>
+                    <span class="font-italic">{{ artifact.description }}</span>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-4 font-weight-bold">File type: </div>
+                  <div class="col-8">{{ artifact.get_file_type_display }}</div>
+                </div>
+                <div class="row">
+                  <div class="col-4 font-weight-bold">Max size (MB): </div>
+                  <div class="col-8">{{ artifact.max_size_mb }}</div>
+                </div>
+                <div class="row">
+                  <div class="col-4 font-weight-bold">Code: </div>
+                  <div class="col-8">{{ artifact.code }}</div>
+                </div>
+                {% if artifact.materials_url %}
+                <div class="row">
+                  <div class="col-4 font-weight-bold">Materials: </div>
+                  <div class="col-8"><a href="{{ artifact.materials_url }}">{{ artifact.materials_url }}</a></div>
+                </div>
+                {% endif %}
+              </div>
+              <a href="{% url 'conferences:artifact-details' pk=conference.pk art_pk=artifact.pk %}"
+                 class="btn btn-sm btn-outline-success ml-auto mr-1">
+                <i class="fas fa-edit"></i>
+              </a>
+              <form action="{% url 'conferences:artifact-delete' pk=conference.pk art_pk=artifact.pk %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-times"></i></button>
+              </form>
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="dccn-text-0 text-info">No artifacts defined yet.</p>
+    {% endif %}
+    <div class="d-flex mt-3">
+      <a class="btn btn-sm btn-outline-success" href="{% url 'conferences:artifact-create' pk=conference.pk proc_pk=proceeding_type.pk %}">
+        <i class="fas fa-plus"></i> Add
+      </a>
+    </div>
+  {% endwith %}
+
 {% endblock %}

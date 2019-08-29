@@ -167,6 +167,12 @@
                     <li class="dccn-text-smaller"><b>{{ volume.name }}</b> - {{ volume.description }}</li>
                   {% endfor %}
                 </ol>
+                <p class="dccn-text-small font-weight-bold mt-3">Artifacts:</p>
+                <ol>
+                  {% for artifact in proc.artifacts.all %}
+                    <li class="dccn-text-smaller"><b>{{ artifact.name }}</b> - {{ artifact.description }} ({{ artifact.get_file_type_display }})</li>
+                  {% endfor %}
+                </ol>
               </div>
               {# TODO: change the following check to filter whether user is able to edit conference #}
               {% if user in conference.chairs.all %}
