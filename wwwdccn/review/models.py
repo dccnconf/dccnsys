@@ -1,8 +1,10 @@
+import statistics
+
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Model, CharField, ForeignKey, CASCADE, SET_NULL, \
-    BooleanField
+    BooleanField, IntegerField, FloatField, OneToOneField
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.template.loader import render_to_string
@@ -160,6 +162,7 @@ def _send_email(user, review, subject, template_html, template_plain):
               from_email=settings.DEFAULT_FROM_EMAIL, fail_silently=False)
 
 
+# noinspection PyUnusedLocal
 @receiver(post_save, sender=Review)
 def create_review(sender, instance, created, **kwargs):
     if created:
@@ -171,6 +174,7 @@ def create_review(sender, instance, created, **kwargs):
             template_plain='review/email/start_review.txt')
 
 
+# noinspection PyUnusedLocal
 @receiver(post_delete, sender=Review)
 def delete_review(sender, instance, **kwargs):
     _send_email(
@@ -244,3 +248,91 @@ class Decision(Model):
                     self.committed = False
                     break
         super().save(*args, **kwargs)
+
+
+class ReviewStats(Model):
+    conference = OneToOneField(Conference, on_delete=CASCADE,
+                               related_name='review_stats')
+
+    num_submissions_reviewed = IntegerField(
+        default=0,
+        verbose_name='Number of submissions with all reviews submitted')
+
+    num_submissions_with_incomplete_reviews = IntegerField(
+        default=0,
+        verbose_name='Number of submissions with incomplete reviews')
+
+    num_submissions_with_missing_reviewers = IntegerField(
+        default=0,
+        verbose_name='Number of submissions missing one or more reviewers')
+
+    average_score = FloatField(
+        default=0.0,
+        verbose_name='Average score over all completely reviewed submissions')
+
+    median_score = FloatField(
+        default=0.0,
+        verbose_name='Median score over all completely reviewed submissions')
+
+    q1_score = FloatField(
+        default=0.0,
+        verbose_name='Q1 score (25% are not greater then)')
+
+    q3_score = FloatField(
+        default=0.0,
+        verbose_name='Q3 score (25% are not less then)')
+
+    def update_stats(self):
+        """Compute and record statistics.
+        """
+        from review.utilities import review_finished, count_required_reviews, \
+            get_average_score
+
+        # 1) Count submissions with complete, incomplete and missing reviews
+        stype_cache = {
+            st.pk: st for st in self.conference.submissiontype_set.all()
+        }
+        submissions = self.conference.submission_set.exclude(
+            status=Submission.SUBMITTED)
+
+        self.num_submissions_reviewed = 0
+        self.num_submissions_with_incomplete_reviews = 0
+        self.num_submissions_with_missing_reviewers = 0
+        for submission in submissions:
+            if review_finished(submission, stype_cache):
+                self.num_submissions_reviewed += 1
+            else:
+                num_required = count_required_reviews(submission, stype_cache)
+                if submission.reviews.count() < num_required:
+                    self.num_submissions_with_missing_reviewers += 1
+                self.num_submissions_with_incomplete_reviews += 1
+
+        # 2) Compute submission scores:
+        self.average_score = get_average_score(submissions)
+        self.median_score = 0.0
+        self.q1_score = 0.0
+        self.q3_score = 0.0
+        scores = [get_average_score(submission) for submission in submissions]
+        scores = [score for score in scores if score > 0]
+        if scores:
+            self.median_score = statistics.median(scores)
+            under_median_scores = [
+                score for score in scores if score < self.median_score]
+            if under_median_scores:
+                self.q1_score = statistics.median(under_median_scores)
+            upper_median_scores = [
+                score for score in scores if score >= self.median_score]
+            if upper_median_scores:
+                self.q3_score = statistics.median(upper_median_scores)
+
+        # 3) Save!
+        self.save()
+
+
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=Review)
+def update_statistics(sender, instance, **kwargs):
+    assert isinstance(instance, Review)
+    conference = instance.paper.conference
+    stats, _ = ReviewStats.objects.get_or_create(conference=conference)
+    stats.update_stats()
