@@ -4,11 +4,11 @@ from django.db.models import Q
 from django.forms import Form, MultipleChoiceField, CharField
 from django.utils.translation import ugettext_lazy as _
 
-from conferences.models import Conference
+from conferences.models import Conference, ProceedingVolume
 from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput
 from review.models import Reviewer, Review, Decision, ReviewStats
 from review.utilities import get_average_score, count_required_reviews, \
-    count_missing_reviews, review_finished
+    review_finished
 from submissions.models import Submission
 from users.models import Profile
 
@@ -19,6 +19,10 @@ COMPLETION_STATUS = [
     ('INCOMPLETE', 'Incomplete submissions'),
     ('COMPLETE', 'Complete submissions'),
 ]
+
+
+def clean_data_to_int(iterable, empty=None):
+    return [int(x) if x != '' else None for x in iterable]
 
 
 def search_submissions(submissions, term, sub_profiles=None):
@@ -357,12 +361,33 @@ class FilterReviewsForm(Form):
         choices=Submission.STATUS_CHOICE, widget=CustomCheckboxSelectMultiple,
         required=False)
 
+    proc_types = forms.MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False,
+    )
+
+    sub_types = forms.MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False
+    )
+
+    volumes = forms.MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False
+    )
+
     def __init__(self, *args, instance=None, **kwargs):
         if not isinstance(instance, Conference):
             raise TypeError(
                 f'expected Conference instance, {type(instance)} found')
         super().__init__(*args, **kwargs)
         self.instance = instance
+        self.fields['proc_types'].choices = [('', 'Undefined')] + [
+            (pt.pk, pt.name) for pt in self.instance.proceedingtype_set.all()
+        ]
+        self.fields['sub_types'].choices = [('', 'Undefined')] + [
+            (st.pk, st.name) for st in self.instance.submissiontype_set.all()
+        ]
+        self.fields['volumes'].choices = [('', 'Undefined')] + [
+            (vol.pk, vol.name) for vol in
+            ProceedingVolume.objects.filter(type__conference=self.instance)]
 
     def apply_quartiles(self, submissions):
         quartiles = self.cleaned_data['quartiles']
@@ -389,11 +414,14 @@ class FilterReviewsForm(Form):
     def apply_decisions(self, submissions):
         selected = self.cleaned_data['decisions']
         if selected:
-            decisions = {sub: sub.review_decision for sub in submissions}
+            decisions = {
+                sub: getattr(sub.review_decision.first(), 'decision', None)
+                for sub in submissions
+            }
             allow_undefined = Decision.UNDEFINED in selected
             submissions = [sub for sub in submissions
                            if ((not decisions[sub] and allow_undefined) or
-                               (decisions[sub].first().decision in selected))]
+                               (decisions[sub] in selected))]
         return submissions
 
     def apply_completion(self, submissions):
@@ -421,10 +449,42 @@ class FilterReviewsForm(Form):
                            if sub.status in selected]
         return submissions
 
+    def apply_proc_types(self, submissions):
+        selected = clean_data_to_int(self.cleaned_data['proc_types'])
+        if selected:
+            proc_types = {
+                sub: getattr(sub.review_decision.first(), 'proc_type_id', None)
+                for sub in submissions
+            }
+            submissions = [sub for sub in submissions
+                           if proc_types[sub] in selected]
+        return submissions
+
+    def apply_sub_types(self, submissions):
+        selected = clean_data_to_int(self.cleaned_data['sub_types'])
+        if selected:
+            submissions = [sub for sub in submissions
+                           if sub.stype_id in selected]
+        return submissions
+
+    def apply_volumes(self, submissions):
+        selected = clean_data_to_int(self.cleaned_data['volumes'])
+        if selected:
+            volumes = {
+                sub: getattr(sub.review_decision.first(), 'volume_id', None)
+                for sub in submissions
+            }
+            submissions = [sub for sub in submissions
+                           if volumes[sub] in selected]
+        return submissions
+
     def apply(self, submissions):
         submissions = search_submissions(submissions, self.cleaned_data['term'])
         submissions = self.apply_quartiles(submissions)
         submissions = self.apply_decisions(submissions)
         submissions = self.apply_completion(submissions)
         submissions = self.apply_status(submissions)
+        submissions = self.apply_proc_types(submissions)
+        submissions = self.apply_sub_types(submissions)
+        submissions = self.apply_volumes(submissions)
         return submissions
