@@ -3,13 +3,14 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.db.models import Max
+from django.forms import ModelForm
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 
 from gears.widgets import CustomFileInput
-from .models import Submission, Author
+from .models import Submission, Author, Artifact
 
 User = get_user_model()
 
@@ -253,3 +254,13 @@ class InviteAuthorForm(forms.Form):
             from_email=settings.DEFAULT_FROM_EMAIL,
             fail_silently=False,
         )
+
+
+class UploadArtifactForm(ModelForm):
+    class Meta:
+        model = Artifact
+        fields = ['file']
+
+    def has_file(self):
+        return (bool(self.cleaned_data['file']) or
+                bool(self.instance and self.instance.file))

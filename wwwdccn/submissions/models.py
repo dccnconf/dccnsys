@@ -201,6 +201,7 @@ class Author(models.Model):
 
 
 def get_artifact_full_path(instance, filename):
+    print('called get_artifact_full_path()')
     ext = filename.split('.')[-1]
     root = settings.MEDIA_PRIVATE_ROOT
     cpk = instance.submission.conference_id if \
@@ -210,7 +211,9 @@ def get_artifact_full_path(instance, filename):
         instance.descriptor and instance.descriptor.code else 'final'
     path = f'{root}/{cpk}/submissions'
     name = f'SID{instance.pk:05d}_{code}'
-    return f'{path}/{name}.{ext}'
+    ret = f'{path}/{name}.{ext}'
+    print(ret)
+    return ret
 
 
 class Artifact(Model):
@@ -233,6 +236,11 @@ class Artifact(Model):
     @property
     def name(self):
         return self.descriptor.name if self.descriptor else ''
+
+    def get_file_name(self):
+        if self.file:
+            return os.path.basename(self.file.file.name)
+        return ''
 
     def __str__(self):
         return f'Artifact "{self.name}" of submission #{self.submission_id}'

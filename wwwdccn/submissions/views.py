@@ -10,8 +10,10 @@ from django.views.decorators.http import require_POST, require_GET
 from conferences.models import Conference
 from submissions.forms import CreateSubmissionForm, SubmissionDetailsForm, \
     AuthorCreateForm, AuthorsReorderForm, AuthorDeleteForm, \
-    UploadReviewManuscriptForm, InviteAuthorForm
-from submissions.models import Submission, Author
+    UploadReviewManuscriptForm, InviteAuthorForm, UploadArtifactForm
+from submissions.models import Submission, Author, Artifact
+from submissions.utilities import is_authorized_edit, \
+    is_authorized_view_artifact
 
 
 def _create_submission(request, form):
@@ -274,3 +276,86 @@ def send_invitation(request, pk):
             messages.warning(request, _('Errors while sending invitation'))
         return redirect('submissions:authors', pk=pk)
     return HttpResponseForbidden()
+
+
+@login_required
+@require_GET
+def camera_ready(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    if submission.status != Submission.ACCEPTED:
+        raise Http404
+    return render(request, 'submissions/camera_ready.html', context={
+        'submission': submission,
+    })
+
+
+@login_required
+@require_GET
+def artifact_download(request, pk, art_pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    artifact = Artifact.objects.get(pk=art_pk)
+    if not is_authorized_view_artifact(request.user, submission):
+        return HttpResponseForbidden()
+    if artifact.file:
+        filename = artifact.get_file_name()
+        mtype = mimetypes.guess_type(filename)[0]
+        # TODO: add mime-type checking
+        response = HttpResponse(artifact.file.file, content_type=mtype)
+        response['Content-Disposition'] = f'filename={filename}'
+        return response
+    raise Http404
+
+
+@login_required
+@require_POST
+def artifact_upload(request, pk, art_pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    artifact = get_object_or_404(Artifact, pk=art_pk)
+    if not is_authorized_edit(request.user, submission):
+        return HttpResponseForbidden()
+    form = UploadArtifactForm(request.POST, request.FILES, instance=artifact)
+    print('POST: ', request.FILES)
+    # We save current file (if any) for two reasons:
+    # 1) if this file is not empty and user uploaded a new file, we
+    #    are going to delete this old file (in case of valid form);
+    #    and
+    # 2) it is going to be assigned instead of TemporaryUploadedFile
+    #    object in case of form validation error.
+    old_file = artifact.file.file if artifact.file else None
+    if form.is_valid():
+        # If the form is valid and user provided a new file, we
+        # delete original file first. Otherwise Django will add a
+        # random suffix which will break our storage strategy.
+        if old_file and request.FILES:
+            artifact.file.storage.delete(old_file.name)
+        print('saving form: ', form)
+        form.save()
+        print('form saved')
+        messages.success(request, f'Uploaded {artifact.name} file '
+                                  f'{artifact.get_file_name()}')
+    else:
+        # If the form is invalid (e.g. title is not provided),
+        # but the user tried to upload a file, a new
+        # TemporaryUploadedFile object will be created and,
+        # which is more important, it will be assigned to
+        # `note.document` field. We want to avoid this to make sure
+        # that until the form is completely valid previous file
+        # is not re-written. To do it we assign the `old_file`
+        # value to both cleaned_data and note.document:
+        form.cleaned_data['file'] = old_file
+        artifact.file.document = old_file
+    return redirect('submissions:camera-ready', pk=pk)
+
+
+@login_required
+@require_POST
+def artifact_delete(request, pk, art_pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    artifact = get_object_or_404(Artifact, pk=art_pk)
+    if not is_authorized_edit(request.user, submission):
+        return HttpResponseForbidden()
+    file_name = artifact.get_file_name()
+    if artifact.file:
+        artifact.file.delete()
+    messages.warning(request, f'Deleted {artifact.name} file {file_name}')
+    return redirect('submissions:camera-ready', pk=pk)
