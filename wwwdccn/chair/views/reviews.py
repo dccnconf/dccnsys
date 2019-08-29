@@ -6,6 +6,7 @@ from django.views.decorators.http import require_GET, require_POST
 from docx.enum.table import WD_ROW_HEIGHT_RULE
 from docx.shared import Cm
 
+from chair.forms import FilterReviewsForm
 from chair.utility import validate_chair_access, build_paged_view_context
 from conferences.models import Conference
 from review.forms import UpdateDecisionForm
@@ -104,10 +105,13 @@ def _get_decision_form_data(submission):
 def list_submissions(request, conf_pk, page=1):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
+    submissions = conference.submission_set.exclude(status=Submission.SUBMITTED)
+
+    filter_form = FilterReviewsForm(request.GET, instance=conference)
+    if filter_form.is_valid():
+        submissions = filter_form.apply(submissions)
 
     cached_stypes = {st.pk: st for st in conference.submissiontype_set.all()}
-    submissions = (conference.submission_set
-                   .exclude(status=Submission.SUBMITTED))
     scores = [{
         'pk': sub.pk, 'score': get_average_score(sub),
         'num_missing': count_missing_reviews(sub, cached_stypes=cached_stypes)
@@ -127,7 +131,7 @@ def list_submissions(request, conf_pk, page=1):
     pks = [score_record['pk'] for score_record in scores]
     context = build_paged_view_context(
         request, pks, page, 'chair:reviews-pages', {'conf_pk': conf_pk})
-    context.update({'conference': conference})
+    context.update({'conference': conference, 'filter_form': filter_form})
     return render(request, 'chair/reviews/reviews_list.html', context=context)
 
 
@@ -162,121 +166,120 @@ def list_item(request, conf_pk, sub_pk):
     return _render_feed_item(request, submission, conference)
 
 
-@require_GET
-def export_doc(request, conf_pk):
-    conference = get_object_or_404(Conference, pk=conf_pk)
-    validate_chair_access(request.user, conference)
-
-    # submissions, reviews, stats = get_review_stats(conference)
-    submissions, reviews, stats = [], [], {}
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-
-    document = Document()
-    document.add_heading(f'{conference.short_name} Review Report')
-    document.add_paragraph('')  # Just line skip
-    table = document.add_table(rows=9, cols=2)
-    table.rows[0].cells[0].text = 'Report date'
-    table.rows[0].cells[1].text = datetime.now().strftime('%d %b %Y, %H:%M')
-    for i, (key, details, dtype) in enumerate(zip(
-            ('average', 'lq', 'median', 'hq',
-             'num_review_submissions', 'num_complete',
-             'num_assigned_incomplete', 'num_not_assigned'),
-            ('Average score', 'Q3', 'Q2 (median)', 'Q1',
-             'Number of submissions under review',
-             'Number of submissions with complete reviews',
-             'Number of submissions with assigned, but incomplete reviews',
-             'Number of submissions with partially not assigned reviewers'),
-            ('float', 'float', 'float', 'float', 'int', 'int', 'int', 'int')
-    )):
-        table.rows[i + 1].cells[0].text = details
-        value = f'{stats[key]:.2f}' if dtype == 'float' else f'{stats[key]}'
-        table.rows[i + 1].cells[1].text = value
-
-    # Writing submissions:
-    submissions = list(submissions)
-
-    def get_order_key(sub):
-        rs = reviews[sub]
-        if rs['complete']:
-            return rs['score']
-        return -(rs['num_required'] - rs['num_finished'])
-
-    submissions.sort(key=get_order_key, reverse=True)
-
-    profiles = {u: u.profile for u in User.objects.all()}
-    document.add_page_break()
-
-    for submission in submissions:
-        record = reviews[submission]
-        scores_str_list = [
-            f'{sc:.1f}' if sc != '?' else '?' for sc in record['scores_list']]
-        try:
-            document.add_heading(
-                f'#{submission.pk}: {submission.title}', level=1)
-        except ValueError:
-            document.add_heading(
-                f'#{submission.pk}: [title hidden due to illegal characters]',
-                level=1)
-
-        p = document.add_paragraph()
-        p.add_run('Review Score: ').bold = True
-        p.add_run(f'{record["score"]:.2f} ({record["quality"]}, scores: '
-                  f'{"/".join(scores_str_list)})')
-        p = document.add_paragraph()
-        p.add_run('Reviews finished / assigned / required: ').bold = True
-        p.add_run(f"{record['num_finished']} / {record['num_assigned']} / "
-                  f"{record['num_required']}")
-        p = document.add_paragraph()
-        p.add_run('Authors: ').bold = True
-        authors = submission.authors.all()
-        for i, author in enumerate(authors):
-            profile = profiles[author.user]
-            p = document.add_paragraph(f'{i + 1}. ')
-            p.add_run(profile.get_full_name()).bold = True
-            name_rus = f'{profile.first_name_rus} {profile.last_name_rus}'
-            if name_rus != ' ':
-                p.add_run(f' [{name_rus}]')
-            p.add_run(' (')
-            p.add_run(
-                f'{profile.get_country_display()}, {profile.affiliation}, '
-                f'{profile.degree}').italic = True
-            p.add_run(')')
-        # p = document.add_paragraph()
-        # p.add_run('Abstract:').bold = True
-        # document.add_paragraph(submission.abstract)
-        for i, review in enumerate(submission.reviews.all()):
-            reviewer_profile = profiles[review.reviewer.user]
-            document.add_heading(
-                f'Review #{i+1} by {reviewer_profile.get_full_name()}',
-                level=2)
-            review_data = (
-                ('Technical merit', review.technical_merit),
-                ('Originality', review.originality),
-                ('Relevance', review.relevance),
-                ('Clarity', review.clarity),
-                ('Finished', 'Yes' if review.submitted else 'No'),
-            )
-            table = document.add_table(rows=len(review_data), cols=2)
-            for row_i, row in enumerate(review_data):
-                table.rows[row_i].cells[0].text = row[0]
-                table.rows[row_i].cells[1].text = row[1]
-            for row in table.rows:
-                row.height_rule = WD_ROW_HEIGHT_RULE.EXACTLY
-                row.height = Cm(0.7)
-            try:
-                document.add_paragraph(review.details)
-            except ValueError:
-                p = document.add_paragraph()
-                p.add_run('[Review details hidden since they contain illegal '
-                          'characters and can not be processed in .docx '
-                          'format]').italic = True
-
-    response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.'
-                     'wordprocessingml.document')
-    response['Content-Disposition'] = \
-        f'attachment; filename=reviews-{timestamp}.docx'
-    document.save(response)
-
-    return response
-
+# @require_GET
+# def export_doc(request, conf_pk):
+#     conference = get_object_or_404(Conference, pk=conf_pk)
+#     validate_chair_access(request.user, conference)
+#     submissions = conference.submission_set.exclude(status=Submission.SUBMITTED)
+#     stats, _ = ReviewStats.objects.get_or_create(conference=conference)
+#     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+#
+#     document = Document()
+#     document.add_heading(f'{conference.short_name} Review Report')
+#     document.add_paragraph('')  # Just line skip
+#     table = document.add_table(rows=9, cols=2)
+#     table.rows[0].cells[0].text = 'Report date'
+#     table.rows[0].cells[1].text = datetime.now().strftime('%d %b %Y, %H:%M')
+#     for i, (key, details, dtype) in enumerate(zip(
+#             ('average', 'lq', 'median', 'hq',
+#              'num_review_submissions', 'num_complete',
+#              'num_assigned_incomplete', 'num_not_assigned'),
+#             ('Average score', 'Q3', 'Q2 (median)', 'Q1',
+#              'Number of submissions under review',
+#              'Number of submissions with complete reviews',
+#              'Number of submissions with assigned, but incomplete reviews',
+#              'Number of submissions with partially not assigned reviewers'),
+#             ('float', 'float', 'float', 'float', 'int', 'int', 'int', 'int')
+#     )):
+#         table.rows[i + 1].cells[0].text = details
+#         value = f'{stats[key]:.2f}' if dtype == 'float' else f'{stats[key]}'
+#         table.rows[i + 1].cells[1].text = value
+#
+#     # Writing submissions:
+#     submissions = list(submissions)
+#
+#     def get_order_key(sub):
+#         rs = reviews[sub]
+#         if rs['complete']:
+#             return rs['score']
+#         return -(rs['num_required'] - rs['num_finished'])
+#
+#     submissions.sort(key=get_order_key, reverse=True)
+#
+#     profiles = {u: u.profile for u in User.objects.all()}
+#     document.add_page_break()
+#
+#     for submission in submissions:
+#         record = reviews[submission]
+#         scores_str_list = [
+#             f'{sc:.1f}' if sc != '?' else '?' for sc in record['scores_list']]
+#         try:
+#             document.add_heading(
+#                 f'#{submission.pk}: {submission.title}', level=1)
+#         except ValueError:
+#             document.add_heading(
+#                 f'#{submission.pk}: [title hidden due to illegal characters]',
+#                 level=1)
+#
+#         p = document.add_paragraph()
+#         p.add_run('Review Score: ').bold = True
+#         p.add_run(f'{record["score"]:.2f} ({record["quality"]}, scores: '
+#                   f'{"/".join(scores_str_list)})')
+#         p = document.add_paragraph()
+#         p.add_run('Reviews finished / assigned / required: ').bold = True
+#         p.add_run(f"{record['num_finished']} / {record['num_assigned']} / "
+#                   f"{record['num_required']}")
+#         p = document.add_paragraph()
+#         p.add_run('Authors: ').bold = True
+#         authors = submission.authors.all()
+#         for i, author in enumerate(authors):
+#             profile = profiles[author.user]
+#             p = document.add_paragraph(f'{i + 1}. ')
+#             p.add_run(profile.get_full_name()).bold = True
+#             name_rus = f'{profile.first_name_rus} {profile.last_name_rus}'
+#             if name_rus != ' ':
+#                 p.add_run(f' [{name_rus}]')
+#             p.add_run(' (')
+#             p.add_run(
+#                 f'{profile.get_country_display()}, {profile.affiliation}, '
+#                 f'{profile.degree}').italic = True
+#             p.add_run(')')
+#         # p = document.add_paragraph()
+#         # p.add_run('Abstract:').bold = True
+#         # document.add_paragraph(submission.abstract)
+#         for i, review in enumerate(submission.reviews.all()):
+#             reviewer_profile = profiles[review.reviewer.user]
+#             document.add_heading(
+#                 f'Review #{i+1} by {reviewer_profile.get_full_name()}',
+#                 level=2)
+#             review_data = (
+#                 ('Technical merit', review.technical_merit),
+#                 ('Originality', review.originality),
+#                 ('Relevance', review.relevance),
+#                 ('Clarity', review.clarity),
+#                 ('Finished', 'Yes' if review.submitted else 'No'),
+#             )
+#             table = document.add_table(rows=len(review_data), cols=2)
+#             for row_i, row in enumerate(review_data):
+#                 table.rows[row_i].cells[0].text = row[0]
+#                 table.rows[row_i].cells[1].text = row[1]
+#             for row in table.rows:
+#                 row.height_rule = WD_ROW_HEIGHT_RULE.EXACTLY
+#                 row.height = Cm(0.7)
+#             try:
+#                 document.add_paragraph(review.details)
+#             except ValueError:
+#                 p = document.add_paragraph()
+#                 p.add_run('[Review details hidden since they contain illegal '
+#                           'characters and can not be processed in .docx '
+#                           'format]').italic = True
+#
+#     response = HttpResponse(
+#         content_type='application/vnd.openxmlformats-officedocument.'
+#                      'wordprocessingml.document')
+#     response['Content-Disposition'] = \
+#         f'attachment; filename=reviews-{timestamp}.docx'
+#     document.save(response)
+#
+#     return response
+#
