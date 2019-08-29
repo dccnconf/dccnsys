@@ -220,7 +220,6 @@ class Topic(models.Model):
         ordering = ['order']
 
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
-
     name = models.CharField(max_length=250, verbose_name=_('Topic name'))
     order = models.IntegerField(default=0)
 
@@ -228,6 +227,7 @@ class Topic(models.Model):
         return f'{self.name}'
 
 
+# noinspection PyUnusedLocal
 @receiver(post_save, sender=Conference)
 def create_conference_stages(sender, instance, created, **kwargs):
     if created:
@@ -235,7 +235,21 @@ def create_conference_stages(sender, instance, created, **kwargs):
         ReviewStage.objects.create(conference=instance)
 
 
+# noinspection PyUnusedLocal
 @receiver(post_save, sender=Conference)
 def save_conference_stages(sender, instance, **kwargs):
     instance.submission_stage.save()
     instance.review_stage.save()
+
+
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=ArtifactDescriptor)
+def update_submissions_artifacts(sender, instance, **kwargs):
+    assert isinstance(instance, ArtifactDescriptor)
+    from submissions.models import Submission
+    submissions = Submission.objects.filter(
+        review_decision__proc_type=instance.proc_type)
+    for submission in submissions:
+        art, created = submission.artifacts.get_or_create(
+            submission=submission, descriptor=instance)
+        print(f'{"created" if created else "updated"} {art}')

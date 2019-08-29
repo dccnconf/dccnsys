@@ -219,3 +219,20 @@ class Artifact(Model):
     descriptor = ForeignKey(ArtifactDescriptor, related_name='instances',
                             on_delete=CASCADE)
     file = models.FileField(upload_to=get_artifact_full_path, blank=True)
+
+    @property
+    def is_active(self):
+        decision = self.submission.review_decision.first()
+        valid_statuses = {Submission.ACCEPTED, Submission.IN_PRINT,
+                          Submission.PUBLISHED}
+        if (decision and self.submission.status in valid_statuses
+                and decision.decision == decision.ACCEPT):
+            return decision.proc_type == self.descriptor.proc_type
+        return False
+
+    @property
+    def name(self):
+        return self.descriptor.name if self.descriptor else ''
+
+    def __str__(self):
+        return f'Artifact "{self.name}" of submission #{self.submission_id}'

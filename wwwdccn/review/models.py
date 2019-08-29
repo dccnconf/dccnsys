@@ -10,7 +10,8 @@ from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 
-from conferences.models import Conference, ProceedingType, ProceedingVolume
+from conferences.models import Conference, ProceedingType, ProceedingVolume, \
+    ArtifactDescriptor
 from submissions.models import Submission
 from users.models import User
 
@@ -227,8 +228,15 @@ class Decision(Model):
             new_status = decision_status[self.decision]
             update_status = status != new_status
             self.submission.status = new_status
-            # TODO: either here, or in submission.save() add/del Contribution
             self.submission.save()
+            # Adding artifacts:
+            if new_status == Submission.ACCEPTED and self.proc_type:
+                artifact_descriptors = ArtifactDescriptor.objects.filter(
+                    proc_type=self.proc_type_id)
+                for ad in artifact_descriptors:
+                    art, created = self.submission.artifacts.get_or_create(
+                        descriptor=ad)
+                    print(f'{"created" if created else "updated"} {art}')
             if update_status and self.decision != Decision.UNDEFINED:
                 # TODO: inform user about proc_type or volume change
                 # (we are here if status didn't change, so Submission.save()
