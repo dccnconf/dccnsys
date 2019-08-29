@@ -6,14 +6,14 @@ from submissions.models import Submission
 
 
 @login_required
-def submissions(request):
+def submissions_list(request):
     return render(request, 'user_site/submissions.html', {
         'submissions': Submission.objects.filter(authors__user=request.user),
     })
 
 
 @login_required
-def reviews(request):
+def reviews_list(request):
     submissions = Submission.objects.filter(authors__user=request.user)
     return render(request, 'user_site/reviews.html', {
         'numSubmissions': len(submissions),

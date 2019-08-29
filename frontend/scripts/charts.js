@@ -1,6 +1,6 @@
 /* jshint esversion: 6 */
 (function ($) {
-  var contexes = $('.dccn-scores-bar-chart');
+  const contexts = $('.dccn-scores-bar-chart');
   //
   // Define some constants:
   //
@@ -19,7 +19,7 @@
   const CATEGORIES = ['Technical Merit', 'Clarity', 'Relevance', 'Originality'];
   const MAX_REVIEWS = 3;
 
-  contexes.each((index, ctx) => {
+  contexts.each((index, ctx) => {
 
     //
     // 1) First, we parse 'data-scores' attribute value. It stores the
@@ -39,7 +39,7 @@
     const EXPECTED_CATEGORIES_NUM = CATEGORIES.length;
     let valid = numReviews > 0 && numReviews <= MAX_REVIEWS;
     allScores.forEach(scores => {
-      valid = valid && scores.length == EXPECTED_CATEGORIES_NUM;
+      valid = valid && scores.length === EXPECTED_CATEGORIES_NUM;
       scores.forEach(score => {
         valid = valid && !isNaN(score);
       });
@@ -47,7 +47,8 @@
 
     if (valid) {
       // 3) If data is valid, we estimate average scores:
-      const averages = math.divide(math.add(...allScores), numReviews);
+      const scoresSum = allScores.length > 1 ? math.add(...allScores) : allScores[0];
+      const averages = math.divide(scoresSum, numReviews);
 
       // 4) Define data sets:
       const datasets = [];

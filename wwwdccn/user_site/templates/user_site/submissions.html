@@ -35,6 +35,10 @@
           {% include 'submissions/components/card_submitted.html' with submission=submission %}
         {% elif submission.status == submission.UNDER_REVIEW %}
           {% include 'submissions/components/card_review.html' with submission=submission %}
+        {% elif submission.status == submission.ACCEPTED %}
+          {% include 'submissions/components/card_accepted.html' with submission=submission %}
+        {% elif submission.status == submission.REJECTED %}
+          {% include 'submissions/components/card_rejected.html' with submission=submission %}
         {% else %}
           {{ submission.title }} -- {{ submission.get_status_display }}
         {% endif %}

@@ -1,6 +1,7 @@
 {% extends "user_site/base.html" %}
 {% load bootstrap4 %}
 {% load submission_extras %}
+{% load review_extras %}
 
 {% block title %}
   Submission #{{ submission.pk }} | DCCN
@@ -98,11 +99,67 @@
             {% endif %}
           </div>
 
+          {% with decision=submission.review_decision.first reviews=submission.reviews.all status=submission.status %}
+          {% if decision %}
+          {% with score=submission|average_score %}
+          {% if status != submission.SUBMITTED and status != submission.UNDER_REVIEW %}
+            {###########################}
+            {# REVIEW RESULT           #}
+            {###########################}
+            <h2 class="h1 border-bottom my-3">Review Result</h2>
+            {% if reviews %}
+              <p class="dccn-text-normal-light">
+                Based on {{ reviews|length }} review{{ reviews|length|pluralize }}, your submission received score {{ score }} and was
+                <strong class="font-weight-bold {% if decision.decision == decision.ACCEPT %}text-success{% else %}text-danger{% endif %}">
+                  {% if decision.decision == decision.ACCEPT %}accepted{% else %}rejected{% endif %}
+                </strong>.
+              </p>
+
+              {% if decision.decision == decision.ACCEPT %}
+                <p class="dccn-text-normal-light mt-2">You need to upload a final manuscript before
+                  <span class="font-weight-normal">{{ decision.proc_type.final_manuscript_deadline|date:"j F Y G:i" }}</span>.
+                </p>
+              {% endif %}
+
+            {% elif decision.decision == decision.REJECT and not submission.review_manuscript %}
+              <p class="dccn-text-normal-light">Your paper was <strong class="text-danger">rejected</strong> due to missing review manuscript.</p>
+            {% endif %}
+
+            {########################}
+            {# REVIEWS              #}
+            {########################}
+            <h2 class="h1 border-bottom my-3">Reviews</h2>
+            <p class="h3 font-weight-normal">Your review score: {{ score }}</p>
+
+            <canvas class="dccn-scores-bar-chart my-4 mx-auto"
+                    data-scores="{% for r in reviews %}{{ r.technical_merit }},{{ r.clarity }},{{ r.relevance }},{{ r.originality }}{% if not forloop.last %};{% endif %}{% endfor %}">
+            </canvas>
+
+            {% for review in reviews %}
+              <h3 class="h3 mt-4 mb-2 border-bottom">Review #{{ forloop.counter }}</h3>
+              <table class="table table-sm table-borderless">
+                <tbody>
+                  <tr><td>Technical Merit</td><td>{{ review.technical_merit }}</td></tr>
+                  <tr><td>Clarity</td><td>{{ review.clarity }}</td></tr>
+                  <tr><td>Relevance</td><td>{{ review.relevance }}</td></tr>
+                  <tr><td>Originality</td><td>{{ review.originality }}</td></tr>
+                </tbody>
+              </table>
+              <p class="dccn-text-smaller-light">{{ review.details }}</p>
+            {% endfor %}
+
+          {% endif %}
+          {% endwith %}
+          {% endif %}
+          {% endwith %}
+
           <hr>
           <div class="d-flex">
-            <button class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteDialog-{{ submission.pk }}">
-              <i class="far fa-trash-alt"></i> Delete
-            </button>
+            {% if submission.status == submission.SUBMITTED or submission.status == submission.UNDER_REVIEW %}
+              <button class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteDialog-{{ submission.pk }}">
+                <i class="far fa-trash-alt"></i> Delete
+              </button>
+            {% endif %}
             {% if show_finish %}
             <a href="{% url 'home' %}" class="btn btn-success ml-auto">
               <i class="fas fa-flag-checkered"></i> Finish
@@ -113,6 +170,7 @@
             </a>
             {% endif %}
           </div>
+
 
           <!-- Delete submission dialog -->
           {% include 'submissions/components/delete_dialog.html' with submission=submission %}
