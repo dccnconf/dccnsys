@@ -25,7 +25,7 @@
         if (sizeKb > 1000) {
           Swal.fire({
             type: 'warning',
-            text: `Profile image size must be under 500KB, your file is ${sizeKb}KB`,
+            text: `Profile image size must be under 1000KB, your file is ${sizeKb}KB`,
             customClass: {
               confirmButton: 'btn btn-outline-secondary mx-2',
             },

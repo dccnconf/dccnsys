@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import ForeignKey, CASCADE, CharField, Model, TextField
+from django.db.models import ForeignKey, CASCADE, CharField, Model, TextField, \
+    IntegerField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
@@ -127,6 +128,29 @@ class ProceedingVolume(Model):
     type = ForeignKey(ProceedingType, on_delete=CASCADE, related_name='volumes')
     name = CharField(max_length=256, verbose_name=_('Short name'))
     description = TextField(verbose_name=_('Description'))
+
+
+class ArtifactDescriptor(Model):
+    TYPE_ANY = 'ANY'
+    TYPE_PDF = 'PDF'
+    TYPE_SCAN = 'SCAN'
+    TYPE_ZIP = 'ZIP'
+
+    FILE_TYPE_CHOICES = (
+        (TYPE_ANY, 'Any file'),
+        (TYPE_PDF, 'PDF files only'),
+        (TYPE_SCAN, 'Any PDF or image file'),
+        (TYPE_ZIP, 'ZIP archive'),
+    )
+
+    proc_type = ForeignKey(ProceedingType, on_delete=CASCADE,
+                           related_name='artifacts')
+    file_type = CharField(choices=FILE_TYPE_CHOICES, default=TYPE_ANY,
+                          max_length=8, verbose_name='Type of files expected')
+    max_size_mb = IntegerField(verbose_name='Maximum size in MB', default=10)
+    name = CharField(max_length=256)
+    code = CharField(max_length=8)  # code to add to filename
+    description = TextField(verbose_name=_('Description of the artifact'))
 
 
 class SubmissionType(models.Model):
