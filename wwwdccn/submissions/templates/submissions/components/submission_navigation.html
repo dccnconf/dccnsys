@@ -1,7 +1,7 @@
 {# =========================================================================#}
 {# CONTEXT:                                                                 #}
 {#                                                                          #}
-{# * active: 'details', 'authors', 'manuscript'                             #}
+{# * active: 'details', 'authors', 'manuscript' , 'camera'                  #}
 {# * submission: Submission                                                 #}
 {# =========================================================================#}
 <div class="dccn-panel dccn-panel-nav dccn-panel-nav-{{ size }}">
@@ -31,5 +31,14 @@
         <a href="{% url 'submissions:edit-manuscript' pk=submission.pk %}" class="dccn-nav-link">3. Review Manuscript</a>
       {% endif %}
     </li>
+    {% if submission.status == submission.ACCEPTED %}
+      <li class="dccn-nav-list-item {% if active == 'camera' %}active{% endif %}">
+        {% if not submission.filled_details and active == 'details' %}
+          <a class="dccn-nav-link" style="cursor: not-allowed;">4. Camera-ready</a>
+        {% else %}
+          <a href="{% url 'submissions:camera-ready' pk=submission.pk %}" class="dccn-nav-link">4. Camera-ready</a>
+        {% endif %}
+      </li>
+    {% endif %}
   </ul>
 </div>

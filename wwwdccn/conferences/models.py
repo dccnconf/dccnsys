@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import ForeignKey, CASCADE, CharField, Model, TextField
+from django.db.models import ForeignKey, CASCADE, CharField, Model, TextField, \
+    IntegerField, BooleanField, URLField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
@@ -129,6 +130,39 @@ class ProceedingVolume(Model):
     description = TextField(verbose_name=_('Description'))
 
 
+class ArtifactDescriptor(Model):
+    TYPE_ANY = 'ANY'
+    TYPE_PDF = 'PDF'
+    TYPE_SCAN = 'SCAN'
+    TYPE_ZIP = 'ZIP'
+
+    FILE_TYPE_CHOICES = (
+        (TYPE_ANY, 'Any file'),
+        (TYPE_PDF, 'PDF files only'),
+        (TYPE_SCAN, 'Any PDF or image file'),
+        (TYPE_ZIP, 'ZIP archive'),
+    )
+
+    proc_type = ForeignKey(ProceedingType, on_delete=CASCADE,
+                           related_name='artifacts')
+    file_type = CharField(choices=FILE_TYPE_CHOICES, default=TYPE_ANY,
+                          max_length=8, verbose_name='Type of files expected')
+    max_size_mb = IntegerField(verbose_name='Maximum size in MB', default=10)
+    name = CharField(max_length=256)
+
+    # Code to add to filename as a suffix
+    code = CharField(max_length=8, default='FINAL',
+                     verbose_name='Alphanumeric code to append to file name')
+
+    description = TextField(verbose_name=_('Description of the artifact'))
+
+    materials_url = URLField(
+        verbose_name=_('URL with additional materials (templates, forms)'),
+        default="", blank=True,)
+
+    mandatory = BooleanField(verbose_name='Artifact is mandatory', default=True)
+
+
 class SubmissionType(models.Model):
     LANGUAGES = (
         (None, _('Select submission language')),
@@ -186,7 +220,6 @@ class Topic(models.Model):
         ordering = ['order']
 
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
-
     name = models.CharField(max_length=250, verbose_name=_('Topic name'))
     order = models.IntegerField(default=0)
 
@@ -194,6 +227,7 @@ class Topic(models.Model):
         return f'{self.name}'
 
 
+# noinspection PyUnusedLocal
 @receiver(post_save, sender=Conference)
 def create_conference_stages(sender, instance, created, **kwargs):
     if created:
@@ -201,7 +235,21 @@ def create_conference_stages(sender, instance, created, **kwargs):
         ReviewStage.objects.create(conference=instance)
 
 
+# noinspection PyUnusedLocal
 @receiver(post_save, sender=Conference)
 def save_conference_stages(sender, instance, **kwargs):
     instance.submission_stage.save()
     instance.review_stage.save()
+
+
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=ArtifactDescriptor)
+def update_submissions_artifacts(sender, instance, **kwargs):
+    assert isinstance(instance, ArtifactDescriptor)
+    from submissions.models import Submission
+    submissions = Submission.objects.filter(
+        review_decision__proc_type=instance.proc_type)
+    for submission in submissions:
+        art, created = submission.artifacts.get_or_create(
+            submission=submission, descriptor=instance)
+        print(f'{"created" if created else "updated"} {art}')

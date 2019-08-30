@@ -8,9 +8,10 @@ from django.views.decorators.http import require_POST, require_GET
 from conferences.decorators import chair_required
 from conferences.forms import ConferenceForm, SubmissionStageForm, \
     ReviewStageForm, ProceedingTypeForm, DeleteForm, SubmissionTypeForm, \
-    TopicCreateForm, TopicsReorderForm, TopicEditForm, ProceedingVolumeForm
+    TopicCreateForm, TopicsReorderForm, TopicEditForm, ProceedingVolumeForm, \
+    ArtifactDescriptorForm
 from conferences.models import Conference, ProceedingType, SubmissionType, \
-    Topic, ProceedingVolume
+    Topic, ProceedingVolume, ArtifactDescriptor
 from submissions.models import Submission
 
 
@@ -317,6 +318,66 @@ def proceeding_volume_delete(request, pk, vol_pk):
     proc_pk = volume.type_id
     volume.delete()
     messages.warning(request, 'Deleted volume')
+    return redirect('conferences:proceedings-update', pk=pk, proc_pk=proc_pk)
+
+
+@chair_required
+def artifact_create(request, pk, proc_pk):
+    ptype = get_object_or_404(ProceedingType, pk=proc_pk)
+    if request.method == 'POST':
+        form = ArtifactDescriptorForm(request.POST)
+        if form.is_valid():
+            artifact = form.save(commit=False)
+            artifact.proc_type = ptype
+            artifact.save()
+            messages.success(request, 'Artifact was created')
+            return redirect('conferences:proceedings-update',
+                            pk=pk, proc_pk=proc_pk)
+    else:
+        form = ArtifactDescriptorForm()
+    return render(request, 'conferences/form.html', {
+        'conference': ptype.conference,
+        'form': form,
+        'subtitle': 'New artifact',
+        'title': f'Conference #{ptype.conference_id}',
+    })
+
+
+@chair_required
+def artifact_details(request, pk, art_pk):
+    artifact = get_object_or_404(ArtifactDescriptor, pk=art_pk)
+    ptype = artifact.proc_type
+
+    if ptype.conference_id != pk:
+        raise Http404
+
+    if request.method == 'POST':
+        form = ArtifactDescriptorForm(request.POST, instance=artifact)
+        if form.is_valid():
+            artifact = form.save(commit=False)
+            artifact.save()
+            messages.success(request, 'Artifact was updated')
+            return redirect('conferences:artifact-details', pk=pk,
+                            art_pk=art_pk)
+    else:
+        form = ArtifactDescriptorForm(instance=artifact)
+    return render(request, 'conferences/form.html', {
+        'conference': ptype.conference,
+        'form': form,
+        'subtitle': 'Edit artifact #{}'.format(art_pk),
+        'title': f'Conference #{ptype.conference_id}',
+        'back_url': reverse('conferences:proceedings-update',
+                            kwargs={'pk': pk, 'proc_pk': ptype.pk}),
+    })
+
+
+@chair_required
+@require_POST
+def artifact_delete(request, pk, art_pk):
+    artifact = get_object_or_404(ArtifactDescriptor, pk=art_pk)
+    proc_pk = artifact.proc_type_id
+    artifact.delete()
+    messages.warning(request, 'Deleted artifact')
     return redirect('conferences:proceedings-update', pk=pk, proc_pk=proc_pk)
 
 

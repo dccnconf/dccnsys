@@ -1,6 +1,7 @@
 {% extends "user_site/base.html" %}
 {% load bootstrap4 %}
 {% load submission_extras %}
+{% load review_extras %}
 
 {% block title %}
   Submission #{{ submission.pk }} | DCCN
@@ -11,117 +12,239 @@
 {% endblock %}
 
 {% block body %}
-  <main class="container py-3">
-    <div class="dccn-layout-row">
+{% with decision=submission.review_decision.first %}
+<main class="container py-3">
+  <div class="dccn-layout-row">
 
-      <!-- MAIN AREA -->
-      <div class="dccn-panel dccn-panel-screen">
+    <!-- MAIN AREA -->
+    <div class="dccn-panel dccn-panel-screen">
 
-        <div class="dccn-panel-header">
-          <h1 class="dccn-panel-title">Submission #{{ submission.pk }}</h1>
-          <a href="{% url 'home' %}" class="dccn-panel-close-btn"><i class="fas fa-times fa-2x"></i></a>
-        </div>
+      <div class="dccn-panel-header">
+        <h1 class="dccn-panel-title">Submission #{{ submission.pk }}</h1>
+        <a href="{% url 'home' %}" class="dccn-panel-close-btn"><i class="fas fa-times fa-2x"></i></a>
+      </div>
 
-        <div class="dccn-panel-body">
-          <div class="dccn-panel-status-row">
-            <p class="dccn-text-small text-muted mb-3">{{ submission.conference.short_name }}</p>
-            <p class="dccn-text-small ml-auto mr-3" data-toggle="tooltip" title="Deadline">
+      <div class="dccn-panel-body">
+        <div class="dccn-panel-status-row">
+          <p class="dccn-text-small text-muted mb-3">{{ submission.conference.short_name }}</p>
+          <div class="ml-auto"></div>
+          {% if deadline %}
+            <p class="dccn-text-small mr-3" data-toggle="tooltip" title="Deadline">
               <i class="far fa-clock"></i> {{ deadline }}
             </p>
-
-            <p class="dccn-text-small">
-              {{ submission.get_status_display }} <i class="fas fa-circle {{ submission|status_class }}"></i>
-            </p>
-          </div>
-
-          <form>
-            {% bootstrap_messages %}
-          </form>
-
-          <p class="text-center dccn-text-larger-light">{{ submission.title }}</p>
-          <p class="text-center dccn-text-2-light mt-2">{{ submission.get_authors_display }}</p>
-          <p class="text-justify dccn-text-0 mt-3"><strong>Abstract:</strong> {{ submission.abstract }}</p>
-
-          <p class="dccn-text-0 mt-3"><strong>Topics:</strong></p>
-          <ul class="list-unstyled mt-0">
-            {% for topic in submission.topics.all %}
-              <li class="dccn-text-0"><i class="far fa-check-square"></i> {{ topic.name }}</li>
-            {% endfor %}
-          </ul>
-
-          <p class="dccn-text-0 mt-3"><strong>Submission type:</strong> {{ submission.stype.name }}</p>
-
-          {% if submission.review_manuscript %}
-            <p class="dccn-text-0 mt-3">
-              <strong>Review Manuscript: </strong>
-              <a href="{% url 'submissions:download-manuscript' pk=submission.pk %}" class="dccn-link">
-                <i class="far fa-file-pdf"></i> {{ submission.get_review_manuscript_name }}
-              </a>
-              {% if submission.can_edit_review_manuscript %}
-                (<a href="{% url 'submissions:edit-manuscript' pk=submission.pk %}" class="dccn-link">Change manuscript...</a>)
-              {% endif %}
-            </p>
-            {% if not submission.can_edit_review_manuscript %}
-              <p class="mt-1 dccn-text-small-light text-muted">
-                Review manuscript can not be changed after review started. Please, contact organizing committee if you need to update your manuscript.
-              </p>
-            {% endif %}
           {% endif %}
 
-          {% if submission.warnings %}
-            <p class="dccn-text-0 mt-3"><strong>Warnings:</strong></p>
-            <ul class="list-unstyled">
-              {% if not submission.review_manuscript %}
-              <li>
-                <span class="text-warning-13"><i class="fas fa-exclamation-circle"></i> Missing review manuscript</span>
-                {% if submission.can_edit_review_manuscript %}
-                  <span>(<a href="{% url 'submissions:edit-manuscript' pk=submission.pk %}" class="dccn-link">Upload...)</a></span>
-                {% endif %}
-              </li>
-              {% endif %}
-            </ul>
-          {% endif %}
+          <p class="dccn-text-small">
+            {{ submission.get_status_display }} <i class="fas fa-circle {{ submission|status_class }}"></i>
+          </p>
+        </div>
 
-          <div class="mt-3 d-flex flex-sm-row flex-column">
-            {% if submission.can_edit_details %}
-              <a href="{% url 'submissions:details' pk=submission.pk %}" class="dccn-link d-inline-block mr-sm-3">
-                <i class="far fa-edit"></i> Edit details
-              </a>
-            {% endif %}
-            <a href="{% url 'submissions:authors' pk=submission.pk %}" class="dccn-link d-block mr-sm-3 mt-2 mt-sm-0">
-              <i class="fas fa-users"></i> Edit authors
+        <form>
+          {% bootstrap_messages %}
+        </form>
+
+        <p class="text-center dccn-text-larger-light">{{ submission.title }}</p>
+        <p class="text-center dccn-text-2-light mt-2">{{ submission.get_authors_display }}</p>
+        <p class="text-justify dccn-text-0 mt-3"><strong>Abstract:</strong> {{ submission.abstract }}</p>
+
+        <p class="dccn-text-0 mt-3"><strong>Topics:</strong></p>
+        <ul class="list-unstyled mt-0">
+          {% for topic in submission.topics.all %}
+            <li class="dccn-text-0"><i class="far fa-check-square"></i> {{ topic.name }}</li>
+          {% endfor %}
+        </ul>
+
+        <p class="dccn-text-0 mt-3"><strong>Submission type:</strong> {{ submission.stype.name }}</p>
+
+        {% if submission.review_manuscript %}
+          <p class="dccn-text-0 mt-3">
+            <strong>Review Manuscript: </strong>
+            <a href="{% url 'submissions:download-manuscript' pk=submission.pk %}" class="dccn-link">
+              <i class="far fa-file-pdf"></i> {{ submission.get_review_manuscript_name }}
             </a>
             {% if submission.can_edit_review_manuscript %}
-              <a href="{% url 'submissions:edit-manuscript' pk=submission.pk %}" class="dccn-link d-block mr-sm-3 mt-2 mt-sm-0">
-                <i class="far fa-file-pdf"></i> Change manuscript
-              </a>
+              (<a href="{% url 'submissions:edit-manuscript' pk=submission.pk %}" class="dccn-link">Change manuscript...</a>)
             {% endif %}
-          </div>
+          </p>
+          {% if not submission.can_edit_review_manuscript %}
+            <p class="mt-1 dccn-text-small-light text-muted">
+              Review manuscript can not be changed after review started. Please, contact organizing committee if you need to update your manuscript.
+            </p>
+          {% endif %}
+        {% endif %}
 
-          <hr>
-          <div class="d-flex">
+        {% if submission.warnings %}
+          <p class="dccn-text-0 mt-3"><strong>Warnings:</strong></p>
+          <ul class="list-unstyled">
+            {% if not submission.review_manuscript %}
+            <li>
+              <span class="text-warning-13"><i class="fas fa-exclamation-circle"></i> Missing review manuscript</span>
+              {% if submission.can_edit_review_manuscript %}
+                <span>(<a href="{% url 'submissions:edit-manuscript' pk=submission.pk %}" class="dccn-link">Upload...)</a></span>
+              {% endif %}
+            </li>
+            {% endif %}
+          </ul>
+        {% endif %}
+
+        <div class="mt-3 d-flex flex-sm-row flex-column">
+          {% if submission.can_edit_details %}
+            <a href="{% url 'submissions:details' pk=submission.pk %}" class="dccn-link d-inline-block mr-sm-3">
+              <i class="far fa-edit"></i> Edit details
+            </a>
+          {% endif %}
+          <a href="{% url 'submissions:authors' pk=submission.pk %}" class="dccn-link d-block mr-sm-3 mt-2 mt-sm-0">
+            <i class="fas fa-users"></i> Edit authors
+          </a>
+          {% if submission.can_edit_review_manuscript %}
+            <a href="{% url 'submissions:edit-manuscript' pk=submission.pk %}" class="dccn-link d-block mr-sm-3 mt-2 mt-sm-0">
+              <i class="far fa-file-pdf"></i> Change manuscript
+            </a>
+          {% endif %}
+        </div>
+
+        {% with reviews=submission.reviews.all status=submission.status %}
+        {% if decision %}
+        {% with score=submission|average_score %}
+        {% if status != submission.SUBMITTED and status != submission.UNDER_REVIEW %}
+          {###########################}
+          {# REVIEW RESULT           #}
+          {###########################}
+          <h2 class="h1 border-bottom my-3">Review Result</h2>
+          {% if reviews %}
+            <p class="dccn-text-normal-light">
+              Based on {{ reviews|length }} review{{ reviews|length|pluralize }}, your submission received score {{ score }} and was
+              <strong class="font-weight-bold {% if decision.decision == decision.ACCEPT %}text-success{% else %}text-danger{% endif %}">
+                {% if decision.decision == decision.ACCEPT %}accepted{% else %}rejected{% endif %}
+              </strong>.
+            </p>
+
+            {% if decision.decision == decision.ACCEPT %}
+              {% with proc_type=decision.proc_type %}
+                <p class="dccn-text-normal-light mt-2">
+                  You are invited to publish your manuscript in
+                  <span class="font-weight-normal">{{ proc_type.description }}</span>{% if decision.volume %},
+                  <span class="font-weight-normal">{{ decision.volume.name }}</span>{% endif %}.
+                  You need to <a href="{% url 'submissions:camera-ready' pk=submission.pk %}" class="dccn-link">upload your camera-ready version</a> before
+                  <span class="font-weight-normal">{{ proc_type.final_manuscript_deadline|date:"j F Y G:i" }}</span>.
+                </p>
+                <p class="dccn-text-normal-light mt-2">
+                  Your final manuscript must be prepared in LaTeX
+                  {% if proc_type.final_latex_template %}(<a href="{{ proc_type.final_latex_template.url }}">download template <i class="fas fa-file-download"></i></a>){% endif %}
+                  and have {{ decision.proc_type.min_num_pages }}-{{ decision.proc_type.max_num_pages }} pages.
+                </p>
+              {% endwith %}
+            {% endif %}
+
+          {% elif decision.decision == decision.REJECT and not submission.review_manuscript %}
+            <p class="dccn-text-normal-light">Your paper was <strong class="text-danger">rejected</strong> due to missing review manuscript.</p>
+          {% endif %}
+
+          {########################}
+          {# CAMERA-READY         #}
+          {########################}
+          {% if decision.decision == decision.ACCEPT %}
+            {% with artifacts=submission|artifacts_of %}
+              <h2 class="h1 border-bottom my-3">Camera-ready</h2>
+
+              <p class="my-3 dccn-text-normal-light">
+                To finish your submission, please provide the following file{{ artifacts|length|pluralize }}.
+                Note that files marked <span class="badge badge-light border border-dark text-dark">mandatory</span>
+                <span class="font-weight-normal">must be provided</span>, otherwise your paper will not be published.
+              </p>
+
+              {% for artifact in artifacts %}
+                {% with ad=artifact.descriptor %}
+                  <div class="d-flex align-items-center">
+                    <h3 class="h3">{% if artifacts|length > 1 %}{{ forloop.counter }}. {% endif %}{{ artifact.name }}</h3>
+                    <div class="ml-auto badge badge-dark text-light">{% if ad.mandatory %}mandatory{% else %}optional{% endif %}</div>
+                  </div>
+                  <p class="dccn-text-small font-italic">
+                    {{ ad.description }} ({{ ad.get_file_type_display }}, up to {{ ad.max_size_mb }} MB).
+                    {% if ad.materials_url %}Additional materials available at: <a href="{{ ad.materials_url }}" class="dccn-link">{{ ad.materials_url }}</a>{% endif %}
+                  </p>
+
+                  {% if artifact.file %}
+                    <p class="my-3 dccn-text-0">
+                      <a href="{% url 'submissions:artifact-download' pk=submission.pk art_pk=artifact.pk %}"
+                         class="dccn-link" target="_blank">
+                        <i class="{{ artifact|file_icon_class }}"></i> {{ artifact.get_file_name }}
+                      </a>
+                    </p>
+                  {% else %}
+                    <p class="my-3 dccn-text-0 text-{% if ad.mandatory %}danger{% else %}warning-13{% endif %}">
+                      <i class="fas fa-exclamation-circle"></i> No file uploaded
+                    </p>
+                  {% endif %}
+
+                  <div class="mt-3 mb-4 d-flex flex-sm-row flex-column">
+                    {% if submission|camera_editable %}
+                      <a href="{% url 'submissions:camera-ready' pk=submission.pk %}" class="dccn-link d-inline-block mr-sm-3">
+                        <i class="far fa-edit"></i> Edit
+                      </a>
+                    {% endif %}
+                  </div>
+                {% endwith %}
+              {% endfor %}
+            {% endwith %}
+          {% endif %}
+
+          {########################}
+          {# REVIEWS              #}
+          {########################}
+          <h2 class="h1 border-bottom my-3">Reviews</h2>
+          <p class="h3 font-weight-normal">Your review score: {{ score }}</p>
+
+          <canvas class="dccn-scores-bar-chart my-4 mx-auto"
+                  data-scores="{% for r in reviews %}{{ r.technical_merit }},{{ r.clarity }},{{ r.relevance }},{{ r.originality }}{% if not forloop.last %};{% endif %}{% endfor %}">
+          </canvas>
+
+          {% for review in reviews %}
+            <h3 class="h3 mt-4 mb-2 border-bottom">Review #{{ forloop.counter }}</h3>
+            <table class="table table-sm table-borderless">
+              <tbody>
+                <tr><td>Technical Merit</td><td>{{ review.technical_merit }}</td></tr>
+                <tr><td>Clarity</td><td>{{ review.clarity }}</td></tr>
+                <tr><td>Relevance</td><td>{{ review.relevance }}</td></tr>
+                <tr><td>Originality</td><td>{{ review.originality }}</td></tr>
+              </tbody>
+            </table>
+            <p class="dccn-text-small-light">{{ review.details }}</p>
+          {% endfor %}
+
+        {% endif %}
+        {% endwith %}
+        {% endif %}
+        {% endwith %}
+
+        <hr>
+        <div class="d-flex">
+          {% if submission.status == submission.SUBMITTED or submission.status == submission.UNDER_REVIEW %}
             <button class="btn btn-outline-danger" data-toggle="modal" data-target="#deleteDialog-{{ submission.pk }}">
               <i class="far fa-trash-alt"></i> Delete
             </button>
-            {% if show_finish %}
-            <a href="{% url 'home' %}" class="btn btn-success ml-auto">
-              <i class="fas fa-flag-checkered"></i> Finish
-            </a>
-            {% else %}
-            <a href="{% url 'home' %}" class="btn btn-outline-secondary ml-auto">
-              <i class="fas fa-home"></i> Close
-            </a>
-            {% endif %}
-          </div>
-
-          <!-- Delete submission dialog -->
-          {% include 'submissions/components/delete_dialog.html' with submission=submission %}
-
+          {% endif %}
+          {% if show_finish %}
+          <a href="{% url 'home' %}" class="btn btn-success ml-auto">
+            <i class="fas fa-flag-checkered"></i> Finish
+          </a>
+          {% else %}
+          <a href="{% url 'home' %}" class="btn btn-outline-secondary ml-auto">
+            <i class="fas fa-home"></i> Close
+          </a>
+          {% endif %}
         </div>
-      </div>
 
+
+        <!-- Delete submission dialog -->
+        {% include 'submissions/components/delete_dialog.html' with submission=submission %}
+
+      </div>
     </div>
-  </main>
+
+  </div>
+</main>
+{% endwith %}
 {% endblock %}
 
 

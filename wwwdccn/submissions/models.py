@@ -1,11 +1,13 @@
 import os
 
 from django.conf import settings
+from django.db.models import Model, ForeignKey, CASCADE
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from conferences.models import Topic, SubmissionType, Conference
+from conferences.models import Topic, SubmissionType, Conference, \
+    ArtifactDescriptor
 
 User = get_user_model()
 
@@ -196,3 +198,49 @@ class Author(models.Model):
     def __str__(self):
         return f'Author #{self.pk}: {self.user.profile.get_full_name()}, ' \
             f'submission={self.submission.pk}, order={self.order}'
+
+
+def get_artifact_full_path(instance, filename):
+    print('called get_artifact_full_path()')
+    ext = filename.split('.')[-1]
+    root = settings.MEDIA_PRIVATE_ROOT
+    cpk = instance.submission.conference_id if \
+        instance.submission and instance.submission.conference \
+        else 'unknown_conf'
+    code = instance.descriptor.code if \
+        instance.descriptor and instance.descriptor.code else 'final'
+    path = f'{root}/{cpk}/submissions'
+    name = f'SID{instance.pk:05d}_{code}'
+    ret = f'{path}/{name}.{ext}'
+    print(ret)
+    return ret
+
+
+class Artifact(Model):
+    submission = ForeignKey(Submission, related_name='artifacts',
+                            on_delete=CASCADE)
+    descriptor = ForeignKey(ArtifactDescriptor, related_name='instances',
+                            on_delete=CASCADE)
+    file = models.FileField(upload_to=get_artifact_full_path, blank=True)
+
+    @property
+    def is_active(self):
+        decision = self.submission.review_decision.first()
+        valid_statuses = {Submission.ACCEPTED, Submission.IN_PRINT,
+                          Submission.PUBLISHED}
+        if (decision and self.submission.status in valid_statuses
+                and decision.decision == decision.ACCEPT):
+            return decision.proc_type == self.descriptor.proc_type
+        return False
+
+    @property
+    def name(self):
+        return self.descriptor.name if self.descriptor else ''
+
+    def get_file_name(self):
+        if self.file:
+            return os.path.basename(self.file.file.name)
+        return ''
+
+    def __str__(self):
+        return f'Artifact "{self.name}" of submission #{self.submission_id}'

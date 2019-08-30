@@ -1,5 +1,8 @@
 from django import template
+from django.utils import timezone
 
+from conferences.models import ArtifactDescriptor
+from submissions import utilities
 from submissions.helpers import get_affiliations_of, get_countries_of
 
 register = template.Library()
@@ -33,3 +36,50 @@ def affiliations(submission):
 @register.filter
 def countries(submission):
     return get_countries_of(submission)
+
+
+@register.filter
+def camera_editable(submission):
+    return utilities.camera_editable(submission)
+
+
+@register.filter
+def artifacts_of(submission):
+    return [artifact for artifact in submission.artifacts.all()
+            if artifact.is_active]
+
+
+@register.filter
+def accepted_input(artifact):
+    ft = artifact.descriptor.file_type
+    if ft == ArtifactDescriptor.TYPE_PDF:
+        return '.pdf'
+    if ft == ArtifactDescriptor.TYPE_SCAN:
+        return '.pdf,image/*'
+    if ft == ArtifactDescriptor.TYPE_ZIP:
+        return 'zip,application/octet-stream,application/zip,' \
+               'application/x-zip,application/x-zip-compressed'
+    return '*'
+
+
+@register.filter
+def file_icon_class(artifact):
+    ft = artifact.descriptor.file_type
+    if ft == ArtifactDescriptor.TYPE_PDF:
+        return 'far fa-file-pdf'
+    if ft == ArtifactDescriptor.TYPE_SCAN:
+        return 'far fa-file-image'
+    if ft == ArtifactDescriptor.TYPE_ZIP:
+        return 'far fa-file-archive'
+    return 'far file-alt'
+
+
+@register.filter
+def warnings_of(submission):
+    from submissions.models import Submission
+    warnings = []
+    if submission.status == Submission.ACCEPTED:
+        for artifact in artifacts_of(submission):
+            if artifact.descriptor.mandatory and not artifact.file:
+                warnings.append(f'{artifact.name} missing')
+    return warnings
