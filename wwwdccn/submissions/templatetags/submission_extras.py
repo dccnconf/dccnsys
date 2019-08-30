@@ -72,3 +72,14 @@ def file_icon_class(artifact):
     if ft == ArtifactDescriptor.TYPE_ZIP:
         return 'far fa-file-archive'
     return 'far file-alt'
+
+
+@register.filter
+def warnings_of(submission):
+    from submissions.models import Submission
+    warnings = []
+    if submission.status == Submission.ACCEPTED:
+        for artifact in artifacts_of(submission):
+            if artifact.descriptor.mandatory and not artifact.file:
+                warnings.append(f'{artifact.name} missing')
+    return warnings

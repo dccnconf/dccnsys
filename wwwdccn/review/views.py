@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
 from django.core.mail import send_mail
-from django.http import Http404
+from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 
@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 
 from review.forms import EditReviewForm
 from review.models import Review
+from submissions.models import Submission
 
 
 def validate_reviewer_access(user, review):
@@ -23,10 +24,13 @@ def review_details(request, pk):
     review = get_object_or_404(Review, pk=pk)
     validate_reviewer_access(request.user, review)
     if request.method == 'POST':
-        edit_form = EditReviewForm(request.POST, instance=review)
-        if edit_form.is_valid():
-            edit_form.save()
-            return redirect('review:review-details', pk=pk)
+        if review.paper.status == Submission.UNDER_REVIEW:
+            edit_form = EditReviewForm(request.POST, instance=review)
+            if edit_form.is_valid():
+                edit_form.save()
+                return redirect('review:review-details', pk=pk)
+        else:
+            return HttpResponseForbidden()
     else:
         edit_form = EditReviewForm(instance=review)
     return render(request, 'review/review_details.html', context={
@@ -40,6 +44,9 @@ def review_details(request, pk):
 def decline_review(request, pk):
     review = get_object_or_404(Review, pk=pk)
     validate_reviewer_access(request.user, review)
+    if review.paper.status != Submission.UNDER_REVIEW:
+        return HttpResponseForbidden()
+
     paper_pk = review.paper.pk
 
     # Send email to chairs:
