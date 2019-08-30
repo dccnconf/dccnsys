@@ -116,13 +116,73 @@
               </p>
 
               {% if decision.decision == decision.ACCEPT %}
-                <p class="dccn-text-normal-light mt-2">You need to upload a final manuscript before
-                  <span class="font-weight-normal">{{ decision.proc_type.final_manuscript_deadline|date:"j F Y G:i" }}</span>.
-                </p>
+                {% with proc_type=decision.proc_type %}
+                  <p class="dccn-text-normal-light mt-2">
+                    You are invited to publish your manuscript in
+                    <span class="font-weight-normal">{{ proc_type.description }}</span>{% if decision.volume %},
+                    <span class="font-weight-normal">{{ decision.volume.name }}</span>{% endif %}.
+                    You need to <a href="{% url 'submissions:camera-ready' pk=submission.pk %}" class="dccn-link">upload your camera-ready version</a> before
+                    <span class="font-weight-normal">{{ proc_type.final_manuscript_deadline|date:"j F Y G:i" }}</span>.
+                  </p>
+                  <p class="dccn-text-normal-light mt-2">
+                    Your final manuscript must be prepared in LaTeX
+                    {% if proc_type.final_latex_template %}(<a href="{{ proc_type.final_latex_template.url }}">download template <i class="fas fa-file-download"></i></a>){% endif %}
+                    and have {{ decision.proc_type.min_num_pages }}-{{ decision.proc_type.max_num_pages }} pages.
+                  </p>
+                {% endwith %}
               {% endif %}
 
             {% elif decision.decision == decision.REJECT and not submission.review_manuscript %}
               <p class="dccn-text-normal-light">Your paper was <strong class="text-danger">rejected</strong> due to missing review manuscript.</p>
+            {% endif %}
+
+            {########################}
+            {# CAMERA-READY         #}
+            {########################}
+            {% if decision.decision == decision.ACCEPT %}
+              {% with artifacts=submission|artifacts_of %}
+                <h2 class="h1 border-bottom my-3">Camera-ready</h2>
+
+                <p class="my-3 dccn-text-normal-light">
+                  To finish your submission, please provide the following file{{ artifacts|length|pluralize }}.
+                  Note that files marked <span class="badge badge-light border border-dark text-dark">mandatory</span>
+                  <span class="font-weight-normal">must be provided</span>, otherwise your paper will not be published.
+                </p>
+
+                {% for artifact in artifacts %}
+                  {% with ad=artifact.descriptor %}
+                    <div class="d-flex align-items-center">
+                      <h3 class="h3">{% if artifacts|length > 1 %}{{ forloop.counter }}. {% endif %}{{ artifact.name }}</h3>
+                      <div class="ml-auto badge badge-dark text-light">{% if ad.mandatory %}mandatory{% else %}optional{% endif %}</div>
+                    </div>
+                    <p class="dccn-text-small font-italic">
+                      {{ ad.description }} ({{ ad.get_file_type_display }}, up to {{ ad.max_size_mb }} MB).
+                      {% if ad.materials_url %}Additional materials available at: <a href="{{ ad.materials_url }}" class="dccn-link">{{ ad.materials_url }}</a>{% endif %}
+                    </p>
+
+                    {% if artifact.file %}
+                      <p class="my-3 dccn-text-0">
+                        <a href="{% url 'submissions:artifact-download' pk=submission.pk art_pk=artifact.pk %}"
+                           class="dccn-link" target="_blank">
+                          <i class="{{ artifact|file_icon_class }}"></i> {{ artifact.get_file_name }}
+                        </a>
+                      </p>
+                    {% else %}
+                      <p class="my-3 dccn-text-0 text-{% if ad.mandatory %}danger{% else %}warning-13{% endif %}">
+                        <i class="fas fa-exclamation-circle"></i> No file uploaded
+                      </p>
+                    {% endif %}
+
+                    <div class="mt-3 mb-4 d-flex flex-sm-row flex-column">
+                      {% if submission|camera_editable %}
+                        <a href="{% url 'submissions:camera-ready' pk=submission.pk %}" class="dccn-link d-inline-block mr-sm-3">
+                          <i class="far fa-edit"></i> Edit
+                        </a>
+                      {% endif %}
+                    </div>
+                  {% endwith %}
+                {% endfor %}
+              {% endwith %}
             {% endif %}
 
             {########################}
@@ -145,7 +205,7 @@
                   <tr><td>Originality</td><td>{{ review.originality }}</td></tr>
                 </tbody>
               </table>
-              <p class="dccn-text-smaller-light">{{ review.details }}</p>
+              <p class="dccn-text-small-light">{{ review.details }}</p>
             {% endfor %}
 
           {% endif %}
