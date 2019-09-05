@@ -521,12 +521,18 @@ class ExportSubmissionsForm(Form):
         (VOLUME_COLUMN, VOLUME_COLUMN),
     )
 
+    columns = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False, choices=COLUMNS)
+
     status = MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False,
         choices=Submission.STATUS_CHOICE)
 
-    columns = MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False, choices=COLUMNS)
+    countries = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
+
+    topics = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
 
     def __init__(self, *args, conference=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -535,12 +541,27 @@ class ExportSubmissionsForm(Form):
         self.conference = conference
         self.fields['columns'].initial = [
             self.ORDER_COLUMN, self.ID_COLUMN, self.TITLE_COLUMN,
-            self.AUTHORS_COLUMN]
+            self.AUTHORS_COLUMN, self.STATUS_COLUMN]
+        countries = list(set(p.country for p in Profile.objects.all()))
+        countries.sort(key=lambda cnt: cnt.name)
+        self.fields['countries'].choices = [
+            (cnt.code, cnt.name) for cnt in countries]
+        self.fields['topics'].choices = [
+            (t.pk, t.name) for t in self.conference.topic_set.all()]
 
     def apply(self, request):
-        submissions = Submission.objects.filter(
-            Q(conference=self.conference) &
-            Q(status__in=self.cleaned_data['status']))
+        submissions = Submission.objects.filter(conference=self.conference)
+        if self.cleaned_data['status']:
+            submissions = submissions.filter(
+                status__in=self.cleaned_data['status'])
+        if self.cleaned_data['countries']:
+            submissions = submissions.filter(
+                authors__user__profile__country__in=
+                self.cleaned_data['countries'])
+        if self.cleaned_data['topics']:
+            submissions = submissions.filter(
+                topics__in=[int(t) for t in self.cleaned_data['topics']])
+        submissions = submissions.distinct().order_by('pk')
 
         order = 0
         result = []
@@ -643,6 +664,9 @@ class ExportUsersForm(Form):
     columns = MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False, choices=COLUMNS)
 
+    countries = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
+
     def __init__(self, *args, conference=None, **kwargs):
         super().__init__(*args, **kwargs)
         if conference is None:
@@ -650,10 +674,20 @@ class ExportUsersForm(Form):
         self.conference = conference
         self.fields['columns'].initial = [
             self.ORDER_COLUMN, self.ID_COLUMN, self.FULL_NAME_COLUMN]
+        countries = list(set(p.country for p in Profile.objects.all()))
+        countries.sort(key=lambda cnt: cnt.name)
+        self.fields['countries'].choices = [
+            (cnt.code, cnt.name) for cnt in countries
+        ]
 
     # noinspection PyUnusedLocal
     def apply(self, request):
-        profiles = Profile.objects.all().order_by('user_id')
+        profiles = Profile.objects.all()
+        if self.cleaned_data['countries']:
+            profiles = profiles.filter(
+                country__in=self.cleaned_data['countries'])
+        profiles = profiles.order_by('user_id')
+
         columns = self.cleaned_data['columns']
         emails = {u.pk: u.email for u in User.objects.all()} \
             if self.EMAIL_COLUMN in columns else {}

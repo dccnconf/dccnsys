@@ -11,7 +11,7 @@ from chair.utility import validate_chair_access
 from conferences.models import Conference
 
 
-def create_export_view(form_class, file_name_prefix, template_name):
+def create_export_view(form_class, file_name_prefix, title):
 
     def view(request, conf_pk):
         conference = get_object_or_404(Conference, pk=conf_pk)
@@ -44,17 +44,17 @@ def create_export_view(form_class, file_name_prefix, template_name):
         else:  # request was GET:
             form = form_class(conference=conference)
 
-        return render(request, template_name, context={
+        return render(request, 'chair/export/export_dialog.html', context={
             'conference': conference,
             'next': next_url,
             'form': form,
+            'panel_title': title,
         })
 
     return view
 
 
 export_submissions = create_export_view(
-    ExportSubmissionsForm, 'papers', 'chair/export/select_submissions.html')
+    ExportSubmissionsForm, 'papers', 'Export submissions')
 
-export_users = create_export_view(
-    ExportUsersForm, 'users', 'chair/export/select_users.html')
+export_users = create_export_view(ExportUsersForm, 'users', 'Export users')
