@@ -542,7 +542,8 @@ class ExportSubmissionsForm(Form):
         self.fields['columns'].initial = [
             self.ORDER_COLUMN, self.ID_COLUMN, self.TITLE_COLUMN,
             self.AUTHORS_COLUMN, self.STATUS_COLUMN]
-        countries = list(set(p.country for p in Profile.objects.all()))
+        countries = list(
+            set(p.country for p in Profile.objects.all() if p.country))
         countries.sort(key=lambda cnt: cnt.name)
         self.fields['countries'].choices = [
             (cnt.code, cnt.name) for cnt in countries]
@@ -674,7 +675,8 @@ class ExportUsersForm(Form):
         self.conference = conference
         self.fields['columns'].initial = [
             self.ORDER_COLUMN, self.ID_COLUMN, self.FULL_NAME_COLUMN]
-        countries = list(set(p.country for p in Profile.objects.all()))
+        countries = list(
+            set(p.country for p in Profile.objects.all() if p.country))
         countries.sort(key=lambda cnt: cnt.name)
         self.fields['countries'].choices = [
             (cnt.code, cnt.name) for cnt in countries
