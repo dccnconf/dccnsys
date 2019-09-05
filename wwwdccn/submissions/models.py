@@ -201,7 +201,6 @@ class Author(models.Model):
 
 
 def get_artifact_full_path(instance, filename):
-    print('called get_artifact_full_path()')
     ext = filename.split('.')[-1]
     root = settings.MEDIA_PRIVATE_ROOT
     cpk = instance.submission.conference_id if \
@@ -212,11 +211,13 @@ def get_artifact_full_path(instance, filename):
     path = f'{root}/{cpk}/submissions'
     name = f'SID{instance.pk:05d}_{code}'
     ret = f'{path}/{name}.{ext}'
-    print(ret)
     return ret
 
 
 class Artifact(Model):
+    class Meta:
+        ordering = ['descriptor_id']
+
     submission = ForeignKey(Submission, related_name='artifacts',
                             on_delete=CASCADE)
     descriptor = ForeignKey(ArtifactDescriptor, related_name='instances',

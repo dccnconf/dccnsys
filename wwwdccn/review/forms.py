@@ -101,3 +101,34 @@ class UpdateDecisionForm(Form):
         if commit:
             decision.save()
         return decision
+
+
+class UpdateVolumeForm(Form):
+    volume = CharField(widget=HiddenInput(), required=False)
+
+    def __init__(self, *args, instance=None, **kwargs):
+        if not instance:
+            raise ValueError('Decision instance is required')
+        self.instance = instance
+        kwargs.update({
+            'initial': {
+                'volume': str(instance.volume.pk) if instance.volume else '',
+            }
+        })
+        super().__init__(*args, **kwargs)
+        self.volume = None
+
+    def clean_volume(self):
+        try:
+            pk = int(self.cleaned_data['volume'])
+            volumes = ProceedingVolume.objects.filter(pk=pk)
+            self.volume = volumes.first() if volumes.count() else None
+        except ValueError:
+            self.volume = None
+        return self.cleaned_data['volume']
+
+    def save(self, commit=True):
+        self.instance.volume = self.volume
+        if commit:
+            self.instance.save()
+        return self.instance

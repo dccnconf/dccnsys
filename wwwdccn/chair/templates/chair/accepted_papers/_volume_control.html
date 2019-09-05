@@ -1,0 +1,48 @@
+{###########################################################################}
+{# Volume control panel.                                                   #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `conf_pk`                                                             #}
+{# - `sub_pk`                                                              #}
+{# - `form_data`: form data object for decision control                    #}
+{###########################################################################}
+{% load review_extras %}
+<form action="{% url 'chair:volume-decision-control' conf_pk=conf_pk sub_pk=sub_pk %}" method="POST"
+      id="updateDecisionForm_{{ sub_pk }}" class="decision-control-form" novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="volume" value="{{ form_data.volume.value }}">
+</form>
+<div class="d-flex justify-content-between">
+  <div>
+    {% if not form_data.volume.hidden %}
+      <b>Volume: </b>
+      <span class="dropdown">
+        <a href="#" data-toggle="dropdown"
+           class="dccn-link dccn-text-small font-weight-bold text-{{ form_data.volume.value|volume_color_class }}">
+          {{ form_data.volume.display }}
+        </a>
+        <span class="dropdown-menu">
+          {% for option in form_data.volume.options %}
+            <button class="dropdown-item dccn-text-small font-weight-normal px-2" data-form-id="#updateDecisionForm_{{ sub_pk }}"
+                    data-name="volume" data-value="{{ option.0 }}">{{ option.1 }}</button>
+          {% endfor %}
+        </span>
+      </span>
+    {% endif %}
+    {% if not form_data.committed %}
+    <p class="my-0 ml-auto text-warning-15 dccn-text-smallest">
+      <i class="fas fa-exclamation-circle"></i> changes not committed
+    </p>
+    {% endif %}
+
+  </div>
+
+  {% if not form_data.committed %}
+  <form action="{% url 'chair:volume-decision-commit' conf_pk=conf_pk sub_pk=sub_pk %}" method="POST"
+        class="mr-2 decision-control-form text-right" novalidate>
+    {% csrf_token %}
+    <input class="btn btn-sm btn-outline-success {% if form_data.committed %}disabled{% endif %}" type="submit" value="Commit">
+  </form>
+  {% endif %}
+
+</div>

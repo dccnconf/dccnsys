@@ -33,6 +33,13 @@ def decision_color_class(string):
 
 
 @register.filter
+def volume_color_class(string):
+    if string:
+        return 'success-14'
+    return 'warning-13'
+
+
+@register.filter
 def decision_icon_class(decision):
     if decision == Decision.ACCEPT:
         return 'fas fa-vote-yea'
