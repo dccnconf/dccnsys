@@ -58,4 +58,5 @@ urlpatterns = [
     # Exports
     #
     path('<int:conf_pk>/export/submissions/', export.export_submissions, name='export-submissions'),
+    path('<int:conf_pk>/export/users/', export.export_users, name='export-users'),
 ]

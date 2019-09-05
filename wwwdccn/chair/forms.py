@@ -491,20 +491,21 @@ class FilterReviewsForm(Form):
         return submissions
 
 
-class SelectSubmissionsExportForm(Form):
+class ExportSubmissionsForm(Form):
     ORDER_COLUMN = '#'
     ID_COLUMN = 'ID'
     AUTHORS_COLUMN = 'AUTHORS'
     TITLE_COLUMN = 'TITLE'
     COUNTRY_COLUMN = 'COUNTRY'
     STYPE_COLUMN = 'TYPE'
-    REVIEW_MANUSCRIPT_COLUMN = 'REVIEW_MANUSCRIPT'
+    REVIEW_PAPER_COLUMN = 'REVIEW_MANUSCRIPT'
     REVIEW_SCORE_COLUMN = 'REVIEW_SCORE'
     STATUS_COLUMN = 'STATUS'
     TOPICS_COLUMN = 'TOPICS'
     PTYPE_COLUMN = 'PROCEEDINGS'
     VOLUME_COLUMN = 'VOLUME'
 
+    # noinspection DuplicatedCode
     COLUMNS = (
         (ORDER_COLUMN, ORDER_COLUMN),
         (ID_COLUMN, ID_COLUMN),
@@ -512,7 +513,7 @@ class SelectSubmissionsExportForm(Form):
         (AUTHORS_COLUMN, AUTHORS_COLUMN),
         (COUNTRY_COLUMN, COUNTRY_COLUMN),
         (STYPE_COLUMN, STYPE_COLUMN),
-        (REVIEW_MANUSCRIPT_COLUMN, REVIEW_MANUSCRIPT_COLUMN),
+        (REVIEW_PAPER_COLUMN, REVIEW_PAPER_COLUMN),
         (REVIEW_SCORE_COLUMN, REVIEW_SCORE_COLUMN),
         (STATUS_COLUMN, STATUS_COLUMN),
         (TOPICS_COLUMN, TOPICS_COLUMN),
@@ -536,7 +537,7 @@ class SelectSubmissionsExportForm(Form):
             self.ORDER_COLUMN, self.ID_COLUMN, self.TITLE_COLUMN,
             self.AUTHORS_COLUMN]
 
-    def apply(self, build_uri=None):
+    def apply(self, request):
         submissions = Submission.objects.filter(
             Q(conference=self.conference) &
             Q(status__in=self.cleaned_data['status']))
@@ -579,13 +580,9 @@ class SelectSubmissionsExportForm(Form):
                 record[self.STYPE_COLUMN] = (
                     sub.stype.get_language_display() if sub.stype else '')
 
-            if self.REVIEW_MANUSCRIPT_COLUMN in columns:
-                uri = ''
-                if build_uri:
-                    uri = build_uri(
-                        reverse('submissions:download-manuscript',
-                                args=[sub.pk]))
-                record[self.REVIEW_MANUSCRIPT_COLUMN] = uri
+            if self.REVIEW_PAPER_COLUMN in columns:
+                record[self.REVIEW_PAPER_COLUMN] = request.build_absolute_uri(
+                    reverse('submissions:download-manuscript', args=[sub.pk]))
 
             if self.REVIEW_SCORE_COLUMN in columns:
                 score = get_average_score(sub)
@@ -608,6 +605,108 @@ class SelectSubmissionsExportForm(Form):
                 record[self.VOLUME_COLUMN] = (
                     decision.volume.name if (decision and decision.volume)
                     else '')
+
+            result.append(record)
+        return result
+
+
+class ExportUsersForm(Form):
+    ORDER_COLUMN = '#'
+    ID_COLUMN = 'ID'
+    FULL_NAME_COLUMN = 'FULL_NAME'
+    FULL_NAME_RUS_COLUMN = 'FULL_NAME_RUS'
+    DEGREE_COLUMN = 'DEGREE'
+    COUNTRY_COLUMN = 'COUNTRY'
+    CITY_COLUMN = 'CITY'
+    AFFILIATION_COLUMN = 'AFFILIATION'
+    ROLE_COLUMN = 'ROLE'
+    EMAIL_COLUMN = 'EMAIL'
+    NUM_SUBMITTED_COLUMN = 'NUM_SUBMITTED_PAPERS'
+    NUM_ACCEPTED_COLUMN = 'NUM_ACCEPTED_PAPERS'
+
+    # noinspection DuplicatedCode
+    COLUMNS = (
+        (ORDER_COLUMN, ORDER_COLUMN),
+        (ID_COLUMN, ID_COLUMN),
+        (FULL_NAME_COLUMN, FULL_NAME_COLUMN),
+        (FULL_NAME_RUS_COLUMN, FULL_NAME_RUS_COLUMN),
+        (DEGREE_COLUMN, DEGREE_COLUMN),
+        (COUNTRY_COLUMN, COUNTRY_COLUMN),
+        (CITY_COLUMN, CITY_COLUMN),
+        (AFFILIATION_COLUMN, AFFILIATION_COLUMN),
+        (ROLE_COLUMN, ROLE_COLUMN),
+        (EMAIL_COLUMN, EMAIL_COLUMN),
+        (NUM_SUBMITTED_COLUMN, NUM_SUBMITTED_COLUMN),
+        (NUM_ACCEPTED_COLUMN, NUM_ACCEPTED_COLUMN),
+    )
+
+    columns = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False, choices=COLUMNS)
+
+    def __init__(self, *args, conference=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if conference is None:
+            raise ValueError('conference must be provided')
+        self.conference = conference
+        self.fields['columns'].initial = [
+            self.ORDER_COLUMN, self.ID_COLUMN, self.FULL_NAME_COLUMN]
+
+    # noinspection PyUnusedLocal
+    def apply(self, request):
+        profiles = Profile.objects.all().order_by('user_id')
+        columns = self.cleaned_data['columns']
+        emails = {u.pk: u.email for u in User.objects.all()} \
+            if self.EMAIL_COLUMN in columns else {}
+
+        submissions = Submission.objects.filter(conference=self.conference)
+
+        order = 0
+        result = []
+
+        for pr in profiles:
+            order += 1
+            record = {}
+
+            if self.ORDER_COLUMN in columns:
+                record[self.ORDER_COLUMN] = order
+
+            if self.ID_COLUMN in columns:
+                record[self.ID_COLUMN] = pr.user_id
+
+            if self.FULL_NAME_COLUMN in columns:
+                record[self.FULL_NAME_COLUMN] = pr.get_full_name()
+
+            if self.FULL_NAME_RUS_COLUMN in columns:
+                record[self.FULL_NAME_RUS_COLUMN] = ' '.join((
+                    pr.first_name_rus, pr.middle_name_rus, pr.last_name_rus))
+
+            if self.DEGREE_COLUMN in columns:
+                record[self.DEGREE_COLUMN] = pr.get_degree_display()
+
+            if self.COUNTRY_COLUMN in columns:
+                record[self.COUNTRY_COLUMN] = pr.get_country_display()
+
+            if self.CITY_COLUMN in columns:
+                record[self.CITY_COLUMN] = pr.city
+
+            if self.AFFILIATION_COLUMN in columns:
+                record[self.AFFILIATION_COLUMN] = pr.affiliation
+
+            if self.ROLE_COLUMN in columns:
+                record[self.ROLE_COLUMN] = pr.get_role_display()
+
+            if self.EMAIL_COLUMN in columns:
+                record[self.EMAIL_COLUMN] = emails.get(pr.user_id, '')
+
+            if self.NUM_SUBMITTED_COLUMN in columns:
+                record[self.NUM_SUBMITTED_COLUMN] = submissions.filter(
+                    authors__user=pr.user_id).count()
+
+            if self.NUM_ACCEPTED_COLUMN in columns:
+                record[self.NUM_ACCEPTED_COLUMN] = submissions.filter(
+                    Q(authors__user=pr.user_id) & Q(status__in=[
+                        Submission.ACCEPTED, Submission.IN_PRINT,
+                        Submission.PUBLISHED])).count()
 
             result.append(record)
         return result
