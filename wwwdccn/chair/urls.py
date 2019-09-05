@@ -31,7 +31,6 @@ urlpatterns = [
     path('<int:conf_pk>/submissions/<int:sub_pk>/reviews/<int:rev_pk>/delete/', submissions.delete_review, name='delete-review'),
     path('<int:conf_pk>/submissions/create/', submissions.create_submission, name='submission-create'),
     path('<int:conf_pk>/submissions/<int:sub_pk>/delete/', submissions.delete_submission, name='submission-delete'),
-    # path('<int:conf_pk>/submissions/export/csv/', submissions.export_csv, name='export-submissions-csv'),
 
     #
     # Users
@@ -42,7 +41,6 @@ urlpatterns = [
     path('<int:conf_pk>/users/<int:user_pk>/messages/', users.emails, name='user-messages'),
     path('<int:conf_pk>/reviewers/invite/<int:user_pk>/', users.create_reviewer, name='invite-reviewer'),
     path('<int:conf_pk>/reviewers/revoke/<int:user_pk>/', users.revoke_reviewer, name='revoke-reviewer'),
-    path('<int:conf_pk>/authors/export/csv/', users.export_csv, name='export-authors-csv'),
 
     #
     # Reviews

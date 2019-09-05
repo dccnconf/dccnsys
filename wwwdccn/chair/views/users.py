@@ -1,14 +1,9 @@
-import csv
-from datetime import datetime
-
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.http import require_GET, require_POST
 
 from chair.forms import FilterUsersForm
 from chair.utility import validate_chair_access, build_paged_view_context
 from chair_mail.models import EmailMessage
-from conferences.decorators import chair_required
 from conferences.models import Conference
 from review.models import Reviewer
 from users.models import User
@@ -126,45 +121,3 @@ def revoke_reviewer(request, conf_pk, user_pk):
     if user.reviewer_set.count() > 0:
         Reviewer.objects.filter(user=user, conference=conference).delete()
     return redirect(request.GET.get('next'))
-
-
-#############################################################################
-# CSV EXPORTS
-#############################################################################
-# noinspection PyUnusedLocal
-@require_GET
-@chair_required
-def export_csv(request, conf_pk):
-    conference = get_object_or_404(Conference, pk=conf_pk)
-
-    users = {
-        user: list(user.authorship.filter(
-            submission__conference=conference
-        ).order_by('pk')) for user in User.objects.all()
-    }
-
-    # Create the HttpResponse object with the appropriate CSV header.
-    response = HttpResponse(content_type='text/csv')
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-    response['Content-Disposition'] = \
-        f'attachment; filename="authors-{timestamp}.csv"'
-
-    writer = csv.writer(response)
-    number = 1
-    writer.writerow([
-        '#', 'ID', 'FULL_NAME', 'FULL_NAME_RUS', 'DEGREE', 'COUNTRY', 'CITY',
-        'AFFILIATION', 'ROLE', 'EMAIL'
-    ])
-
-    for user in users:
-        prof = user.profile
-        row = [
-            number, user.pk, prof.get_full_name(), prof.get_full_name_rus(),
-            prof.degree, prof.get_country_display(), prof.city,
-            prof.affiliation, prof.role, user.email,
-        ]
-        writer.writerow(row)
-        number += 1
-
-    return response
-

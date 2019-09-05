@@ -37,6 +37,14 @@
 {% endblock %}
 
 
+{% block toolbar %}
+  <div class="d-flex my-3 pb-3 border-bottom">
+    <a href="{% url 'chair:export-users' conf_pk=conference.pk %}?next={{ request.get_full_path|urlencode }}"
+       class="btn btn-outline-secondary" ><i class="fas fa-download"></i> Export</a>
+  </div>
+{% endblock %}
+
+
 {#---------------------------------------------------------------------------#}
 {# Main content                                                              #}
 {#---------------------------------------------------------------------------#}

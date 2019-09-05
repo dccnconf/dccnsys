@@ -55,6 +55,8 @@
       {% csrf_token %}
       <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Create</button>
     </form>
+    <a href="{% url 'chair:export-submissions' conf_pk=conference.pk %}?next={{ request.get_full_path|urlencode }}"
+       class="btn btn-outline-secondary ml-2" ><i class="fas fa-download"></i> Export</a>
   </div>
 {% endblock %}
 
