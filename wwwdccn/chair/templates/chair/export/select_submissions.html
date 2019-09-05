@@ -1,0 +1,46 @@
+{% extends 'chair/base/preview_page.html' %}
+
+{% load bootstrap4 %}
+
+{% block content %}
+  <h1 class="dccn-panel-title">Export submissions</h1>
+  <form action="" method="POST" class="mt-4">
+    {% csrf_token %}
+
+    <div class="row">
+      <div class="col-xl-4 col-lg-6 col-12 form-group">
+        <div class="dccn-text-0">Select status
+          (<button type="button" class="btn btn-link dccn-link dccn-text-small clear-cb-btn">clear</button>,
+          <button type="button" class="btn btn-link dccn-link dccn-text-small select-all-cb-btn">select all</button>):
+        </div>
+        {{ form.status }}
+      </div>
+      <div class="col-xl-4 col-lg-6 col-12 form-group">
+        <div class="dccn-text-0">Select columns
+          (<button type="button" class="btn btn-link dccn-link dccn-text-small clear-cb-btn">clear</button>,
+          <button type="button" class="btn btn-link dccn-link dccn-text-small select-all-cb-btn">select all</button>):
+        </div>
+        {{ form.columns }}
+      </div>
+    </div>
+    <div class="d-flex mt-4">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Export</button>
+      <a class="btn btn-outline-secondary ml-auto" href="{{ next }}"><i class="fas fa-times"></i> Close</a>
+    </div>
+  </form>
+{% endblock %}
+
+
+{% block script %}
+<script>
+$('.clear-cb-btn').on('click', function () {
+  const parent = $(this).parent().parent();
+  parent.find('.form-check input').prop('checked', false);
+});
+
+$('.select-all-cb-btn').on('click', function () {
+  const parent = $(this).parent().parent();
+  parent.find('.form-check input').prop('checked', true);
+});
+</script>
+{% endblock %}

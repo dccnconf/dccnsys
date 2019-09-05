@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.forms import Form, MultipleChoiceField, CharField
+from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from conferences.models import Conference, ProceedingVolume
@@ -488,3 +489,125 @@ class FilterReviewsForm(Form):
         submissions = self.apply_sub_types(submissions)
         submissions = self.apply_volumes(submissions)
         return submissions
+
+
+class SelectSubmissionsExportForm(Form):
+    ORDER_COLUMN = '#'
+    ID_COLUMN = 'ID'
+    AUTHORS_COLUMN = 'AUTHORS'
+    TITLE_COLUMN = 'TITLE'
+    COUNTRY_COLUMN = 'COUNTRY'
+    STYPE_COLUMN = 'TYPE'
+    REVIEW_MANUSCRIPT_COLUMN = 'REVIEW_MANUSCRIPT'
+    REVIEW_SCORE_COLUMN = 'REVIEW_SCORE'
+    STATUS_COLUMN = 'STATUS'
+    TOPICS_COLUMN = 'TOPICS'
+    PTYPE_COLUMN = 'PROCEEDINGS'
+    VOLUME_COLUMN = 'VOLUME'
+
+    COLUMNS = (
+        (ORDER_COLUMN, ORDER_COLUMN),
+        (ID_COLUMN, ID_COLUMN),
+        (TITLE_COLUMN, TITLE_COLUMN),
+        (AUTHORS_COLUMN, AUTHORS_COLUMN),
+        (COUNTRY_COLUMN, COUNTRY_COLUMN),
+        (STYPE_COLUMN, STYPE_COLUMN),
+        (REVIEW_MANUSCRIPT_COLUMN, REVIEW_MANUSCRIPT_COLUMN),
+        (REVIEW_SCORE_COLUMN, REVIEW_SCORE_COLUMN),
+        (STATUS_COLUMN, STATUS_COLUMN),
+        (TOPICS_COLUMN, TOPICS_COLUMN),
+        (PTYPE_COLUMN, PTYPE_COLUMN),
+        (VOLUME_COLUMN, VOLUME_COLUMN),
+    )
+
+    status = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False,
+        choices=Submission.STATUS_CHOICE)
+
+    columns = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False, choices=COLUMNS)
+
+    def __init__(self, *args, conference=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if conference is None:
+            raise ValueError('conference must be provided')
+        self.conference = conference
+        self.fields['columns'].initial = [
+            self.ORDER_COLUMN, self.ID_COLUMN, self.TITLE_COLUMN,
+            self.AUTHORS_COLUMN]
+
+    def apply(self, build_uri=None):
+        submissions = Submission.objects.filter(
+            Q(conference=self.conference) &
+            Q(status__in=self.cleaned_data['status']))
+
+        order = 0
+        result = []
+        columns = self.cleaned_data['columns']
+
+        profiles = {
+            u.pk: u.profile for u in User.objects.filter(
+                authorship__submission__conference=self.conference)
+        }
+        for sub in submissions:
+            order += 1
+            record = {}
+            authors = sub.authors.all().order_by('order')
+            decision = sub.review_decision.first()
+
+            if self.ORDER_COLUMN in columns:
+                record[self.ORDER_COLUMN] = order
+
+            if self.ID_COLUMN in columns:
+                record[self.ID_COLUMN] = sub.pk
+
+            if self.TITLE_COLUMN in columns:
+                record[self.TITLE_COLUMN] = sub.title
+
+            if self.AUTHORS_COLUMN in columns:
+                names = [profiles[a.user_id].get_full_name() for a in authors]
+                record[self.AUTHORS_COLUMN] = '; '.join(names)
+
+            if self.COUNTRY_COLUMN in columns:
+                countries = [
+                    profiles[a.user_id].get_country_display() for a in authors]
+                countries = list(set(countries))  # remove duplicates
+                countries.sort()
+                record[self.COUNTRY_COLUMN] = '; '.join(countries)
+
+            if self.STYPE_COLUMN in columns:
+                record[self.STYPE_COLUMN] = (
+                    sub.stype.get_language_display() if sub.stype else '')
+
+            if self.REVIEW_MANUSCRIPT_COLUMN in columns:
+                uri = ''
+                if build_uri:
+                    uri = build_uri(
+                        reverse('submissions:download-manuscript',
+                                args=[sub.pk]))
+                record[self.REVIEW_MANUSCRIPT_COLUMN] = uri
+
+            if self.REVIEW_SCORE_COLUMN in columns:
+                score = get_average_score(sub)
+                score_string = f'{score:.1f}' if score else '-'
+                record[self.REVIEW_SCORE_COLUMN] = score_string
+
+            if self.STATUS_COLUMN in columns:
+                record[self.STATUS_COLUMN] = sub.get_status_display()
+
+            if self.TOPICS_COLUMN in columns:
+                record[self.TOPICS_COLUMN] = '; '.join(sub.topics.values_list(
+                    'name', flat=True))
+
+            if self.PTYPE_COLUMN in columns:
+                record[self.PTYPE_COLUMN] = (
+                    decision.proc_type.name if (decision and decision.proc_type)
+                    else '')
+
+            if self.VOLUME_COLUMN in columns:
+                record[self.VOLUME_COLUMN] = (
+                    decision.volume.name if (decision and decision.volume)
+                    else '')
+
+            result.append(record)
+        return result
