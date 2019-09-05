@@ -1,5 +1,6 @@
 from django.urls import path
 
+from chair.views import export
 from .views import dashboard, submissions, users, reviews
 
 
@@ -30,7 +31,6 @@ urlpatterns = [
     path('<int:conf_pk>/submissions/<int:sub_pk>/reviews/<int:rev_pk>/delete/', submissions.delete_review, name='delete-review'),
     path('<int:conf_pk>/submissions/create/', submissions.create_submission, name='submission-create'),
     path('<int:conf_pk>/submissions/<int:sub_pk>/delete/', submissions.delete_submission, name='submission-delete'),
-    path('<int:conf_pk>/submissions/export/csv/', submissions.export_csv, name='export-submissions-csv'),
 
     #
     # Users
@@ -41,7 +41,6 @@ urlpatterns = [
     path('<int:conf_pk>/users/<int:user_pk>/messages/', users.emails, name='user-messages'),
     path('<int:conf_pk>/reviewers/invite/<int:user_pk>/', users.create_reviewer, name='invite-reviewer'),
     path('<int:conf_pk>/reviewers/revoke/<int:user_pk>/', users.revoke_reviewer, name='revoke-reviewer'),
-    path('<int:conf_pk>/authors/export/csv/', users.export_csv, name='export-authors-csv'),
 
     #
     # Reviews
@@ -52,4 +51,10 @@ urlpatterns = [
     path('<int:conf_pk>/reviews/<int:sub_pk>/decision_control_panel/', reviews.decision_control_panel, name='review-decision-control'),
     path('<int:conf_pk>/reviews/<int:sub_pk>/commit_decision/', reviews.commit_decision, name='review-decision-commit'),
     path('<int:conf_pk>/reviews/<int:sub_pk>/list_item/', reviews.list_item, name='reviews-list-item-html'),
+
+    #
+    # Exports
+    #
+    path('<int:conf_pk>/export/submissions/', export.export_submissions, name='export-submissions'),
+    path('<int:conf_pk>/export/users/', export.export_users, name='export-users'),
 ]

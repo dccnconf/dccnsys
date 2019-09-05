@@ -361,57 +361,6 @@ def delete_review(request, conference, submission, rev_pk):
         conf_pk=conference.pk, sub_pk=submission.pk)
 
 
-#############################################################################
-# CSV EXPORTS
-#############################################################################
-@require_GET
-@chair_required
-def export_csv(request, conf_pk):
-    conference = get_object_or_404(Conference, pk=conf_pk)
-    submissions = list(conference.submission_set.all().order_by('pk'))
-    profs = {
-        sub: Profile.objects.filter(user__authorship__submission=sub).all()
-        for sub in submissions
-    }
-
-    # Create the HttpResponse object with the appropriate CSV header.
-    response = HttpResponse(content_type='text/csv')
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-    response['Content-Disposition'] = \
-        f'attachment; filename="submissions-{timestamp}.csv"'
-
-    writer = csv.writer(response)
-    number = 1
-    writer.writerow([
-        '#', 'ID', 'TITLE', 'AUTHORS', 'COUNTRY', 'CORR_AUTHOR', 'CORR_EMAIL',
-        'LANGUAGE', 'LINK',
-    ])
-
-    for sub in submissions:
-        # noinspection PyShadowingNames
-        authors = ', '.join(pr.get_full_name() for pr in profs[sub])
-        countries = ', '.join(set(p.get_country_display() for p in profs[sub]))
-        owner = sub.created_by
-        corr_author = owner.profile.get_full_name() if owner else ''
-        corr_email = owner.email if owner else ''
-
-        if sub.review_manuscript:
-            link = request.build_absolute_uri(
-                reverse('submissions:download-manuscript', args=[sub.pk]))
-        else:
-            link = ''
-        stype = sub.stype.get_language_display() if sub.stype else ''
-
-        row = [
-            number, sub.pk, sub.title, authors, countries, corr_author,
-            corr_email, stype, link
-        ]
-        writer.writerow(row)
-        number += 1
-
-    return response
-
-
 @require_POST
 def create_submission(request, conf_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
