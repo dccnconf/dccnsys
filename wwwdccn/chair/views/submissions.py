@@ -301,9 +301,14 @@ def delete_review_manuscript(request, conference, submission):
 @require_POST
 @submission_view
 def start_review(request, conference, submission):
-    if submission.status == Submission.SUBMITTED:
+    if submission.status in [Submission.SUBMITTED, Submission.ACCEPTED,
+                             Submission.REJECTED]:
         submission.status = Submission.UNDER_REVIEW
         submission.save()
+        decision = submission.review_decision.first()
+        if decision:
+            decision.committed = False
+            decision.save()
     return redirect(request.GET.get('next', ''))
 
 

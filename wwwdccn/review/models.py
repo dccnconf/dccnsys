@@ -227,7 +227,8 @@ class Decision(Model):
         if status != Submission.IN_PRINT:
             new_status = decision_status[self.decision]
             update_status = status != new_status
-            self.submission.status = new_status
+            if not (new_status == Submission.ACCEPTED and not self.proc_type):
+                self.submission.status = new_status
             self.submission.save()
             # Adding artifacts:
             if new_status == Submission.ACCEPTED and self.proc_type:
@@ -236,7 +237,6 @@ class Decision(Model):
                 for ad in artifact_descriptors:
                     art, created = self.submission.artifacts.get_or_create(
                         descriptor=ad)
-                    print(f'{"created" if created else "updated"} {art}')
             if update_status and self.decision != Decision.UNDEFINED:
                 # TODO: inform user about proc_type or volume change
                 # (we are here if status didn't change, so Submission.save()

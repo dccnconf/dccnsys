@@ -160,13 +160,9 @@
   <script src="{% static 'chair/js/review_decision_control.js' %}"></script>
   <script>
 $(document).ready(() => {
-  $.fn.loadHtml = function () {
-  };
-
   $('[data-html-src]').each(function () {
     const div = $(this);
     const url = div.attr('data-html-src');
-    console.log('Sending data request to ', url);
     $.get(url, data => {
       div.html(data);
     });
