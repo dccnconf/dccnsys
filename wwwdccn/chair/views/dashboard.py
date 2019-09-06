@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from chair.utility import validate_chair_access
+from conferences.utilities import validate_chair_access
 from conferences.models import Conference
 from submissions.models import Submission
 from users.models import User

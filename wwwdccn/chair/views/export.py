@@ -6,7 +6,7 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 
 from chair.forms import ExportSubmissionsForm, ExportUsersForm
-from chair.utility import validate_chair_access
+from conferences.utilities import validate_chair_access
 from conferences.models import Conference
 
 

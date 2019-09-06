@@ -2,7 +2,8 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.http import require_GET, require_POST
 
 from chair.forms import FilterUsersForm
-from chair.utility import validate_chair_access, build_paged_view_context
+from chair.utility import build_paged_view_context
+from conferences.utilities import validate_chair_access
 from chair_mail.models import EmailMessage
 from conferences.models import Conference
 from review.models import Reviewer

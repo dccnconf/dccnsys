@@ -89,7 +89,7 @@
 
       {# 2.2.2. Volume form #}
       <div class="ml-3 mt-3 review-feed-item-controls">
-        {% include 'chair/submissions/feed/_volume_control.html' with form_data=form_data conf_pk=conf_pk sub_pk=sub_pk %}
+        {% include 'chair/submissions/feed/_decision_control.html' with form_data=form_data conf_pk=conf_pk sub_pk=sub_pk %}
       </div>
 
     </div>
@@ -140,8 +140,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-          <form action="{% url 'chair:start-review' conf_pk=conf_pk sub_pk=sub_pk %}?next={{ request.get_full_path|urlencode }}"
-                method="POST" class="dccn-feed-item-link decision-control-form">
+          <form action="{% url 'chair:start-review' conf_pk=conf_pk sub_pk=sub_pk %}" method="POST" class="inst-form">
             {% csrf_token %}
             <button type="submit" class="btn btn-warning">Confirm</button>
           </form>

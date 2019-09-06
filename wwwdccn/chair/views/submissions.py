@@ -1,27 +1,23 @@
-import csv
 import functools
-from datetime import datetime
 
 from django.contrib import messages
-from django.http import Http404, HttpResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
-from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 from django.utils.translation import ugettext_lazy as _
 
 from chair.forms import FilterSubmissionsForm, \
     ChairUploadReviewManuscriptForm, AssignReviewerForm
-from chair.utility import validate_chair_access, build_paged_view_context
-from conferences.decorators import chair_required
+from chair.utility import build_paged_view_context
+from conferences.utilities import validate_chair_access
 from conferences.models import Conference
-from review.forms import UpdateVolumeForm
+from review.forms import UpdateVolumeForm, UpdateDecisionForm
 from review.models import Review, ReviewStats, Decision
 from review.utilities import count_required_reviews, qualify_score, \
     UNKNOWN_QUALITY
 from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
     AuthorDeleteForm, AuthorsReorderForm, InviteAuthorForm
 from submissions.models import Submission
-from users.models import Profile
 
 
 def submission_view(fn):
@@ -55,7 +51,7 @@ def list_submissions(request, conf_pk, page=1):
         'conference': conference,
         'filter_form': form,
     })
-    return render(request, 'chair/submissions/submissions_list.html',
+    return render(request, 'chair/submissions/list.html',
                   context=context)
 
 
@@ -95,10 +91,10 @@ def feed_item(request, conference, submission):
         if num_missing > 0:
             warnings.append(f'{num_missing} reviews are not assigned')
 
-        return render(request, 'chair/reviews/_submission_feed_item.html', {
+        return render(request, 'chair/submissions/feed/card_review.html', {
             'submission': submission,
             'conf_pk': conference.pk,
-            'decision_data': _get_decision_form_data(submission),
+            'decision_data': _build_decision_form_data(submission),
             'reviews_data': reviews_data,
             'warnings': warnings,
         })
@@ -108,7 +104,8 @@ def feed_item(request, conference, submission):
             'conf_pk': conference.pk,
             'submission': submission,
             'decision': submission.review_decision.first(),
-            'form_data': _get_volume_form_data(submission),
+            'form_data': _build_decision_form_data(
+                submission, hide_decision=True, hide_proc_type=True),
         })
 
     elif submission.status == Submission.REJECTED:
@@ -118,97 +115,43 @@ def feed_item(request, conference, submission):
         })
 
 
-@require_POST
-def volume_control_panel(request, conf_pk, sub_pk):
-    conference = get_object_or_404(Conference, pk=conf_pk)
-    validate_chair_access(request.user, conference)
-    submission = Submission.objects.get(pk=sub_pk)
-    decision = submission.review_decision.first()
-    form = UpdateVolumeForm(request.POST, instance=decision)
-    if request.method == 'POST' and form.is_valid():
-        form.save()
-    return render(request, 'chair/accepted_papers/_feed_item.html', {
-        'conf_pk': conference.pk,
-        'submission': submission,
-        'decision': submission.review_decision.first(),
-        'form_data': _get_volume_form_data(submission),
-    })
-
-
-@require_POST
-def commit_volume(request, conf_pk, sub_pk):
-    conference = get_object_or_404(Conference, pk=conf_pk)
-    validate_chair_access(request.user, conference)
-    submission = Submission.objects.get(pk=sub_pk)
-    decision = submission.review_decision.first()
-    decision.commit()
-    return render(request, 'chair/accepted_papers/_feed_item.html', {
-        'conf_pk': conference.pk,
-        'submission': submission,
-        'decision': submission.review_decision.first(),
-        'form_data': _get_volume_form_data(submission),
-    })
-
-
-def _get_volume_form_data(submission):
-    decision = submission.review_decision.first()
-    proc_type = decision.proc_type
-    volume = decision.volume if decision else None
-    default_option = [('', 'Not selected')]
-
-    data_volume = {
-        'hidden': False,
-        'value': '', 'display': default_option[0][-1],
-        'options': default_option + [
-            (vol.pk, vol.name) for vol in proc_type.volumes.all()],
-
-    }
-    if volume:
-        data_volume.update({'value': volume.pk, 'display': volume.name})
-    return {
-        'volume': data_volume,
-        'committed': decision.committed if decision else True
-    }
-
-
-def _get_decision_form_data(submission):
+def _build_decision_form_data(submission, hide_decision=False,
+                              hide_proc_type=False, hide_volume=False):
     decision = submission.review_decision.first()
     proc_type = decision.proc_type if decision else None
     volume = decision.volume if decision else None
     default_option = [('', 'Not selected')]
 
     # 1) Filling data_decision value and display:
-    data_decision = {'hidden': False, 'options': Decision.DECISION_CHOICES}
     decision_value = Decision.UNDEFINED if not decision else decision.decision
-    data_decision['value'] = decision_value
-    data_decision['display'] = [
-        opt[1] for opt in Decision.DECISION_CHOICES if opt[0] == decision_value
-    ][0]
-
-    # 2) Fill proceedings type if possible:
-    stype = submission.stype
-    data_proc_type = {
-        'hidden': decision_value != Decision.ACCEPT,
-        'value': '', 'display': default_option[0][-1],
+    data_decision = {
+        'hidden': hide_decision,
+        'options': Decision.DECISION_CHOICES,
+        'value': decision_value,
+        'display': [opt[1] for opt in Decision.DECISION_CHOICES
+                    if opt[0] == decision_value][0]
     }
-    if not data_proc_type['hidden']:
-        data_proc_type['options'] = default_option + [
-            (pt.pk, pt.name) for pt in stype.possible_proceedings.all()]
-        if proc_type:
-            data_proc_type.update({
-                'value': proc_type.pk, 'display': proc_type.name
-            })
+    if submission.pk == 31:
+        print('Data decision: ', data_decision)
+
+    # 2) Fill proceedings type if needed and possible:
+    data_proc_type = {
+        'hidden': hide_proc_type or decision_value != Decision.ACCEPT,
+        'value': proc_type.pk if proc_type else '',
+        'display': proc_type.name if proc_type else default_option[0][-1],
+        'options': default_option + [
+            (t.pk, t.name) for t in submission.stype.possible_proceedings.all()]
+    }
 
     # 3) Fill volumes if possible:
     data_volume = {
-        'hidden': data_proc_type['value'] == '',
-        'value': '', 'display': default_option[0][-1],
+        'hidden': hide_volume or not data_proc_type['value'],
+        'value': volume.pk if volume else '',
+        'display': volume.name if volume else default_option[0][-1],
+        'options': default_option + [
+            (vol.pk, vol.name) for vol in
+            (proc_type.volumes.all() if proc_type else [])]
     }
-    if not data_volume['hidden']:
-        data_volume['options'] = default_option + [
-            (vol.pk, vol.name) for vol in proc_type.volumes.all()]
-        if volume:
-            data_volume.update({'value': volume.pk, 'display': volume.name})
 
     # 4) Collect everything and output:
     return {
@@ -389,20 +332,6 @@ def delete_review_manuscript(request, conference, submission):
     )
 
 
-@require_POST
-@submission_view
-def start_review(request, conference, submission):
-    if submission.status in [Submission.SUBMITTED, Submission.ACCEPTED,
-                             Submission.REJECTED]:
-        submission.status = Submission.UNDER_REVIEW
-        submission.save()
-        decision = submission.review_decision.first()
-        if decision:
-            decision.committed = False
-            decision.save()
-    return redirect(request.GET.get('next', ''))
-
-
 # noinspection PyUnusedLocal
 @require_POST
 @submission_view
@@ -474,3 +403,26 @@ def delete_submission(request, conf_pk, sub_pk):
     submission.delete()
     messages.warning(request, f'Submission #{sub_pk} deleted')
     return redirect('chair:submissions', conf_pk=conf_pk)
+
+
+#
+# API
+#
+@require_POST
+@submission_view
+def start_review(request, conference, submission):
+    # submission = kwargs.get('submission')
+    print(submission)
+    if submission.status in [Submission.SUBMITTED, Submission.ACCEPTED,
+                             Submission.REJECTED]:
+        submission.status = Submission.UNDER_REVIEW
+        submission.save()
+        print(submission)
+        decision = submission.review_decision.first()
+        print(decision)
+        if decision:
+            decision.committed = False
+            decision.save()
+            print('saved decision')
+    print('returning 200')
+    return JsonResponse(data={})

@@ -98,8 +98,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-          <form action="{% url 'chair:start-review' conf_pk=conf_pk sub_pk=sub_pk %}?next={{ request.get_full_path|urlencode }}"
-                method="POST" class="dccn-feed-item-link decision-control-form">
+          <form action="{% url 'chair:start-review' conf_pk=conf_pk sub_pk=sub_pk %}" method="POST" class="inst-form">
             {% csrf_token %}
             <button type="submit" class="btn btn-warning">Confirm</button>
           </form>

@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 
-from chair.utility import validate_chair_access
+from conferences.utilities import validate_chair_access
 from chair_mail.mailing_lists import USER_LISTS, SUBMISSION_LISTS, ALL_LISTS, \
     find_list
 from conferences.models import Conference

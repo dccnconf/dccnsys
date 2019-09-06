@@ -7,11 +7,6 @@ from django.urls import reverse
 ITEMS_PER_PAGE = 10
 
 
-def validate_chair_access(user, conference):
-    if user not in conference.chairs.all():
-        raise Http404
-
-
 def build_paged_view_context(request, items, page, viewname, kwargs):
     num_items = len(items)
     num_pages = int(math.ceil(num_items / ITEMS_PER_PAGE))

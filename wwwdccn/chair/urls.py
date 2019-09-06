@@ -1,7 +1,7 @@
 from django.urls import path
 
-from chair.views import export, accepted_papers
-from .views import dashboard, submissions, users, reviews
+from chair.views import export
+from .views import dashboard, submissions, users
 
 
 app_name = 'chair'
@@ -42,27 +42,6 @@ urlpatterns = [
     path('<int:conf_pk>/users/<int:user_pk>/messages/', users.emails, name='user-messages'),
     path('<int:conf_pk>/reviewers/invite/<int:user_pk>/', users.create_reviewer, name='invite-reviewer'),
     path('<int:conf_pk>/reviewers/revoke/<int:user_pk>/', users.revoke_reviewer, name='revoke-reviewer'),
-
-    #
-    # Reviews
-    #
-    path('<int:conf_pk>/reviews/', reviews.list_submissions, name='reviews'),
-    path('<int:conf_pk>/reviews/pages/<int:page>/', reviews.list_submissions, name='reviews-pages'),
-    # path('<int:conf_pk>/reviews/export/docx/', reviews.export_doc, name='export-reviews-doc'),
-    path('<int:conf_pk>/reviews/<int:sub_pk>/decision_control_panel/', reviews.decision_control_panel, name='review-decision-control'),
-    path('<int:conf_pk>/reviews/<int:sub_pk>/commit_decision/', reviews.commit_decision, name='review-decision-commit'),
-    path('<int:conf_pk>/reviews/<int:sub_pk>/list_item/', reviews.list_item, name='reviews-list-item-html'),
-
-    #
-    # Accepted papers
-    #
-    path('<int:conf_pk>/accepted_papers/', accepted_papers.papers_list, name='accepted-papers'),
-    path('<int:conf_pk>/accepted_papers/pages/<int:page>/', accepted_papers.papers_list, name='accepted-papers-pages'),
-    path('<int:conf_pk>/accepted_papers/<int:sub_pk>/list_item/', accepted_papers.feed_item, name='accepted-papers-feed-item'),
-    path('<int:conf_pk>/accepted_papers/<int:sub_pk>/volume_control_panel/',
-         accepted_papers.volume_control_panel, name='volume-decision-control'),
-    path('<int:conf_pk>/accepted_papers/<int:sub_pk>/commit_decision/',
-         accepted_papers.commit_volume, name='volume-decision-commit'),
 
     #
     # Exports
