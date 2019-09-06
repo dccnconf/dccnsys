@@ -16,6 +16,9 @@
     <div class="dccn-feed-item-label dccn-feed-item-status">
       <i class="fas fa-circle {{ submission|status_class }}"></i> {{ submission.get_status_display }}
     </div>
+    <div class="dccn-feed-item-label ml-2 text-{{ submission|quality_of|quality_color }}-12 ">
+      <i class="far fa-star"></i> {{ submission|average_score }}
+    </div>
     {# 1.2. Submission warnings, or, if no warnings, review status #}
     {% if warnings %}
       <div class="dccn-feed-item-label mx-2">
