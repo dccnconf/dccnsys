@@ -107,13 +107,48 @@
       <input type="hidden" name="objects" value="{{ sub_pk }}">
       <button class="btn btn-link dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</button>
     </form>
-    <form action="{% url 'chair:start-review' conf_pk=conf_pk sub_pk=submission.pk %}?next={{ request.get_full_path|urlencode }}"
-          method="POST" class="dccn-feed-item-link decision-control-form">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-link dccn-feed-item-link"><i class="fas fa-backward"></i> Revert to review</button>
-    </form>
-
+    <button type="button" class="btn btn-link dccn-feed-item-link"
+            data-toggle="modal" data-target="#revertToReviewModal-{{ sub_pk }}">
+      <i class="fas fa-backward"></i> Revert to review
+    </button>
+{#      <button type="submit" class="btn btn-link dccn-feed-item-link"><i class="fas fa-backward"></i> Revert to review</button>#}
     <div class="dccn-feed-item-id ml-auto">#{{ sub_pk }}</div>
+  </div>
+
+  {###################################################}
+  {# MODAL DIALOG: Conformation for revert to review #}
+  {###################################################}
+  <div class="modal fade" tabindex="-1" role="dialog" id="revertToReviewModal-{{ sub_pk }}">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title">Confirm revert to review</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body d-flex align-items-center">
+          <div class="mr-4">
+            <i class="fas fa-exclamation-triangle fa-5x text-warning"></i>
+          </div>
+          <div>
+            <p class="dccn-text-small">
+              If you proceed, status of the submission #<b>{{ sub_pk }} "{{ submission.title }}"</b>  will be changed
+              to <b>Review</b>, authors will receive an email (if notifications are enabled) about that status change.
+            </p>
+            <p class="dccn-text-small mt-3">Are you sure you want to proceed?</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+          <form action="{% url 'chair:start-review' conf_pk=conf_pk sub_pk=sub_pk %}?next={{ request.get_full_path|urlencode }}"
+                method="POST" class="dccn-feed-item-link decision-control-form">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-warning">Confirm</button>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 {% endwith %}
 </div>

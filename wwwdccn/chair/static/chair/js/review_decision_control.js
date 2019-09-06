@@ -9,8 +9,7 @@ $(document).ready(function () {
     form.submit();
   });
 
-  body.on('submit', 'form.decision-control-form', event => {
-    const form = $(event.target);
+  const sendControlForm = function (form) {
     const formData = form.serialize();
     $.ajax({
       url: form.attr('action'),
@@ -19,6 +18,19 @@ $(document).ready(function () {
     }).done(data => {
       form.parents('.dccn-feed-item').html(data);
     });
+  };
+
+  body.on('submit', 'form.decision-control-form', event => {
+    const form = $(event.target);
+    const modalParent = form.parents('.modal');
+    if (modalParent.length > 0) {
+      modalParent.on('hidden.bs.modal', function () {
+        sendControlForm(form);
+      });
+      modalParent.modal('hide');
+    } else {
+      sendControlForm(form);
+    }
     event.stopPropagation();
     return false;
   });
