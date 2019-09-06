@@ -14,6 +14,7 @@ urlpatterns = [
     #
     path('<int:conf_pk>/submissions/', submissions.list_submissions, name='submissions'),
     path('<int:conf_pk>/submissions/pages/<int:page>/', submissions.list_submissions, name='submissions-pages'),
+    path('<int:conf_pk>/submissions/<int:sub_pk>/feed_item/', submissions.feed_item, name='submission-feed-item'),
     path('<int:conf_pk>/submissions/<int:sub_pk>/overview/', submissions.overview, name='submission-overview'),
     path('<int:conf_pk>/submissions/<int:sub_pk>/metadata/', submissions.metadata, name='submission-metadata'),
     path('<int:conf_pk>/submissions/<int:sub_pk>/authors/', submissions.authors, name='submission-authors'),

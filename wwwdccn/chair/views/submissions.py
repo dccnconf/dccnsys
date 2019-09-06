@@ -14,7 +14,10 @@ from chair.forms import FilterSubmissionsForm, \
 from chair.utility import validate_chair_access, build_paged_view_context
 from conferences.decorators import chair_required
 from conferences.models import Conference
-from review.models import Review
+from review.forms import UpdateVolumeForm
+from review.models import Review, ReviewStats, Decision
+from review.utilities import count_required_reviews, qualify_score, \
+    UNKNOWN_QUALITY
 from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
     AuthorDeleteForm, AuthorsReorderForm, InviteAuthorForm
 from submissions.models import Submission
@@ -43,82 +46,10 @@ def list_submissions(request, conf_pk, page=1):
     if form.is_valid():
         submissions = form.apply(submissions)
 
-    # auth_prs = {
-    #     sub: Profile.objects.filter(user__authorship__submission=sub).values(
-    #         'first_name', 'last_name', 'user__pk',
-    #     )
-    #     for sub in submissions
-    # }
-    # NOTE: may be slower than code above, but provides right ordering:
-
-    # Collect possible actions:
-    actions = {
-        sub: {
-            'review': sub.status == Submission.SUBMITTED and not sub.warnings(),
-            'revoke_review': sub.status == Submission.UNDER_REVIEW,
-            'assign_reviewers': sub.status == Submission.UNDER_REVIEW,
-        }
-        for sub in submissions
-    }
-
-    _reviews = {
-        sub: sub.reviews.all() for sub in submissions
-    }
-    num_revs_incomplete = {
-        sub: sub.reviews.filter(submitted=False).count() for sub in submissions
-    }
-
-    scores = {
-        sub: [r.average_score() for r in _reviews[sub]] for sub in submissions
-    }
-    average_scores = {
-        sub: (f'{sum(scores[sub])/len(scores[sub]):.1f}'
-              if len(scores[sub]) > 0 else '-')
-        for sub in submissions}
-
-    for sub in submissions:
-        _scores = scores[sub]
-        for i in range(len(_scores)):
-            x = _scores[i]
-            _scores[i] = '-' if x == 0 else f'{x:.1f}'
-
-    warnings = {}
-    for sub in submissions:
-        _w = []
-        if sub.status == Submission.UNDER_REVIEW:
-            if num_revs_incomplete[sub] > 0:
-                _w.append(f'{num_revs_incomplete[sub]} reviews incomplete')
-            if len(_reviews[sub]) < sub.stype.num_reviews:
-                _w.append(
-                    f'missing {sub.stype.num_reviews - _reviews[sub].count()}'
-                    f' review assignments'
-                )
-        warnings[sub] = _w + list(sub.warnings())
-
-    items = [{
-        'object': sub,
-        'title': sub.title,
-        'authors': [{
-            'name': pr.get_full_name(),
-            'user_pk': pr.user.pk,
-        } for pr in sub.get_authors_profiles()],
-        'pk': sub.pk,
-        'status': sub.status,  # this is needed to make `status_class` work
-        'status_display': sub.get_status_display(),
-        'actions': actions[sub],
-        'reviews': _reviews[sub],
-        'num_reviews': sub.reviews.all().count(),
-        'num_reviews_required': sub.stype.num_reviews if sub.stype else 0,
-        'num_incomplete_reviews': num_revs_incomplete[sub],
-        'scores': scores[sub],
-        'average_score': average_scores[sub],
-        'warnings': warnings[sub],
-    } for sub in submissions]
-
-    items.sort(key=lambda item: item['pk'])
+    pks = [sub.pk for sub in submissions]
 
     context = build_paged_view_context(
-        request, items, page, 'chair:submissions-pages', {'conf_pk': conf_pk}
+        request, pks, page, 'chair:submissions-pages', {'conf_pk': conf_pk}
     )
     context.update({
         'conference': conference,
@@ -126,6 +57,166 @@ def list_submissions(request, conf_pk, page=1):
     })
     return render(request, 'chair/submissions/submissions_list.html',
                   context=context)
+
+
+@require_GET
+@submission_view
+def feed_item(request, conference, submission):
+    if submission.status == Submission.SUBMITTED:
+        return render(request, 'chair/submissions/feed/card_submitted.html', {
+            'conf_pk': conference.pk,
+            'submission': submission,
+        })
+
+    elif submission.status == Submission.UNDER_REVIEW:
+        stats, _ = ReviewStats.objects.get_or_create(conference=conference)
+
+        # Fill reviews data - a list of scores with data, and warnings:
+        reviews_data = []
+        num_incomplete, num_missing = 0, 0
+        for review in submission.reviews.all():
+            score = review.average_score()
+            quality = qualify_score(score, stats=stats)
+            reviews_data.append({
+                'quality': quality,
+                'score': f'{score:.1f}' if score > 0 else '?',
+            })
+            if score == 0:
+                num_incomplete += 1
+        num_required = count_required_reviews(submission)
+        if num_required > len(reviews_data):
+            num_missing = num_required - len(reviews_data)
+            for _ in range(num_required - len(reviews_data)):
+                reviews_data.append({'quality': UNKNOWN_QUALITY, 'score': '-'})
+
+        warnings = []
+        if num_incomplete > 0:
+            warnings.append(f'{num_incomplete} reviews are not finished')
+        if num_missing > 0:
+            warnings.append(f'{num_missing} reviews are not assigned')
+
+        return render(request, 'chair/reviews/_submission_feed_item.html', {
+            'submission': submission,
+            'conf_pk': conference.pk,
+            'decision_data': _get_decision_form_data(submission),
+            'reviews_data': reviews_data,
+            'warnings': warnings,
+        })
+
+    elif submission.status == Submission.ACCEPTED:
+        return render(request, 'chair/submissions/feed/card_accepted.html', {
+            'conf_pk': conference.pk,
+            'submission': submission,
+            'decision': submission.review_decision.first(),
+            'form_data': _get_volume_form_data(submission),
+        })
+
+    elif submission.status == Submission.REJECTED:
+        return render(request, 'chair/submissions/feed/card_rejected.html', {
+            'conf_pk': conference.pk,
+            'submission': submission,
+        })
+
+
+@require_POST
+def volume_control_panel(request, conf_pk, sub_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    submission = Submission.objects.get(pk=sub_pk)
+    decision = submission.review_decision.first()
+    form = UpdateVolumeForm(request.POST, instance=decision)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+    return render(request, 'chair/accepted_papers/_feed_item.html', {
+        'conf_pk': conference.pk,
+        'submission': submission,
+        'decision': submission.review_decision.first(),
+        'form_data': _get_volume_form_data(submission),
+    })
+
+
+@require_POST
+def commit_volume(request, conf_pk, sub_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    submission = Submission.objects.get(pk=sub_pk)
+    decision = submission.review_decision.first()
+    decision.commit()
+    return render(request, 'chair/accepted_papers/_feed_item.html', {
+        'conf_pk': conference.pk,
+        'submission': submission,
+        'decision': submission.review_decision.first(),
+        'form_data': _get_volume_form_data(submission),
+    })
+
+
+def _get_volume_form_data(submission):
+    decision = submission.review_decision.first()
+    proc_type = decision.proc_type
+    volume = decision.volume if decision else None
+    default_option = [('', 'Not selected')]
+
+    data_volume = {
+        'hidden': False,
+        'value': '', 'display': default_option[0][-1],
+        'options': default_option + [
+            (vol.pk, vol.name) for vol in proc_type.volumes.all()],
+
+    }
+    if volume:
+        data_volume.update({'value': volume.pk, 'display': volume.name})
+    return {
+        'volume': data_volume,
+        'committed': decision.committed if decision else True
+    }
+
+
+def _get_decision_form_data(submission):
+    decision = submission.review_decision.first()
+    proc_type = decision.proc_type if decision else None
+    volume = decision.volume if decision else None
+    default_option = [('', 'Not selected')]
+
+    # 1) Filling data_decision value and display:
+    data_decision = {'hidden': False, 'options': Decision.DECISION_CHOICES}
+    decision_value = Decision.UNDEFINED if not decision else decision.decision
+    data_decision['value'] = decision_value
+    data_decision['display'] = [
+        opt[1] for opt in Decision.DECISION_CHOICES if opt[0] == decision_value
+    ][0]
+
+    # 2) Fill proceedings type if possible:
+    stype = submission.stype
+    data_proc_type = {
+        'hidden': decision_value != Decision.ACCEPT,
+        'value': '', 'display': default_option[0][-1],
+    }
+    if not data_proc_type['hidden']:
+        data_proc_type['options'] = default_option + [
+            (pt.pk, pt.name) for pt in stype.possible_proceedings.all()]
+        if proc_type:
+            data_proc_type.update({
+                'value': proc_type.pk, 'display': proc_type.name
+            })
+
+    # 3) Fill volumes if possible:
+    data_volume = {
+        'hidden': data_proc_type['value'] == '',
+        'value': '', 'display': default_option[0][-1],
+    }
+    if not data_volume['hidden']:
+        data_volume['options'] = default_option + [
+            (vol.pk, vol.name) for vol in proc_type.volumes.all()]
+        if volume:
+            data_volume.update({'value': volume.pk, 'display': volume.name})
+
+    # 4) Collect everything and output:
+    return {
+        'decision': data_decision,
+        'proc_type': data_proc_type,
+        'volume': data_volume,
+        'committed': decision.committed if decision else True
+    }
 
 
 @require_GET
