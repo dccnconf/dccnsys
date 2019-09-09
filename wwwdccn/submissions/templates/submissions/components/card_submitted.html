@@ -2,14 +2,21 @@
 {# CONTEXT:        #}
 {# * submission    #}
 {######################################}
+{% load submission_extras %}
+{% with warnings=submission|warnings_of %}
 <div class="dccn-feed-item">
   <div class="dccn-feed-item-top">
     <div class="dccn-feed-item-label dccn-feed-item-conf">{{ submission.conference.short_name }}</div>
     <div class="dccn-feed-item-label ml-auto mr-3" data-toggle="tooltip" title="Submission deadline">
       <i class="far fa-clock"></i> <span class="font-weight-lighter">{{ submission.conference.submission_stage.end_date }}</span>
     </div>
+    {% if warnings %}
+      <div class="dccn-feed-item-label mr-3">
+        <i class="fas fa-exclamation-triangle text-warning"></i> {{ warnings|length }}
+      </div>
+    {% endif %}
     <div class="dccn-feed-item-label dccn-feed-item-status">
-      Submitted <i class="fas fa-circle {% if not submission.review_manuscript %}text-warning{% else %}text-success{% endif %}"></i>
+      Submitted <i class="fas fa-circle text-success-4"></i>
     </div>
   </div>
   <p class="dccn-feed-item-title">
@@ -23,14 +30,14 @@
     </div>
   </div>
   <div class="dccn-feed-item-messages">
-    {% if not submission.review_manuscript %}
-    <div class="dccn-feed-item-row">
-      <div class="dccn-feed-item-message-text">
-        <i class="fas fa-exclamation-triangle text-warning"></i> Manuscript not uploaded yet
-        (<a href="{% url 'submissions:edit-manuscript' pk=submission.pk %}" class="dccn-feed-item-message-link">upload...</a>)
+    {% for warning in warnings %}
+      <div class="dccn-feed-item-row">
+        <div class="dccn-feed-item-message-text">
+          <i class="fas fa-exclamation-circle text-warning"></i> {{ warning.label }}
+          {% if warning.link %}(<a href="{{ warning.link }}" class="dccn-link dccn-text-small">{{ warning.link_label }}</a>){% endif %}
+        </div>
       </div>
-    </div>
-    {% endif %}
+    {% endfor %}
   </div>
   <div class="dccn-feed-item-footer">
     <a href="{% url 'submissions:overview' pk=submission.pk %}" class="dccn-feed-item-link"><i class="fas fa-align-justify"></i> View</a>
@@ -43,3 +50,4 @@
 
   {% include 'submissions/components/delete_dialog.html' with submission=submission %}
 </div>
+{% endwith %}

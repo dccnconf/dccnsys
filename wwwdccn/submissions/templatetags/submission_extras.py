@@ -4,6 +4,7 @@ from django.utils import timezone
 from conferences.models import ArtifactDescriptor
 from submissions import utilities
 from submissions.helpers import get_affiliations_of, get_countries_of
+from submissions.utilities import list_warnings
 
 register = template.Library()
 
@@ -75,11 +76,22 @@ def file_icon_class(artifact):
 
 
 @register.filter
-def warnings_of(submission):
+def warnings_of(submission, role='author'):
+    """List all warnings for the submission.
+
+    :param submission:
+    :param role: 'author' or 'chair'
+    :return:
+    """
     from submissions.models import Submission
-    warnings = []
-    if submission.status == Submission.ACCEPTED:
-        for artifact in artifacts_of(submission):
-            if artifact.descriptor.mandatory and not artifact.file:
-                warnings.append(f'{artifact.name} missing')
-    return warnings
+    warnings = list_warnings(submission)
+    # if submission.status == Submission.ACCEPTED:
+    #     for artifact in artifacts_of(submission):
+    #         if artifact.descriptor.mandatory and not artifact.file:
+    #             warnings.append(f'{artifact.name} missing')
+    return [w for w in warnings if role in w.visible_by]
+
+
+@register.filter
+def count_warnings(submission, role='author'):
+    return len(warnings_of(submission, role))

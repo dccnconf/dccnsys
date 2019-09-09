@@ -6,10 +6,7 @@
 {###########################################################################}
 {% load submission_extras %}
 
-{# TODO: #}
-{# [ ] implement count_submission_warnings filter #}
-{# [ ] implement get_submission_warnings filter, returning named tuples with `details`, `link` #}
-
+{% with warnings=submission|warnings_of:'chair' %}
 <div>
   {#------------------------------------------ #}
   {# 1 Card top row: status, indications, etc. #}
@@ -20,13 +17,13 @@
       <i class="fas fa-circle {{ submission|status_class }}"></i> {{ submission.get_status_display }}
     </div>
     {# 1.2 Display number of warnings next to submission status: #}
-{#    {% with num_warnings=submission|count_submission_warnings %}#}
-{#      {% if num_warnings %}#}
-{#        <div class="dccn-feed-item-label mx-2">#}
-{#          <i class="fas fa-exclamation-triangle text-warning"></i> {{ num_warnings }}#}
-{#        </div>#}
-{#      {% endif %}#}
-{#    {% endwith %}#}
+    {% with num_warnings=submission|count_warnings %}
+      {% if num_warnings %}
+        <div class="dccn-feed-item-label mx-2">
+          <i class="fas fa-exclamation-triangle text-warning"></i> {{ num_warnings }}
+        </div>
+      {% endif %}
+    {% endwith %}
     {% block statusRowItems %}
       {# Put additional status row items here #}
     {% endblock %}
@@ -39,7 +36,7 @@
     {% block cardBodyColumns %}
       <div class="col-12">
         {% include 'chair/submissions/feed/components/_title_authors.html' with submission=submission %}
-        {% include 'chair/submissions/feed/components/_warning_list.html' with submission=submission %}
+        {% include 'chair/submissions/feed/components/_warning_list.html' with warnings=warnings %}
       </div>
     {% endblock %}
   </div>
@@ -67,3 +64,4 @@
     <div class="dccn-feed-item-id ml-auto">#{{ submission.pk }}</div>
   </div>
 </div>
+{% endwith %}

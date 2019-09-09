@@ -77,5 +77,3 @@ def missing_reviews(submission):
     num_required = submission.stype.num_reviews if submission.stype else 0
     num_existing = submission.reviews.count()
     return ['-' for _ in range(max(num_required - num_existing, 0))]
-
-
