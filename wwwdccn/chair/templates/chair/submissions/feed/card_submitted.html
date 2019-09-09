@@ -1,74 +1,12 @@
 {###########################################################################}
-{# Submission feed item content in **REJECTED** state.                     #}
+{# Submission feed item content in **SUBMITTED** state.                    #}
 {#                                                                         #}
 {# CONTEXT:                                                                #}
 {# - `conf_pk`: conference primary key                                     #}
 {# - `submission`: a submission dictionary object                          #}
-{# - `decision_data`: form data for decision pseudo-form                   #}
-{# - `revews_data`: TODO, maybe remove                                     #}
 {###########################################################################}
-{% load submission_extras %}
-{% load review_extras %}
-<div>
-{% with sub_pk=submission.pk %}
-  {# 1. Top row: status and actions #}
-  <div class="dccn-feed-item-row">
-    {# 1.1. Submission status and warnings indicator #}
-    <div class="dccn-feed-item-label dccn-feed-item-status">
-      <i class="fas fa-circle {{ submission|status_class }}"></i> {{ submission.get_status_display }}
-    </div>
-    {% if warnings %}
-      <div class="dccn-feed-item-label mx-2" data-toggle="tooltip"
-           data-placement="bottom" data-html="true"
-           title="<ul class='list-unstyled'>{% for warning in warnings %}<li class='text-left dccn-text-smallest'>{{ warning }}{% if forloop.last %}.{% else %};{% endif %}</li>
-{% endfor %}</ul>">
-        <i class="fas fa-exclamation-triangle text-warning"></i> {{ warnings|length }}
-      </div>
-    {% endif %}
-  </div>
+{% extends 'chair/submissions/feed/_card_base.html' %}
 
-  {# 2. Submission body: title and authors #}
-  <p class="mb-1">
-    <a href="{% url 'chair:submission-overview' conf_pk=conf_pk sub_pk=sub_pk %}"
-       class="dccn-link dccn-text-4 font-weight-normal">
-      {% if submission.title %}{{ submission.title }}{% else %}<span class="bg-warning">No Title</span>{% endif %}
-    </a>
-  </p>
-
-  <div>
-    <p class="dccn-text-0">
-      {% for author in submission.authors.all %}
-        <span>
-          <a href="{% url 'chair:user-overview' conf_pk=conf_pk user_pk=author.user_id %}?next={{ request.get_full_path|urlencode }}"
-             class="dccn-link dccn-text-small font-weight-light">
-            {{ author.user.profile.get_full_name }}</a>{% if not forloop.last %},&nbsp;{% endif %}
-        </span>
-      {% endfor %}
-    </p>
-  </div>
-
-  <div class="mt-2"></div>
-
-  {# 3. Bottom row: view, delete, etc. - actions those do not depend on current status and refs #}
-  <div class="dccn-feed-item-footer mt-4">
-    <a href="{% url 'chair:submission-overview' conf_pk=conf_pk sub_pk=sub_pk %}" class="dccn-feed-item-link">
-      <i class="fas fa-align-justify"></i> Details
-    </a>
-    <form action="{% url 'chair_mail:compose-submission' conf_pk=conf_pk %}" method="GET" class="mr-2">
-      <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
-      <input type="hidden" name="objects" value="{{ sub_pk }}">
-      <button class="btn btn-link dccn-feed-item-link">
-        <i class="fas fa-envelope"></i> Contact
-      </button>
-    </form>
-    <form action="{% url 'chair:start-review' conf_pk=conf_pk sub_pk=sub_pk %}?next={{ request.get_full_path|urlencode }}"
-          method="POST">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-link dccn-feed-item-link"><i class="fas fa-glass"></i> Start review</button>
-    </form>
-
-    <div class="dccn-feed-item-id ml-auto">#{{ sub_pk }}</div>
-  </div>
-
-{% endwith %}
-</div>
+{% block footerRowItems %}
+  {% include 'chair/submissions/feed/components/_start_review_button.html' with submission=submission label='Start review' icon='fas fa-forward' %}
+{% endblock %}

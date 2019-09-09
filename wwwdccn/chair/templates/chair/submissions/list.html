@@ -20,14 +20,14 @@
 {# Each item should is expected to have the following fields:              #}
 {# - `pk`: submission ID                                                   #}
 {# - `status`: submission status                                           #}
-{# - `status_display`:  #}
-{# - `warnings` #}
-{# - `average_score` #}
-{# - `actions`: (`review`, `revoke_review`, `assign_reviewers`) #}
-{# - `title` #}
-{# - `authors` #}
-{# - `num_reviews` #}
-{# - `num_reviews_required` #}
+{# - `status_display`:                                                     #}
+{# - `warnings`                                                            #}
+{# - `average_score`                                                       #}
+{# - `actions`: (`review`, `revoke_review`, `assign_reviewers`)            #}
+{# - `title`                                                               #}
+{# - `authors`                                                             #}
+{# - `num_reviews`                                                         #}
+{# - `num_reviews_required`                                                #}
 {###########################################################################}
 {% extends 'chair/base/list_page.html' %}
 {% load static %}
@@ -61,15 +61,17 @@
   </div>
 {% endblock %}
 
+
+
 {#---------------------------------------------------------------------------#}
 {# List view content                                                         #}
 {#---------------------------------------------------------------------------#}
 {% block listViewContent %}
-{% for item in items %}
-  <div class="dccn-feed-item pb-3"
-       data-html-src="{% url 'chair:submission-feed-item' conf_pk=conference.pk sub_pk=item %}">
-  </div>
-{% endfor %}
+  {% for item in items %}
+    <div class="dccn-feed-item pb-3"
+         data-html-src="{% url 'chair:submission-feed-item' conf_pk=conference.pk sub_pk=item %}">
+    </div>
+  {% endfor %}
 {% endblock %}
 
 

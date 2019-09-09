@@ -1,0 +1,71 @@
+{###########################################################################}
+{# Submission feed item base.                                              #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `conf_pk`: conference primary key                                     #}
+{# - `submission`: a submission                                            #}
+{###########################################################################}
+{% load submission_extras %}
+
+{# TODO: #}
+{# [ ] implement count_submission_warnings filter #}
+{# [ ] implement get_submission_warnings filter, returning named tuples with `details`, `link` #}
+
+<div>
+  {#------------------------------------------ #}
+  {# 1 Card top row: status, indications, etc. #}
+  {#------------------------------------------ #}
+  <div class="dccn-feed-item-row align-items-center">
+    {# 1.1 Submission status indicator - always at the left corner #}
+    <div class="dccn-feed-item-label dccn-feed-item-status">
+      <i class="fas fa-circle {{ submission|status_class }}"></i> {{ submission.get_status_display }}
+    </div>
+    {# 1.2 Display number of warnings next to submission status: #}
+{#    {% with num_warnings=submission|count_submission_warnings %}#}
+{#      {% if num_warnings %}#}
+{#        <div class="dccn-feed-item-label mx-2">#}
+{#          <i class="fas fa-exclamation-triangle text-warning"></i> {{ num_warnings }}#}
+{#        </div>#}
+{#      {% endif %}#}
+{#    {% endwith %}#}
+    {% block statusRowItems %}
+      {# Put additional status row items here #}
+    {% endblock %}
+  </div>
+
+  {#------------------------------------------ #}
+  {# 2 Card top row: status, indications, etc. #}
+  {#------------------------------------------ #}
+  <div class="row">
+    {% block cardBodyColumns %}
+      <div class="col-12">
+        {% include 'chair/submissions/feed/components/_title_authors.html' with submission=submission conf_pk=conf_pk %}
+        {% include 'chair/submissions/feed/components/_warning_list.html' with submission=submission %}
+      </div>
+    {% endblock %}
+  </div>
+
+
+  {#------------------------------------------ #}
+  {# 3 Card bottom row: details, actions, etc. #}
+  {#------------------------------------------ #}
+  <div class="dccn-feed-item-footer mt-4">
+    {# 3.1 Link to submission details #}
+    <a href="{% url 'chair:submission-overview' conf_pk=conf_pk sub_pk=submission.pk %}"
+       class="dccn-feed-item-link">
+      <i class="fas fa-align-justify"></i> Details
+    </a>
+    {# 3.2 Link to message composing #}
+    <form action="{% url 'chair_mail:compose-submission' conf_pk=conf_pk %}" method="GET" class="mr-2">
+      <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
+      <input type="hidden" name="objects" value="{{ submission.pk }}">
+      <button class="btn btn-link dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</button>
+    </form>
+    {# 3.3 Additional actions, links, etc. #}
+    {% block footerRowItems %}
+      {# Put additional actions here #}
+    {% endblock %}
+    {# 3.4 Submission ID #}
+    <div class="dccn-feed-item-id ml-auto">#{{ submission.pk }}</div>
+  </div>
+</div>

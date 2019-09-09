@@ -1,0 +1,45 @@
+{###########################################################################}
+{# Button with modal dialog for reverting submission to the review phase.  #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `submission`: a submission                                            #}
+{###########################################################################}
+<button type="button" class="btn btn-link dccn-feed-item-link"
+        data-toggle="modal" data-target="#revertToReviewModal-{{ submission.pk }}">
+  <i class="{{ icon }}"></i> {{ label }}
+</button>
+
+{#-------------------------------------------------#}
+{# MODAL DIALOG: Conformation for revert to review #}
+{#-------------------------------------------------#}
+<div class="modal fade" tabindex="-1" role="dialog" id="revertToReviewModal-{{ submission.pk }}">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title">Confirm revert to review</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body d-flex align-items-center">
+        <div class="mr-4">
+          <i class="fas fa-exclamation-triangle fa-5x text-warning"></i>
+        </div>
+        <div>
+          <p class="dccn-text-small">
+            If you proceed, status of the submission #<b>{{ submission.pk }} "{{ submission.title }}"</b>
+            will be changed to <b>Review</b>, authors will receive an email (if notifications are enabled) about it.
+          </p>
+          <p class="dccn-text-small mt-3">Are you sure you want to proceed?</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+        <form action="{% url 'chair:start-review' conf_pk=submission.conference_id sub_pk=submission.pk %}" method="POST" class="inst-form">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-warning">Confirm</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -90,7 +90,6 @@ def update_decision(request, sub_pk):
     if not decision:
         decision = Decision.objects.create(submission=submission)
     form = UpdateDecisionForm(request.POST, instance=decision)
-    print(form)
     if form.is_valid():
         form.save()
         return JsonResponse(status=200, data={})

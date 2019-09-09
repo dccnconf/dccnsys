@@ -20,12 +20,12 @@
   {# Dropdown controls: #}
   <div>
     {% if form_data.decision and not form_data.decision.hidden %}
-      <div>
+      <div class="dccn-text-small">
         <b>Decision: </b>
         <span class="dropdown-left">
           <a href="#" data-toggle="dropdown"
-             class="dccn-link font-weight-normal text-{{ form_data.decision.value|decision_color_class }}">
-            {{ form_data.decision.display }} <i class="{{ form_data.decision.value|decision_icon_class }}"></i>
+             class="dccn-link dccn-text-small font-weight-normal text-{{ form_data.decision.value|decision_color_class }}">
+            {{ form_data.decision.display }}
           </a>
           <span class="dropdown-menu">
             {% for option in form_data.decision.options %}
@@ -42,11 +42,11 @@
       {% endif %}
 
       {% if form_data.proc_type and not form_data.proc_type.hidden %}
-      <div class="mt-1">
+      <div class="mt-1 dccn-text-small">
         <b>Proceedings: </b>
         <span class="dropdown">
           <a href="#" data-toggle="dropdown"
-             class="dccn-link font-weight-normal text-{{ form_data.proc_type.value|decision_color_class }}">
+             class="dccn-link font-weight-normal dccn-text-small text-{{ form_data.proc_type.value|decision_color_class }}">
             {{ form_data.proc_type.display }}
           </a>
           <span class="dropdown-menu">
@@ -64,11 +64,11 @@
       {% endif %}
 
       {% if form_data.volume and not form_data.volume.hidden %}
-      <div class="mt-1">
+      <div class="mt-1 dccn-text-small">
         <b>Volume: </b>
         <span class="dropdown">
           <a href="#" data-toggle="dropdown"
-             class="dccn-link font-weight-normal text-{{ form_data.volume.value|decision_color_class }}">
+             class="dccn-link font-weight-normal dccn-text-small text-{{ form_data.volume.value|decision_color_class }}">
             {{ form_data.volume.display }}
           </a>
           <span class="dropdown-menu">
@@ -90,10 +90,9 @@
   <div>
     {% if not form_data.committed %}
       <form action="{% url 'review:commit-decision' sub_pk=sub_pk %}" method="POST"
-            class="inst-form mr-2 text-right" novalidate>
+            class="inst-form mr-2" novalidate>
         {% csrf_token %}
-        <input class="btn btn-sm btn-outline-success {% if form_data.committed %}disabled{% endif %}"
-               type="submit" value="Commit">
+        <input class="btn btn-sm py-1 btn-outline-primary" type="submit" value="Commit">
       </form>
     {% endif %}
   </div>

@@ -131,8 +131,6 @@ def _build_decision_form_data(submission, hide_decision=False,
         'display': [opt[1] for opt in Decision.DECISION_CHOICES
                     if opt[0] == decision_value][0]
     }
-    if submission.pk == 31:
-        print('Data decision: ', data_decision)
 
     # 2) Fill proceedings type if needed and possible:
     data_proc_type = {
@@ -412,17 +410,12 @@ def delete_submission(request, conf_pk, sub_pk):
 @submission_view
 def start_review(request, conference, submission):
     # submission = kwargs.get('submission')
-    print(submission)
     if submission.status in [Submission.SUBMITTED, Submission.ACCEPTED,
                              Submission.REJECTED]:
         submission.status = Submission.UNDER_REVIEW
         submission.save()
-        print(submission)
         decision = submission.review_decision.first()
-        print(decision)
         if decision:
             decision.committed = False
             decision.save()
-            print('saved decision')
-    print('returning 200')
     return JsonResponse(data={})

@@ -6,147 +6,55 @@
 {# - `submission`: a submission                                            #}
 {# - `decision`: review decision                                           #}
 {###########################################################################}
+{% extends 'chair/submissions/feed/_card_base_columed.html' %}
+
 {% load submission_extras %}
 {% load review_extras %}
-<div>
-{% with sub_pk=submission.pk %}
-  {# 1. Top row: status and actions #}
-  <div class="dccn-feed-item-row align-items-center">
-    {# 1.1. Submission status indicator #}
-    <div class="dccn-feed-item-label dccn-feed-item-status">
-      <i class="fas fa-circle {{ submission|status_class }}"></i> {{ submission.get_status_display }}
-    </div>
-    <div class="dccn-feed-item-label ml-2 text-{{ submission|quality_of|quality_color }}-12 ">
-      <i class="far fa-star"></i> {{ submission|average_score }}
-    </div>
-    {# 1.2. Submission warnings, or, if no warnings, review status #}
-    {% if warnings %}
-      <div class="dccn-feed-item-label mx-2">
-        <i class="fas fa-exclamation-triangle text-warning"></i> {{ warnings|length }}
-      </div>
-    {% endif %}
-    <div class="dccn-feed-item-label ml-auto badge badge-secondary p-1">
-      {{ decision.proc_type.name }}
-    </div>
+
+{% block statusRowItems %}
+  {# Show average score in the status row: #}
+  <div class="dccn-feed-item-label ml-2 text-{{ submission|quality_of|quality_color }}-12 ">
+    <i class="far fa-star"></i> {{ submission|average_score }}
   </div>
-
-  {# 2. Submission body: title and authors (left part) and review score with controls (right part) #}
-  <div class="row">
-    {# 2.1. Title and authors #}
-    <div class="col-12 col-lg-5 col-xl-4">
-      <p class="mb-1 pr-3">
-        <a href="{% url 'chair:submission-overview' conf_pk=conf_pk sub_pk=sub_pk %}"
-           class="dccn-link dccn-text-4 font-weight-normal">
-          {% if submission.title %}{{ submission.title }}{% else %}<span class="bg-warning">No Title</span>{% endif %}
-        </a>
-      </p>
-      <div>
-        <p class="dccn-text-0 mr-3">
-          {% for author in submission.authors.all %}
-            <span>
-              <a href="{% url 'chair:user-overview' conf_pk=conf_pk user_pk=author.user_id %}?next={{ request.get_full_path|urlencode }}"
-                 class="dccn-link dccn-text-small font-weight-light">
-                {{ author.user.profile.get_full_name }}</a>{% if not forloop.last %},&nbsp;{% endif %}
-            </span>
-          {% endfor %}
-        </p>
-        {% if warnings %}
-          <ul class="mt-3 list-unstyled">
-          {% for warning in warnings %}
-            <li class="text-danger"><i class="fas fa-exclamation-circle"></i> {{ warning }}</li>
-          {% endfor %}
-          </ul>
-        {% endif %}
-      </div>
-    </div>
-
-    {# 2.2. Artifacts and volume form #}
-    <div class="col-12 col-lg-7 col-xl-5 mt-3 mt-lg-0 border-left">
-
-      {# 2.2.1. Artifacts #}
-      {% for art in submission.artifacts.all %}
-        {% if art.is_active %}
-          {% with descriptor=art.descriptor %}
-            <div class="dccn-text-small mb-2 d-flex align-items-center justify-content-between ml-3">
-              <div class="mr-2 {% if descriptor.mandatory %}font-weight-normal{% else %}font-weight-light{% endif %}">
-                {% if descriptor.mandatory %}<span class="dccn-text-smallest"><i class="fas fa-star-of-life"></i></span>{% endif %}
-                {{ descriptor.name }}:
-              </div>
-              <div class="">
-                {% if art.file %}
-                  <a href="{% url 'submissions:artifact-download' pk=submission.pk art_pk=art.pk %}" target="_blank"
-                     class="dccn-link dccn-text-smallest-light">
-                    {{ art.get_file_name }} <i class="{{ art|file_icon_class }}"></i>
-                  </a>
-                {% else %}
-                  <i class="fas fa-question-circle text-{% if descriptor.mandatory %}danger{% else %}warning{% endif %} "></i>
-                {% endif %}
-              </div>
-            </div>
-          {% endwith %}
-        {% endif %}
-      {% endfor %}
-
-      {# 2.2.2. Volume form #}
-      <div class="ml-3 mt-3 review-feed-item-controls">
-        {% include 'chair/submissions/feed/_decision_control.html' with form_data=form_data conf_pk=conf_pk sub_pk=sub_pk %}
-      </div>
-
-    </div>
+  {# Display proceedings at the right corner: #}
+  <div class="dccn-feed-item-label ml-auto badge badge-secondary p-1">
+    {{ decision.proc_type.name }}
   </div>
+{% endblock %}
 
-  <div class="mt-2"></div>
 
-  {# 3. Bottom row: view, delete, etc. - actions those do not depend on current status and refs #}
-  <div class="dccn-feed-item-footer mt-4">
-    <a href="{% url 'chair:submission-overview' conf_pk=conf_pk sub_pk=sub_pk %}" class="dccn-feed-item-link">
-      <i class="fas fa-align-justify"></i> Details
-    </a>
-    <form action="{% url 'chair_mail:compose-submission' conf_pk=conf_pk %}" method="GET" class="mr-2">
-      <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
-      <input type="hidden" name="objects" value="{{ sub_pk }}">
-      <button class="btn btn-link dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</button>
-    </form>
-    <button type="button" class="btn btn-link dccn-feed-item-link"
-            data-toggle="modal" data-target="#revertToReviewModal-{{ sub_pk }}">
-      <i class="fas fa-backward"></i> Revert to review
-    </button>
-    <div class="dccn-feed-item-id ml-auto">#{{ sub_pk }}</div>
-  </div>
-
-  {###################################################}
-  {# MODAL DIALOG: Conformation for revert to review #}
-  {###################################################}
-  <div class="modal fade" tabindex="-1" role="dialog" id="revertToReviewModal-{{ sub_pk }}">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header bg-warning text-dark">
-          <h5 class="modal-title">Confirm revert to review</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body d-flex align-items-center">
-          <div class="mr-4">
-            <i class="fas fa-exclamation-triangle fa-5x text-warning"></i>
+{% block rightBodyColumn %}
+  {# List artifacts: #}
+  {% for art in submission.artifacts.all %}
+    {% if art.is_active %}
+      {% with descriptor=art.descriptor %}
+        <div class="dccn-text-small mb-2 d-flex align-items-center justify-content-between ml-3">
+          <div class="mr-2 {% if descriptor.mandatory %}font-weight-normal{% else %}font-weight-light{% endif %}">
+            {% if descriptor.mandatory %}<span class="dccn-text-smallest"><i class="fas fa-star-of-life"></i></span>{% endif %}
+            {{ descriptor.name }}:
           </div>
           <div>
-            <p class="dccn-text-small">
-              If you proceed, status of the submission #<b>{{ sub_pk }} "{{ submission.title }}"</b>  will be changed
-              to <b>Review</b>, authors will receive an email (if notifications are enabled) about that status change.
-            </p>
-            <p class="dccn-text-small mt-3">Are you sure you want to proceed?</p>
+            {% if art.file %}
+              <a href="{% url 'submissions:artifact-download' pk=submission.pk art_pk=art.pk %}" target="_blank"
+                 class="dccn-link dccn-text-smallest-light">
+                {{ art.get_file_name }} <i class="{{ art|file_icon_class }}"></i>
+              </a>
+            {% else %}
+              <i class="fas fa-question-circle text-{% if descriptor.mandatory %}danger{% else %}warning{% endif %} "></i>
+            {% endif %}
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-          <form action="{% url 'chair:start-review' conf_pk=conf_pk sub_pk=sub_pk %}" method="POST" class="inst-form">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-warning">Confirm</button>
-          </form>
-        </div>
-      </div>
-    </div>
+      {% endwith %}
+    {% endif %}
+  {% endfor %}
+
+  {# Volume form: #}
+  <div class="ml-3 mt-3 review-feed-item-controls">
+    {% include 'chair/submissions/feed/components/_decision_control.html' with form_data=form_data conf_pk=conf_pk sub_pk=submission.pk %}
   </div>
-{% endwith %}
-</div>
+{% endblock %}
+
+
+{% block footerRowItems %}
+  {% include 'chair/submissions/feed/components/_start_review_button.html' with submission=submission label='Revert to review' icon='fas fa-backward' %}
+{% endblock %}
