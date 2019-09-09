@@ -17,16 +17,26 @@ from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
 from submissions.models import Submission
 
 
-def submission_view(fn):
-    @functools.wraps(fn)
-    def wrapper(request, conf_pk, sub_pk, *args, **kwargs):
-        conference = get_object_or_404(Conference, pk=conf_pk)
-        submission = get_object_or_404(Submission, pk=sub_pk)
-        validate_chair_access(request.user, conference)
-        if submission.conference_id != conference.pk:
-            raise Http404
-        return fn(request, conference, submission, *args, **kwargs)
-    return wrapper
+def submission_view(params='submission'):
+    def decorator(fn):
+        @functools.wraps(fn)
+        def wrapper(request, sub_pk, *args, **kwargs):
+            submission = get_object_or_404(Submission, pk=sub_pk)
+            conference = submission.conference
+            validate_chair_access(request.user, conference)
+            names = params.split(',')
+            names.reverse()
+            args = list(args)
+            for name in names:
+                if name == 'conference':
+                    args = [conference] + args
+                elif name == 'submission':
+                    args = [submission] + args
+                else:
+                    raise ValueError(f'unsupported parameter name "{name}"')
+            return fn(request, *args, **kwargs)
+        return wrapper
+    return decorator
 
 
 @require_GET
@@ -52,43 +62,48 @@ def list_submissions(request, conf_pk, page=1):
                   context=context)
 
 
+@require_POST
+def create_submission(request, conf_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    submission = Submission.objects.create(conference=conference)
+    return redirect('chair:submission-metadata', conf_pk=conf_pk,
+                    sub_pk=submission.pk)
+
+
+@require_POST
+@submission_view('submission')
+def delete_submission(request, submission):
+    sub_pk, conf_pk = submission.pk, submission.conference_id
+    submission.delete()
+    messages.warning(request, f'Submission #{sub_pk} deleted')
+    return redirect('chair:submissions', conf_pk=conf_pk)
+
+
+#############################################################################
+# SUBMISSIONS FEED
+#############################################################################
 @require_GET
-@submission_view
-def feed_item(request, conference, submission):
-    if submission.status == Submission.SUBMITTED:
-        return render(request, 'chair/submissions/feed/card_submitted.html', {
-            'conf_pk': conference.pk,
-            'submission': submission,
-        })
-
+@submission_view('submission,conference')
+def feed_item(request, submission, conference):
     stats, _ = ReviewStats.objects.get_or_create(conference=conference)
+    context = {
+        'submission': submission,
+        'review_stats': stats,
+    }
+    template_names = {
+        Submission.SUBMITTED: 'chair/submissions/feed/card_submitted.html',
+        Submission.UNDER_REVIEW: 'chair/submissions/feed/card_review.html',
+        Submission.ACCEPTED: 'chair/submissions/feed/card_accepted.html',
+        Submission.REJECTED: 'chair/submissions/feed/card_rejected.html',
+    }
     if submission.status == Submission.UNDER_REVIEW:
-        return render(request, 'chair/submissions/feed/card_review.html', {
-            'submission': submission,
-            'conf_pk': conference.pk,
-            'decision_data': _build_decision_form_data(submission),
-            'review_stats': stats,
-        })
-
-    if submission.status == Submission.ACCEPTED:
-        return render(request, 'chair/submissions/feed/card_accepted.html', {
-            'conf_pk': conference.pk,
-            'submission': submission,
-            'decision': submission.review_decision.first(),
-            'form_data': _build_decision_form_data(
-                submission, hide_decision=True, hide_proc_type=True),
-            'review_stats': stats,
-        })
-
-    if submission.status == Submission.REJECTED:
-        stats, _ = ReviewStats.objects.get_or_create(conference=conference)
-        return render(request, 'chair/submissions/feed/card_rejected.html', {
-            'conf_pk': conference.pk,
-            'submission': submission,
-            'review_stats': stats,
-        })
-
-    raise Http404
+        context['form_data'] = _build_decision_form_data(submission)
+    elif submission.status == Submission.ACCEPTED:
+        context['decision'] = submission.review_decision.first()
+        context['form_data'] = _build_decision_form_data(
+            submission, hide_decision=True, hide_proc_type=True)
+    return render(request, template_names[submission.status], context)
 
 
 def _build_decision_form_data(submission, hide_decision=False,
@@ -136,9 +151,12 @@ def _build_decision_form_data(submission, hide_decision=False,
     }
 
 
+#############################################################################
+# TAB PAGES
+#############################################################################
 @require_GET
-@submission_view
-def overview(request, conference, submission):
+@submission_view('submission,conference')
+def overview(request, submission, conference):
     # If the request is AJAX, then we render only the overview as for
     # modal dialog:
     if request.is_ajax():
@@ -154,17 +172,17 @@ def overview(request, conference, submission):
         'review': (status == Submission.SUBMITTED and not warnings),
         'revoke_review': status == Submission.UNDER_REVIEW,
     }
-    return render(request, 'chair/submissions/submission_overview.html', context={
-        'conference': conference,
+    return render(request, 'chair/submissions/submission_overview.html', {
         'submission': submission,
+        'conference': conference,
         'warnings': warnings,
         'actions': actions,
         'active_tab': 'overview',
     })
 
 
-@submission_view
-def metadata(request, conference, submission):
+@submission_view('submission,conference')
+def metadata(request, submission, conference):
     if request.method == 'POST':
         form = SubmissionDetailsForm(request.POST, instance=submission)
         if form.is_valid():
@@ -172,7 +190,7 @@ def metadata(request, conference, submission):
             messages.success(request, f'Submission #{submission.pk} updated')
     else:
         form = SubmissionDetailsForm(instance=submission)
-    return render(request, 'chair/submissions/submission_metadata.html', context={
+    return render(request, 'chair/submissions/submission_metadata.html', {
         'submission': submission,
         'conference': conference,
         'form': form,
@@ -181,63 +199,55 @@ def metadata(request, conference, submission):
 
 
 @require_GET
-@submission_view
-def authors(request, conference, submission):
-    return render(request, 'chair/submissions/submission_authors.html', context={
-        'conference': conference,
+@submission_view('submission,conference')
+def authors(request, submission, conference):
+    return render(request, 'chair/submissions/submission_authors.html', {
         'submission': submission,
+        'conference': conference,
         'active_tab': 'authors',
     })
 
 
 @require_POST
-@submission_view
-def create_author(request, conference, submission):
+@submission_view('submission')
+def create_author(request, submission):
     form = AuthorCreateForm(submission, request.POST)
     if form.is_valid():
         form.save()
-    return redirect(
-        'chair:submission-authors', conf_pk=conference.pk, sub_pk=submission.pk
-    )
+    return redirect('chair:submission-authors', sub_pk=submission.pk)
 
 
 @require_POST
-@submission_view
-def delete_author(request, conference, submission):
+@submission_view('submission')
+def delete_author(request, submission):
     form = AuthorDeleteForm(submission, request.POST)
     if form.is_valid():
         form.save()
-    return redirect(
-        'chair:submission-authors', conf_pk=conference.pk, sub_pk=submission.pk
-    )
+    return redirect('chair:submission-authors', sub_pk=submission.pk)
 
 
 @require_POST
-@submission_view
-def reorder_authors(request, conference, submission):
+@submission_view('submission')
+def reorder_authors(request, submission):
     form = AuthorsReorderForm(submission, request.POST)
     if form.is_valid():
         form.save()
-    return redirect(
-        'chair:submission-authors', conf_pk=conference.pk, sub_pk=submission.pk
-    )
+    return redirect('chair:submission-authors', sub_pk=submission.pk)
 
 
-@submission_view
-def invite_author(request, conference, submission):
+@submission_view('submission')
+def invite_author(request, submission):
     form = InviteAuthorForm(request.POST)
     if form.is_valid():
         form.save(request, submission)
         messages.success(request, _('Invitation sent'))
     else:
         messages.warning(request, _('Error sending invitation'))
-    return redirect(
-        'chair:submission-authors', conf_pk=conference.pk, sub_pk=submission.pk
-    )
+    return redirect('chair:submission-authors', sub_pk=submission.pk)
 
 
-@submission_view
-def review_manuscript(request, conference, submission):
+@submission_view('submission,conference')
+def review_manuscript(request, submission, conference):
     if request.method == 'POST':
         form = ChairUploadReviewManuscriptForm(
             request.POST,
@@ -263,10 +273,8 @@ def review_manuscript(request, conference, submission):
                 )
             form.save()
             messages.success(request, _('Manuscript updated'))
-            return redirect(
-                'chair:submission-review-manuscript',
-                conf_pk=conference.pk, sub_pk=submission.pk
-            )
+            return redirect('chair:submission-review-manuscript',
+                            sub_pk=submission.pk)
         else:
             # If the form is invalid (e.g. title is not provided),
             # but the user tried to upload a file, a new
@@ -284,32 +292,24 @@ def review_manuscript(request, conference, submission):
 
     return render(
         request,
-        'chair/submissions/submission_review_manuscript.html',
-        context={
-            'submission': submission,
-            'conference': conference,
-            'form': form,
-            'active_tab': 'review-manuscript',
-        }
+        'chair/submissions/submission_review_manuscript.html', {
+            'submission': submission, 'conference': conference, 'form': form,
+            'active_tab': 'review-manuscript'}
     )
 
 
-@submission_view
-def delete_review_manuscript(request, conference, submission):
+@submission_view('submission')
+def delete_review_manuscript(request, submission):
     file_name = submission.get_review_manuscript_name()
     if submission.review_manuscript:
         submission.review_manuscript.delete()
         messages.info(request, f'Manuscript {file_name} was deleted')
-    return redirect(
-        'chair:submission-review-manuscript',
-        conf_pk=conference.pk, sub_pk=submission.pk
-    )
+    return redirect('chair:submission-review-manuscript', sub_pk=submission.pk)
 
 
-# noinspection PyUnusedLocal
 @require_POST
-@submission_view
-def revoke_review(request, conference, submission):
+@submission_view('submission')
+def revoke_review(request, submission):
     if submission.status == Submission.UNDER_REVIEW:
         submission.status = Submission.SUBMITTED
         submission.save()
@@ -317,17 +317,17 @@ def revoke_review(request, conference, submission):
 
 
 @require_GET
-@submission_view
-def reviews(request, conference, submission):
-    return render(request, 'chair/submissions/submission_reviews.html', context={
+@submission_view('submission,conference')
+def reviews(request, submission, conference):
+    return render(request, 'chair/submissions/submission_reviews.html', {
         'submission': submission,
         'conference': conference,
         'assign_reviewer_form': AssignReviewerForm(submission=submission),
     })
 
 
-@submission_view
-def emails(request, conference, submission):
+@submission_view('submission,conference')
+def emails(request, submission, conference):
     return render(request, 'chair/submissions/submission_emails.html', context={
         'submission': submission,
         'conference': conference,
@@ -336,56 +336,32 @@ def emails(request, conference, submission):
 
 
 @require_POST
-@submission_view
-def assign_reviewer(request, conference, submission):
+@submission_view('submission')
+def assign_reviewer(request, submission):
     form = AssignReviewerForm(request.POST, submission=submission)
     if form.is_valid():
         form.save()
-    return redirect(
-        'chair:submission-reviewers',
-        conf_pk=conference.pk, sub_pk=submission.pk
-    )
+    return redirect('chair:submission-reviewers', sub_pk=submission.pk)
 
 
 # noinspection PyUnusedLocal
 @require_POST
-@submission_view
-def delete_review(request, conference, submission, rev_pk):
+@submission_view('submission')
+def delete_review(request, submission, rev_pk):
     review = get_object_or_404(Review, pk=rev_pk)
     if review.paper != submission:
         raise Http404
     review.delete()
-    return redirect(
-        'chair:submission-reviewers',
-        conf_pk=conference.pk, sub_pk=submission.pk)
-
-
-@require_POST
-def create_submission(request, conf_pk):
-    conference = get_object_or_404(Conference, pk=conf_pk)
-    validate_chair_access(request.user, conference)
-    submission = Submission.objects.create(conference=conference)
-    return redirect('chair:submission-metadata', conf_pk=conf_pk,
-                    sub_pk=submission.pk)
-
-
-@require_POST
-def delete_submission(request, conf_pk, sub_pk):
-    conference = get_object_or_404(Conference, pk=conf_pk)
-    validate_chair_access(request.user, conference)
-    submission = get_object_or_404(Submission, pk=sub_pk)
-    submission.delete()
-    messages.warning(request, f'Submission #{sub_pk} deleted')
-    return redirect('chair:submissions', conf_pk=conf_pk)
+    return redirect('chair:submission-reviewers', sub_pk=submission.pk)
 
 
 #
 # API
 #
+# noinspection PyUnusedLocal
 @require_POST
-@submission_view
-def start_review(request, conference, submission):
-    # submission = kwargs.get('submission')
+@submission_view('submission')
+def start_review(request, submission):
     if submission.status in [Submission.SUBMITTED, Submission.ACCEPTED,
                              Submission.REJECTED]:
         submission.status = Submission.UNDER_REVIEW

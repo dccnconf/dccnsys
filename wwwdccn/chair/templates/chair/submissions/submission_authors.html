@@ -10,8 +10,8 @@
 {#   * `is_creator`: this author is the creator of the submission          #}
 {#                                                                         #}
 {# INHERITED CONTEXT:                                                      #}
-{# - `submission`                                                          #}
 {# - `conference`                                                          #}
+{# - `submission`                                                          #}
 {# - `active_tab`                                                          #}
 {###########################################################################}
 {% extends 'chair/submissions/_base.html' %}
@@ -51,7 +51,7 @@
                     <p class="dccn-text-0-light">
                       Are you sure you want to delete {{ profile.get_full_name }} from the co-authors list?
                     </p>
-                    <form action="{% url 'chair:submission-author-delete' conf_pk=conference.pk sub_pk=submission.pk %}"
+                    <form action="{% url 'chair:submission-author-delete' sub_pk=submission.pk %}"
                           method="POST">
                       {% csrf_token %}
                       <input type="hidden" name="author_pk" value="{{ author.pk }}">
@@ -76,7 +76,7 @@
     {% endfor %}
     </ul>
 
-    <form action="{% url 'chair:submission-authors-reorder' conf_pk=conference.pk sub_pk=submission.pk %}"
+    <form action="{% url 'chair:submission-authors-reorder' sub_pk=submission.pk %}"
           method="POST" class="dccn-reorder-form" novalidate>
       {% csrf_token %}
       <input type="hidden" name="pks" class="dccn-reorder-form-input">
@@ -112,7 +112,7 @@
         </div>
       </div>
 
-      <form action="{% url 'chair:submission-author-create' conf_pk=conference.pk sub_pk=submission.pk %}" method="POST"
+      <form action="{% url 'chair:submission-author-create' sub_pk=submission.pk %}" method="POST"
             class="dccn-hidden-form" novalidate>
         {% csrf_token %}
         <input type="hidden" name="user_pk" id="user_pk">
@@ -135,7 +135,7 @@
           </button>
         </div>
         <div class="modal-body">
-          <form action="{% url 'chair:submission-author-invite' conf_pk=conference.pk sub_pk=submission.pk %}"
+          <form action="{% url 'chair:submission-author-invite' sub_pk=submission.pk %}"
                 method="POST">
             {% csrf_token %}
             <div class="form-group">

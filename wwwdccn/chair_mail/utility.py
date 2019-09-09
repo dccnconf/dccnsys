@@ -79,8 +79,7 @@ def get_object_url(msg_type, conference, obj):
         return reverse('chair:user-overview', kwargs={
             'conf_pk': conference.pk, 'user_pk': obj.pk})
     elif msg_type == MSG_TYPE_SUBMISSION:
-        return reverse('chair:submission-overview', kwargs={
-            'conf_pk': conference.pk, 'sub_pk': obj.pk})
+        return reverse('chair:submission-overview', kwargs={'sub_pk': obj.pk})
     raise ValueError(f'unexpected message type "{msg_type}"')
 
 

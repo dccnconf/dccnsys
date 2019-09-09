@@ -2,11 +2,10 @@
 {# Submission feed item content in **SUBMITTED** state.                    #}
 {#                                                                         #}
 {# CONTEXT:                                                                #}
-{# - `conf_pk`: conference primary key                                     #}
 {# - `submission`: a submission dictionary object                          #}
 {###########################################################################}
 {% extends 'chair/submissions/feed/_card_base.html' %}
 
 {% block footerRowItems %}
-  {% include 'chair/submissions/feed/components/_start_review_button.html' with submission=submission label='Start review' icon='fas fa-forward' %}
+  {% include 'chair/submissions/feed/components/_start_review_button.html' with label='Start review' icon='fas fa-forward' %}
 {% endblock %}

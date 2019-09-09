@@ -44,6 +44,9 @@ $(document).ready(function () {
         parentFeedItem.html(data);
       });
     });
+    parentFeedItem.html(
+      '<div class="d-flex"><div class="mx-auto text-center"><div class="spinner-border"></div><p>Loading</p></div></div>'
+    )
   };
 
   // Thirdly, we bind `sendControlForm` handler to form submission. Here we

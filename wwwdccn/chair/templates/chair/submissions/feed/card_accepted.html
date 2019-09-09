@@ -2,10 +2,10 @@
 {# Submission feed item content in **ACCEPTED** state.                     #}
 {#                                                                         #}
 {# CONTEXT:                                                                #}
-{# - `conf_pk`: conference primary key                                     #}
 {# - `submission`: a submission                                            #}
 {# - `decision`: review decision                                           #}
-{# - `review_stats` #}
+{# - `review_stats`: an instance of `ReviewStats`                          #}
+{# - `form_data`: data for volume selection instant form                   #}
 {###########################################################################}
 {% extends 'chair/submissions/feed/_card_base_columed.html' %}
 
@@ -14,7 +14,7 @@
 
 {% block statusRowItems %}
   {# Show average score in the status row: #}
-  <div class="dccn-feed-item-label ml-2 text-{{ review_stats|quality_of:submission|quality_color }}-12 ">
+  <div class="dccn-feed-item-label ml-2 text-{{ review_stats|quality_of:submission|quality_color }} ">
     <i class="far fa-star"></i> {{ submission|average_score }}
   </div>
   {# Display proceedings at the right corner: #}
@@ -51,11 +51,11 @@
 
   {# Volume form: #}
   <div class="ml-3 mt-3 review-feed-item-controls">
-    {% include 'chair/submissions/feed/components/_decision_control.html' with form_data=form_data conf_pk=conf_pk sub_pk=submission.pk %}
+    {% include 'chair/submissions/feed/components/_decision_control.html' with form_data=form_data sub_pk=submission.pk %}
   </div>
 {% endblock %}
 
 
 {% block footerRowItems %}
-  {% include 'chair/submissions/feed/components/_start_review_button.html' with submission=submission label='Revert to review' icon='fas fa-backward' %}
+  {% include 'chair/submissions/feed/components/_start_review_button.html' with label='Revert to review' icon='fas fa-backward' %}
 {% endblock %}

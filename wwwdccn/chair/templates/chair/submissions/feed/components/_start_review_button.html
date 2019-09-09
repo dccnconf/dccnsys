@@ -35,7 +35,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-        <form action="{% url 'chair:start-review' conf_pk=submission.conference_id sub_pk=submission.pk %}" method="POST" class="inst-form">
+        <form action="{% url 'chair:start-review' sub_pk=submission.pk %}" method="POST" class="inst-form">
           {% csrf_token %}
           <button type="submit" class="btn btn-warning">Confirm</button>
         </form>

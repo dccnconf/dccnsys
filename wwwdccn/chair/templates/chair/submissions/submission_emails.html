@@ -14,7 +14,7 @@
 
 
 {% block tabViewContent %}
-  <form action="{% url 'chair_mail:compose-submission' conf_pk=conference.pk %}">
+  <form action="{% url 'chair_mail:compose-submission' conf_pk=submission.conference_id %}">
     <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
     <input type="hidden" name="objects" value="{{ submission.pk }}">
     <button type="submit" class="btn btn-outline-primary"><i class="fas fa-plus"></i> New message</button>

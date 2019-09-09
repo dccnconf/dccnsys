@@ -2,10 +2,9 @@
 {# Submission feed item content in **REVIEW** state.                       #}
 {#                                                                         #}
 {# CONTEXT:                                                                #}
-{# - `conf_pk`: conference primary key                                     #}
 {# - `submission`: a submission dictionary object                          #}
 {# - `review_stats`: an instance of `ReviewStats` object                   #}
-{# - `decision_data`: form data for decision pseudo-form                   #}
+{# - `form_data`: form data for decision pseudo-form                       #}
 {###########################################################################}
 {% extends 'chair/submissions/feed/_card_base_columed.html' %}
 {% load submission_extras %}
@@ -20,7 +19,7 @@
         {% with score=submission|average_score quality=review_stats|quality_of:submission %}
           <i class="{{ quality|quality_icon_class }} text-{{ quality|quality_color }}"></i>
           <a class="text-{{ quality|quality_color }}"
-             href="{% url 'chair:submission-reviewers' conf_pk=submission.conference_id sub_pk=submission.pk %}">{{ score }}</a>
+             href="{% url 'chair:submission-reviewers' sub_pk=submission.pk %}">{{ score }}</a>
         {% endwith %}
       </div>
       <div class="ml-3 dccn-text-large-light">
@@ -37,7 +36,7 @@
               {% if miss_revs|length != 0 and reviews|length != 0 %}<span>, </span>{% endif %}
               {% for symbol in miss_revs %}
                 <a class="text-danger-15 dccn-text-normal"
-                   href="{% url 'chair:submission-reviewers' conf_pk=submission.conference_id sub_pk=submission.pk %}">
+                   href="{% url 'chair:submission-reviewers' sub_pk=submission.pk %}">
                   <i class="fas fa-minus"></i></a>
                 {% if not forloop.last %}<span>, </span>{% endif %}
               {% endfor %}
@@ -47,7 +46,7 @@
       </div>
     </div>
     <div class="review-feed-item-controls ml-3 my-3">
-      {% include 'chair/submissions/feed/components/_decision_control.html' with form_data=decision_data conf_pk=submission.conference_id sub_pk=submission.pk %}
+      {% include 'chair/submissions/feed/components/_decision_control.html' with form_data=form_data sub_pk=submission.pk %}
     </div>
 
   {# Add modal dialogs for review preview: #}
@@ -116,11 +115,11 @@
 
 {% block footerRowItems %}
 {#    TODO:#}
-{#    <a href="{% url 'chair:submission-reviewers' conf_pk=conference.pk sub_pk=item.pk %}" class="dccn-feed-item-link">#}
+{#    <a href="{% url 'chair:submission-reviewers' sub_pk=item.pk %}" class="dccn-feed-item-link">#}
 {#      <i class="fas fa-glasses"></i> Select reviewers#}
 {#      (<span class="{% if item.num_reviews < item.num_reviews_required %}text-danger{% endif %}">{{ submission.num_reviews }}/{{ submission.num_reviews_required }}</span>)#}
 {#    </a>#}
-{#      <form action="{% url 'chair:revoke-review' conf_pk=conference.pk sub_pk=item.pk %}?next={{ request.get_full_path|urlencode }}"#}
+{#      <form action="{% url 'chair:revoke-review' sub_pk=item.pk %}?next={{ request.get_full_path|urlencode }}"#}
 {#            method="POST" >#}
 {#        {% csrf_token %}#}
 {#        <button type="submit" class="btn btn-sm btn-outline-warning"><i class="fas fa-times"></i> Revoke review</button>#}

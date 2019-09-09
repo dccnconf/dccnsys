@@ -2,7 +2,6 @@
 {# Submission feed item base.                                              #}
 {#                                                                         #}
 {# CONTEXT:                                                                #}
-{# - `conf_pk`: conference primary key                                     #}
 {# - `submission`: a submission                                            #}
 {###########################################################################}
 {% load submission_extras %}
@@ -39,7 +38,7 @@
   <div class="row">
     {% block cardBodyColumns %}
       <div class="col-12">
-        {% include 'chair/submissions/feed/components/_title_authors.html' with submission=submission conf_pk=conf_pk %}
+        {% include 'chair/submissions/feed/components/_title_authors.html' with submission=submission %}
         {% include 'chair/submissions/feed/components/_warning_list.html' with submission=submission %}
       </div>
     {% endblock %}
@@ -51,12 +50,11 @@
   {#------------------------------------------ #}
   <div class="dccn-feed-item-footer mt-4">
     {# 3.1 Link to submission details #}
-    <a href="{% url 'chair:submission-overview' conf_pk=conf_pk sub_pk=submission.pk %}"
-       class="dccn-feed-item-link">
+    <a href="{% url 'chair:submission-overview' sub_pk=submission.pk %}" class="dccn-feed-item-link">
       <i class="fas fa-align-justify"></i> Details
     </a>
     {# 3.2 Link to message composing #}
-    <form action="{% url 'chair_mail:compose-submission' conf_pk=conf_pk %}" method="GET" class="mr-2">
+    <form action="{% url 'chair_mail:compose-submission' conf_pk=submission.conference_id %}" method="GET" class="mr-2">
       <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
       <input type="hidden" name="objects" value="{{ submission.pk }}">
       <button class="btn btn-link dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</button>

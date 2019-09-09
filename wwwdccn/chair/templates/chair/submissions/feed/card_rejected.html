@@ -2,7 +2,6 @@
 {# Submission feed item content in **REJECTED** state.                     #}
 {#                                                                         #}
 {# CONTEXT:                                                                #}
-{# - `conf_pk`: conference primary key                                     #}
 {# - `submission`: a submission dictionary object                          #}
 {# - `decision_data`: form data for decision pseudo-form                   #}
 {###########################################################################}
@@ -19,5 +18,5 @@
 
 
 {% block footerRowItems %}
-  {% include 'chair/submissions/feed/components/_start_review_button.html' with submission=submission label='Revert to review' icon='fas fa-backward' %}
+  {% include 'chair/submissions/feed/components/_start_review_button.html' with label='Revert to review' icon='fas fa-backward' %}
 {% endblock %}
