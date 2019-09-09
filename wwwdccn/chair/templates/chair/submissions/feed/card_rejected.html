@@ -12,7 +12,7 @@
 
 {% block statusRowItems %}
   {# Show average score in the status row: #}
-  <div class="dccn-feed-item-label ml-2 text-{{ submission|quality_of|quality_color }}">
+  <div class="dccn-feed-item-label ml-2 text-{{ review_stats|quality_of:submission|quality_color }}">
     <i class="far fa-star"></i> {{ submission|average_score }}
   </div>
 {% endblock %}

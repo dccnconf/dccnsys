@@ -1,6 +1,3 @@
-from review.models import ReviewStats
-
-
 def count_required_reviews(submission, cached_stypes=None):
     """Return the number of required reviews for the submission.
     If `cached_stypes` provided, it should contain a `stype.pk -> stype`
@@ -61,36 +58,19 @@ def get_average_score(obj):
             # If obj is not a Review, assume that it is Submission:
             scores = [get_average_score(rev) for rev in obj.reviews.all()]
         except AttributeError:
-            # If obj is not Review or Submission, assume it is
-            # a collection of either objects:
-            scores = [get_average_score(item) for item in obj]
+            try:
+                # If obj is not Review or Submission, assume it is
+                # a collection of either objects:
+                scores = [get_average_score(item) for item in obj]
+            except TypeError:
+                # If iterating over the object failed, treat it as a score:
+                return float(obj)
         # Finally, filter correct scores (which must be greater then zero)
         # and estimate average score on the scores of parts
         scores = [score for score in scores if score > 0]
         return sum(scores) / len(scores) if scores else 0.0
 
 
-EXCELLENT_QUALITY = 'excellent'
-GOOD_QUALITY = 'good'
-AVERAGE_QUALITY = 'average'
-POOR_QUALITY = 'poor'
-UNKNOWN_QUALITY = ''
-
-
-def qualify_score(score, stats=None, conference=None):
-    if not stats:
-        stats, _ = ReviewStats.objects.get_or_create(conference=conference)
-    if 0 < score < stats.q1_score:
-        return POOR_QUALITY
-    if 0 < score < stats.median_score:
-        return AVERAGE_QUALITY
-    if 0 < score < stats.q3_score:
-        return GOOD_QUALITY
-    if score >= stats.q3_score:
-        return EXCELLENT_QUALITY
-    return UNKNOWN_QUALITY
-
-
-def get_quality(submission, stats=None):
+def get_quality(submission, stats):
     score = get_average_score(submission)
-    return qualify_score(score, stats=stats, conference=submission.conference)
+    return stats.qualify_score(score)

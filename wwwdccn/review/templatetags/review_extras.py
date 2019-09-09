@@ -1,10 +1,8 @@
 from django import template
 from django.db.models import Q
 
-from review.models import Review, Decision
-from review.utilities import EXCELLENT_QUALITY, GOOD_QUALITY, \
-    AVERAGE_QUALITY, POOR_QUALITY, UNKNOWN_QUALITY, get_quality, \
-    get_average_score
+from review.models import Review, Decision, ReviewStats
+from review.utilities import get_quality, get_average_score
 
 register = template.Library()
 
@@ -40,29 +38,29 @@ def volume_color_class(string):
 
 
 @register.filter
-def quality_of(submission):
-    return get_quality(submission)
+def quality_icon_class(quality):
+    return {
+        ReviewStats.EXCELLENT_QUALITY: 'far fa-grin-stars',
+        ReviewStats.GOOD_QUALITY: 'far fa-smile',
+        ReviewStats.AVERAGE_QUALITY: 'far fa-meh',
+        ReviewStats.POOR_QUALITY: 'far fa-frown',
+        ReviewStats.UNKNOWN_QUALITY: 'far fa-question-circle',
+    }[quality]
 
 
 @register.filter
-def quality_icon_class(quality):
-    return {
-        EXCELLENT_QUALITY: 'far fa-grin-stars',
-        GOOD_QUALITY: 'far fa-smile',
-        AVERAGE_QUALITY: 'far fa-meh',
-        POOR_QUALITY: 'far fa-frown',
-        UNKNOWN_QUALITY: 'fas fa-question',
-    }[quality]
+def quality_of(review_stats, obj):
+    return review_stats.qualify_score(get_average_score(obj))
 
 
 @register.filter
 def quality_color(quality):
     return {
-        EXCELLENT_QUALITY: 'success-15',
-        GOOD_QUALITY: 'info-15',
-        AVERAGE_QUALITY: 'warning-15',
-        POOR_QUALITY: 'danger-15',
-        UNKNOWN_QUALITY: 'danger-15',
+        ReviewStats.EXCELLENT_QUALITY: 'success-15',
+        ReviewStats.GOOD_QUALITY: 'info-15',
+        ReviewStats.AVERAGE_QUALITY: 'warning-15',
+        ReviewStats.POOR_QUALITY: 'danger-15',
+        ReviewStats.UNKNOWN_QUALITY: 'danger-15',
     }[quality]
 
 
@@ -72,3 +70,12 @@ def average_score(obj):
     if score == 0:
         return ''
     return '{:.1f}'.format(score)
+
+
+@register.filter
+def missing_reviews(submission):
+    num_required = submission.stype.num_reviews if submission.stype else 0
+    num_existing = submission.reviews.count()
+    return ['-' for _ in range(max(num_required - num_existing, 0))]
+
+

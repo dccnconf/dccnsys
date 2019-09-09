@@ -5,6 +5,7 @@
 {# - `conf_pk`: conference primary key                                     #}
 {# - `submission`: a submission                                            #}
 {# - `decision`: review decision                                           #}
+{# - `review_stats` #}
 {###########################################################################}
 {% extends 'chair/submissions/feed/_card_base_columed.html' %}
 
@@ -13,7 +14,7 @@
 
 {% block statusRowItems %}
   {# Show average score in the status row: #}
-  <div class="dccn-feed-item-label ml-2 text-{{ submission|quality_of|quality_color }}-12 ">
+  <div class="dccn-feed-item-label ml-2 text-{{ review_stats|quality_of:submission|quality_color }}-12 ">
     <i class="far fa-star"></i> {{ submission|average_score }}
   </div>
   {# Display proceedings at the right corner: #}

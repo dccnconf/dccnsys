@@ -11,10 +11,7 @@ from chair.forms import FilterSubmissionsForm, \
 from chair.utility import build_paged_view_context
 from conferences.utilities import validate_chair_access
 from conferences.models import Conference
-from review.forms import UpdateVolumeForm, UpdateDecisionForm
 from review.models import Review, ReviewStats, Decision
-from review.utilities import count_required_reviews, qualify_score, \
-    UNKNOWN_QUALITY
 from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
     AuthorDeleteForm, AuthorsReorderForm, InviteAuthorForm
 from submissions.models import Submission
@@ -64,55 +61,34 @@ def feed_item(request, conference, submission):
             'submission': submission,
         })
 
-    elif submission.status == Submission.UNDER_REVIEW:
-        stats, _ = ReviewStats.objects.get_or_create(conference=conference)
-
-        # Fill reviews data - a list of scores with data, and warnings:
-        reviews_data = []
-        num_incomplete, num_missing = 0, 0
-        for review in submission.reviews.all():
-            score = review.average_score()
-            quality = qualify_score(score, stats=stats)
-            reviews_data.append({
-                'quality': quality,
-                'score': f'{score:.1f}' if score > 0 else '?',
-            })
-            if score == 0:
-                num_incomplete += 1
-        num_required = count_required_reviews(submission)
-        if num_required > len(reviews_data):
-            num_missing = num_required - len(reviews_data)
-            for _ in range(num_required - len(reviews_data)):
-                reviews_data.append({'quality': UNKNOWN_QUALITY, 'score': '-'})
-
-        warnings = []
-        if num_incomplete > 0:
-            warnings.append(f'{num_incomplete} reviews are not finished')
-        if num_missing > 0:
-            warnings.append(f'{num_missing} reviews are not assigned')
-
+    stats, _ = ReviewStats.objects.get_or_create(conference=conference)
+    if submission.status == Submission.UNDER_REVIEW:
         return render(request, 'chair/submissions/feed/card_review.html', {
             'submission': submission,
             'conf_pk': conference.pk,
             'decision_data': _build_decision_form_data(submission),
-            'reviews_data': reviews_data,
-            'warnings': warnings,
+            'review_stats': stats,
         })
 
-    elif submission.status == Submission.ACCEPTED:
+    if submission.status == Submission.ACCEPTED:
         return render(request, 'chair/submissions/feed/card_accepted.html', {
             'conf_pk': conference.pk,
             'submission': submission,
             'decision': submission.review_decision.first(),
             'form_data': _build_decision_form_data(
                 submission, hide_decision=True, hide_proc_type=True),
+            'review_stats': stats,
         })
 
-    elif submission.status == Submission.REJECTED:
+    if submission.status == Submission.REJECTED:
+        stats, _ = ReviewStats.objects.get_or_create(conference=conference)
         return render(request, 'chair/submissions/feed/card_rejected.html', {
             'conf_pk': conference.pk,
             'submission': submission,
+            'review_stats': stats,
         })
+
+    raise Http404
 
 
 def _build_decision_form_data(submission, hide_decision=False,

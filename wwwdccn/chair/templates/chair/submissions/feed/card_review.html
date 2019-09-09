@@ -4,32 +4,113 @@
 {# CONTEXT:                                                                #}
 {# - `conf_pk`: conference primary key                                     #}
 {# - `submission`: a submission dictionary object                          #}
+{# - `review_stats`: an instance of `ReviewStats` object                   #}
 {# - `decision_data`: form data for decision pseudo-form                   #}
-{# - `revews_data`: TODO, maybe remove                                     #}
 {###########################################################################}
 {% extends 'chair/submissions/feed/_card_base_columed.html' %}
 {% load submission_extras %}
 {% load review_extras %}
-
-{% block statusRowItems %}
-{% endblock %}
+{% load gears_extras %}
 
 
 {% block rightBodyColumn %}
-  <div class="ml-3 d-flex align-items-center mt-0 pt-0 mb-2">
-    <div class="dccn-text-large">
-      <i class="{{ quality|quality_icon_class }} text-{{ quality|quality_color }} mr-2"></i>
-      <span class="text-{{ quality|quality_color }}">{{ submission|average_score }}</span>
+  {% with reviews=submission.reviews.all %}
+    <div class="ml-3 d-flex align-items-center mt-0 pt-0 mb-2">
+      <div class="dccn-text-large">
+        {% with score=submission|average_score quality=review_stats|quality_of:submission %}
+          <i class="{{ quality|quality_icon_class }} text-{{ quality|quality_color }}"></i>
+          <a class="text-{{ quality|quality_color }}"
+             href="{% url 'chair:submission-reviewers' conf_pk=submission.conference_id sub_pk=submission.pk %}">{{ score }}</a>
+        {% endwith %}
+      </div>
+      <div class="ml-3 dccn-text-large-light">
+        {% spaceless %}
+          <span>(</span>
+            {% for review in reviews %}
+              {% with quality=review_stats|quality_of:review %}
+                <a class="text-{{ quality|quality_color }}" href="#reviewModal-{{ submission.pk }}-{{ review.pk }}"
+                   data-toggle="modal">{{ review|average_score|default:'?' }}</a>
+                {% if not forloop.last %}<span>, </span>{% endif %}
+              {% endwith %}
+            {% endfor %}
+            {% with miss_revs=submission|missing_reviews %}
+              {% if miss_revs|length != 0 and reviews|length != 0 %}<span>, </span>{% endif %}
+              {% for symbol in miss_revs %}
+                <a class="text-danger-15 dccn-text-normal"
+                   href="{% url 'chair:submission-reviewers' conf_pk=submission.conference_id sub_pk=submission.pk %}">
+                  <i class="fas fa-minus"></i></a>
+                {% if not forloop.last %}<span>, </span>{% endif %}
+              {% endfor %}
+            {% endwith %}
+          <span>)</span>
+        {% endspaceless %}
+      </div>
     </div>
-    <div class="ml-3 dccn-text-large-light">
-      ({% for review in reviews_data %}
-        <span class="text-{{ review.quality|quality_color }}">{{ review.score }}</span>{% if not forloop.last %}, {% endif %}
-      {% endfor %})
+    <div class="review-feed-item-controls ml-3 my-3">
+      {% include 'chair/submissions/feed/components/_decision_control.html' with form_data=decision_data conf_pk=submission.conference_id sub_pk=submission.pk %}
     </div>
-  </div>
-  <div class="review-feed-item-controls ml-3 my-3">
-    {% include 'chair/submissions/feed/components/_decision_control.html' with form_data=decision_data conf_pk=conf_pk sub_pk=submission.pk %}
-  </div>
+
+  {# Add modal dialogs for review preview: #}
+  {% for review in reviews %}
+    {% with quality=review_stats|quality_of:review %}
+      <div class="modal fade" tabindex="-1" role="dialog" id="reviewModal-{{ submission.pk }}-{{ review.pk }}">
+        <div class="modal-dialog modal-xl" role="document">
+          <div class="modal-content">
+            <div class="modal-header bg-{{ quality|quality_color }} text-light">
+              {% spaceless %}
+                <h5 class="modal-title ml-3">
+                  <span>Review by {{ review.reviewer.user.profile.get_full_name }}</span>
+                  {% if not review.submitted %}<span class="font-weight-bold"> (not finished)</span>{% endif %}
+                </h5>
+              {% endspaceless %}
+              <button type="button" class="close mr-2" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="d-flex align-items-center">
+                <div class="mx-5">
+                  <i class="fa-4x {{ quality|quality_icon_class }} text-{{ quality|quality_color }}"></i>&nbsp;
+                </div>
+                <div class="ml-3 my-2 dccn-text-normal-light">
+                  <p class="my-0">
+                    <span>Technical merit: </span>
+                    <span class="font-weight-bold">
+                      {{ review.technical_merit|default:'?' }}
+                    </span>
+                  </p>
+                  <p class="my-1">
+                    <span>Clarity: </span>
+                    <span class="font-weight-bold">
+                      {{ review.clarity|default:'?' }}
+                    </span>
+                  </p>
+                  <p class="my-1">
+                    <span>Originality: </span>
+                    <span class="font-weight-bold">
+                      {{ review.originality|default:'?' }}
+                    </span>
+                  </p>
+                  <p class="my-1">
+                    <span>Relevance: </span>
+                    <span class="font-weight-bold">
+                      {{ review.relevance|default:'?' }}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <p class="m-5 font-italic text-secondary dccn-text-normal-light">{{ review.details }}</p>
+            </div>
+            <div class="modal-footer mx-3">
+              <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    {% endwith %}
+  {% endfor %}
+  {% endwith %}
 {% endblock %}
 
 

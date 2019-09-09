@@ -20,3 +20,52 @@
     color: theme-color-level($klass, 10) !important;
   }
 }
+
+
+@each $sz in ('sm', 'md', 'lg', 'xl') {
+  .border-#{$sz}-left {
+    @include media-breakpoint-up($sz) {
+      border-left: 1px solid $border-color;
+    }
+  }
+  .border-#{$sz}-left-none {
+    @include media-breakpoint-up($sz) {
+      border-left: none !important;
+    }
+  }
+  .border-#{$sz}-right {
+    @include media-breakpoint-up($sz) {
+      border-right: 1px solid $border-color;
+    }
+  }
+  .border-#{$sz}-right-none {
+    @include media-breakpoint-up($sz) {
+      border-right: none !important;
+    }
+  }
+  .border-#{$sz}-top {
+    @include media-breakpoint-up($sz) {
+      border-top: 1px solid $border-color;
+    }
+  }
+  .border-#{$sz}-top-none {
+    @include media-breakpoint-up($sz) {
+      border-top: none !important;
+    }
+  }
+  .border-#{$sz}-bottom {
+    @include media-breakpoint-up($sz) {
+      border-bottom: 1px solid $border-color;
+    }
+  }
+  .border-#{$sz}-bottom-none {
+    @include media-breakpoint-up($sz) {
+      border-bottom: none !important;
+    }
+  }
+  .border-#{$sz}-none {
+    @include media-breakpoint-up($sz) {
+      border: none;
+    }
+  }
+}

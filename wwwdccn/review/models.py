@@ -12,6 +12,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from conferences.models import Conference, ProceedingType, ProceedingVolume, \
     ArtifactDescriptor
+from review.utilities import get_average_score
 from submissions.models import Submission
 from users.models import User
 
@@ -335,6 +336,27 @@ class ReviewStats(Model):
 
         # 3) Save!
         self.save()
+
+    EXCELLENT_QUALITY = 'excellent'
+    GOOD_QUALITY = 'good'
+    AVERAGE_QUALITY = 'average'
+    POOR_QUALITY = 'poor'
+    UNKNOWN_QUALITY = ''
+
+    def qualify_score(self, score):
+        if not score:
+            return ReviewStats.UNKNOWN_QUALITY
+        if isinstance(score, str):
+            score = float(score)
+        if 0 < score < self.q1_score:
+            return ReviewStats.POOR_QUALITY
+        if 0 < score < self.median_score:
+            return ReviewStats.AVERAGE_QUALITY
+        if 0 < score < self.q3_score:
+            return ReviewStats.GOOD_QUALITY
+        if score >= self.q3_score:
+            return ReviewStats.EXCELLENT_QUALITY
+        return ReviewStats.UNKNOWN_QUALITY
 
 
 # noinspection PyUnusedLocal

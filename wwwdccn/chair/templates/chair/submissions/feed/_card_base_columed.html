@@ -3,14 +3,16 @@
 
 {% block cardBodyColumns %}
   {# 1 Leftmost column: title, authors, warnings #}
-  <div class="col-12 col-lg-5 col-xl-4">
+  <div class="col-12 col-xl-4">
     {% include 'chair/submissions/feed/components/_title_authors.html' with submission=submission conf_pk=conf_pk %}
     {% include 'chair/submissions/feed/components/_warning_list.html' with submission=submission %}
   </div>
 
   {# 2 Rightmost column: filled depending on the submission status #}
-  <div class="col-12 col-lg-7 col-xl-8 mt-3 mt-lg-0 border-left">
+  <div class="col-12 col-xl-8 mt-3 mt-xl-0 border-xl-left">
+    <div class="ml-0 ml-lg-3">
     {% block rightBodyColumn %}
     {% endblock %}
+    </div>
   </div>
 {% endblock %}
