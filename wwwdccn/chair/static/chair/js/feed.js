@@ -39,10 +39,14 @@ $(document).ready(function () {
       method: form.attr('method'),
       data: formData,
     }).done(function () {
-      const url = parentFeedItem.attr('data-html-src');
-      $.get(url, function (data) {
-        parentFeedItem.html(data);
-      });
+      if (form.hasClass('inst-form-delete')) {
+        parentFeedItem.remove();
+      } else {
+        const url = parentFeedItem.attr('data-html-src');
+        $.get(url, function (data) {
+          parentFeedItem.html(data);
+        });
+      }
     });
     parentFeedItem.html(
       '<div class="d-flex"><div class="mx-auto text-center"><div class="spinner-border"></div><p>Loading</p></div></div>'
