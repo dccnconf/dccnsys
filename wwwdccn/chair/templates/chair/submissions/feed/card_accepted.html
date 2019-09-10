@@ -57,5 +57,8 @@
 
 
 {% block footerRowItems %}
-  {% include 'chair/submissions/feed/components/_start_review_button.html' with label='Revert to review' icon='fas fa-backward' %}
+  <a class="dccn-feed-item-link" data-toggle="modal" href="#setStatusDialog-REVIEW-{{ submission.pk }}">
+    <i class="fas fa-backward"></i> Revert to review
+  </a>
+  {% include 'chair/submissions/feed/components/_to_review_modal.html' %}
 {% endblock %}

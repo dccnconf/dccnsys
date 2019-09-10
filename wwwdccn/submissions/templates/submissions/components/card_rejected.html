@@ -13,7 +13,7 @@
       <i class="far fa-star"></i> <span class="font-weight-lighter">{{ submission|average_score }}</span>
     </div>
     <div class="dccn-feed-item-label dccn-feed-item-status">
-      Rejected <i class="fas fa-circle text-danger"></i>
+      Rejected <i class="fas fa-circle {{ submission|status_class }}"></i>
     </div>
   </div>
   <p class="dccn-feed-item-title">

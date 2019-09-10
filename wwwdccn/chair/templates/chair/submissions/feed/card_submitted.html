@@ -7,5 +7,8 @@
 {% extends 'chair/submissions/feed/_card_base.html' %}
 
 {% block footerRowItems %}
-  {% include 'chair/submissions/feed/components/_start_review_button.html' with label='Start review' icon='fas fa-forward' %}
+    <a class="dccn-feed-item-link" data-toggle="modal" href="#setStatusDialog-REVIEW-{{ submission.pk }}">
+    <i class="fas fa-forward"></i> Start review
+  </a>
+  {% include 'chair/submissions/feed/components/_to_review_modal.html' %}
 {% endblock %}

@@ -114,14 +114,16 @@
 
 
 {% block footerRowItems %}
-{#    TODO:#}
-{#    <a href="{% url 'chair:submission-reviewers' sub_pk=item.pk %}" class="dccn-feed-item-link">#}
-{#      <i class="fas fa-glasses"></i> Select reviewers#}
-{#      (<span class="{% if item.num_reviews < item.num_reviews_required %}text-danger{% endif %}">{{ submission.num_reviews }}/{{ submission.num_reviews_required }}</span>)#}
-{#    </a>#}
-{#      <form action="{% url 'chair:revoke-review' sub_pk=item.pk %}?next={{ request.get_full_path|urlencode }}"#}
-{#            method="POST" >#}
-{#        {% csrf_token %}#}
-{#        <button type="submit" class="btn btn-sm btn-outline-warning"><i class="fas fa-times"></i> Revoke review</button>#}
-{#      </form>#}
+  {% if submission.stype %}
+    {% with num_required=submission.stype.num_reviews num_reviews=submission.reviews.count %}
+        <a href="{% url 'chair:submission-reviewers' sub_pk=submission.pk %}" class="dccn-feed-item-link">
+          <i class="fas fa-glasses"></i> Reviewers
+          (<span class="{% if num_reviews < num_required %}text-danger-12{% endif %}">{{ num_reviews }}/{{ num_required }}</span>)
+        </a>
+    {% endwith %}
+  {% endif %}
+  <a href="#setStatusDialog-SUBMITTED-{{ submission.pk }}" data-toggle="modal" class="dccn-feed-item-link">
+    <i class="fas fa-backward"></i> Revoke review
+  </a>
+  {% include 'chair/submissions/feed/components/_to_submitted_modal.html' with submission=submission %}
 {% endblock %}

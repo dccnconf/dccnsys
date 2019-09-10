@@ -1,5 +1,4 @@
 from django import template
-from django.utils import timezone
 
 from conferences.models import ArtifactDescriptor
 from submissions import utilities
@@ -11,19 +10,13 @@ register = template.Library()
 
 @register.filter('status_class')
 def status_class(submission):
-    try:
-        status = submission.status
-        warnings = submission.warnings()
-    except AttributeError:
-        status = submission['status']
-        warnings = submission['warnings']
-
+    status = submission.status
     if status == 'SUBMIT':
-        return 'text-success' if not warnings else 'text-warning'
+        return 'text-success-4'
     elif status in {'REVIEW', 'PRINT', 'PUBLISH'}:
         return 'text-info'
     elif status == 'ACCEPT':
-        return 'text-success'
+        return 'text-success-12'
     elif status == 'REJECT':
         return 'text-danger'
     return ''

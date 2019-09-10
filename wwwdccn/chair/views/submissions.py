@@ -313,7 +313,7 @@ def revoke_review(request, submission):
     if submission.status == Submission.UNDER_REVIEW:
         submission.status = Submission.SUBMITTED
         submission.save()
-    return redirect(request.GET.get('next', ''))
+    return JsonResponse(data={})
 
 
 @require_GET
