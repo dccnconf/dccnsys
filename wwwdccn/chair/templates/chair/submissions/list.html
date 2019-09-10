@@ -6,15 +6,8 @@
 {# - `filter_form`: a submissions filter form                              #}
 {#                                                                         #}
 {# INHERITED CONTEXT:                                                      #}
-{# - `num_items`: number of items shown on the page.                       #}
-{# - `curr_page`: index (1-based) of the current page.                     #}
-{# - `page_urls`: a list of all pages URLs.                                #}
-{# - `first_index`: index (1-based) of the first item being shown.         #}
-{# - `last_index`: index (1-based) of the last item being shown.           #}
-{# - `prev_page_url`: URL of the previous page, if exists.                 #}
-{# - `next_page_url`: URL of the next page, if exists.                     #}
-{# - `first_page_url`: URL of the first page, if exists.                   #}
-{# - `last_page_url`: URL of the last page, if exists.                     #}
+{# - `page`: a `Page` object                                               #}
+{# - `list_view_url`: this list view URL without query-string part.        #}
 {# - `conference`: conference identifier                                   #}
 {#                                                                         #}
 {# Each item should is expected to have the following fields:              #}
@@ -51,6 +44,7 @@
 {% endblock %}
 
 {% block toolbar %}
+  {{ url }}
   <div class="d-flex my-3 pb-3 border-bottom">
     <form action="{% url 'chair:submission-create' conf_pk=conference.pk %}" method="POST">
       {% csrf_token %}
@@ -67,7 +61,7 @@
 {# List view content                                                         #}
 {#---------------------------------------------------------------------------#}
 {% block listViewContent %}
-  {% for item in items %}
+  {% for item in page %}
     <div class="dccn-feed-item pb-3" data-html-src="{% url 'chair:submission-feed-item' sub_pk=item %}">
       <div class="d-flex"><div class="mx-auto text-center"><div class="spinner-border"></div><p>Loading</p></div></div>
     </div>

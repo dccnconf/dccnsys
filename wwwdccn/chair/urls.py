@@ -13,7 +13,6 @@ urlpatterns = [
     # Submissions
     #
     path('<int:conf_pk>/submissions/', submissions.list_submissions, name='submissions'),
-    path('<int:conf_pk>/submissions/pages/<int:page>/', submissions.list_submissions, name='submissions-pages'),
     path('<int:conf_pk>/submissions/create/', submissions.create_submission, name='submission-create'),
     path('submissions/<int:sub_pk>/feed_item/', submissions.feed_item, name='submission-feed-item'),
     path('submissions/<int:sub_pk>/overview/', submissions.overview, name='submission-overview'),

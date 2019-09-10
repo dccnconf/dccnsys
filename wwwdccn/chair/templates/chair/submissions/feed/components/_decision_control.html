@@ -88,8 +88,7 @@
   {# Commit button: #}
   <div>
     {% if not form_data.committed %}
-      <form action="{% url 'review:commit-decision' sub_pk=sub_pk %}" method="POST"
-            class="inst-form mr-2" novalidate>
+      <form action="{% url 'review:commit-decision' sub_pk=sub_pk %}" method="POST" class="inst-form mr-2" novalidate>
         {% csrf_token %}
         <input class="btn btn-sm py-1 btn-outline-primary" type="submit" value="Commit">
       </form>

@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.http import require_GET, require_POST
 
@@ -66,14 +68,14 @@ def list_users(request, conf_pk, page=1):
     } for user, profile in profiles.items()]
 
     items.sort(key=lambda x: x['pk'])
+    paginator = Paginator(items, settings.ITEMS_PER_PAGE)
+    page = paginator.page(request.GET.get('page', 1))
 
-    context = build_paged_view_context(
-        request, items, page, 'chair:users-pages', {'conf_pk': conf_pk}
-    )
-    context.update({
+    context = {
         'conference': conference,
         'filter_form': form,
-    })
+        'page': page,
+    }
     return render(request, 'chair/users/users_list.html', context=context)
 
 

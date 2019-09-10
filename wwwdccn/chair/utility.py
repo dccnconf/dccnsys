@@ -1,21 +1,20 @@
 import math
 
+from django.conf import settings
 from django.http import Http404
 from django.urls import reverse
 
 
-ITEMS_PER_PAGE = 10
-
-
 def build_paged_view_context(request, items, page, viewname, kwargs):
+    items_per_page = getattr(settings, 'ITEMS_PER_PAGE', 10)
     num_items = len(items)
-    num_pages = int(math.ceil(num_items / ITEMS_PER_PAGE))
+    num_pages = int(math.ceil(num_items / items_per_page))
 
     if page < 1 or page > max(num_pages, 1):
         raise Http404
 
-    first_index = min((page - 1) * ITEMS_PER_PAGE, num_items)
-    last_index = min(page * ITEMS_PER_PAGE, num_items)
+    first_index = min((page - 1) * items_per_page, num_items)
+    last_index = min(page * items_per_page, num_items)
     first_page_url, last_page_url = '', ''
     prev_page_url, next_page_url = '', ''
     query_string = request.GET.urlencode()

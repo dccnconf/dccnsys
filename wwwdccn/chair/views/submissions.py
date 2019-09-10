@@ -1,6 +1,8 @@
 import functools
 
+from django.conf import settings
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.http import require_GET, require_POST
@@ -8,7 +10,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from chair.forms import FilterSubmissionsForm, \
     ChairUploadReviewManuscriptForm, AssignReviewerForm
-from chair.utility import build_paged_view_context
 from conferences.utilities import validate_chair_access
 from conferences.models import Conference
 from review.models import Review, ReviewStats, Decision
@@ -40,7 +41,7 @@ def submission_view(params='submission'):
 
 
 @require_GET
-def list_submissions(request, conf_pk, page=1):
+def list_submissions(request, conf_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     form = FilterSubmissionsForm(request.GET, instance=conference)
@@ -50,16 +51,15 @@ def list_submissions(request, conf_pk, page=1):
         submissions = form.apply(submissions)
 
     pks = [sub.pk for sub in submissions]
+    paginator = Paginator(pks, settings.ITEMS_PER_PAGE)
+    page = paginator.page(request.GET.get('page', 1))
 
-    context = build_paged_view_context(
-        request, pks, page, 'chair:submissions-pages', {'conf_pk': conf_pk}
-    )
-    context.update({
+    context = {
         'conference': conference,
         'filter_form': form,
-    })
-    return render(request, 'chair/submissions/list.html',
-                  context=context)
+        'page': page,
+    }
+    return render(request, 'chair/submissions/list.html', context=context)
 
 
 @require_POST
