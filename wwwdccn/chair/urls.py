@@ -36,7 +36,6 @@ urlpatterns = [
     # Users
     #
     path('<int:conf_pk>/users/', users.list_users, name='users'),
-    path('<int:conf_pk>/users/pages/<int:page>/', users.list_users, name='users-pages'),
     path('<int:conf_pk>/users/<int:user_pk>/overview/', users.overview, name='user-overview'),
     path('<int:conf_pk>/users/<int:user_pk>/messages/', users.emails, name='user-messages'),
     path('<int:conf_pk>/reviewers/invite/<int:user_pk>/', users.create_reviewer, name='invite-reviewer'),

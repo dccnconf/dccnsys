@@ -4,7 +4,6 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.http import require_GET, require_POST
 
 from chair.forms import FilterUsersForm
-from chair.utility import build_paged_view_context
 from conferences.utilities import validate_chair_access
 from chair_mail.models import EmailMessage
 from conferences.models import Conference
@@ -13,7 +12,7 @@ from users.models import User
 
 
 @require_GET
-def list_users(request, conf_pk, page=1):
+def list_users(request, conf_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     users = User.objects.all()
