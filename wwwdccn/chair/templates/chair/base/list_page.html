@@ -16,6 +16,7 @@
 {# - `conference`                                                          #}
 {###########################################################################}
 {% extends 'chair/base/generic_page.html' %}
+{% load gears_extras %}
 
 {#---------------------------------------------------------------------------#}
 {# Main content                                                              #}
@@ -35,7 +36,9 @@
 
         {# Go to previous page: #}
         {% if page.has_previous %}
-          <a href="?page={{ page.previous_page_number }}" class="btn btn-outline-secondary btn-sm mr-auto">
+          <a href="?{% update_param request page=page.previous_page_number %}" class="btn btn-outline-secondary btn-sm mr-auto">
+{#          <a href="?page={{ page.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"#}
+{#             class="btn btn-outline-secondary btn-sm mr-auto">#}
             <i class="fas fa-chevron-left"></i>
           </a>
         {% else %}
@@ -44,7 +47,7 @@
 
         {# Go the next page: #}
         {% if page.has_next %}
-          <a href="?page={{ page.next_page_number }}" class="btn btn-outline-secondary btn btn-sm ml-auto">
+          <a href="?{% update_param request page=page.next_page_number %}" class="btn btn-outline-secondary btn btn-sm ml-auto">
             <i class="fas fa-chevron-right"></i>
           </a>
         {% else %}
@@ -63,7 +66,7 @@
       <ul class="pagination d-flex justify-content-center flex-wrap">
         {# 1) Go to the first page: #}
         <li class="page-item {% if page.number == 1 %}disabled{% endif %}">
-          <a class="page-link" href="?page=1">
+          <a class="page-link" href="?{% update_param request page=1 %}">
             <i class="fas fa-angle-double-left"></i>
           </a>
         </li>
@@ -71,7 +74,7 @@
         {# 2) Go to the previous page: #}
         {% if page.has_previous %}
           <li class="page-item">
-            <a class="page-link" href="?page={{ page.previous_page_number }}">
+            <a class="page-link" href="?{% update_param request page=page.previous_page_number %}">
               <i class="fas fa-angle-left"></i>
             </a>
           </li>
@@ -82,14 +85,14 @@
         {# 3) List all pages: #}
         {% for page_index in paginator.page_range %}
           <li class="page-item {% if page_index == page.number %}active{% endif %}">
-            <a href="?page={{ page_index }}" class="page-link">{{ page_index }}</a>
+            <a href="?{% update_param request page=page_index %}" class="page-link">{{ page_index }}</a>
           </li>
         {% endfor %}
 
         {# 4) Go to the next page: #}
         {% if page.has_next %}
           <li class="page-item">
-            <a class="page-link" href="?page={{ page.next_page_number }}">
+            <a class="page-link" href="?{% update_param request page=page.next_page_number %}">
               <i class="fas fa-angle-right"></i>
             </a>
           </li>
@@ -99,7 +102,7 @@
 
         {# 5) Go to the last page: #}
         <li class="page-item {% if page.number == paginator.num_pages %}disabled{% endif %}">
-          <a class="page-link" href="?page={{ paginator.num_pages }}">
+          <a class="page-link" href="?{% update_param request page=paginator.num_pages %}">
             <i class="fas fa-angle-double-right"></i>
           </a>
         </li>

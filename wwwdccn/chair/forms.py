@@ -15,10 +15,14 @@ from users.models import Profile
 
 User = get_user_model()
 
+EMPTY_SUBMISSION = 'EMPTY'
+INCOMPLETE_SUBMISSION = 'INCOMPLETE'
+COMPLETE_SUBMISSION = 'COMPLETE'
+
 COMPLETION_STATUS = [
-    ('EMPTY', 'Empty submissions'),
-    ('INCOMPLETE', 'Incomplete submissions'),
-    ('COMPLETE', 'Complete submissions'),
+    (EMPTY_SUBMISSION, 'Empty submissions'),
+    (INCOMPLETE_SUBMISSION, 'Incomplete submissions'),
+    (COMPLETE_SUBMISSION, 'Complete submissions'),
 ]
 
 
@@ -107,66 +111,41 @@ class FilterSubmissionsForm(forms.ModelForm):
         self.fields['affiliations'].choices = [(item, item) for item in affs]
 
     def apply(self, submissions):
-        term = self.cleaned_data['term']
-        completion = self.cleaned_data['completion']
-        types = [int(t) for t in self.cleaned_data['types']]
-        topics = [int(topic) for topic in self.cleaned_data['topics']]
-        status = self.cleaned_data['status']
-        countries = self.cleaned_data['countries']
-        affiliations = self.cleaned_data['affiliations']
-
-        auth_prs = {
-            sub: Profile.objects.filter(user__authorship__submission=sub)
-            for sub in submissions
-        }
-        if term:
-            submissions = search_submissions(
-                submissions, term, sub_profiles=auth_prs)
-
-        if completion:
-            _show_incomplete = 'INCOMPLETE' in completion
-            _show_complete = 'COMPLETE' in completion
-            _show_empty = 'EMPTY' in completion
-
-            _sub_warnings = {sub: sub.warnings() for sub in submissions}
-
-            submissions = [
-                sub for sub in submissions
-                if (_sub_warnings[sub] and _show_incomplete or
-                    not _sub_warnings[sub] and _show_complete or
-                    not sub.title and _show_empty)
-            ]
-
-        if topics:
-            _sub_topics = {
-                sub: set(x[0] for x in sub.topics.values_list('pk'))
-                for sub in submissions
-            }
-            submissions = [
-                sub for sub in submissions
-                if any(topic in _sub_topics[sub] for topic in topics)
-            ]
-
+        query_expr = Q(pk__isnull=False)  # always True for any valid entry
+        types = [int(t) for t in self.cleaned_data['types'] if t]
         if types:
-            submissions = [sub for sub in submissions
-                           if sub.stype and sub.stype.pk in types]
-
-        if status:
-            submissions = [sub for sub in submissions if sub.status in status]
-
+            query_expr = query_expr & Q(stype__in=types)
+        topics = [int(topic) for topic in self.cleaned_data['topics'] if topic]
+        if topics:
+            query_expr = query_expr & Q(topics__in=topics)
+        statuses = self.cleaned_data['status']
+        if statuses:
+            query_expr = query_expr & Q(status__in=statuses)
+        countries = self.cleaned_data['countries']
         if countries:
-            submissions = [
-                sub for sub in submissions
-                if any(pr.country.code in countries for pr in auth_prs[sub])
-            ]
-
+            query_expr = query_expr & Q(
+                author__user__profile__country__in=countries)
+        affiliations = self.cleaned_data['affiliations']
         if affiliations:
-            submissions = [
-                sub for sub in submissions
-                if any(pr.affiliation in affiliations for pr in auth_prs[sub])
-            ]
+            query_expr = query_expr & Q(
+                author__user__profile__affiliation__in=affiliations)
 
-        return submissions
+        term = self.cleaned_data['term']
+        term_expr = None
+        for word in term.lower().split():
+            word_expr = (Q(title__icontains=word) | Q(pk__icontains=word) |
+                         Q(authors__user__profile__first_name__icontains=word) |
+                         Q(authors__user__profile__last_name__icontains=word))
+            term_expr = (term_expr & word_expr) if term_expr else word_expr
+        if term_expr:
+            query_expr = query_expr & term_expr
+
+        # completion = self.cleaned_data['completion']
+        # completion_expr = Q(pk__isnull=True)  # always False
+        # if COMPLETE_SUBMISSION in completion:
+        #     completion_expr = completion_expr | Q()
+
+        return submissions.filter(query_expr).distinct()
 
 
 ATTENDING_STATUS = (
