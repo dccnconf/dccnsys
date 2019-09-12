@@ -1,6 +1,8 @@
+from functools import reduce
+
 from django import forms
 from django.contrib.auth import get_user_model
-from django.db.models import Q
+from django.db.models import Q, F, Count
 from django.forms import Form, MultipleChoiceField, CharField
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
@@ -52,6 +54,24 @@ def search_submissions(submissions, term, sub_profiles=None):
 
 
 class FilterSubmissionsForm(forms.ModelForm):
+    COMPLETE_SUBMISSION = 'COMPLETE'
+    MISSING_TITLE = 'MISSING_TITLE'
+    NO_REVIEW_MANUSCRIPT = 'NO_REVIEW_PDF'
+    INCOMPLETE_REVIEWS = 'INCOMPLETE_REVIEWS'
+    UNASSIGNED_REVIEWERS = 'UNASSIGNED_REVIEWERS'
+    MISSING_ARTIFACT = 'MISSING_MANDATORY_ART'
+    MISSING_OPT_ARTIFACT = 'MISSING_OPT_ART'
+
+    COMPLETION_CHOICES = (
+        (COMPLETE_SUBMISSION, 'Everything complete'),
+        (MISSING_TITLE, 'Empty submissions'),
+        (NO_REVIEW_MANUSCRIPT, 'Missing review PDF'),
+        (INCOMPLETE_REVIEWS, 'Incomplete reviews'),
+        (UNASSIGNED_REVIEWERS, 'Unassigned reviewers'),
+        (MISSING_ARTIFACT, 'Missing mandatory artifacts'),
+        (MISSING_OPT_ARTIFACT, 'Missing optional artifacts'),
+    )
+
     class Meta:
         model = Conference
         fields = []
@@ -60,7 +80,7 @@ class FilterSubmissionsForm(forms.ModelForm):
 
     completion = MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False,
-        choices=COMPLETION_STATUS)
+        choices=COMPLETION_CHOICES)
 
     types = MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False)
@@ -96,7 +116,84 @@ class FilterSubmissionsForm(forms.ModelForm):
             (x, x) for x in profiles_data.values_list(
                 'affiliation', flat=True).distinct().order_by('affiliation')]
 
+        self.conjuncts = []
+
+    def clean_completion(self):
+        data = self.cleaned_data['completion']
+        disjuncts = []
+
+        # Below we define various queries for _non-empty_ submissions those
+        # may be issued within 'completion' choice. Negation of these
+        # queries conjunction along with condition on non-emptiness give
+        # complete submission criterion:
+        queries = {
+            self.NO_REVIEW_MANUSCRIPT:
+                Q(review_manuscript='') & Q(status=Submission.SUBMITTED),
+            self.UNASSIGNED_REVIEWERS:
+                Q(num_reviews_assigned__lt=F('num_reviews_required')) &
+                Q(status=Submission.UNDER_REVIEW),
+            self.INCOMPLETE_REVIEWS:
+                Q(num_reviews_submitted__lt=F('num_reviews_assigned')) &
+                Q(status=Submission.UNDER_REVIEW),
+            self.MISSING_ARTIFACT:
+                Q(num_missing_mandatory_artifacts__gt=0) &
+                Q(status=Submission.ACCEPTED),
+            self.MISSING_OPT_ARTIFACT:
+                Q(num_missing_optional_artifacts__gt=0) &
+                Q(status=Submission.ACCEPTED),
+        }
+
+        empty = Q(title='')  # we use this often below
+        if self.MISSING_TITLE in data:
+            disjuncts.append(empty)
+
+        # Check every option defined in queries dictionary above. Disjunct
+        # all presented in 'completion' choice options, conjunct them with
+        # non-emptiness and add to 'disjuncts' list (~E & (Q1 | Q2 | ... | Qn))
+        non_empty_disjuncts = []
+        for opt, query in queries.items():
+            if opt in data:
+                non_empty_disjuncts.append(query)
+        if non_empty_disjuncts:
+            disjuncts.append(
+                ~empty & reduce(lambda q, acc: acc | q, non_empty_disjuncts))
+
+        # If we are also interested in completed submissions, disjuct all
+        # queries defined above (regardless of whether they are presented
+        # in completion choices!), conjunct with non-emptiness and put to
+        # 'disjuncts' list:
+        if self.COMPLETE_SUBMISSION in data:
+            disjuncts.append(
+                ~empty & ~reduce(lambda q, acc: acc | q, queries.values()))
+
+        if disjuncts:
+            self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
+
+        return data
+
     def apply(self, submissions):
+        # First, we prepare submissions by annotating them with:
+        # - num_reviews_required
+        # - num_reviews_assigned
+        # - num_reviews_submitted
+        # - num_missing_mandatory_artifacts
+        # - num_missing_optional_artifacts
+        submissions = submissions.annotate(
+            num_reviews_required=F('stype__num_reviews'),
+            num_reviews_assigned=Count('reviews', distinct=True),
+            num_reviews_submitted=Count('reviews', filter=Q(
+                reviews__submitted=True), distinct=True),
+            num_missing_mandatory_artifacts=Count('artifacts', filter=Q(
+                artifacts__file='', artifacts__descriptor__mandatory=True,
+                artifacts__descriptor__proc_type=F(
+                    'review_decision__proc_type')), distinct=True),
+            num_missing_optional_artifacts=Count('artifacts', filter=Q(
+                artifacts__file='', artifacts__descriptor__mandatory=False,
+                artifacts__descriptor__proc_type=F(
+                    'review_decision__proc_type')), distinct=True),
+        )
+
+        # Then, we apply simple filters:
         query_expr = Q(pk__isnull=False)  # always True for any valid entry
         types = [int(t) for t in self.cleaned_data['types'] if t]
         if types:
@@ -126,10 +223,9 @@ class FilterSubmissionsForm(forms.ModelForm):
         if term_expr:
             query_expr = query_expr & term_expr
 
-        # completion = self.cleaned_data['completion']
-        # completion_expr = Q(pk__isnull=True)  # always False
-        # if COMPLETE_SUBMISSION in completion:
-        #     completion_expr = completion_expr | Q()
+        # Finally, apply all conjuncts:
+        if self.conjuncts:
+            query_expr = query_expr & reduce(lambda x, y: x & y, self.conjuncts)
 
         return submissions.filter(query_expr).distinct().order_by('pk')
 
