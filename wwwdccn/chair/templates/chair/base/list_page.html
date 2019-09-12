@@ -37,8 +37,6 @@
         {# Go to previous page: #}
         {% if page.has_previous %}
           <a href="?{% update_param request page=page.previous_page_number %}" class="btn btn-outline-secondary btn-sm mr-auto">
-{#          <a href="?page={{ page.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"#}
-{#             class="btn btn-outline-secondary btn-sm mr-auto">#}
             <i class="fas fa-chevron-left"></i>
           </a>
         {% else %}

@@ -5,6 +5,8 @@ from django.forms import Form, MultipleChoiceField, CharField
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
+from django_countries import countries
+
 from conferences.models import Conference, ProceedingVolume
 from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput
 from review.models import Reviewer, Review, Decision, ReviewStats
@@ -56,75 +58,59 @@ class FilterSubmissionsForm(forms.ModelForm):
 
     term = forms.CharField(required=False)
 
-    completion = forms.MultipleChoiceField(
+    completion = MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False,
-        choices=COMPLETION_STATUS,
-    )
+        choices=COMPLETION_STATUS)
 
-    types = forms.MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False,
-    )
+    types = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
 
-    topics = forms.MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False,
-    )
+    topics = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
 
-    status = forms.MultipleChoiceField(
+    status = MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False,
-        choices=Submission.STATUS_CHOICE
-    )
+        choices=Submission.STATUS_CHOICE)
 
-    countries = forms.MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False,
-    )
+    countries = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
 
-    affiliations = forms.MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False,
-    )
+    affiliations = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert isinstance(self.instance, Conference)
-
         self.fields['types'].choices = [
-            (st.pk, st) for st in self.instance.submissiontype_set.all()
-        ]
+            (x.pk, x.name) for x in self.instance.submissiontype_set.all()]
         self.fields['topics'].choices = [
-            (topic.pk, topic) for topic in self.instance.topic_set.all()
-        ]
+            (x.pk, x.name) for x in self.instance.topic_set.all()]
 
-        # Getting profiles of all participants:
-        profiles = Profile.objects.filter(
-            user__authorship__submission__conference__pk=self.instance.pk
-        ).distinct()
-
-        # Extracting all the different countries:
-        countries = list(set(p.country for p in profiles))
-        countries.sort(key=lambda cnt: cnt.name)
+        profiles_data = Profile.objects\
+            .filter(user__authorship__submission__conference=self.instance)\
+            .values('affiliation', 'country')
         self.fields['countries'].choices = [
-            (cnt.code, cnt.name) for cnt in countries
-        ]
-
-        # Extracting all the different affiliations:
-        affs = [item['affiliation'] for item in profiles.values('affiliation')]
-        affs.sort()
-        self.fields['affiliations'].choices = [(item, item) for item in affs]
+            (x, dict(countries)[x]) for x in profiles_data.values_list(
+                'country', flat=True).distinct().order_by('country')]
+        self.fields['affiliations'].choices = [
+            (x, x) for x in profiles_data.values_list(
+                'affiliation', flat=True).distinct().order_by('affiliation')]
 
     def apply(self, submissions):
         query_expr = Q(pk__isnull=False)  # always True for any valid entry
         types = [int(t) for t in self.cleaned_data['types'] if t]
         if types:
             query_expr = query_expr & Q(stype__in=types)
-        topics = [int(topic) for topic in self.cleaned_data['topics'] if topic]
+        topics = [int(t) for t in self.cleaned_data['topics'] if t]
         if topics:
             query_expr = query_expr & Q(topics__in=topics)
         statuses = self.cleaned_data['status']
         if statuses:
             query_expr = query_expr & Q(status__in=statuses)
-        countries = self.cleaned_data['countries']
-        if countries:
+        selected_countries = self.cleaned_data['countries']
+        if selected_countries:
             query_expr = query_expr & Q(
-                author__user__profile__country__in=countries)
+                author__user__profile__country__in=selected_countries)
         affiliations = self.cleaned_data['affiliations']
         if affiliations:
             query_expr = query_expr & Q(
@@ -145,7 +131,7 @@ class FilterSubmissionsForm(forms.ModelForm):
         # if COMPLETE_SUBMISSION in completion:
         #     completion_expr = completion_expr | Q()
 
-        return submissions.filter(query_expr).distinct()
+        return submissions.filter(query_expr).distinct().order_by('pk')
 
 
 ATTENDING_STATUS = (
