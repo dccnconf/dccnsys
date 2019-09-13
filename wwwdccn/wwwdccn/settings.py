@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'storages',
     'django_countries',
     'registration',
+    'widget_tweaks',
 
     # Application defined in this project:
     'users',

@@ -27,6 +27,7 @@
 {% load gears_extras %}
 {% load bootstrap4 %}
 {% load submission_extras %}
+{% load widget_tweaks %}
 
 {#---------------------------------------------------------------------------#}
 {# Navigation and breadcrumbs                                                #}
@@ -45,13 +46,24 @@
 
 {% block toolbar %}
   {{ url }}
-  <div class="d-flex my-3 pb-3 border-bottom">
+  <div class="d-flex my-3 pb-3 border-bottom align-items-center">
     <form action="{% url 'chair:submission-create' conf_pk=conference.pk %}" method="POST">
       {% csrf_token %}
       <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Create</button>
     </form>
     <a href="{% url 'chair:export-submissions' conf_pk=conference.pk %}?next={{ request.get_full_path|urlencode }}"
        class="btn btn-outline-secondary ml-2" ><i class="fas fa-download"></i> Export</a>
+
+    <div class="ml-auto"></div>
+    <div class="mr-2">
+      {% render_field filter_form.order class+="form-control form-control-sm" form="filterForm" %}
+    </div>
+    <div class="mr-2">
+      {% render_field filter_form.direction class+="form-control form-control-sm" form="filterForm" %}
+    </div>
+    <div>
+      <button type="submit" form="filterForm" class="btn btn-outline-secondary btn-sm">Apply</button>
+    </div>
   </div>
 {% endblock %}
 
@@ -75,7 +87,7 @@
 {#---------------------------------------------------------------------------#}
 {% block filter %}
   <div class="dccn-chair-workspace-filter">
-    <form action="{% url 'chair:submissions' conf_pk=conference.pk %}" method="GET" class="m-2">
+    <form action="{% url 'chair:submissions' conf_pk=conference.pk %}" method="GET" class="m-2" id="filterForm">
       {% bootstrap_field filter_form.term show_label=False bound_css_class='' %}
 
       <a href="#detailedFilterFormFields" class="d-block dccn-link mb-3" data-toggle="collapse" id="detailedFilterFormToggler">

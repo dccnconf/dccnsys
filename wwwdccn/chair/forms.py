@@ -2,9 +2,10 @@ from functools import reduce
 
 from django import forms
 from django.contrib.auth import get_user_model
-from django.db.models import Q, F, Count
+from django.db.models import Q, F, Count, Max
 from django.db.models.functions import Concat
-from django.forms import Form, MultipleChoiceField, CharField
+from django.forms import Form, MultipleChoiceField, CharField, ChoiceField, \
+    Select
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
@@ -78,6 +79,17 @@ class FilterSubmissionsForm(forms.ModelForm):
     Q4 = 'Q4'
     QUARTILE_CHOICES = ((Q1, 'Q1'), (Q2, 'Q2'), (Q3, 'Q3'), (Q4, 'Q4'))
 
+    ORDER_BY_PK = 'PK'
+    ORDER_BY_TITLE = 'TITLE'
+    ORDER_BY_SCORE = 'SCORE'
+    ORDER_CHOICES = (
+        (ORDER_BY_PK, 'Order by ID'),
+        (ORDER_BY_SCORE, 'Order by score'),
+        (ORDER_BY_TITLE, 'Order by title'),
+    )
+
+    DIRECTION_CHOICES = (('ASC', 'Ascending'), ('DESC', 'Descending'))
+
     class Meta:
         model = Conference
         fields = []
@@ -114,6 +126,9 @@ class FilterSubmissionsForm(forms.ModelForm):
         widget=CustomCheckboxSelectMultiple, required=False,
         choices=QUARTILE_CHOICES)
 
+    order = ChoiceField(required=False, choices=ORDER_CHOICES)
+    direction = ChoiceField(required=False, choices=DIRECTION_CHOICES)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert isinstance(self.instance, Conference)
@@ -139,6 +154,30 @@ class FilterSubmissionsForm(forms.ModelForm):
                 'affiliation', flat=True).distinct().order_by('affiliation')]
 
         self.conjuncts = []
+
+    def order_submissions(self, submissions):
+        order = self.cleaned_data['order']
+        direction = '' if self.cleaned_data['direction'] == 'ASC' else '-'
+        if order == self.ORDER_BY_PK:
+            return submissions.order_by(f'{direction}pk')
+
+        elif order == self.ORDER_BY_TITLE:
+            return submissions.order_by(f'{direction}title')
+
+        elif order == self.ORDER_BY_SCORE:
+            #FIXME: refactor this to use pure SQL instead of Python:
+            max_pk = max(submissions.aggregate(Max('pk'))['pk__max'], 1)
+
+            def order_key(sub):
+                score = get_average_score(sub)
+                v = (-score, sub.pk / max_pk)
+                return sum(x * 10**(len(v)-1-i) for i, x in enumerate(v))
+
+            ordered_submissions = list(submissions)
+            ordered_submissions.sort(key=order_key, reverse=(direction == '-'))
+            return ordered_submissions
+
+        return submissions
 
     def clean_completion(self):
         data = self.cleaned_data['completion']
@@ -324,7 +363,7 @@ class FilterSubmissionsForm(forms.ModelForm):
             submissions = submissions.filter(q)
 
         # Finally, distinct results and order them:
-        return submissions.distinct().order_by('pk')
+        return self.order_submissions(submissions.distinct())
 
 
 ATTENDING_STATUS = (
