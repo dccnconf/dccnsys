@@ -62,7 +62,6 @@ class FilterSubmissionsForm(forms.ModelForm):
     UNASSIGNED_REVIEWERS = 'UNASSIGNED_REVIEWERS'
     MISSING_ARTIFACT = 'MISSING_MANDATORY_ART'
     MISSING_OPT_ARTIFACT = 'MISSING_OPT_ART'
-
     COMPLETION_CHOICES = (
         (COMPLETE_SUBMISSION, 'Everything complete'),
         (MISSING_TITLE, 'Empty submissions'),
@@ -72,6 +71,12 @@ class FilterSubmissionsForm(forms.ModelForm):
         (MISSING_ARTIFACT, 'Missing mandatory artifacts'),
         (MISSING_OPT_ARTIFACT, 'Missing optional artifacts'),
     )
+
+    Q1 = 'Q1'
+    Q2 = 'Q2'
+    Q3 = 'Q3'
+    Q4 = 'Q4'
+    QUARTILE_CHOICES = ((Q1, 'Q1'), (Q2, 'Q2'), (Q3, 'Q3'), (Q4, 'Q4'))
 
     class Meta:
         model = Conference
@@ -99,6 +104,16 @@ class FilterSubmissionsForm(forms.ModelForm):
     affiliations = MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False)
 
+    proc_types = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
+
+    volumes = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
+
+    quartiles = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False,
+        choices=QUARTILE_CHOICES)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert isinstance(self.instance, Conference)
@@ -106,10 +121,16 @@ class FilterSubmissionsForm(forms.ModelForm):
             (x.pk, x.name) for x in self.instance.submissiontype_set.all()]
         self.fields['topics'].choices = [
             (x.pk, x.name) for x in self.instance.topic_set.all()]
+        self.fields['proc_types'].choices = [('', 'Not defined')] + [
+            (x.pk, x.name) for x in self.instance.proceedingtype_set.all()]
+        self.fields['volumes'].choices = [('', 'Not defined')] + [
+            (vol_pk, vol_name) for (vol_pk, vol_name) in
+            self.instance.proceedingtype_set.values_list(
+                'volumes__pk', 'volumes__name').distinct()]
 
-        profiles_data = Profile.objects\
-            .filter(user__authorship__submission__conference=self.instance)\
-            .values('affiliation', 'country')
+        profiles_data = Profile.objects.filter(
+            user__authorship__submission__conference=self.instance).values(
+            'affiliation', 'country')
         self.fields['countries'].choices = [
             (x, dict(countries)[x]) for x in profiles_data.values_list(
                 'country', flat=True).distinct().order_by('country')]
@@ -196,6 +217,72 @@ class FilterSubmissionsForm(forms.ModelForm):
         if data:
             self.conjuncts.append(
                 Q(authors__user__profile__affiliation__in=data))
+        return data
+
+    # noinspection DuplicatedCode
+    def clean_proc_types(self):
+        data = self.cleaned_data['proc_types']
+        disjuncts = []
+        proc_types = [int(x) for x in data if x]
+        if proc_types:
+            disjuncts.append(Q(review_decision__proc_type__in=proc_types))
+        if '' in data:
+            disjuncts.append(Q(review_decision__proc_type=None))
+        if disjuncts:
+            self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
+        return data
+
+    # noinspection DuplicatedCode
+    def clean_volumes(self):
+        data = self.cleaned_data['volumes']
+        disjuncts = []
+        volumes = [int(x) for x in data if x]
+        if volumes:
+            disjuncts.append(Q(review_decision__volume__in=volumes))
+        if '' in data:
+            disjuncts.append(Q(review_decision__volume=None))
+        if disjuncts:
+            self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
+        return data
+
+    def clean_quartiles(self):
+        data = self.cleaned_data['quartiles']
+        # Since the following computations are expensive, do them only when
+        # we need them. Also skip if no review stats are available:
+        stats_query = ReviewStats.objects.filter(conference=self.instance)
+        if not data or not stats_query.count():
+            return data
+
+        stats = stats_query.first()
+        q1, q2, q3 = stats.q1_score, stats.median_score, stats.q3_score
+
+        # We also make sure that review stats were filled, since otherwise
+        # the following code may raise errors, while there won't be any
+        # results:
+        if not stats.median_score:
+            # TODO: maybe add Q(pk__isnull=True) to conjuncts:
+            # this will make result always empty -- if there is no median
+            # (so Q1 and Q2), checking any quartile will result in empty set.
+            return data
+
+        submissions = Submission.objects.filter(status__in=[
+            Submission.UNDER_REVIEW, Submission.ACCEPTED, Submission.REJECTED,
+            Submission.IN_PRINT, Submission.PUBLISHED])
+        scores = {sub: get_average_score(sub) for sub in submissions}
+        # Skip all submissions without average score:
+        submissions = [sub for sub in submissions if scores[sub]]
+        disjuncts = []
+        if self.Q1 in data:
+            disjuncts.append(lambda sub: scores[sub] < q1)
+        if self.Q2 in data:
+            disjuncts.append(lambda sub: q1 <= scores[sub] < q2)
+        if self.Q3 in data:
+            disjuncts.append(lambda sub: q2 <= scores[sub] < q3)
+        if self.Q4 in data:
+            disjuncts.append(lambda sub: q3 <= scores[sub])
+        submissions = [sub for sub in submissions
+                       if any(predicate(sub) for predicate in disjuncts)]
+        self.conjuncts.append(Q(pk__in=[sub.pk for sub in submissions]))
         return data
 
     def clean_term(self):
