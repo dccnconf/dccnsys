@@ -3,6 +3,7 @@ from functools import reduce
 from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import Q, F, Count
+from django.db.models.functions import Concat
 from django.forms import Form, MultipleChoiceField, CharField
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
@@ -171,6 +172,44 @@ class FilterSubmissionsForm(forms.ModelForm):
 
         return data
 
+    def clean_topics(self):
+        data = self.cleaned_data['types']
+        items = [int(topic) for topic in data if topic]
+        if items:
+            self.conjuncts.append(Q(stype__in=items))
+        return data
+
+    def clean_status(self):
+        data = self.cleaned_data['status']
+        if data:
+            self.conjuncts.append(Q(status__in=data))
+        return data
+
+    def clean_countries(self):
+        data = self.cleaned_data['countries']
+        if data:
+            self.conjuncts.append(Q(authors__user__profile__country__in=data))
+        return data
+
+    def clean_affiliations(self):
+        data = self.cleaned_data['affiliations']
+        if data:
+            self.conjuncts.append(
+                Q(authors__user__profile__affiliation__in=data))
+        return data
+
+    def clean_term(self):
+        term = self.cleaned_data['term']
+        for word in term.lower().split():
+            self.conjuncts.append(
+                Q(title__icontains=word) | Q(pk__icontains=word) |
+                Q(authors__user__profile__first_name__icontains=word) |
+                Q(authors__user__profile__last_name__icontains=word) |
+                Q(authors__user__profile__first_name_rus__icontains=word) |
+                Q(authors__user__profile__middle_name_rus__icontains=word) |
+                Q(authors__user__profile__last_name_rus__icontains=word)
+            )
+
     def apply(self, submissions):
         # First, we prepare submissions by annotating them with:
         # - num_reviews_required
@@ -193,41 +232,12 @@ class FilterSubmissionsForm(forms.ModelForm):
                     'review_decision__proc_type')), distinct=True),
         )
 
-        # Then, we apply simple filters:
-        query_expr = Q(pk__isnull=False)  # always True for any valid entry
-        types = [int(t) for t in self.cleaned_data['types'] if t]
-        if types:
-            query_expr = query_expr & Q(stype__in=types)
-        topics = [int(t) for t in self.cleaned_data['topics'] if t]
-        if topics:
-            query_expr = query_expr & Q(topics__in=topics)
-        statuses = self.cleaned_data['status']
-        if statuses:
-            query_expr = query_expr & Q(status__in=statuses)
-        selected_countries = self.cleaned_data['countries']
-        if selected_countries:
-            query_expr = query_expr & Q(
-                author__user__profile__country__in=selected_countries)
-        affiliations = self.cleaned_data['affiliations']
-        if affiliations:
-            query_expr = query_expr & Q(
-                author__user__profile__affiliation__in=affiliations)
+        # Secondly, we build the query from conjuncts and apply the filter:
+        for q in self.conjuncts:
+            submissions = submissions.filter(q)
 
-        term = self.cleaned_data['term']
-        term_expr = None
-        for word in term.lower().split():
-            word_expr = (Q(title__icontains=word) | Q(pk__icontains=word) |
-                         Q(authors__user__profile__first_name__icontains=word) |
-                         Q(authors__user__profile__last_name__icontains=word))
-            term_expr = (term_expr & word_expr) if term_expr else word_expr
-        if term_expr:
-            query_expr = query_expr & term_expr
-
-        # Finally, apply all conjuncts:
-        if self.conjuncts:
-            query_expr = query_expr & reduce(lambda x, y: x & y, self.conjuncts)
-
-        return submissions.filter(query_expr).distinct().order_by('pk')
+        # Finally, distinct results and order them:
+        return submissions.distinct().order_by('pk')
 
 
 ATTENDING_STATUS = (
