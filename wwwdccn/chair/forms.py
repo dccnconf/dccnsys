@@ -12,7 +12,8 @@ from django.utils.translation import ugettext_lazy as _
 from django_countries import countries
 
 from conferences.models import Conference, ProceedingVolume
-from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput
+from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput, \
+    DropdownSelectSubmit
 from review.models import Reviewer, Review, Decision, ReviewStats
 from review.utilities import get_average_score, count_required_reviews, \
     review_finished
