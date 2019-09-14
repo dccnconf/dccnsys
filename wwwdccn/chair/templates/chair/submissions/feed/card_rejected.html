@@ -19,8 +19,9 @@
 
 
 {% block footerRowItems %}
-    <a class="dccn-feed-item-link" data-toggle="modal" href="#setStatusDialog-REVIEW-{{ submission.pk }}">
+  <button class="btn btn-link dccn-feed-item-link" data-toggle="submission-status" data-status="REVIEW"
+          data-target="{% url 'submissions:update-status' pk=submission.pk %}">
+    {% csrf_token %}
     <i class="fas fa-backward"></i> Revert to review
-  </a>
-  {% include 'chair/submissions/feed/components/_to_review_modal.html' %}
+  </button>
 {% endblock %}

@@ -25,4 +25,6 @@ urlpatterns = [
     path('<int:pk>/authors/create/', views.create_author, name='create-author'),
     path('<int:pk>/authors/order/', views.order_authors, name='order-authors'),
     path('<int:pk>/authors/invite/', views.send_invitation, name='invite'),
+
+    path('<int:pk>/update_status/', views.update_status, name='update-status'),
 ]

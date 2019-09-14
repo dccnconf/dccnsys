@@ -57,11 +57,13 @@
       <input type="hidden" name="objects" value="{{ submission.pk }}">
       <button class="btn btn-link dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</button>
     </form>
+
     {# 3.3 Delete submission button #}
     <a href="#deleteSubmissionDialog-{{ submission.pk }}" data-toggle="modal" class="dccn-feed-item-link text-danger-16">
       <i class="far fa-trash-alt"></i> Delete
     </a>
     {% include 'chair/submissions/feed/components/_delete_modal.html' with submission=submission %}
+
     {# 3.4 Additional actions, links, etc. #}
     {% block footerRowItems %}
       {# Put additional actions here #}

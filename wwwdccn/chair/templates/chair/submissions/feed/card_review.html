@@ -123,8 +123,9 @@
         </a>
     {% endwith %}
   {% endif %}
-  <a href="#setStatusDialog-SUBMITTED-{{ submission.pk }}" data-toggle="modal" class="dccn-feed-item-link">
+  <button class="btn btn-link dccn-feed-item-link" data-toggle="submission-status" data-status="SUBMIT"
+          data-target="{% url 'submissions:update-status' pk=submission.pk %}">
+    {% csrf_token %}
     <i class="fas fa-backward"></i> Revoke review
-  </a>
-  {% include 'chair/submissions/feed/components/_to_submitted_modal.html' with submission=submission %}
+  </button>
 {% endblock %}
