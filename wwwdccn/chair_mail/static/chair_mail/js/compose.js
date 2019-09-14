@@ -401,7 +401,7 @@ const Model = function ({listMailingListsURL, listObjectsURL, onObjectChecked, o
     initialize: api.initialize,
     objects: {
       check: id => api.check(state.objects[id], onObjectChecked),
-      uncheck: id => api.uncheck(state.objects[id], onObjectChecked),
+      uncheck: id => api.uncheck(state.objects[id], onObjectUnchecked),
       toggle: id => api.toggleCheck(state.objects[id], onObjectChecked, onObjectUnchecked),
       get: id => state.objects[id],
       all: () => Object.values(state.objects),
@@ -513,10 +513,14 @@ $.fn.composeToArea = function ({objectsInput, listsInput, onObjectDeleted, onLis
     /** Remove an item of a given type ('object' or 'list'). If `internal=true`, call `onItemDeleted(id)` handler. */
     remove: (type, id, internal=false) => {
       const item = this.find(`.compose-to-item[data-type="${type}"][data-id="${id}"]`);
+      console.log('remove call: item=', item);
       item.remove();
+      console.log('items after removing: ', this.find('.compose-to-item'));
       state[type].items.remove(id);
+      console.log('items after calling items.remove(id): ', this.find('.compose-to-item'));
       if (internal)
         state[type].onItemDeleted(id);
+      console.log('items after calling onItemDeleted: ', this.find('.compose-to-item'));
       },
 
     /** Add am object with a given ID. */
@@ -536,8 +540,10 @@ $.fn.composeToArea = function ({objectsInput, listsInput, onObjectDeleted, onLis
       // Bind 'click' event to the area and catch it at buttons with [data-toggle="remove"]:
       this.on('click', 'button[data-toggle="remove"]', (event) => {
         const item = $(event.currentTarget).parents('.compose-to-item');
+        console.log('going to remove item: ', item);
         api.remove(item.attr('data-type'), item.attr('data-id'), true);
         event.stopPropagation();
+        return false;
       });
       // Bind 'click' event to anchors in .compose-to-item's to showing modals with a list of users:
       this.on('click', '.compose-to-item[data-type="list"]', (event) => {

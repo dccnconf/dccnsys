@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.http import Http404, JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
+from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 from django.utils.translation import ugettext_lazy as _
 
@@ -90,6 +91,9 @@ def feed_item(request, submission, conference):
     context = {
         'submission': submission,
         'review_stats': stats,
+        'list_view_url': request.GET.get(
+            'list_view_url',
+            reverse('chair:submissions', kwargs={'conf_pk': conference.pk})),
     }
     template_names = {
         Submission.SUBMITTED: 'chair/submissions/feed/card_submitted.html',

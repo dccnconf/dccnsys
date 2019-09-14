@@ -41,10 +41,8 @@ def serialize_user(profile, conference):
     return data
 
 
-def serialize_submission(submission, conference, profiles_cache=None):
-    url = reverse('chair:submission-overview', kwargs={
-        'conf_pk': conference.pk, 'sub_pk': submission.pk,
-    })
+def serialize_submission(submission, profiles_cache=None):
+    url = reverse('chair:submission-overview', kwargs={'sub_pk': submission.pk})
     authors = [{
         'id': author.user_id,
         'name': (profiles_cache[author.user_id].get_full_name()
@@ -115,7 +113,7 @@ def list_submissions(request, conf_pk):
     data = {
         'type': 'submission',
         'objects': [
-            serialize_submission(submission, conference, profiles_cache)
+            serialize_submission(submission, profiles_cache)
             for submission in submissions
         ]
     }

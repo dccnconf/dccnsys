@@ -94,7 +94,9 @@
 {#---------------------------------------------------------------------------#}
 {% block listViewContent %}
   {% for item in page %}
-    <div class="dccn-feed-item pb-3" data-html-src="{% url 'chair:submission-feed-item' sub_pk=item %}">
+    <div class="dccn-feed-item pb-3"
+         data-html-src="{% url 'chair:submission-feed-item' sub_pk=item %}"
+         data-list-view-url="{{ request.get_full_path }}">
       <div class="d-flex"><div class="mx-auto text-center"><div class="spinner-border"></div><p>Loading</p></div></div>
     </div>
   {% endfor %}
@@ -131,7 +133,8 @@ $(document).ready(() => {
   $('[data-html-src]').each(function () {
     const div = $(this);
     const url = div.attr('data-html-src');
-    $.get(url, data => {
+    const params = {'list_view_url': div.attr('data-list-view-url')};
+    $.get(url, params, data => {
       div.html(data);
     });
   });
