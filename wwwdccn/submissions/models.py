@@ -243,5 +243,16 @@ class Artifact(Model):
             return os.path.basename(self.file.file.name)
         return ''
 
+    def get_chair_download_name(self):
+        if self.file:
+            original_filename = self.get_file_name()
+            ext = original_filename.split('.')[-1]
+            code = self.descriptor.code
+            print(original_filename, self.submission_id)
+            name = f'FIN{self.submission_id:05d}_{code}.{ext}'
+            print(name)
+            return name
+        return ''
+
     def __str__(self):
         return f'Artifact "{self.name}" of submission #{self.submission_id}'

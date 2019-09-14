@@ -36,9 +36,9 @@
           </div>
           <div>
             {% if art.file %}
-              <a href="{% url 'submissions:artifact-download' pk=submission.pk art_pk=art.pk %}" target="_blank"
+              <a href="{% url 'chair:artifact-download' art_pk=art.pk %}" target="_blank"
                  class="dccn-link dccn-text-smallest-light">
-                {{ art.get_file_name }} <i class="{{ art|file_icon_class }}"></i>
+                {{ art.get_chair_download_name }} <i class="{{ art|file_icon_class }}"></i>
               </a>
             {% else %}
               <i class="fas fa-question-circle text-{% if descriptor.mandatory %}danger{% else %}warning{% endif %} "></i>

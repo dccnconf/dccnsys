@@ -31,6 +31,7 @@ urlpatterns = [
     path('submissions/<int:sub_pk>/reviews/assign/', submissions.assign_reviewer, name='assign-reviewer'),
     path('submissions/<int:sub_pk>/reviews/<int:rev_pk>/delete/', submissions.delete_review, name='delete-review'),
     path('submissions/<int:sub_pk>/delete/', submissions.delete_submission, name='submission-delete'),
+    path('artifacts/<int:art_pk>/download/', submissions.artifact_download, name='artifact-download'),
 
     #
     # Users

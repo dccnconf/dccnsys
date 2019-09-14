@@ -1,9 +1,10 @@
 import functools
+import mimetypes
 
 from django.conf import settings
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.http import Http404, JsonResponse
+from django.http import Http404, JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.http import require_GET, require_POST
 from django.utils.translation import ugettext_lazy as _
@@ -15,7 +16,7 @@ from conferences.models import Conference
 from review.models import Review, ReviewStats, Decision
 from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
     AuthorDeleteForm, AuthorsReorderForm, InviteAuthorForm
-from submissions.models import Submission
+from submissions.models import Submission, Artifact
 
 
 def submission_view(params='submission'):
@@ -353,6 +354,22 @@ def delete_review(request, submission, rev_pk):
         raise Http404
     review.delete()
     return redirect('chair:submission-reviewers', sub_pk=submission.pk)
+
+
+#
+# Overridden user methods:
+#
+@require_GET
+def artifact_download(request, art_pk):
+    artifact = get_object_or_404(Artifact, pk=art_pk)
+    validate_chair_access(request.user, artifact.submission.conference)
+    if artifact.file:
+        filename = artifact.get_chair_download_name()
+        mtype = mimetypes.guess_type(filename)[0]
+        response = HttpResponse(artifact.file.file, content_type=mtype)
+        response['Content-Disposition'] = f'filename={filename}'
+        return response
+    raise Http404
 
 
 #
