@@ -1,8 +1,10 @@
+from django.conf import settings
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.http import require_GET, require_POST
 
 from chair.forms import FilterUsersForm
-from chair.utility import validate_chair_access, build_paged_view_context
+from conferences.utilities import validate_chair_access
 from chair_mail.models import EmailMessage
 from conferences.models import Conference
 from review.models import Reviewer
@@ -10,7 +12,7 @@ from users.models import User
 
 
 @require_GET
-def list_users(request, conf_pk, page=1):
+def list_users(request, conf_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     users = User.objects.all()
@@ -65,14 +67,14 @@ def list_users(request, conf_pk, page=1):
     } for user, profile in profiles.items()]
 
     items.sort(key=lambda x: x['pk'])
+    paginator = Paginator(items, settings.ITEMS_PER_PAGE)
+    page = paginator.page(request.GET.get('page', 1))
 
-    context = build_paged_view_context(
-        request, items, page, 'chair:users-pages', {'conf_pk': conf_pk}
-    )
-    context.update({
+    context = {
         'conference': conference,
         'filter_form': form,
-    })
+        'page': page,
+    }
     return render(request, 'chair/users/users_list.html', context=context)
 
 

@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
-from chair.utility import validate_chair_access
+from conferences.utilities import validate_chair_access
 from chair_mail.context import USER_VARS, CONFERENCE_VARS, SUBMISSION_VARS, \
     FRAME_VARS
 from chair_mail.forms import EmailFrameUpdateForm, EmailFrameTestForm, \

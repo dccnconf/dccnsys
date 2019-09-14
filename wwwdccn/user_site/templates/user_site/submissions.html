@@ -31,17 +31,19 @@
       </div>
 
       {% for submission in submissions %}
+        {% with review_stats=submission.conference.review_stats %}
         {% if submission.status == submission.SUBMITTED %}
           {% include 'submissions/components/card_submitted.html' with submission=submission %}
         {% elif submission.status == submission.UNDER_REVIEW %}
           {% include 'submissions/components/card_review.html' with submission=submission %}
         {% elif submission.status == submission.ACCEPTED %}
-          {% include 'submissions/components/card_accepted.html' with submission=submission %}
+          {% include 'submissions/components/card_accepted.html' with submission=submission review_stats=review_stats %}
         {% elif submission.status == submission.REJECTED %}
-          {% include 'submissions/components/card_rejected.html' with submission=submission %}
+          {% include 'submissions/components/card_rejected.html' with submission=submission review_stats=review_stats %}
         {% else %}
           {{ submission.title }} -- {{ submission.get_status_display }}
         {% endif %}
+        {% endwith %}
       {% endfor %}
 
     </div>

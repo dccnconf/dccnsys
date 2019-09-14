@@ -10,69 +10,108 @@
 {# - `navigation`: left-side navigation.                                   #}
 {#                                                                         #}
 {# CONTEXT:                                                                #}
-{# - `num_items`: number of items shown on the page.                       #}
-{# - `curr_page`: index (1-based) of the current page.                     #}
-{# - `page_urls`: a list of all pages URLs.                                #}
-{# - `first_index`: index (1-based) of the first item being shown.         #}
-{# - `last_index`: index (1-based) of the last item being shown.           #}
-{# - `prev_page_url`: URL of the previous page, if exists.                 #}
-{# - `next_page_url`: URL of the next page, if exists.                     #}
-{# - `first_page_url`: URL of the first page, if exists.                   #}
-{# - `last_page_url`: URL of the last page, if exists.                     #}
+{# - `page`: a `Page` object                                               #}
 {#                                                                         #}
 {# INHERITED CONTEXT:                                                      #}
 {# - `conference`                                                          #}
 {###########################################################################}
 {% extends 'chair/base/generic_page.html' %}
+{% load gears_extras %}
 
 {#---------------------------------------------------------------------------#}
 {# Main content                                                              #}
 {#---------------------------------------------------------------------------#}
 {% block content %}
-  <div class="dccn-panel-toolbar mt-2">
-    {% block toolbar %}
-    {% endblock %}
-    <p class="dccn-text-smaller-light mb-1 mt-0">
-      {{ num_items }}&nbsp;items found{% if num_items > 0 %}, showing from {{ first_index }} to {{ last_index }}{% endif %}
-    </p>
-    <div class="row">
-      <a href="{{ prev_page_url }}"
-         class="btn btn-outline-secondary btn-sm mr-auto {% if not prev_page_url %}disabled{% endif %}">
-        <i class="fas fa-chevron-left"></i>
-      </a>
-      <a href="{{ next_page_url }}"
-         class="btn btn-outline-secondary btn-sm ml-auto {% if not next_page_url %}disabled{% endif %}">
-        <i class="fas fa-chevron-right"></i>
-      </a>
+  {% with paginator=page.paginator %}
+    <div class="dccn-panel-toolbar mb-0 pb-0 mt-3">
+      {% block toolbar %}
+      {% endblock %}
+
+      {# Top row navigation #}
+      <div class="d-flex bg-secondary-2 py-1">
+
+        {# Go to previous page: #}
+        {% if page.has_previous %}
+          <a href="?{% update_param request page=page.previous_page_number %}" class="mr-auto dccn-link dccn-text-small font-weight-bold">
+            <i class="fas fa-chevron-left"></i> prev
+          </a>
+        {% else %}
+          <a href="#" class="mr-auto disabled dccn-link dccn-text-small font-weight-bold">
+            <i class="fas fa-chevron-left"></i> prev
+          </a>
+        {% endif %}
+
+        <p class="dccn-text-smaller-light">
+          <span class="font-weight-bold">{{ paginator.count }}</span>&nbsp;items found{% if paginator.count > 0 %},
+          showing from <span class="font-weight-bold">{{ page.start_index }}</span> to <span class="font-weight-bold">{{ page.end_index }}</span>{% endif %}
+        </p>
+
+        {# Go the next page: #}
+        {% if page.has_next %}
+          <a href="?{% update_param request page=page.next_page_number %}" class="ml-auto dccn-link dccn-text-small font-weight-bold">
+            next <i class="fas fa-chevron-right"></i>
+          </a>
+        {% else %}
+          <a href="#" class="dccn-link dccn-text-small ml-auto disabled font-weight-bold">
+            next <i class="fas fa-chevron-right"></i>
+          </a>
+        {% endif %}
+      </div>
+      {# --- end of top row navigation --- #}
     </div>
-  </div>
 
-  {% block listViewContent %}
-  {% endblock %}
+    {% block listViewContent %}
+      {# Put list content here! #}
+    {% endblock %}
 
-  <nav>
-    <ul class="pagination d-flex justify-content-center flex-wrap">
-      <li class="page-item {% if not first_page_url %}disabled{% endif %}">
-        <a class="page-link" href="{{ first_page_url }}" aria-label="Previous"><i class="fas fa-angle-double-left"></i></a>
-      </li>
-      <li class="page-item {% if not prev_page_url %}disabled{% endif %}">
-        <a class="page-link" href="{{ prev_page_url }}" aria-label="Previous"><i class="fas fa-angle-left"></i></a>
-      </li>
-
-      {% for page_url in page_urls %}
-        <li class="page-item {% if forloop.counter == curr_page %}active{% endif %}">
-          <a href="{{ page_url }}" class="page-link">{{ forloop.counter }}</a>
+    <nav>
+      {# Bottom row page navigation: #}
+      <ul class="pagination d-flex justify-content-center flex-wrap">
+        {# 1) Go to the first page: #}
+        <li class="page-item {% if page.number == 1 %}disabled{% endif %}">
+          <a class="page-link" href="?{% update_param request page=1 %}">
+            <i class="fas fa-angle-double-left"></i>
+          </a>
         </li>
-      {% endfor %}
 
-      <li class="page-item {% if not next_page_url %}disabled{% endif %}">
-        <a class="page-link" href="{{ next_page_url }}" aria-label="Previous"><i class="fas fa-angle-right"></i></a>
-      </li>
-      <li class="page-item {% if not last_page_url %}disabled{% endif %}">
-        <a class="page-link" href="{{ last_page_url }}" aria-label="Previous"><i class="fas fa-angle-double-right"></i></a>
-      </li>
-    </ul>
-  </nav>
+        {# 2) Go to the previous page: #}
+        {% if page.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?{% update_param request page=page.previous_page_number %}">
+              <i class="fas fa-angle-left"></i>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-left"></i></a></li>
+        {% endif %}
+
+        {# 3) List all pages: #}
+        {% for page_index in paginator.page_range %}
+          <li class="page-item {% if page_index == page.number %}active{% endif %}">
+            <a href="?{% update_param request page=page_index %}" class="page-link">{{ page_index }}</a>
+          </li>
+        {% endfor %}
+
+        {# 4) Go to the next page: #}
+        {% if page.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?{% update_param request page=page.next_page_number %}">
+              <i class="fas fa-angle-right"></i>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-right"></i></a></li>
+        {% endif %}
+
+        {# 5) Go to the last page: #}
+        <li class="page-item {% if page.number == paginator.num_pages %}disabled{% endif %}">
+          <a class="page-link" href="?{% update_param request page=paginator.num_pages %}">
+            <i class="fas fa-angle-double-right"></i>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  {% endwith %}
 {% endblock %}
 
 
@@ -89,16 +128,6 @@ detailedFilter.on('hidden.bs.collapse', function () {
 detailedFilter.on('shown.bs.collapse', function () {
   detailedFilterTogglerIcon.removeClass('fa-chevron-right');
   detailedFilterTogglerIcon.addClass('fa-chevron-down');
-});
-
-$('.clear-cb-btn').on('click', function () {
-  const parent = $(this).parent().parent();
-  parent.find('.form-check input').prop('checked', false);
-});
-
-$('.select-all-cb-btn').on('click', function () {
-  const parent = $(this).parent().parent();
-  parent.find('.form-check input').prop('checked', true);
 });
 
 $(document).ready(function () {

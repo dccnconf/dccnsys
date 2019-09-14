@@ -1,0 +1,14 @@
+{###########################################################################}
+{# Submission feed item content in **SUBMITTED** state.                    #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `submission`: a submission dictionary object                          #}
+{###########################################################################}
+{% extends 'chair/submissions/feed/_card_base.html' %}
+
+{% block footerRowItems %}
+    <a class="dccn-feed-item-link" data-toggle="modal" href="#setStatusDialog-REVIEW-{{ submission.pk }}">
+    <i class="fas fa-forward"></i> Start review
+  </a>
+  {% include 'chair/submissions/feed/components/_to_review_modal.html' %}
+{% endblock %}

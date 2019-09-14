@@ -1,0 +1,64 @@
+{###########################################################################}
+{# Submission feed item content in **ACCEPTED** state.                     #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `submission`: a submission                                            #}
+{# - `decision`: review decision                                           #}
+{# - `review_stats`: an instance of `ReviewStats`                          #}
+{# - `form_data`: data for volume selection instant form                   #}
+{###########################################################################}
+{% extends 'chair/submissions/feed/_card_base_columed.html' %}
+
+{% load submission_extras %}
+{% load review_extras %}
+
+{% block statusRowItems %}
+  {# Show average score in the status row: #}
+  <div class="dccn-feed-item-label ml-2 text-{{ review_stats|quality_of:submission|quality_color }} ">
+    <i class="far fa-star"></i> {{ submission|average_score }}
+  </div>
+  {# Display proceedings at the right corner: #}
+  <div class="dccn-feed-item-label ml-auto badge badge-secondary p-1">
+    {{ decision.proc_type.name }}
+  </div>
+{% endblock %}
+
+
+{% block rightBodyColumn %}
+  {# List artifacts: #}
+  {% for art in submission.artifacts.all %}
+    {% if art.is_active %}
+      {% with descriptor=art.descriptor %}
+        <div class="dccn-text-small mb-2 d-flex align-items-center justify-content-between ml-3">
+          <div class="mr-2 {% if descriptor.mandatory %}font-weight-normal{% else %}font-weight-light{% endif %}">
+            {% if descriptor.mandatory %}<span class="dccn-text-smallest"><i class="fas fa-star-of-life"></i></span>{% endif %}
+            {{ descriptor.name }}:
+          </div>
+          <div>
+            {% if art.file %}
+              <a href="{% url 'chair:artifact-download' art_pk=art.pk %}" target="_blank"
+                 class="dccn-link dccn-text-smallest-light">
+                {{ art.get_chair_download_name }} <i class="{{ art|file_icon_class }}"></i>
+              </a>
+            {% else %}
+              <i class="fas fa-question-circle text-{% if descriptor.mandatory %}danger{% else %}warning{% endif %} "></i>
+            {% endif %}
+          </div>
+        </div>
+      {% endwith %}
+    {% endif %}
+  {% endfor %}
+
+  {# Volume form: #}
+  <div class="ml-3 mt-3 review-feed-item-controls">
+    {% include 'chair/submissions/feed/components/_decision_control.html' with form_data=form_data sub_pk=submission.pk %}
+  </div>
+{% endblock %}
+
+
+{% block footerRowItems %}
+  <a class="dccn-feed-item-link" data-toggle="modal" href="#setStatusDialog-REVIEW-{{ submission.pk }}">
+    <i class="fas fa-backward"></i> Revert to review
+  </a>
+  {% include 'chair/submissions/feed/components/_to_review_modal.html' %}
+{% endblock %}

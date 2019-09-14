@@ -39,7 +39,7 @@
           <ul>
             {% for submission in conference|list_submission_by:u %}
               <li>
-                <a href="{% url 'chair:submission-overview' conf_pk=conference.pk sub_pk=submission.pk %}"
+                <a href="{% url 'chair:submission-overview' sub_pk=submission.pk %}"
                    class="dccn-link">{{ submission.title }}</a>
               </li>
             {% endfor %}
@@ -60,7 +60,7 @@
             {% for review in conference|list_reviews_by:u %}
               {% with paper=review.paper %}
                 <li>
-                  <a href="{% url 'chair:submission-reviewers' conf_pk=conference.pk sub_pk=paper.pk %}"
+                  <a href="{% url 'chair:submission-reviewers' sub_pk=paper.pk %}"
                      class="dccn-link">{{ paper.title }}</a>
                 </li>
               {% endwith %}

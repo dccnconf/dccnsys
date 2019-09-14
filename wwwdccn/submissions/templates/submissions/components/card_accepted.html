@@ -1,26 +1,27 @@
 {######################################}
 {# CONTEXT:                           #}
 {# * submission                       #}
+{# * review_stats #}
 {######################################}
 {% load review_extras %}
 {% load submission_extras %}
-{% with decision=submission.review_decision.first quality=submission|quality_of warnings=submission|warnings_of %}
+{% with decision=submission.review_decision.first quality=review_stats|quality_of:submission warnings=submission|warnings_of %}
 <div class="dccn-feed-item">
   <div class="dccn-feed-item-top">
     <div class="dccn-feed-item-label dccn-feed-item-conf">{{ submission.conference.short_name }}</div>
-    {% if warnings %}
-      <div class="dccn-feed-item-label mx-3">
-        <i class="fas fa-exclamation-triangle text-warning"></i> {{ warnings|length }}
-      </div>
-    {% endif %}
     <div class="dccn-feed-item-label ml-auto mr-3" data-toggle="tooltip" title="Submission deadline">
       <i class="far fa-clock"></i> <span class="font-weight-lighter">{{ decision.proc_type.final_manuscript_deadline|date:"j F Y G:i" }}</span>
     </div>
     <div class="dccn-feed-item-label dccn-feed-item-score text-{{ quality|quality_color }}-15" data-toggle="tooltip" title="Review score">
       <i class="far fa-star"></i> <span class="font-weight-lighter">{{ submission|average_score }}</span>
     </div>
+    {% if warnings %}
+      <div class="dccn-feed-item-label mr-3">
+        <i class="fas fa-exclamation-triangle text-warning"></i> {{ warnings|length }}
+      </div>
+    {% endif %}
     <div class="dccn-feed-item-label dccn-feed-item-status">
-      Accepted <i class="fas fa-circle text-success"></i>
+      Accepted <i class="fas fa-circle {{ submission|status_class }}"></i>
     </div>
   </div>
   <p class="dccn-feed-item-title">
@@ -36,13 +37,12 @@
   <div class="dccn-feed-item-messages">
     {% for warning in warnings %}
       <div class="dccn-feed-item-row">
-        <div class="dccn-feed-item-message-text text-danger">
-          <i class="fas fa-exclamation-circle"></i> {{ warning }}
+        <div class="dccn-feed-item-message-text">
+          <i class="fas fa-exclamation-circle text-warning"></i> {{ warning.label }}
+          {% if warning.link %}(<a href="{{ warning.link }}" class="dccn-link dccn-text-small">{{ warning.link_label }}</a>){% endif %}
         </div>
       </div>
     {% endfor %}
-{#    {% if not submission.review_manuscript %}#}
-{#    {% endif %}#}
   </div>
   <div class="dccn-feed-item-footer">
     <a href="{% url 'submissions:overview' pk=submission.pk %}" class="dccn-feed-item-link"><i class="fas fa-align-justify"></i> View</a>

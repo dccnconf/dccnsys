@@ -1,0 +1,25 @@
+{###########################################################################}
+{# Submission feed item content in **REJECTED** state.                     #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `submission`: a submission dictionary object                          #}
+{# - `decision_data`: form data for decision pseudo-form                   #}
+{###########################################################################}
+{% extends 'chair/submissions/feed/_card_base.html' %}
+{#{% load submission_extras %}#}
+{% load review_extras %}
+
+{% block statusRowItems %}
+  {# Show average score in the status row: #}
+  <div class="dccn-feed-item-label ml-2 text-{{ review_stats|quality_of:submission|quality_color }}">
+    <i class="far fa-star"></i> {{ submission|average_score }}
+  </div>
+{% endblock %}
+
+
+{% block footerRowItems %}
+    <a class="dccn-feed-item-link" data-toggle="modal" href="#setStatusDialog-REVIEW-{{ submission.pk }}">
+    <i class="fas fa-backward"></i> Revert to review
+  </a>
+  {% include 'chair/submissions/feed/components/_to_review_modal.html' %}
+{% endblock %}

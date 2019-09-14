@@ -1,0 +1,62 @@
+<div class="form-group dropdown-select-submit">
+
+  <div class="dropdown">
+    <button class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" type="button">
+      {% if widget.value %}{{ widget.value }}{% else %}{{ widget.optgroups.0.1.0.label }}{% endif %}
+    </button>
+
+    <div class="dropdown-menu">
+      {% for group, options, index in widget.optgroups %}
+        {% for option in options %}
+          <button class="dropdown-item dccn-text-small px-3 py-1">{{ option.label }}</button>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+
+  {{ widget.value }}
+
+  <select name="{{ widget.attrs.name }}" {% include "django/forms/widgets/attrs.html" %}>
+          {% if widget.attrs.form %}form="{{ widget.attrs.form }}"{% endif %}>
+    {% for group, options, index in widget.optgroups %}
+      {% for option in options %}
+        <option value="{{ option.value }}" {% if option.selected %}selected{%endif %}>{{ option.label }}</option>
+      {% endfor  %}
+    {% endfor %}
+  </select>
+
+{##}
+{#  <div class="border rounded px-2 pb-2 mt-2 bg-light">#}
+{#    {% for group, options, index in widget.optgroups|slice:"3" %}#}
+{#      {% for option in options %}#}
+{#        <div class="form-check">#}
+{#          <input type="checkbox" name="{{ option.name }}"#}
+{#                 class="form-check-input" {% if option.value != None %} value="{{ option.value|stringformat:'s' }}"{% endif %}#}
+{#                 {% include "django/forms/widgets/attrs.html" with widget=option %}>#}
+{#          <label for="{{ option.attrs.id }}" class="form-check-label">{{ option.label }}</label>#}
+{#        </div>#}
+{#      {% endfor %}#}
+{#    {% endfor %}#}
+{##}
+{#    {% if widget.optgroups|length > 3 %}#}
+{#      <div class="collapse cb-options-tail" id="{{ widget.name }}-options-tail">#}
+{#        {% for group, options, index in widget.optgroups %}#}
+{#          {% if forloop.counter0 >= 3 %}#}
+{#            {% for option in options %}#}
+{#              <div class="form-check">#}
+{#                <input type="checkbox" name="{{ option.name }}"#}
+{#                       class="form-check-input" {% if option.value != None %} value="{{ option.value|stringformat:'s' }}"{% endif %}#}
+{#                       {% include "django/forms/widgets/attrs.html" with widget=option %}>#}
+{#                <label for="{{ option.attrs.id }}" class="form-check-label">{{ option.label }}</label>#}
+{#              </div>#}
+{#            {% endfor %}#}
+{#          {% endif %}#}
+{#        {% endfor %}#}
+{#      </div>#}
+{##}
+{#      <a href="#{{ widget.name }}-options-tail" class="dccn-link dccn-text-smallest cb-options-tail-collapse" data-toggle="collapse">#}
+{#        <i class="fas fa-plus"></i> Show more...#}
+{#      </a>#}
+{#    {% endif %}#}
+{#  </div>#}
+</div>

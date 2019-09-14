@@ -26,7 +26,7 @@
   <p class="text-center dccn-text-larger-light">{{ submission.title }}</p>
   <p class="text-center dccn-text-2-light mt-2">
     {% for author in submission.get_authors_profiles %}
-      <a href="{% url 'chair:user-overview' conf_pk=conference.pk user_pk=author.user_id %}"
+      <a href="{% url 'chair:user-overview' conf_pk=submission.conference_id user_pk=author.user_id %}"
          class="dccn-link">
         {{ author.get_full_name }}
       </a>{% if not forloop.last %}, {% endif %}
@@ -66,13 +66,13 @@
   <hr>
   <div class="row mt-3">
     {% if actions.review %}
-      <form method="POST" action="{% url 'chair:start-review' conf_pk=conference.pk sub_pk=submission.pk %}?next={{ request.get_full_path|urlencode }}">
+      <form method="POST" action="{% url 'chair:start-review' sub_pk=submission.pk %}?next={{ request.get_full_path|urlencode }}">
         {% csrf_token %}
         <button type="submit" class="btn btn-sm btn-outline-info"><i class="fas fa-check"></i> Start review</button>
       </form>
     {% endif %}
     {% if actions.revoke_review %}
-      <form method="POST" action="{% url 'chair:revoke-review' conf_pk=conference.pk sub_pk=submission.pk %}?next={{ request.get_full_path|urlencode }}">
+      <form method="POST" action="{% url 'chair:revoke-review' sub_pk=submission.pk %}?next={{ request.get_full_path|urlencode }}">
         {% csrf_token %}
         <button type="submit" class="btn btn-sm btn-outline-warning"><i class="fas fa-times"></i> Revoke review</button>
       </form>
@@ -99,7 +99,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Close</button>
-          <form action="{% url 'chair:submission-delete' conf_pk=conference.pk sub_pk=submission.pk %}" method="POST">
+          <form action="{% url 'chair:submission-delete' sub_pk=submission.pk %}" method="POST">
             {% csrf_token %}
             <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
           </form>

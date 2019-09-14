@@ -1,7 +1,7 @@
 from django.urls import path
 
-from chair.views import export, accepted_papers
-from .views import dashboard, submissions, users, reviews
+from chair.views import export
+from .views import dashboard, submissions, users
 
 
 app_name = 'chair'
@@ -13,55 +13,34 @@ urlpatterns = [
     # Submissions
     #
     path('<int:conf_pk>/submissions/', submissions.list_submissions, name='submissions'),
-    path('<int:conf_pk>/submissions/pages/<int:page>/', submissions.list_submissions, name='submissions-pages'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/overview/', submissions.overview, name='submission-overview'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/metadata/', submissions.metadata, name='submission-metadata'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/authors/', submissions.authors, name='submission-authors'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/authors/delete/', submissions.delete_author, name='submission-author-delete'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/authors/create/', submissions.create_author, name='submission-author-create'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/authors/invite/', submissions.invite_author, name='submission-author-invite'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/authors/reorder/', submissions.reorder_authors, name='submission-authors-reorder'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/rev_man/', submissions.review_manuscript, name='submission-review-manuscript'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/rev_man/delete/', submissions.delete_review_manuscript, name='submission-review-manuscript-delete'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/start_review/', submissions.start_review, name='start-review'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/revoke_review/', submissions.revoke_review, name='revoke-review'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/reviews/', submissions.reviews, name='submission-reviewers'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/messages/', submissions.emails, name='submission-messages'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/reviews/assign/', submissions.assign_reviewer, name='assign-reviewer'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/reviews/<int:rev_pk>/delete/', submissions.delete_review, name='delete-review'),
     path('<int:conf_pk>/submissions/create/', submissions.create_submission, name='submission-create'),
-    path('<int:conf_pk>/submissions/<int:sub_pk>/delete/', submissions.delete_submission, name='submission-delete'),
+    path('submissions/<int:sub_pk>/feed_item/', submissions.feed_item, name='submission-feed-item'),
+    path('submissions/<int:sub_pk>/overview/', submissions.overview, name='submission-overview'),
+    path('submissions/<int:sub_pk>/metadata/', submissions.metadata, name='submission-metadata'),
+    path('submissions/<int:sub_pk>/authors/', submissions.authors, name='submission-authors'),
+    path('submissions/<int:sub_pk>/authors/delete/', submissions.delete_author, name='submission-author-delete'),
+    path('submissions/<int:sub_pk>/authors/create/', submissions.create_author, name='submission-author-create'),
+    path('submissions/<int:sub_pk>/authors/invite/', submissions.invite_author, name='submission-author-invite'),
+    path('submissions/<int:sub_pk>/authors/reorder/', submissions.reorder_authors, name='submission-authors-reorder'),
+    path('submissions/<int:sub_pk>/rev_man/', submissions.review_manuscript, name='submission-review-manuscript'),
+    path('submissions/<int:sub_pk>/rev_man/delete/', submissions.delete_review_manuscript, name='submission-review-manuscript-delete'),
+    path('submissions/<int:sub_pk>/start_review/', submissions.start_review, name='start-review'),
+    path('submissions/<int:sub_pk>/revoke_review/', submissions.revoke_review, name='revoke-review'),
+    path('submissions/<int:sub_pk>/reviews/', submissions.reviews, name='submission-reviewers'),
+    path('submissions/<int:sub_pk>/messages/', submissions.emails, name='submission-messages'),
+    path('submissions/<int:sub_pk>/reviews/assign/', submissions.assign_reviewer, name='assign-reviewer'),
+    path('submissions/<int:sub_pk>/reviews/<int:rev_pk>/delete/', submissions.delete_review, name='delete-review'),
+    path('submissions/<int:sub_pk>/delete/', submissions.delete_submission, name='submission-delete'),
+    path('artifacts/<int:art_pk>/download/', submissions.artifact_download, name='artifact-download'),
 
     #
     # Users
     #
     path('<int:conf_pk>/users/', users.list_users, name='users'),
-    path('<int:conf_pk>/users/pages/<int:page>/', users.list_users, name='users-pages'),
     path('<int:conf_pk>/users/<int:user_pk>/overview/', users.overview, name='user-overview'),
     path('<int:conf_pk>/users/<int:user_pk>/messages/', users.emails, name='user-messages'),
     path('<int:conf_pk>/reviewers/invite/<int:user_pk>/', users.create_reviewer, name='invite-reviewer'),
     path('<int:conf_pk>/reviewers/revoke/<int:user_pk>/', users.revoke_reviewer, name='revoke-reviewer'),
-
-    #
-    # Reviews
-    #
-    path('<int:conf_pk>/reviews/', reviews.list_submissions, name='reviews'),
-    path('<int:conf_pk>/reviews/pages/<int:page>/', reviews.list_submissions, name='reviews-pages'),
-    # path('<int:conf_pk>/reviews/export/docx/', reviews.export_doc, name='export-reviews-doc'),
-    path('<int:conf_pk>/reviews/<int:sub_pk>/decision_control_panel/', reviews.decision_control_panel, name='review-decision-control'),
-    path('<int:conf_pk>/reviews/<int:sub_pk>/commit_decision/', reviews.commit_decision, name='review-decision-commit'),
-    path('<int:conf_pk>/reviews/<int:sub_pk>/list_item/', reviews.list_item, name='reviews-list-item-html'),
-
-    #
-    # Accepted papers
-    #
-    path('<int:conf_pk>/accepted_papers/', accepted_papers.papers_list, name='accepted-papers'),
-    path('<int:conf_pk>/accepted_papers/pages/<int:page>/', accepted_papers.papers_list, name='accepted-papers-pages'),
-    path('<int:conf_pk>/accepted_papers/<int:sub_pk>/list_item/', accepted_papers.feed_item, name='accepted-papers-feed-item'),
-    path('<int:conf_pk>/accepted_papers/<int:sub_pk>/volume_control_panel/',
-         accepted_papers.volume_control_panel, name='volume-decision-control'),
-    path('<int:conf_pk>/accepted_papers/<int:sub_pk>/commit_decision/',
-         accepted_papers.commit_volume, name='volume-decision-commit'),
 
     #
     # Exports

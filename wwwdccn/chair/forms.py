@@ -1,12 +1,19 @@
+from functools import reduce
+
 from django import forms
 from django.contrib.auth import get_user_model
-from django.db.models import Q
-from django.forms import Form, MultipleChoiceField, CharField
+from django.db.models import Q, F, Count, Max
+from django.db.models.functions import Concat
+from django.forms import Form, MultipleChoiceField, CharField, ChoiceField, \
+    Select
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
+from django_countries import countries
+
 from conferences.models import Conference, ProceedingVolume
-from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput
+from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput, \
+    DropdownSelectSubmit
 from review.models import Reviewer, Review, Decision, ReviewStats
 from review.utilities import get_average_score, count_required_reviews, \
     review_finished
@@ -15,10 +22,14 @@ from users.models import Profile
 
 User = get_user_model()
 
+EMPTY_SUBMISSION = 'EMPTY'
+INCOMPLETE_SUBMISSION = 'INCOMPLETE'
+COMPLETE_SUBMISSION = 'COMPLETE'
+
 COMPLETION_STATUS = [
-    ('EMPTY', 'Empty submissions'),
-    ('INCOMPLETE', 'Incomplete submissions'),
-    ('COMPLETE', 'Complete submissions'),
+    (EMPTY_SUBMISSION, 'Empty submissions'),
+    (INCOMPLETE_SUBMISSION, 'Incomplete submissions'),
+    (COMPLETE_SUBMISSION, 'Complete submissions'),
 ]
 
 
@@ -46,127 +57,317 @@ def search_submissions(submissions, term, sub_profiles=None):
 
 
 class FilterSubmissionsForm(forms.ModelForm):
+    COMPLETE_SUBMISSION = 'COMPLETE'
+    MISSING_TITLE = 'MISSING_TITLE'
+    NO_REVIEW_MANUSCRIPT = 'NO_REVIEW_PDF'
+    INCOMPLETE_REVIEWS = 'INCOMPLETE_REVIEWS'
+    UNASSIGNED_REVIEWERS = 'UNASSIGNED_REVIEWERS'
+    MISSING_ARTIFACT = 'MISSING_MANDATORY_ART'
+    MISSING_OPT_ARTIFACT = 'MISSING_OPT_ART'
+    COMPLETION_CHOICES = (
+        (COMPLETE_SUBMISSION, 'Everything complete'),
+        (MISSING_TITLE, 'Empty submissions'),
+        (NO_REVIEW_MANUSCRIPT, 'Missing review PDF'),
+        (INCOMPLETE_REVIEWS, 'Incomplete reviews'),
+        (UNASSIGNED_REVIEWERS, 'Unassigned reviewers'),
+        (MISSING_ARTIFACT, 'Missing mandatory artifacts'),
+        (MISSING_OPT_ARTIFACT, 'Missing optional artifacts'),
+    )
+
+    Q1 = 'Q1'
+    Q2 = 'Q2'
+    Q3 = 'Q3'
+    Q4 = 'Q4'
+    QUARTILE_CHOICES = ((Q1, 'Q1'), (Q2, 'Q2'), (Q3, 'Q3'), (Q4, 'Q4'))
+
+    ORDER_BY_PK = 'PK'
+    ORDER_BY_TITLE = 'TITLE'
+    ORDER_BY_SCORE = 'SCORE'
+    ORDER_CHOICES = (
+        (ORDER_BY_PK, 'Order by ID'),
+        (ORDER_BY_SCORE, 'Order by score'),
+        (ORDER_BY_TITLE, 'Order by title'),
+    )
+
+    DIRECTION_CHOICES = (('ASC', 'Ascending'), ('DESC', 'Descending'))
+
     class Meta:
         model = Conference
         fields = []
 
     term = forms.CharField(required=False)
 
-    completion = forms.MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False,
-        choices=COMPLETION_STATUS,
-    )
+    completion = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple(attrs={
+            'btn_class': 'btn btn-link dccn-link dccn-text-small',
+            'label_class': 'dccn-text-0',
+        }), required=False, choices=COMPLETION_CHOICES)
 
-    types = forms.MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False,
-    )
+    types = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
 
-    topics = forms.MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False,
-    )
+    topics = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
 
-    status = forms.MultipleChoiceField(
+    status = MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False,
-        choices=Submission.STATUS_CHOICE
-    )
+        choices=Submission.STATUS_CHOICE)
 
-    countries = forms.MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False,
-    )
+    countries = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
 
-    affiliations = forms.MultipleChoiceField(
+    affiliations = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
+
+    proc_types = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple(
+            attrs={'label': 'Proceedings'}), required=False)
+
+    volumes = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
+
+    quartiles = MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False,
-    )
+        choices=QUARTILE_CHOICES)
+
+    order = ChoiceField(required=False, choices=ORDER_CHOICES)
+    direction = ChoiceField(required=False, choices=DIRECTION_CHOICES)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert isinstance(self.instance, Conference)
-
         self.fields['types'].choices = [
-            (st.pk, st) for st in self.instance.submissiontype_set.all()
-        ]
+            (x.pk, x.name) for x in self.instance.submissiontype_set.all()]
         self.fields['topics'].choices = [
-            (topic.pk, topic) for topic in self.instance.topic_set.all()
-        ]
+            (x.pk, x.name) for x in self.instance.topic_set.all()]
+        self.fields['proc_types'].choices = [('', 'Not defined')] + [
+            (x.pk, x.name) for x in self.instance.proceedingtype_set.all()]
+        self.fields['volumes'].choices = [('', 'Not defined')] + [
+            (vol_pk, vol_name) for (vol_pk, vol_name) in
+            self.instance.proceedingtype_set.values_list(
+                'volumes__pk', 'volumes__name').distinct()]
 
-        # Getting profiles of all participants:
-        profiles = Profile.objects.filter(
-            user__authorship__submission__conference__pk=self.instance.pk
-        ).distinct()
-
-        # Extracting all the different countries:
-        countries = list(set(p.country for p in profiles))
-        countries.sort(key=lambda cnt: cnt.name)
+        profiles_data = Profile.objects.filter(
+            user__authorship__submission__conference=self.instance).values(
+            'affiliation', 'country')
         self.fields['countries'].choices = [
-            (cnt.code, cnt.name) for cnt in countries
-        ]
+            (x, dict(countries)[x]) for x in profiles_data.values_list(
+                'country', flat=True).distinct().order_by('country')]
+        self.fields['affiliations'].choices = [
+            (x, x) for x in profiles_data.values_list(
+                'affiliation', flat=True).distinct().order_by('affiliation')]
 
-        # Extracting all the different affiliations:
-        affs = [item['affiliation'] for item in profiles.values('affiliation')]
-        affs.sort()
-        self.fields['affiliations'].choices = [(item, item) for item in affs]
+        self.conjuncts = []
 
-    def apply(self, submissions):
-        term = self.cleaned_data['term']
-        completion = self.cleaned_data['completion']
-        types = [int(t) for t in self.cleaned_data['types']]
-        topics = [int(topic) for topic in self.cleaned_data['topics']]
-        status = self.cleaned_data['status']
-        countries = self.cleaned_data['countries']
-        affiliations = self.cleaned_data['affiliations']
+    def order_submissions(self, submissions):
+        order = self.cleaned_data['order']
+        direction = '' if self.cleaned_data['direction'] == 'ASC' else '-'
+        if order == self.ORDER_BY_PK:
+            return submissions.order_by(f'{direction}pk')
 
-        auth_prs = {
-            sub: Profile.objects.filter(user__authorship__submission=sub)
-            for sub in submissions
-        }
-        if term:
-            submissions = search_submissions(
-                submissions, term, sub_profiles=auth_prs)
+        elif order == self.ORDER_BY_TITLE:
+            return submissions.order_by(f'{direction}title')
 
-        if completion:
-            _show_incomplete = 'INCOMPLETE' in completion
-            _show_complete = 'COMPLETE' in completion
-            _show_empty = 'EMPTY' in completion
+        elif order == self.ORDER_BY_SCORE:
+            #FIXME: refactor this to use pure SQL instead of Python:
+            max_pk = max(submissions.aggregate(Max('pk'))['pk__max'], 1)
 
-            _sub_warnings = {sub: sub.warnings() for sub in submissions}
+            def order_key(sub):
+                score = get_average_score(sub)
+                v = (-score, sub.pk / max_pk)
+                return sum(x * 10**(len(v)-1-i) for i, x in enumerate(v))
 
-            submissions = [
-                sub for sub in submissions
-                if (_sub_warnings[sub] and _show_incomplete or
-                    not _sub_warnings[sub] and _show_complete or
-                    not sub.title and _show_empty)
-            ]
-
-        if topics:
-            _sub_topics = {
-                sub: set(x[0] for x in sub.topics.values_list('pk'))
-                for sub in submissions
-            }
-            submissions = [
-                sub for sub in submissions
-                if any(topic in _sub_topics[sub] for topic in topics)
-            ]
-
-        if types:
-            submissions = [sub for sub in submissions
-                           if sub.stype and sub.stype.pk in types]
-
-        if status:
-            submissions = [sub for sub in submissions if sub.status in status]
-
-        if countries:
-            submissions = [
-                sub for sub in submissions
-                if any(pr.country.code in countries for pr in auth_prs[sub])
-            ]
-
-        if affiliations:
-            submissions = [
-                sub for sub in submissions
-                if any(pr.affiliation in affiliations for pr in auth_prs[sub])
-            ]
+            ordered_submissions = list(submissions)
+            ordered_submissions.sort(key=order_key, reverse=(direction == '-'))
+            return ordered_submissions
 
         return submissions
+
+    def clean_completion(self):
+        data = self.cleaned_data['completion']
+        disjuncts = []
+
+        # Below we define various queries for _non-empty_ submissions those
+        # may be issued within 'completion' choice. Negation of these
+        # queries conjunction along with condition on non-emptiness give
+        # complete submission criterion:
+        queries = {
+            self.NO_REVIEW_MANUSCRIPT:
+                Q(review_manuscript='') & Q(status=Submission.SUBMITTED),
+            self.UNASSIGNED_REVIEWERS:
+                Q(num_reviews_assigned__lt=F('num_reviews_required')) &
+                Q(status=Submission.UNDER_REVIEW),
+            self.INCOMPLETE_REVIEWS:
+                Q(num_reviews_submitted__lt=F('num_reviews_assigned')) &
+                Q(status=Submission.UNDER_REVIEW),
+            self.MISSING_ARTIFACT:
+                Q(num_missing_mandatory_artifacts__gt=0) &
+                Q(status=Submission.ACCEPTED),
+            self.MISSING_OPT_ARTIFACT:
+                Q(num_missing_optional_artifacts__gt=0) &
+                Q(status=Submission.ACCEPTED),
+        }
+
+        empty = Q(title='')  # we use this often below
+        if self.MISSING_TITLE in data:
+            disjuncts.append(empty)
+
+        # Check every option defined in queries dictionary above. Disjunct
+        # all presented in 'completion' choice options, conjunct them with
+        # non-emptiness and add to 'disjuncts' list (~E & (Q1 | Q2 | ... | Qn))
+        non_empty_disjuncts = []
+        for opt, query in queries.items():
+            if opt in data:
+                non_empty_disjuncts.append(query)
+        if non_empty_disjuncts:
+            disjuncts.append(
+                ~empty & reduce(lambda q, acc: acc | q, non_empty_disjuncts))
+
+        # If we are also interested in completed submissions, disjuct all
+        # queries defined above (regardless of whether they are presented
+        # in completion choices!), conjunct with non-emptiness and put to
+        # 'disjuncts' list:
+        if self.COMPLETE_SUBMISSION in data:
+            disjuncts.append(
+                ~empty & ~reduce(lambda q, acc: acc | q, queries.values()))
+
+        if disjuncts:
+            self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
+
+        return data
+
+    def clean_topics(self):
+        data = self.cleaned_data['types']
+        items = [int(topic) for topic in data if topic]
+        if items:
+            self.conjuncts.append(Q(stype__in=items))
+        return data
+
+    def clean_status(self):
+        data = self.cleaned_data['status']
+        if data:
+            self.conjuncts.append(Q(status__in=data))
+        return data
+
+    def clean_countries(self):
+        data = self.cleaned_data['countries']
+        if data:
+            self.conjuncts.append(Q(authors__user__profile__country__in=data))
+        return data
+
+    def clean_affiliations(self):
+        data = self.cleaned_data['affiliations']
+        if data:
+            self.conjuncts.append(
+                Q(authors__user__profile__affiliation__in=data))
+        return data
+
+    # noinspection DuplicatedCode
+    def clean_proc_types(self):
+        data = self.cleaned_data['proc_types']
+        disjuncts = []
+        proc_types = [int(x) for x in data if x]
+        if proc_types:
+            disjuncts.append(Q(review_decision__proc_type__in=proc_types))
+        if '' in data:
+            disjuncts.append(Q(review_decision__proc_type=None))
+        if disjuncts:
+            self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
+        return data
+
+    # noinspection DuplicatedCode
+    def clean_volumes(self):
+        data = self.cleaned_data['volumes']
+        disjuncts = []
+        volumes = [int(x) for x in data if x]
+        if volumes:
+            disjuncts.append(Q(review_decision__volume__in=volumes))
+        if '' in data:
+            disjuncts.append(Q(review_decision__volume=None))
+        if disjuncts:
+            self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
+        return data
+
+    def clean_quartiles(self):
+        data = self.cleaned_data['quartiles']
+        # Since the following computations are expensive, do them only when
+        # we need them. Also skip if no review stats are available:
+        stats_query = ReviewStats.objects.filter(conference=self.instance)
+        if not data or not stats_query.count():
+            return data
+
+        stats = stats_query.first()
+        q1, q2, q3 = stats.q1_score, stats.median_score, stats.q3_score
+
+        # We also make sure that review stats were filled, since otherwise
+        # the following code may raise errors, while there won't be any
+        # results:
+        if not stats.median_score:
+            # TODO: maybe add Q(pk__isnull=True) to conjuncts:
+            # this will make result always empty -- if there is no median
+            # (so Q1 and Q2), checking any quartile will result in empty set.
+            return data
+
+        submissions = Submission.objects.filter(status__in=[
+            Submission.UNDER_REVIEW, Submission.ACCEPTED, Submission.REJECTED,
+            Submission.IN_PRINT, Submission.PUBLISHED])
+        scores = {sub: get_average_score(sub) for sub in submissions}
+        # Skip all submissions without average score:
+        submissions = [sub for sub in submissions if scores[sub]]
+        disjuncts = []
+        if self.Q1 in data:
+            disjuncts.append(lambda sub: scores[sub] < q1)
+        if self.Q2 in data:
+            disjuncts.append(lambda sub: q1 <= scores[sub] < q2)
+        if self.Q3 in data:
+            disjuncts.append(lambda sub: q2 <= scores[sub] < q3)
+        if self.Q4 in data:
+            disjuncts.append(lambda sub: q3 <= scores[sub])
+        submissions = [sub for sub in submissions
+                       if any(predicate(sub) for predicate in disjuncts)]
+        self.conjuncts.append(Q(pk__in=[sub.pk for sub in submissions]))
+        return data
+
+    def clean_term(self):
+        term = self.cleaned_data['term']
+        for word in term.lower().split():
+            self.conjuncts.append(
+                Q(title__icontains=word) | Q(pk__icontains=word) |
+                Q(authors__user__profile__first_name__icontains=word) |
+                Q(authors__user__profile__last_name__icontains=word) |
+                Q(authors__user__profile__first_name_rus__icontains=word) |
+                Q(authors__user__profile__middle_name_rus__icontains=word) |
+                Q(authors__user__profile__last_name_rus__icontains=word)
+            )
+
+    def apply(self, submissions):
+        # First, we prepare submissions by annotating them with:
+        # - num_reviews_required
+        # - num_reviews_assigned
+        # - num_reviews_submitted
+        # - num_missing_mandatory_artifacts
+        # - num_missing_optional_artifacts
+        submissions = submissions.annotate(
+            num_reviews_required=F('stype__num_reviews'),
+            num_reviews_assigned=Count('reviews', distinct=True),
+            num_reviews_submitted=Count('reviews', filter=Q(
+                reviews__submitted=True), distinct=True),
+            num_missing_mandatory_artifacts=Count('artifacts', filter=Q(
+                artifacts__file='', artifacts__descriptor__mandatory=True,
+                artifacts__descriptor__proc_type=F(
+                    'review_decision__proc_type')), distinct=True),
+            num_missing_optional_artifacts=Count('artifacts', filter=Q(
+                artifacts__file='', artifacts__descriptor__mandatory=False,
+                artifacts__descriptor__proc_type=F(
+                    'review_decision__proc_type')), distinct=True),
+        )
+
+        # Secondly, we build the query from conjuncts and apply the filter:
+        for q in self.conjuncts:
+            submissions = submissions.filter(q)
+
+        # Finally, distinct results and order them:
+        return self.order_submissions(submissions.distinct())
 
 
 ATTENDING_STATUS = (

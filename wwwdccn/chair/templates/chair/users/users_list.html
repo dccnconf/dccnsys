@@ -6,15 +6,7 @@
 {# - `filter_form`: a submissions filter form                              #}
 {#                                                                         #}
 {# INHERITED CONTEXT:                                                      #}
-{# - `num_items`: number of items shown on the page.                       #}
-{# - `curr_page`: index (1-based) of the current page.                     #}
-{# - `page_urls`: a list of all pages URLs.                                #}
-{# - `first_index`: index (1-based) of the first item being shown.         #}
-{# - `last_index`: index (1-based) of the last item being shown.           #}
-{# - `prev_page_url`: URL of the previous page, if exists.                 #}
-{# - `next_page_url`: URL of the next page, if exists.                     #}
-{# - `first_page_url`: URL of the first page, if exists.                   #}
-{# - `last_page_url`: URL of the last page, if exists.                     #}
+{# - `page`                                                                #}
 {# - `conference`                                                          #}
 {###########################################################################}
 {% extends 'chair/base/list_page.html' %}
@@ -49,7 +41,7 @@
 {# Main content                                                              #}
 {#---------------------------------------------------------------------------#}
 {% block listViewContent %}
-{% for item in items %}
+{% for item in page %}
 <div class="dccn-feed-item pb-3 mt-0 pt-0">
   <div class="row">
     <div class="col-9 d-flex align-items-center">

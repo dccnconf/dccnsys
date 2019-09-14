@@ -1,9 +1,10 @@
 {######################################}
 {# CONTEXT:                           #}
 {# * submission                       #}
+{# * review_stats                     #}
 {######################################}
 {% load review_extras %}
-{% with decision=submission.review_decision.first quality=submission|quality_of %}
+{% with decision=submission.review_decision.first quality=review_stats|quality_of:submission %}
 <div class="dccn-feed-item">
   <div class="dccn-feed-item-top">
     <div class="dccn-feed-item-label dccn-feed-item-conf">{{ submission.conference.short_name }}</div>
@@ -12,7 +13,7 @@
       <i class="far fa-star"></i> <span class="font-weight-lighter">{{ submission|average_score }}</span>
     </div>
     <div class="dccn-feed-item-label dccn-feed-item-status">
-      Rejected <i class="fas fa-circle text-danger"></i>
+      Rejected <i class="fas fa-circle {{ submission|status_class }}"></i>
     </div>
   </div>
   <p class="dccn-feed-item-title">

@@ -14,7 +14,7 @@
 
 {% block tabViewContent %}
   <div class="dccn-file-vd">
-    <form action="{% url 'chair:submission-review-manuscript-delete' conf_pk=conference.pk sub_pk=submission.pk %}"
+    <form action="{% url 'chair:submission-review-manuscript-delete' sub_pk=submission.pk %}"
           method="POST" id="deleteManuscriptForm">
       {% csrf_token %}
     </form>
@@ -29,7 +29,7 @@
     </div>
   </div>
 
-  <form method="POST" action="{% url 'chair:submission-review-manuscript' conf_pk=conference.pk sub_pk=submission.pk %}"
+  <form method="POST" action="{% url 'chair:submission-review-manuscript' sub_pk=submission.pk %}"
         class="mt-3" enctype="multipart/form-data" id="uploadForm" novalidate>
     {% csrf_token %}
     {% bootstrap_form_errors form type='non_fields' %}

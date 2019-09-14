@@ -2,43 +2,42 @@
 {# Tab navigation for submission details.                                  #}
 {#                                                                         #}
 {# CONTEXT:                                                                #}
-{# - `conference`                                                          #}
 {# - `submission`                                                          #}
 {# - `active`: a string indicating which tab is currently active.          #}
 {###########################################################################}
 <ul class="nav nav-pills justify-content-start">
   <li class="nav-item">
-    <a href="{% url 'chair:submission-overview' conf_pk=conference.pk sub_pk=submission.pk %}"
+    <a href="{% url 'chair:submission-overview' sub_pk=submission.pk %}"
        class="nav-link {% if active == 'overview' %}active{% endif %}">
       Overview
     </a>
   </li>
   <li class="nav-item">
-    <a href="{% url 'chair:submission-metadata' conf_pk=conference.pk sub_pk=submission.pk %}"
+    <a href="{% url 'chair:submission-metadata' sub_pk=submission.pk %}"
        class="nav-link {% if active == 'metadata' %}active{% endif %}">
       Metadata
     </a>
   </li>
   <li class="nav-item">
-    <a href="{% url 'chair:submission-authors' conf_pk=conference.pk sub_pk=submission.pk %}"
+    <a href="{% url 'chair:submission-authors' sub_pk=submission.pk %}"
        class="nav-link {% if active == 'authors' %}active{% endif %}">
       Authors
     </a>
   </li>
   <li class="nav-item">
-    <a href="{% url 'chair:submission-review-manuscript' conf_pk=conference.pk sub_pk=submission.pk %}"
+    <a href="{% url 'chair:submission-review-manuscript' sub_pk=submission.pk %}"
        class="nav-link {% if active == 'review-manuscript' %}active{% endif %}">
       Review Manuscript
     </a>
   </li>
   <li class="nav-item">
-    <a href="{% url 'chair:submission-reviewers' conf_pk=conference.pk sub_pk=submission.pk %}"
+    <a href="{% url 'chair:submission-reviewers' sub_pk=submission.pk %}"
        class="nav-link {% if active == 'reviews' %}active{% endif %} {% if submission.status == 'SUBMIT' %}disabled text-dark-2{% endif %}">
       Reviews {% if submission.status != 'SUBMIT' %}({{ submission.reviews.count }}/{{ submission.stype.num_reviews }}){% endif %}
     </a>
   </li>
   <li class="nav-item">
-    <a href="{% url 'chair:submission-messages' conf_pk=conference.pk sub_pk=submission.pk %}"
+    <a href="{% url 'chair:submission-messages' sub_pk=submission.pk %}"
        class="nav-link {% if active == 'messages' %}active{% endif %}">
       Messages
     </a>

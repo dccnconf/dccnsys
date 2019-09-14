@@ -15,7 +15,7 @@
 {% load bootstrap4 %}
 
 {% block tabViewContent %}
-  <form action="{% url 'chair:submission-metadata' conf_pk=conference.pk sub_pk=submission.pk %}" method="POST">
+  <form action="{% url 'chair:submission-metadata' sub_pk=submission.pk %}" method="POST">
     {% bootstrap_messages %}
     {% csrf_token %}
     {% bootstrap_form form %}
