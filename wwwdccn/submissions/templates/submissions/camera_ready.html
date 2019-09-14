@@ -93,62 +93,11 @@
           {% endwith %}
         {% endfor %}
 
-{#          <p class="dccn-text-0-light mb-4">#}
-{#            Please upload your submission PDF file for the review. Make sure that its format and content fits#}
-{#            <a href="#">the conference requirements</a>.#}
-{#          </p>#}
-{#          <p class="dccn-text-0-light mb-4">#}
-{#            Please note that all uploaded papers are subject for double-blind review.#}
-{#            It means that neither authors know the reviewers, nor the reviewers know whose papers they score.#}
-{#            You need to remove all information that can be used to identify you or your co-authors from the manuscript.#}
-{#            In particular, you should remove authors names, funding sources and any references to your previous work.#}
-{#            You will be able to add this information in your final manuscript after the review.#}
-{#          </p>#}
-{##}
-{#          {% if not submission.can_edit_review_manuscript %}#}
-{#            <p class="dccn-text-2-light border border-danger rounded bg-light p-3 mb-3">#}
-{#              Review manuscript can not be changed any longer. Please, contact organizing committee if you need to update it.#}
-{#            </p>#}
-{#          {% endif %}#}
-{##}
-{#          <div class="dccn-file-vd">#}
-{#            <form action="{% url 'submissions:delete-manuscript' pk=submission.pk %}" method="POST"#}
-{#                  class="dccn-file-vd-form" id="deleteManuscriptForm">#}
-{#              {% csrf_token %}#}
-{#            </form>#}
-{#            <div class="dccn-file-vd-box">#}
-{#              {% if submission.review_manuscript %}#}
-{#                <p class="my-1">Current document:#}
-{#                  <a href="{% url 'submissions:download-manuscript' pk=submission.pk %}" target="_blank">#}
-{#                    <i class="far fa-file-pdf"></i> {{ submission.get_review_manuscript_name }}#}
-{#                  </a>#}
-{#                </p>#}
-{#                <p class="my-1">#}
-{#                  <button type="submit" class="btn btn-link p-0 m-0 text-danger" form="deleteManuscriptForm" {% if not submission.can_edit_review_manuscript %}disabled{% endif %}>#}
-{#                    <i class="far fa-trash-alt"></i> Delete#}
-{#                  </button>#}
-{#                </p>#}
-{#              {% endif %}#}
-{#            </div>#}
-{#          </div>#}
-{##}
-{#        <form method="POST" action="" class="mt-5" enctype="multipart/form-data" novalidate>#}
-{#          {% csrf_token %}#}
-{#          {% bootstrap_form_errors form type='non_fields' %}#}
-{#          {% if submission.can_edit_review_manuscript %}#}
-{#          {% bootstrap_field form.confirm_blind %}#}
-{#          {% bootstrap_field form.understand_blind_review %}#}
-{#          {% bootstrap_field form.review_manuscript %}#}
-{#          <p class="text-muted dccn-text-small-light" id="mustConfirmNote">#}
-{#            You need to confirm with blind review conditions before uploading the manuscript.#}
-{#          </p>#}
-{#          {% endif %}#}
-
-          <div class="dccn-saveform">
-            <a href="{% url 'submissions:overview' pk=submission.pk %}" class="btn btn-outline-secondary ml-auto mr-2">
-              <i class="fas fa-flag-checkered"></i> Finish
-            </a>
-          </div>
+        <div class="dccn-saveform">
+          <a href="{% url 'submissions:overview' pk=submission.pk %}" class="btn btn-outline-secondary ml-auto mr-2">
+            <i class="fas fa-flag-checkered"></i> Finish
+          </a>
+        </div>
       </div>
 
     </div>

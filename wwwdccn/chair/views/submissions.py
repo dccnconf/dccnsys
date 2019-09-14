@@ -68,8 +68,7 @@ def create_submission(request, conf_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     submission = Submission.objects.create(conference=conference)
-    return redirect('chair:submission-metadata', conf_pk=conf_pk,
-                    sub_pk=submission.pk)
+    return redirect('chair:submission-metadata', sub_pk=submission.pk)
 
 
 @require_POST
@@ -333,6 +332,16 @@ def emails(request, submission, conference):
         'submission': submission,
         'conference': conference,
         'msg_list': submission.group_emails.all().order_by('-sent_at'),
+        'active_tab': 'messages',
+    })
+
+
+@submission_view('submission,conference')
+def camera_ready(request, submission, conference):
+    return render(request, 'chair/submissions/tabs/camera_ready.html', context={
+        'submission': submission,
+        'conference': conference,
+        'active_tab': 'camera-ready',
     })
 
 
