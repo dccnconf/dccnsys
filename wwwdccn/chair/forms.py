@@ -97,8 +97,10 @@ class FilterSubmissionsForm(forms.ModelForm):
     term = forms.CharField(required=False)
 
     completion = MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False,
-        choices=COMPLETION_CHOICES)
+        widget=CustomCheckboxSelectMultiple(attrs={
+            'btn_class': 'btn btn-link dccn-link dccn-text-small',
+            'label_class': 'dccn-text-0',
+        }), required=False, choices=COMPLETION_CHOICES)
 
     types = MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False)
@@ -117,7 +119,8 @@ class FilterSubmissionsForm(forms.ModelForm):
         widget=CustomCheckboxSelectMultiple, required=False)
 
     proc_types = MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False)
+        widget=CustomCheckboxSelectMultiple(
+            attrs={'label': 'Proceedings'}), required=False)
 
     volumes = MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False)

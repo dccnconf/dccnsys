@@ -294,13 +294,14 @@
 
     //noinspection SassScssResolvedByNameOnly
     @include media-breakpoint-up(lg) {
-      margin-left: 10px;
+      margin-left: 5px;
       margin-bottom: 0;
       width: 260px !important;
       max-width: 260px !important;
       order: 1;
     }
   }
+
 }
 
 @include media-breakpoint-up(md) {

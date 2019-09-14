@@ -21561,7 +21561,7 @@ ul.dccn-authors-editor-list > li:hover {
 
 @media (min-width: 992px) {
   .dccn-chair-workspace .dccn-chair-workspace-filter {
-    margin-left: 10px;
+    margin-left: 5px;
     margin-bottom: 0;
     width: 260px !important;
     max-width: 260px !important;

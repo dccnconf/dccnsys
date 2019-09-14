@@ -1,8 +1,43 @@
-{% for group, options, index in widget.optgroups %}
-  {% for option in options %}
-    <div class="form-check">
-      <input type="checkbox" name="{{ option.name }}" class="form-check-input" {% if option.value != None %} value="{{ option.value|stringformat:'s' }}"{% endif %} {% include "django/forms/widgets/attrs.html" with widget=option %}>
-      <label for="{{ option.attrs.id }}" class="form-check-label">{{ option.label }}</label>
-    </div>
-  {% endfor %}
-{% endfor %}
+<div class="form-group checkbox-multiple-select">
+  <div class="{{ widget.attrs.label_class|default:"dccn-text-0" }}">
+    {% if widget.attrs.label %}{{ widget.attrs.label }}{% else %}{{ widget.name|title }}{% endif %}
+    (<button type="button" class="{{ widget.attrs.btn_class|default:"btn btn-link dccn-link dccn-text-small" }} clear-cb-btn">clear</button>,
+    <button type="button" class="{{ widget.attrs.btn_class|default:"btn btn-link dccn-link dccn-text-small" }} select-all-cb-btn">all</button>,
+    <button type="submit" class="{{ widget.attrs.btn_class|default:"btn btn-link dccn-link dccn-text-small" }}"
+            {% if widget.attrs.form %}form="{{ widget.attrs.form }}"{% endif %}>apply</button>):
+  </div>
+
+  <div class="border rounded px-2 pb-2 mt-2 bg-light">
+    {% for group, options, index in widget.optgroups|slice:"3" %}
+      {% for option in options %}
+        <div class="form-check">
+          <input type="checkbox" name="{{ option.name }}"
+                 class="form-check-input" {% if option.value != None %} value="{{ option.value|stringformat:'s' }}"{% endif %}
+                 {% include "django/forms/widgets/attrs.html" with widget=option %}>
+          <label for="{{ option.attrs.id }}" class="form-check-label">{{ option.label }}</label>
+        </div>
+      {% endfor %}
+    {% endfor %}
+
+    {% if widget.optgroups|length > 3 %}
+      <div class="collapse cb-options-tail" id="{{ widget.name }}-options-tail">
+        {% for group, options, index in widget.optgroups %}
+          {% if forloop.counter0 >= 3 %}
+            {% for option in options %}
+              <div class="form-check">
+                <input type="checkbox" name="{{ option.name }}"
+                       class="form-check-input" {% if option.value != None %} value="{{ option.value|stringformat:'s' }}"{% endif %}
+                       {% include "django/forms/widgets/attrs.html" with widget=option %}>
+                <label for="{{ option.attrs.id }}" class="form-check-label">{{ option.label }}</label>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <a href="#{{ widget.name }}-options-tail" class="dccn-link dccn-text-smallest cb-options-tail-collapse" data-toggle="collapse">
+        <i class="fas fa-plus"></i> Show more...
+      </a>
+    {% endif %}
+  </div>
+</div>

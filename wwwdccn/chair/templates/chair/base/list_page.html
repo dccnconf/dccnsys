@@ -23,33 +23,38 @@
 {#---------------------------------------------------------------------------#}
 {% block content %}
   {% with paginator=page.paginator %}
-    <div class="dccn-panel-toolbar mt-2">
+    <div class="dccn-panel-toolbar mb-0 pb-0 mt-3">
       {% block toolbar %}
       {% endblock %}
 
-      <p class="dccn-text-smaller-light mb-1 mt-0">
-        {{ paginator.count }}&nbsp;items found{% if paginator.count > 0 %}, showing from {{ page.start_index }} to {{ page.end_index }}{% endif %}
-      </p>
-
       {# Top row navigation #}
-      <div class="row">
+      <div class="d-flex bg-secondary-2 py-1">
 
         {# Go to previous page: #}
         {% if page.has_previous %}
-          <a href="?{% update_param request page=page.previous_page_number %}" class="btn btn-outline-secondary btn-sm mr-auto">
-            <i class="fas fa-chevron-left"></i>
+          <a href="?{% update_param request page=page.previous_page_number %}" class="mr-auto dccn-link dccn-text-small font-weight-bold">
+            <i class="fas fa-chevron-left"></i> prev
           </a>
         {% else %}
-          <a href="#" class="btn btn-outline-secondary btn-sm mr-auto disabled"><i class="fas fa-chevron-left"></i></a>
+          <a href="#" class="mr-auto disabled dccn-link dccn-text-small font-weight-bold">
+            <i class="fas fa-chevron-left"></i> prev
+          </a>
         {% endif %}
+
+        <p class="dccn-text-smaller-light">
+          <span class="font-weight-bold">{{ paginator.count }}</span>&nbsp;items found{% if paginator.count > 0 %},
+          showing from <span class="font-weight-bold">{{ page.start_index }}</span> to <span class="font-weight-bold">{{ page.end_index }}</span>{% endif %}
+        </p>
 
         {# Go the next page: #}
         {% if page.has_next %}
-          <a href="?{% update_param request page=page.next_page_number %}" class="btn btn-outline-secondary btn btn-sm ml-auto">
-            <i class="fas fa-chevron-right"></i>
+          <a href="?{% update_param request page=page.next_page_number %}" class="ml-auto dccn-link dccn-text-small font-weight-bold">
+            next <i class="fas fa-chevron-right"></i>
           </a>
         {% else %}
-          <a href="#" class="btn btn-outline-secondary btn-sm ml-auto disabled"><i class="fas fa-chevron-right"></i></a>
+          <a href="#" class="dccn-link dccn-text-small ml-auto disabled font-weight-bold">
+            next <i class="fas fa-chevron-right"></i>
+          </a>
         {% endif %}
       </div>
       {# --- end of top row navigation --- #}
@@ -123,16 +128,6 @@ detailedFilter.on('hidden.bs.collapse', function () {
 detailedFilter.on('shown.bs.collapse', function () {
   detailedFilterTogglerIcon.removeClass('fa-chevron-right');
   detailedFilterTogglerIcon.addClass('fa-chevron-down');
-});
-
-$('.clear-cb-btn').on('click', function () {
-  const parent = $(this).parent().parent();
-  parent.find('.form-check input').prop('checked', false);
-});
-
-$('.select-all-cb-btn').on('click', function () {
-  const parent = $(this).parent().parent();
-  parent.find('.form-check input').prop('checked', true);
 });
 
 $(document).ready(function () {
