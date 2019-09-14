@@ -73,6 +73,10 @@
           </form>
         </div>
       {% endwith %}
+    {% empty %}
+      <p class="text-center text-info dccn-text-small-light">
+        No artifacts available for this submission.
+      </p>
     {% endfor %}
   {% endwith %}
 {% endblock %}
