@@ -3,6 +3,7 @@
 {#                                                                         #}
 {# CONTEXT:                                                                #}
 {# - `submission`: a submission                                            #}
+{# - `list_view_url`: a URL of the list view that renders this card        #}
 {###########################################################################}
 {% load submission_extras %}
 
@@ -52,7 +53,7 @@
     </a>
     {# 3.2 Link to message composing #}
     <form action="{% url 'chair_mail:compose-submission' conf_pk=submission.conference_id %}" method="GET" class="mr-2">
-      <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
+      <input type="hidden" name="next" value="{{ list_view_url }}">
       <input type="hidden" name="objects" value="{{ submission.pk }}">
       <button class="btn btn-link dccn-feed-item-link"><i class="fas fa-envelope"></i> Contact</button>
     </form>

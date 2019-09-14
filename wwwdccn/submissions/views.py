@@ -3,7 +3,8 @@ import mimetypes
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpResponse, HttpResponseForbidden
+from django.http import Http404, HttpResponse, HttpResponseForbidden, \
+    HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST, require_GET
 
@@ -318,7 +319,6 @@ def artifact_upload(request, pk, art_pk):
     if not is_authorized_edit(request.user, submission):
         return HttpResponseForbidden()
     form = UploadArtifactForm(request.POST, request.FILES, instance=artifact)
-    print('POST: ', request.FILES)
     # We save current file (if any) for two reasons:
     # 1) if this file is not empty and user uploaded a new file, we
     #    are going to delete this old file (in case of valid form);
@@ -332,9 +332,7 @@ def artifact_upload(request, pk, art_pk):
         # random suffix which will break our storage strategy.
         if old_file and request.FILES:
             artifact.file.storage.delete(old_file.name)
-        print('saving form: ', form)
         form.save()
-        print('form saved')
         messages.success(request, f'Uploaded {artifact.name} file '
                                   f'{artifact.get_file_name()}')
     else:
@@ -348,6 +346,9 @@ def artifact_upload(request, pk, art_pk):
         # value to both cleaned_data and note.document:
         form.cleaned_data['file'] = old_file
         artifact.file.document = old_file
+    next_url = request.GET.get('next')
+    if next_url:
+        return HttpResponseRedirect(next_url)
     return redirect('submissions:camera-ready', pk=pk)
 
 
@@ -362,4 +363,7 @@ def artifact_delete(request, pk, art_pk):
     if artifact.file:
         artifact.file.delete()
     messages.warning(request, f'Deleted {artifact.name} file {file_name}')
+    next_url = request.GET.get('next')
+    if next_url:
+        return HttpResponseRedirect(next_url)
     return redirect('submissions:camera-ready', pk=pk)

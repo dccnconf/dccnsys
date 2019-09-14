@@ -28,6 +28,7 @@ urlpatterns = [
     path('submissions/<int:sub_pk>/revoke_review/', submissions.revoke_review, name='revoke-review'),
     path('submissions/<int:sub_pk>/reviews/', submissions.reviews, name='submission-reviewers'),
     path('submissions/<int:sub_pk>/messages/', submissions.emails, name='submission-messages'),
+    path('submissions/<int:sub_pk>/camera_ready/', submissions.camera_ready, name='submission-camera-ready'),
     path('submissions/<int:sub_pk>/reviews/assign/', submissions.assign_reviewer, name='assign-reviewer'),
     path('submissions/<int:sub_pk>/reviews/<int:rev_pk>/delete/', submissions.delete_review, name='delete-review'),
     path('submissions/<int:sub_pk>/delete/', submissions.delete_submission, name='submission-delete'),

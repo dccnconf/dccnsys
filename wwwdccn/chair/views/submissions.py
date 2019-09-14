@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.http import Http404, JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
+from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 from django.utils.translation import ugettext_lazy as _
 
@@ -68,8 +69,7 @@ def create_submission(request, conf_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
     submission = Submission.objects.create(conference=conference)
-    return redirect('chair:submission-metadata', conf_pk=conf_pk,
-                    sub_pk=submission.pk)
+    return redirect('chair:submission-metadata', sub_pk=submission.pk)
 
 
 @require_POST
@@ -91,6 +91,9 @@ def feed_item(request, submission, conference):
     context = {
         'submission': submission,
         'review_stats': stats,
+        'list_view_url': request.GET.get(
+            'list_view_url',
+            reverse('chair:submissions', kwargs={'conf_pk': conference.pk})),
     }
     template_names = {
         Submission.SUBMITTED: 'chair/submissions/feed/card_submitted.html',
@@ -333,6 +336,16 @@ def emails(request, submission, conference):
         'submission': submission,
         'conference': conference,
         'msg_list': submission.group_emails.all().order_by('-sent_at'),
+        'active_tab': 'messages',
+    })
+
+
+@submission_view('submission,conference')
+def camera_ready(request, submission, conference):
+    return render(request, 'chair/submissions/tabs/camera_ready.html', context={
+        'submission': submission,
+        'conference': conference,
+        'active_tab': 'camera-ready',
     })
 
 
