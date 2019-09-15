@@ -318,7 +318,6 @@ def refresh_notifications(request, conf_pk):
     for name, kwargs in DEFAULT_NOTIFICATIONS_DATA.items():
         notif = SystemNotification.objects.filter(
             name=name, conference=conference).first()
-        print('notification: ', notif)
         if not notif:
             SystemNotification.objects.create(
                 name=name, conference=conference, **kwargs)

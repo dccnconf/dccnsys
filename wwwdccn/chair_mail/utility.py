@@ -123,6 +123,8 @@ def send_submission_status_notification_message(submission):
         name = SystemNotification.ASSIGN_STATUS_REJECT
     elif status == Submission.IN_PRINT:
         name = SystemNotification.ASSIGN_STATUS_INPRINT
+    elif status == Submission.PUBLISHED:
+        name = SystemNotification.ASSIGN_STATUS_PUBLISHED
     else:
         return
     send_notification_message(submission.conference, name, [submission])

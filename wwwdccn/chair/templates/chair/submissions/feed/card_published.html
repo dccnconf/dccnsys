@@ -1,5 +1,5 @@
 {###########################################################################}
-{# Submission feed item content in **IN-PRINT** state.                     #}
+{# Submission feed item content in **PUBLISHED** state.                    #}
 {#                                                                         #}
 {# CONTEXT:                                                                #}
 {# - `submission`: a submission dictionary object                          #}
@@ -24,14 +24,9 @@
 
 
 {% block footerRowItems %}
-  <button class="btn btn-link dccn-feed-item-link" data-toggle="submission-status" data-status="ACCEPT"
+  <button class="btn btn-link dccn-feed-item-link" data-toggle="submission-status" data-status="PRINT"
           data-target="{% url 'submissions:update-status' pk=submission.pk %}">
     {% csrf_token %}
-    <i class="fas fa-backward"></i> Revert to accepted
-  </button>
-  <button class="btn btn-link dccn-feed-item-link" data-toggle="submission-status" data-status="PUBLISH"
-          data-target="{% url 'submissions:update-status' pk=submission.pk %}">
-    {% csrf_token %}
-    <i class="fas fa-forward"></i> Published
+    <i class="fas fa-backward"></i> Revert to in-print
   </button>
 {% endblock %}
