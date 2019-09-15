@@ -20964,6 +20964,8 @@ nav.breadcrumb ol.breadcrumb {
 
 .dccn-feed-item-top {
   margin-bottom: 15px !important;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .dccn-feed-item-footer {

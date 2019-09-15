@@ -17,7 +17,7 @@
 {% load review_extras %}
 
 {% block tabViewContent %}
-  {% with warnings=submission|warnings_of status=submission.status %}
+  {% with warnings=submission|warnings_of status=submission.status proc_type=submission|proc_type_of volume=submission|volume_of %}
     <div class="d-flex align-items-center">
       {# 1.1 Display submission status: #}
       <p class="dccn-text">
@@ -47,11 +47,9 @@
       <div class="ml-auto"></div>
 
       {# 1.4 Proceedings type, if valueable #}
-      {% with proc_type=submission|proc_type_of %}
-        {% if proc_type %}
-          <div class="badge badge-dark text-light">{{ proc_type.name }}</div>
-        {% endif %}
-      {% endwith %}
+      {% if proc_type %}
+        <div class="badge badge-dark text-light">{{ proc_type.name }}</div>
+      {% endif %}
     </div>
 
     {###############################################}
@@ -76,6 +74,19 @@
     </ul>
 
     <p class="dccn-text-0 mt-3"><strong>Submission type:</strong> {{ submission.stype.name }}</p>
+
+    {% if proc_type %}
+      <p class="dccn-text-0"><span class="font-weight-bold">Proceedings: </span>{{ proc_type.name }}</p>
+    {% endif %}
+    {% if volume and status != 'ACCEPT' %}
+      <p class="dccn-text-0"><span class="font-weight-bold">Volume: </span>{{ volume.name }}</p>
+    {% endif %}
+
+    {% if decision_form_data %}
+      <div class="border rounded p-2 mt-3">
+        {% include 'chair/submissions/components/_decision_control.html' with form_data=decision_form_data sub_pk=submission.pk %}
+      </div>
+    {% endif %}
 
     <p class="mt-3 dccn-text-0 font-weight-bold">Files:</p>
     <div class="container">
@@ -119,12 +130,6 @@
       {% endfor %}
     </div>
 
-    {% if decision_form_data %}
-      <div class="border rounded p-2 mt-3">
-        {% include 'chair/submissions/components/_decision_control.html' with form_data=decision_form_data sub_pk=submission.pk %}
-      </div>
-    {% endif %}
-
     {% if warnings %}
       <p class="dccn-text-0 mt-3"><strong>Warnings:</strong></p>
       {% for warning in warnings %}
@@ -147,22 +152,33 @@
           <i class="fas fa-forward"></i> Start review
         </button>
       {% elif status == 'REVIEW' %}
-        <button class="btn btn-sm btn-outline-success" data-toggle="submission-status" data-status="SUBMIT"
+        <button class="btn btn-sm btn-outline-secondary" data-toggle="submission-status" data-status="SUBMIT"
                 data-target="{% url 'submissions:update-status' pk=submission.pk %}">
           {% csrf_token %}
           <i class="fas fa-backward"></i> Revoke review
         </button>
       {% elif status == 'ACCEPT' %}
-        <button class="btn btn-sm btn-outline-success" data-toggle="submission-status" data-status="REVIEW"
+        <button class="btn btn-sm btn-outline-secondary" data-toggle="submission-status" data-status="REVIEW"
                 data-target="{% url 'submissions:update-status' pk=submission.pk %}">
           {% csrf_token %}
           <i class="fas fa-backward"></i> Revert to review
         </button>
+        <button class="btn btn-sm btn-outline-success ml-2" data-toggle="submission-status" data-status="PRINT"
+                data-target="{% url 'submissions:update-status' pk=submission.pk %}">
+          {% csrf_token %}
+          <i class="fas fa-forward"></i> Start printing
+        </button>
       {% elif status == 'REJECT' %}
-        <button class="btn btn-sm btn-outline-success" data-toggle="submission-status" data-status="REVIEW"
+        <button class="btn btn-sm btn-outline-secondary" data-toggle="submission-status" data-status="REVIEW"
                 data-target="{% url 'submissions:update-status' pk=submission.pk %}">
           {% csrf_token %}
           <i class="fas fa-backward"></i> Revert to review
+        </button>
+      {% elif status == 'PRINT' %}
+        <button class="btn btn-sm btn-outline-secondary" data-toggle="submission-status" data-status="ACCEPT"
+                data-target="{% url 'submissions:update-status' pk=submission.pk %}">
+          {% csrf_token %}
+          <i class="fas fa-backward"></i> Revert printing
         </button>
       {% endif %}
 

@@ -230,6 +230,8 @@ $dccn-feed-item-authors-font-size: 0.9rem;
 .dccn-feed-item-top {
   @extend .dccn-feed-item-row;
   margin-bottom: 15px !important;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .dccn-feed-item-footer {

@@ -26,31 +26,7 @@
 
 
 {% block rightBodyColumn %}
-  {# List artifacts: #}
-  {% for art in submission.artifacts.all %}
-    {% if art.is_active %}
-      {% with descriptor=art.descriptor %}
-        <div class="dccn-text-small mb-2 d-flex align-items-center justify-content-between ml-3">
-          <div class="mr-2 {% if descriptor.mandatory %}font-weight-normal{% else %}font-weight-light{% endif %}">
-            {% if descriptor.mandatory %}<span class="dccn-text-smallest"><i class="fas fa-star-of-life"></i></span>{% endif %}
-            {{ descriptor.name }}:
-          </div>
-          <div>
-            {% if art.file %}
-              <a href="{% url 'chair:artifact-download' art_pk=art.pk %}" target="_blank"
-                 class="dccn-link dccn-text-smallest-light">
-                {{ art.get_chair_download_name }} <i class="{{ art|file_icon_class }}"></i>
-              </a>
-            {% else %}
-              <i class="fas fa-question-circle text-{% if descriptor.mandatory %}danger{% else %}warning{% endif %} "></i>
-            {% endif %}
-          </div>
-        </div>
-      {% endwith %}
-    {% endif %}
-  {% endfor %}
-
-  {# Volume form: #}
+  {% include 'chair/submissions/feed/_artifacts.html' with submission=submission hide_missing=False mark_mandatory=True  %}
   <div class="ml-3 mt-3 review-feed-item-controls">
     {% include 'chair/submissions/components/_decision_control.html' with form_data=form_data sub_pk=submission.pk %}
   </div>
@@ -62,5 +38,10 @@
           data-target="{% url 'submissions:update-status' pk=submission.pk %}">
     {% csrf_token %}
     <i class="fas fa-backward"></i> Revert to review
+  </button>
+  <button class="btn btn-link dccn-feed-item-link" data-toggle="submission-status" data-status="PRINT"
+          data-target="{% url 'submissions:update-status' pk=submission.pk %}">
+    {% csrf_token %}
+    <i class="fas fa-forward"></i> In-print
   </button>
 {% endblock %}

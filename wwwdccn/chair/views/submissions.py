@@ -100,6 +100,7 @@ def feed_item(request, submission, conference):
         Submission.UNDER_REVIEW: 'chair/submissions/feed/card_review.html',
         Submission.ACCEPTED: 'chair/submissions/feed/card_accepted.html',
         Submission.REJECTED: 'chair/submissions/feed/card_rejected.html',
+        Submission.IN_PRINT: 'chair/submissions/feed/card_inprint.html',
     }
     if submission.status == Submission.UNDER_REVIEW:
         context['form_data'] = _build_decision_form_data(submission)

@@ -289,7 +289,8 @@ def send_invitation(request, pk):
 @require_GET
 def camera_ready(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
-    if submission.status != Submission.ACCEPTED:
+    if submission.status not in [Submission.ACCEPTED, Submission.IN_PRINT,
+                                 Submission.PUBLISHED]:
         raise Http404
     return render(request, 'submissions/camera_ready.html', context={
         'submission': submission,
