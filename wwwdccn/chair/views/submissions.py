@@ -176,12 +176,25 @@ def overview(request, submission, conference):
         'review': (status == Submission.SUBMITTED and not warnings),
         'revoke_review': status == Submission.UNDER_REVIEW,
     }
-    return render(request, 'chair/submissions/submission_overview.html', {
+    stats = ReviewStats.objects.filter(conference=conference).first()
+
+    # Build decision form data if we should have it:
+    if submission.status == Submission.UNDER_REVIEW:
+        decision_form_data = _build_decision_form_data(submission)
+    elif submission.status == Submission.ACCEPTED:
+        decision_form_data = _build_decision_form_data(
+            submission, hide_decision=True, hide_proc_type=True)
+    else:
+        decision_form_data = None
+
+    return render(request, 'chair/submissions/tabs/overview.html', {
         'submission': submission,
         'conference': conference,
         'warnings': warnings,
         'actions': actions,
         'active_tab': 'overview',
+        'review_stats': stats,
+        'decision_form_data': decision_form_data,
     })
 
 

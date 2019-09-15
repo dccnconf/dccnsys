@@ -36,8 +36,12 @@
   <div class="row">
     {% block cardBodyColumns %}
       <div class="col-12">
-        {% include 'chair/submissions/feed/components/_title_authors.html' with submission=submission %}
-        {% include 'chair/submissions/feed/components/_warning_list.html' with warnings=warnings %}
+        {% include 'chair/submissions/feed/_title_authors.html' with submission=submission %}
+        {% if warnings %}
+          <div class="dccn-feed-item-messages">
+            {% include 'chair/submissions/feed/_warning_list.html' with warnings=warnings %}
+          </div>
+        {% endif %}
       </div>
     {% endblock %}
   </div>
@@ -62,7 +66,7 @@
     <a href="#deleteSubmissionDialog-{{ submission.pk }}" data-toggle="modal" class="dccn-feed-item-link text-danger-16">
       <i class="far fa-trash-alt"></i> Delete
     </a>
-    {% include 'chair/submissions/feed/components/_delete_modal.html' with submission=submission %}
+    {% include 'chair/submissions/components/_delete_modal.html' with submission=submission %}
 
     {# 3.4 Additional actions, links, etc. #}
     {% block footerRowItems %}

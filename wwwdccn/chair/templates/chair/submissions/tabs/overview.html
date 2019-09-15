@@ -1,0 +1,179 @@
+{###########################################################################}
+{# Submission overview with title, authors, abstract, topics, PDF,         #}
+{# warnings and control buttons.                                           #}
+{#                                                                         #}
+{# CONTEXT:                                                                #}
+{# - `warnings`: list of strings                                           #}
+{# - `review_stats`: `ReviewStats` object                                  #}
+{#                                                                         #}
+{# INHERITED CONTEXT:                                                      #}
+{# - `conference`                                                          #}
+{# - `submission`                                                          #}
+{# - `active_tab`                                                          #}
+{###########################################################################}
+{% extends 'chair/submissions/_base.html' %}
+{% load gears_extras %}
+{% load submission_extras %}
+{% load review_extras %}
+
+{% block tabViewContent %}
+  {% with warnings=submission|warnings_of status=submission.status %}
+    <div class="d-flex align-items-center">
+      {# 1.1 Display submission status: #}
+      <p class="dccn-text">
+        <i class="fas fa-circle {{ submission|status_class }}"></i>
+        <span class="border-bottom font-weight-normal">{{ submission.get_status_display }}</span>
+      </p>
+
+      {# 1.2 Display number of warnings next to submission status: #}
+      {% with num_warnings=submission|count_warnings %}
+        {% if num_warnings %}
+          <div class="dccn-text mx-2">
+            <i class="fas fa-exclamation-triangle text-warning"></i> {{ num_warnings }}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {# 1.3 Display score for any status except SUBMIT #}
+      {% if status != 'SUBMIT' %}
+        {% with quality=review_stats|quality_of:submission %}
+          <div class="dccn-text mx-2 text-{{ quality|quality_color }}">
+            <i class="{{ quality|quality_icon_class }}"></i> {{ submission|average_score }}
+          </div>
+        {% endwith %}
+      {% endif %}
+
+      {# 1.3 Separator #}
+      <div class="ml-auto"></div>
+
+      {# 1.4 Proceedings type, if valueable #}
+      {% with proc_type=submission|proc_type_of %}
+        {% if proc_type %}
+          <div class="badge badge-dark text-light">{{ proc_type.name }}</div>
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    {###############################################}
+    {# 2 Title, abstract, topics and other details #}
+    {###############################################}
+    <p class="text-center dccn-text-larger-light">{{ submission.title }}</p>
+    <p class="text-center dccn-text-2-light mt-2">
+      {% for author in submission.get_authors_profiles %}
+        <a href="{% url 'chair:user-overview' conf_pk=submission.conference_id user_pk=author.user_id %}"
+           class="dccn-link">
+          {{ author.get_full_name }}
+        </a>{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    </p>
+    <p class="text-justify dccn-text-0 mt-3"><strong>Abstract:</strong> {{ submission.abstract }}</p>
+
+    <p class="dccn-text-0 mt-3"><strong>Topics:</strong></p>
+    <ul class="list-unstyled mt-0">
+      {% for topic in submission.topics.all %}
+        <li class="dccn-text-0"><i class="far fa-check-square"></i> {{ topic }}</li>
+      {% endfor %}
+    </ul>
+
+    <p class="dccn-text-0 mt-3"><strong>Submission type:</strong> {{ submission.stype.name }}</p>
+
+    <p class="mt-3 dccn-text-0 font-weight-bold">Files:</p>
+    <div class="container">
+      {% if submission.review_manuscript %}
+        <div class="row">
+          <div class="col-6 col-md-5 col-lg-4">
+            <p class="dccn-text-small">Review Manuscript:</p>
+          </div>
+          <div class="col-6 col-md-7 col-lg-8">
+            <p class="dccn-text-small">
+              <a href="{% url 'submissions:download-manuscript' pk=submission.pk %}"
+                 class="dccn-link dccn-text-small" target="_blank">
+                <i class="far fa-file-pdf"></i> {{ submission.get_review_manuscript_name }}
+              </a>
+            </p>
+          </div>
+        </div>
+      {% endif %}
+      {% for art in submission|artifacts_of %}
+        <div class="row">
+          <div class="col-6 col-md-5 col-lg-4">
+            <p class="dccn-text-small">{{ art.descriptor.name }}:</p>
+          </div>
+          <div class="col-6 col-md-7 col-lg-8">
+            <p class="dccn-text-small">
+              {% if art.file %}
+                <a href="{% url 'chair:artifact-download' art_pk=art.pk %}"
+                   class="dccn-link dccn-text-small" target="_blank">
+                  <i class="{{ art|file_icon_class }}"></i> {{ art.get_chair_download_name }}
+                </a>
+              {% else %}
+                <span class="text-{% if art.descriptor.mandatory %}danger{% else %}warning{% endif %}-13">
+                  no file uploaded
+                </span>
+                (<a href="{% url 'chair:submission-camera-ready' sub_pk=submission.pk %}"
+                    class="dccn-link dccn-text-small">upload...</a>)
+              {% endif %}
+            </p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if decision_form_data %}
+      <div class="border rounded p-2 mt-3">
+        {% include 'chair/submissions/components/_decision_control.html' with form_data=decision_form_data sub_pk=submission.pk %}
+      </div>
+    {% endif %}
+
+    {% if warnings %}
+      <p class="dccn-text-0 mt-3"><strong>Warnings:</strong></p>
+      {% for warning in warnings %}
+        <p class="dccn-text-small">
+          <i class="fas fa-exclamation-circle text-warning"></i> {{ warning.label }}
+          {% if warning.chair_link %}
+            (<a href="{{ warning.chair_link }}" class="dccn-link dccn-text-small">{{ warning.link_label }}</a>)
+          {% endif %}
+        </p>
+      {% endfor %}
+    {% endif %}
+
+    <hr>
+    {# 3 Actions #}
+    <div class="row mt-3">
+      {% if status == 'SUBMIT' %}
+        <button class="btn btn-sm btn-outline-success" data-toggle="submission-status" data-status="REVIEW"
+                data-target="{% url 'submissions:update-status' pk=submission.pk %}">
+          {% csrf_token %}
+          <i class="fas fa-forward"></i> Start review
+        </button>
+      {% elif status == 'REVIEW' %}
+        <button class="btn btn-sm btn-outline-success" data-toggle="submission-status" data-status="SUBMIT"
+                data-target="{% url 'submissions:update-status' pk=submission.pk %}">
+          {% csrf_token %}
+          <i class="fas fa-backward"></i> Revoke review
+        </button>
+      {% elif status == 'ACCEPT' %}
+        <button class="btn btn-sm btn-outline-success" data-toggle="submission-status" data-status="REVIEW"
+                data-target="{% url 'submissions:update-status' pk=submission.pk %}">
+          {% csrf_token %}
+          <i class="fas fa-backward"></i> Revert to review
+        </button>
+      {% elif status == 'REJECT' %}
+        <button class="btn btn-sm btn-outline-success" data-toggle="submission-status" data-status="REVIEW"
+                data-target="{% url 'submissions:update-status' pk=submission.pk %}">
+          {% csrf_token %}
+          <i class="fas fa-backward"></i> Revert to review
+        </button>
+      {% endif %}
+
+      <div class="ml-auto"></div>
+      <button class="btn btn-sm btn-outline-danger"
+              data-toggle="modal" data-target="#deleteSubmissionDialog-{{ submission.pk }}">
+        <i class="far fa-trash-alt"></i> Delete
+      </button>
+    </div>
+
+    {# CONFIRM DELETE MODAL DIALOG #}
+    {% include 'chair/submissions/components/_delete_modal.html' with submission=submission %}
+  {% endwith %}
+{% endblock %}

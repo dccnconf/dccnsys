@@ -1,12 +1,13 @@
 $(document).ready(function () {
+  const body = $('body');
+
   /*
    * For all buttons with 'data-toggle="submission-status"' we show a bootbox modal dialog,
    * in which we send AJAX POST for status update.
    *
    * !!! This button MUST contain {% csrf_token %} inside !!!
    */
-  $('body').on('click', 'button[data-toggle="submission-status"]', function () {
-    console.log('click!');
+  body.on('click', 'button[data-toggle="submission-status"]', function () {
     const btn = $(this);
     const target = btn.attr('data-target');
     const status = btn.attr('data-status');
@@ -27,11 +28,14 @@ $(document).ready(function () {
           formData[csrf.attr('name')] = csrf.val();
           $.post(target, formData, function () {
             const reloadableParent = btn.parents('[data-html-src]');
+            console.log('reloadable parents: ', reloadableParent);
             if (reloadableParent.length > 0) {
               const htmlURL = reloadableParent.attr('data-html-src');
               $.get(htmlURL, function (html) {
                 reloadableParent.html(html);
               });
+            } else {
+              window.location.reload(true);
             }
           });
         }

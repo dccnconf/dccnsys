@@ -2,8 +2,6 @@ $(document).ready(function () {
   const body = $('body');
 
   /*
-   * I. INSTANT FORMS
-   *
    * Instant forms are the forms composed of dropdowns with actions, which are submitted
    * immediately after any button is clicked. These forms are expected to be somewhere
    * inside the .dccn-feed-item elements.
@@ -33,7 +31,7 @@ $(document).ready(function () {
   // is re-leaded:
   const sendControlForm = function (form) {
     const formData = form.serialize();
-    const parentFeedItem = form.parents('.dccn-feed-item');
+    const parentFeedItem = form.parents('[data-html-src]');
     $.ajax({
       url: form.attr('action'),
       method: form.attr('method'),
@@ -41,11 +39,13 @@ $(document).ready(function () {
     }).done(function () {
       if (form.hasClass('inst-form-delete')) {
         parentFeedItem.remove();
-      } else {
+      } else if (parentFeedItem.length > 0) {
         const url = parentFeedItem.attr('data-html-src');
         $.get(url, function (data) {
           parentFeedItem.html(data);
         });
+      } else {
+        window.location.reload(true);
       }
     });
     parentFeedItem.html(

@@ -3,7 +3,7 @@ from django import template
 from conferences.models import ArtifactDescriptor
 from submissions import utilities
 from submissions.helpers import get_affiliations_of, get_countries_of
-from submissions.utilities import list_warnings
+from submissions.utilities import list_warnings, get_proc_type, get_volume
 
 register = template.Library()
 
@@ -88,3 +88,13 @@ def warnings_of(submission, role='author'):
 @register.filter
 def count_warnings(submission, role='author'):
     return len(warnings_of(submission, role))
+
+
+@register.filter
+def proc_type_of(submission):
+    return get_proc_type(submission)
+
+
+@register.filter
+def volume_of(submission):
+    return get_volume(submission)
