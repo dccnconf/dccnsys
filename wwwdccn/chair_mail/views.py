@@ -309,6 +309,23 @@ def reset_all_notifications(request, conf_pk):
 
 
 @require_POST
+def refresh_notifications(request, conf_pk):
+    """This view doesn't delete or update existing notifications, but
+    create notifications if some of them do not exist.
+    """
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    for name, kwargs in DEFAULT_NOTIFICATIONS_DATA.items():
+        notif = SystemNotification.objects.filter(
+            name=name, conference=conference).first()
+        print('notification: ', notif)
+        if not notif:
+            SystemNotification.objects.create(
+                name=name, conference=conference, **kwargs)
+    return redirect('chair_mail:notifications', conf_pk)
+
+
+@require_POST
 def reset_notification(request, conf_pk, notif_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)

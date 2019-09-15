@@ -275,12 +275,14 @@ class SystemNotification(models.Model):
     ASSIGN_STATUS_REVIEW = 'assign_status_review'
     ASSIGN_STATUS_ACCEPT = 'assign_status_accept'
     ASSIGN_STATUS_REJECT = 'assign_status_reject'
+    ASSIGN_STATUS_INPRINT = 'assign_status_inprint'
 
     NAME_CHOICES = (
         (ASSIGN_STATUS_REVIEW, 'Assign status REVIEW to the paper'),
         (ASSIGN_STATUS_SUBMIT, 'Assign status SUBMIT to the paper'),
         (ASSIGN_STATUS_ACCEPT, 'Assign status ACCEPT to the paper'),
         (ASSIGN_STATUS_REJECT, 'Assign status REJECT to the paper'),
+        (ASSIGN_STATUS_INPRINT, 'Assign status IN-PRINT to the paper'),
     )
 
     name = CharField(max_length=64, choices=NAME_CHOICES)
@@ -340,6 +342,15 @@ accepted for the conference.'''
 
 unfortunately your submission #{{ paper_id }} **"{{ paper_title }}"** 
 was rejected according to the double-blinded review. 
+'''
+    },
+    SystemNotification.ASSIGN_STATUS_INPRINT: {
+        'subject': 'Submission #{{ paper_id }} was rejected',
+        'type': MSG_TYPE_SUBMISSION,
+        'body': '''Dear {{ username }},
+
+your submission #{{ paper_id }} **"{{ paper_title }}"** camera-ready was 
+sent to the publisher. We will let you know when the paper will be published. 
 '''
     },
 }
