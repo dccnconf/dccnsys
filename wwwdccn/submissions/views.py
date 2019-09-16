@@ -4,14 +4,16 @@ from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse, HttpResponseForbidden, \
-    HttpResponseRedirect
+    HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST, require_GET
 
 from conferences.models import Conference
+from conferences.utilities import validate_chair_access
 from submissions.forms import CreateSubmissionForm, SubmissionDetailsForm, \
     AuthorCreateForm, AuthorsReorderForm, AuthorDeleteForm, \
-    UploadReviewManuscriptForm, InviteAuthorForm, UploadArtifactForm
+    UploadReviewManuscriptForm, InviteAuthorForm, UploadArtifactForm, \
+    UpdateSubmissionStatusForm
 from submissions.models import Submission, Author, Artifact
 from submissions.utilities import is_authorized_edit, \
     is_authorized_view_artifact
@@ -287,7 +289,8 @@ def send_invitation(request, pk):
 @require_GET
 def camera_ready(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
-    if submission.status != Submission.ACCEPTED:
+    if submission.status not in [Submission.ACCEPTED, Submission.IN_PRINT,
+                                 Submission.PUBLISHED]:
         raise Http404
     return render(request, 'submissions/camera_ready.html', context={
         'submission': submission,
@@ -367,3 +370,20 @@ def artifact_delete(request, pk, art_pk):
     if next_url:
         return HttpResponseRedirect(next_url)
     return redirect('submissions:camera-ready', pk=pk)
+
+
+@require_POST
+def update_status(request, pk):
+    submission = get_object_or_404(Submission, pk=pk)
+    validate_chair_access(request.user, submission.conference)
+    form = UpdateSubmissionStatusForm(request.POST, instance=submission)
+    if form.is_valid():
+        form.save()
+
+        decision = submission.review_decision.first()
+        if decision and submission.status == Submission.UNDER_REVIEW:
+            decision.committed = False
+            decision.save()
+
+        return JsonResponse({}, status=200)
+    return JsonResponse({}, status=500)

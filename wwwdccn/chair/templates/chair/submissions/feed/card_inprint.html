@@ -1,12 +1,12 @@
 {###########################################################################}
-{# Submission feed item content in **REJECTED** state.                     #}
+{# Submission feed item content in **IN-PRINT** state.                     #}
 {#                                                                         #}
 {# CONTEXT:                                                                #}
 {# - `submission`: a submission dictionary object                          #}
 {# - `list_view_url`: a URL of the list view that renders this card        #}
 {# - `decision_data`: form data for decision pseudo-form                   #}
 {###########################################################################}
-{% extends 'chair/submissions/feed/_card_base.html' %}
+{% extends 'chair/submissions/feed/_card_base_columed.html' %}
 {#{% load submission_extras %}#}
 {% load review_extras %}
 
@@ -18,10 +18,20 @@
 {% endblock %}
 
 
+{% block rightBodyColumn %}
+  {% include 'chair/submissions/feed/_artifacts.html' with submission=submission %}
+{% endblock %}
+
+
 {% block footerRowItems %}
-  <button class="btn btn-link dccn-feed-item-link" data-toggle="submission-status" data-status="REVIEW"
+  <button class="btn btn-link dccn-feed-item-link" data-toggle="submission-status" data-status="ACCEPT"
           data-target="{% url 'submissions:update-status' pk=submission.pk %}">
     {% csrf_token %}
-    <i class="fas fa-backward"></i> Revert to review
+    <i class="fas fa-backward"></i> Revert to accepted
+  </button>
+  <button class="btn btn-link dccn-feed-item-link" data-toggle="submission-status" data-status="PUBLISH"
+          data-target="{% url 'submissions:update-status' pk=submission.pk %}">
+    {% csrf_token %}
+    <i class="fas fa-forward"></i> Published
   </button>
 {% endblock %}

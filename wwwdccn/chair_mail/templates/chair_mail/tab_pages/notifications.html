@@ -89,6 +89,13 @@
     <button type="button" class="btn btn-outline-danger ml-auto" data-toggle="modal" data-target="#resetAllModal">
       Reset all notifications
     </button>
+    <form action="{% url 'chair_mail:refresh-notifications' conf_pk=conference.pk %}" method="POST">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline-secondary ml-2" data-toggle="tooltip"
+         title="If some notifications are not displayed here, they will be created. Any existing notification won't change">
+        Refresh
+      </button>
+    </form>
   </div>
 
   {#####################################}

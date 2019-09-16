@@ -15,6 +15,7 @@
 {# - `conference`                                                          #}
 {###########################################################################}
 {% extends 'chair/base/generic_page.html' %}
+{% load static %}
 {% load gears_extras %}
 {% load submission_extras %}
 
@@ -40,4 +41,9 @@
       {% endblock %}
     </div>
   </div>
+{% endblock %}
+
+
+{% block script %}
+  <script src="{% static 'chair/js/submission-actions.js' %}"></script>
 {% endblock %}

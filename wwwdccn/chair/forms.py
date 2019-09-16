@@ -2,22 +2,19 @@ from functools import reduce
 
 from django import forms
 from django.contrib.auth import get_user_model
-from django.db.models import Q, F, Count, Max
-from django.db.models.functions import Concat
-from django.forms import Form, MultipleChoiceField, CharField, ChoiceField, \
-    Select
+from django.db.models import Q, F, Count, Max, Subquery, OuterRef
+from django.forms import Form, MultipleChoiceField, CharField, ChoiceField
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from django_countries import countries
 
-from conferences.models import Conference, ProceedingVolume
-from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput, \
-    DropdownSelectSubmit
+from conferences.models import Conference, ProceedingVolume, ArtifactDescriptor
+from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput
 from review.models import Reviewer, Review, Decision, ReviewStats
 from review.utilities import get_average_score, count_required_reviews, \
     review_finished
-from submissions.models import Submission
+from submissions.models import Submission, Artifact
 from users.models import Profile
 
 User = get_user_model()
@@ -130,6 +127,9 @@ class FilterSubmissionsForm(forms.ModelForm):
         widget=CustomCheckboxSelectMultiple, required=False,
         choices=QUARTILE_CHOICES)
 
+    artifacts = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False)
+
     order = ChoiceField(required=False, choices=ORDER_CHOICES)
     direction = ChoiceField(required=False, choices=DIRECTION_CHOICES)
 
@@ -146,6 +146,10 @@ class FilterSubmissionsForm(forms.ModelForm):
             (vol_pk, vol_name) for (vol_pk, vol_name) in
             self.instance.proceedingtype_set.values_list(
                 'volumes__pk', 'volumes__name').distinct()]
+        self.fields['artifacts'].choices = [
+            (x.pk, f'{x.name} ({x.proc_type.name}') for x in
+            ArtifactDescriptor.objects.filter(
+                 proc_type__conference=self.instance)]
 
         profiles_data = Profile.objects.filter(
             user__authorship__submission__conference=self.instance).values(
@@ -326,6 +330,20 @@ class FilterSubmissionsForm(forms.ModelForm):
         submissions = [sub for sub in submissions
                        if any(predicate(sub) for predicate in disjuncts)]
         self.conjuncts.append(Q(pk__in=[sub.pk for sub in submissions]))
+        return data
+
+    def clean_artifacts(self):
+        data = self.cleaned_data['artifacts']
+        disjuncts = []
+        descriptors = [int(x) for x in data if x]
+        for desc_pk in descriptors:
+            disjuncts.append(Q(artifacts__in=Subquery(
+                Artifact.objects.filter(
+                    descriptor=desc_pk, submission=OuterRef('pk')
+                ).exclude(file='').values('pk')),
+                review_decision__proc_type__artifacts=desc_pk))
+        if disjuncts:
+            self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
         return data
 
     def clean_term(self):

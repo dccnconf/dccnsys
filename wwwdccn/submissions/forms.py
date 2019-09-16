@@ -264,3 +264,9 @@ class UploadArtifactForm(ModelForm):
     def has_file(self):
         return (bool(self.cleaned_data['file']) or
                 bool(self.instance and self.instance.file))
+
+
+class UpdateSubmissionStatusForm(ModelForm):
+    class Meta:
+        model = Submission
+        fields = ['status']

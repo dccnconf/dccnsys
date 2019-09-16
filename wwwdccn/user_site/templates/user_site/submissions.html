@@ -40,6 +40,10 @@
           {% include 'submissions/components/card_accepted.html' with submission=submission review_stats=review_stats %}
         {% elif submission.status == submission.REJECTED %}
           {% include 'submissions/components/card_rejected.html' with submission=submission review_stats=review_stats %}
+        {% elif submission.status == submission.IN_PRINT %}
+          {% include 'submissions/components/card_inprint.html' with submission=submission review_stats=review_stats %}
+        {% elif submission.status == submission.PUBLISHED %}
+          {% include 'submissions/components/card_published.html' with submission=submission review_stats=review_stats %}
         {% else %}
           {{ submission.title }} -- {{ submission.get_status_display }}
         {% endif %}

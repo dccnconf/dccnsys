@@ -4,8 +4,8 @@
 {% block cardBodyColumns %}
   {# 1 Leftmost column: title, authors, warnings #}
   <div class="col-12 col-xl-4">
-    {% include 'chair/submissions/feed/components/_title_authors.html' with submission=submission %}
-    {% include 'chair/submissions/feed/components/_warning_list.html' with submission=submission %}
+    {% include 'chair/submissions/feed/_title_authors.html' with submission=submission %}
+    {% include 'chair/submissions/feed/_warning_list.html' with submission=submission %}
   </div>
 
   {# 2 Rightmost column: filled depending on the submission status #}

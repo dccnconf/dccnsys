@@ -46,6 +46,8 @@ urlpatterns = [
          views.notification_details, name='notification-details'),
     path('<int:conf_pk>/notifications/reset/', views.reset_all_notifications,
          name='reset-notifications'),
+    path('<int:conf_pk>/notifications/refresh/', views.refresh_notifications,
+         name='refresh-notifications'),
     path('<int:conf_pk>/notifications/<int:notif_pk>/reset/',
          views.reset_notification, name='reset-notification'),
     path('<int:conf_pk>/notifications/<int:notif_pk>/update_state/',

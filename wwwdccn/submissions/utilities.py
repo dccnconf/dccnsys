@@ -86,3 +86,34 @@ def list_warnings(submission):
                     link_label='upload...'))
 
     return warnings
+
+
+def get_proc_type(submission):
+    """Get proceedings type, if valuable for the submission, i.e. it is in
+    `ACCEPT`, `PRINT` or `PUBLISH` state.
+
+    :param submission: `Submission` instance
+    :return: `ProcType` instance, or `None`
+    """
+    status = submission.status
+    decision = submission.review_decision.first()
+    if decision and status in {Submission.ACCEPTED, Submission.IN_PRINT,
+                               Submission.PUBLISHED}:
+        return decision.proc_type
+    return None
+
+
+def get_volume(submission):
+    """Get volume, if valuable for the submission, i.e. it is in
+    `ACCEPT`, `PRINT` or `PUBLISH` state, and proceedings type is known.
+
+    :param submission: `Submission` instance
+    :return: `Volume` instance, or `None`
+    """
+    status = submission.status
+    decision = submission.review_decision.first()
+    if (decision and decision.proc_type and
+            status in {Submission.ACCEPTED, Submission.IN_PRINT,
+                       Submission.PUBLISHED}):
+        return decision.volume
+    return None
