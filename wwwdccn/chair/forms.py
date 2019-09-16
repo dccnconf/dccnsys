@@ -811,11 +811,11 @@ class ExportSubmissionsForm(Form):
                 record[self.AUTHORS_COLUMN] = '; '.join(names)
 
             if self.COUNTRY_COLUMN in columns:
-                countries = [
+                countries_list = [
                     profiles[a.user_id].get_country_display() for a in authors]
-                countries = list(set(countries))  # remove duplicates
-                countries.sort()
-                record[self.COUNTRY_COLUMN] = '; '.join(countries)
+                countries_list = list(set(countries_list))  # remove duplicates
+                countries_list.sort()
+                record[self.COUNTRY_COLUMN] = '; '.join(countries_list)
 
             if self.STYPE_COLUMN in columns:
                 record[self.STYPE_COLUMN] = (
@@ -894,11 +894,11 @@ class ExportUsersForm(Form):
         self.conference = conference
         self.fields['columns'].initial = [
             self.ORDER_COLUMN, self.ID_COLUMN, self.FULL_NAME_COLUMN]
-        countries = list(
+        countries_list = list(
             set(p.country for p in Profile.objects.all() if p.country))
-        countries.sort(key=lambda cnt: cnt.name)
+        countries_list.sort(key=lambda cnt: cnt.name)
         self.fields['countries'].choices = [
-            (cnt.code, cnt.name) for cnt in countries
+            (cnt.code, cnt.name) for cnt in countries_list
         ]
 
     # noinspection PyUnusedLocal
@@ -929,11 +929,12 @@ class ExportUsersForm(Form):
                 record[self.ID_COLUMN] = pr.user_id
 
             if self.FULL_NAME_COLUMN in columns:
-                record[self.FULL_NAME_COLUMN] = pr.get_full_name()
+                record[self.FULL_NAME_COLUMN] = \
+                    f'{pr.last_name} {pr.first_name}'
 
             if self.FULL_NAME_RUS_COLUMN in columns:
                 record[self.FULL_NAME_RUS_COLUMN] = ' '.join((
-                    pr.first_name_rus, pr.middle_name_rus, pr.last_name_rus))
+                    pr.last_name_rus, pr.middle_name_rus, pr.first_name_rus))
 
             if self.DEGREE_COLUMN in columns:
                 record[self.DEGREE_COLUMN] = pr.get_degree_display()
