@@ -741,17 +741,20 @@ class ExportSubmissionsForm(Form):
     )
 
     columns = MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False, choices=COLUMNS)
+        widget=CustomCheckboxSelectMultiple(hide_apply_btn=True),
+        required=False, choices=COLUMNS)
 
     status = MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False,
-        choices=Submission.STATUS_CHOICE)
+        widget=CustomCheckboxSelectMultiple(hide_apply_btn=True),
+        required=False, choices=Submission.STATUS_CHOICE)
 
     countries = MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False)
+        widget=CustomCheckboxSelectMultiple(hide_apply_btn=True),
+        required=False)
 
     topics = MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False)
+        widget=CustomCheckboxSelectMultiple(hide_apply_btn=True),
+        required=False)
 
     def __init__(self, *args, conference=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -761,11 +764,11 @@ class ExportSubmissionsForm(Form):
         self.fields['columns'].initial = [
             self.ORDER_COLUMN, self.ID_COLUMN, self.TITLE_COLUMN,
             self.AUTHORS_COLUMN, self.STATUS_COLUMN]
-        countries = list(
+        countries_list = list(
             set(p.country for p in Profile.objects.all() if p.country))
-        countries.sort(key=lambda cnt: cnt.name)
+        countries_list.sort(key=lambda cnt: cnt.name)
         self.fields['countries'].choices = [
-            (cnt.code, cnt.name) for cnt in countries]
+            (cnt.code, cnt.name) for cnt in countries_list]
         self.fields['topics'].choices = [
             (t.pk, t.name) for t in self.conference.topic_set.all()]
 
@@ -791,6 +794,10 @@ class ExportSubmissionsForm(Form):
             u.pk: u.profile for u in User.objects.filter(
                 authorship__submission__conference=self.conference)
         }
+
+        def get_user_name(profile):
+            return f'{profile.last_name} {profile.first_name}'
+
         for sub in submissions:
             order += 1
             record = {}
@@ -807,15 +814,15 @@ class ExportSubmissionsForm(Form):
                 record[self.TITLE_COLUMN] = sub.title
 
             if self.AUTHORS_COLUMN in columns:
-                names = [profiles[a.user_id].get_full_name() for a in authors]
+                names = [get_user_name(profiles[a.user_id]) for a in authors]
                 record[self.AUTHORS_COLUMN] = '; '.join(names)
 
             if self.COUNTRY_COLUMN in columns:
-                countries = [
+                countries_list = [
                     profiles[a.user_id].get_country_display() for a in authors]
-                countries = list(set(countries))  # remove duplicates
-                countries.sort()
-                record[self.COUNTRY_COLUMN] = '; '.join(countries)
+                countries_list = list(set(countries_list))  # remove duplicates
+                countries_list.sort()
+                record[self.COUNTRY_COLUMN] = '; '.join(countries_list)
 
             if self.STYPE_COLUMN in columns:
                 record[self.STYPE_COLUMN] = (
@@ -882,10 +889,12 @@ class ExportUsersForm(Form):
     )
 
     columns = MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False, choices=COLUMNS)
+        widget=CustomCheckboxSelectMultiple(hide_apply_btn=True),
+        required=False, choices=COLUMNS)
 
     countries = MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False)
+        widget=CustomCheckboxSelectMultiple(hide_apply_btn=True),
+        required=False)
 
     def __init__(self, *args, conference=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -894,11 +903,11 @@ class ExportUsersForm(Form):
         self.conference = conference
         self.fields['columns'].initial = [
             self.ORDER_COLUMN, self.ID_COLUMN, self.FULL_NAME_COLUMN]
-        countries = list(
+        countries_list = list(
             set(p.country for p in Profile.objects.all() if p.country))
-        countries.sort(key=lambda cnt: cnt.name)
+        countries_list.sort(key=lambda cnt: cnt.name)
         self.fields['countries'].choices = [
-            (cnt.code, cnt.name) for cnt in countries
+            (cnt.code, cnt.name) for cnt in countries_list
         ]
 
     # noinspection PyUnusedLocal
@@ -929,11 +938,12 @@ class ExportUsersForm(Form):
                 record[self.ID_COLUMN] = pr.user_id
 
             if self.FULL_NAME_COLUMN in columns:
-                record[self.FULL_NAME_COLUMN] = pr.get_full_name()
+                record[self.FULL_NAME_COLUMN] = \
+                    f'{pr.last_name} {pr.first_name}'
 
             if self.FULL_NAME_RUS_COLUMN in columns:
                 record[self.FULL_NAME_RUS_COLUMN] = ' '.join((
-                    pr.first_name_rus, pr.middle_name_rus, pr.last_name_rus))
+                    pr.last_name_rus, pr.first_name_rus, pr.middle_name_rus))
 
             if self.DEGREE_COLUMN in columns:
                 record[self.DEGREE_COLUMN] = pr.get_degree_display()

@@ -2,6 +2,10 @@
 
 {% load bootstrap4 %}
 
+{% block extrahead %}
+  {{ form.media }}
+{% endblock %}
+
 {% block content %}
   <h1 class="dccn-panel-title">{{ panel_title }}</h1>
   <form action="" method="POST" class="mt-4">
@@ -11,10 +15,6 @@
       {% for field in form %}
         <div class="form-group card">
           <div class="card-body">
-            <div class="dccn-text-0">Select {{ field.label }}
-              (<button type="button" class="btn btn-link dccn-link dccn-text-small clear-cb-btn">clear</button>,
-              <button type="button" class="btn btn-link dccn-link dccn-text-small select-all-cb-btn">select all</button>):
-            </div>
             {{ field }}
           </div>
         </div>
@@ -25,19 +25,4 @@
       <a class="btn btn-outline-secondary ml-auto" href="{{ next }}"><i class="fas fa-times"></i> Close</a>
     </div>
   </form>
-{% endblock %}
-
-
-{% block script %}
-<script>
-$('.clear-cb-btn').on('click', function () {
-  const parent = $(this).parent().parent();
-  parent.find('.form-check input').prop('checked', false);
-});
-
-$('.select-all-cb-btn').on('click', function () {
-  const parent = $(this).parent().parent();
-  parent.find('.form-check input').prop('checked', true);
-});
-</script>
 {% endblock %}
