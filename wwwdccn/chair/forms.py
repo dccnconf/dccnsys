@@ -3,17 +3,14 @@ from functools import reduce
 from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import Q, F, Count, Max, Subquery, OuterRef
-from django.db.models.functions import Concat
-from django.forms import Form, MultipleChoiceField, CharField, ChoiceField, \
-    Select
+from django.forms import Form, MultipleChoiceField, CharField, ChoiceField
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from django_countries import countries
 
 from conferences.models import Conference, ProceedingVolume, ArtifactDescriptor
-from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput, \
-    DropdownSelectSubmit
+from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput
 from review.models import Reviewer, Review, Decision, ReviewStats
 from review.utilities import get_average_score, count_required_reviews, \
     review_finished
