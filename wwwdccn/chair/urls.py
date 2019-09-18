@@ -47,5 +47,6 @@ urlpatterns = [
     # Exports
     #
     path('<int:conf_pk>/export/submissions/', export.export_submissions, name='export-submissions'),
+    path('<int:conf_pk>/export/reviews_doc/', export.export_reviews_doc, name='export-reviews-doc'),
     path('<int:conf_pk>/export/users/', export.export_users, name='export-users'),
 ]
