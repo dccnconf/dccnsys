@@ -177,7 +177,12 @@ def export_reviews_doc(request, conf_pk):
 
         p = document.add_paragraph()
         p.add_run('Abstract: ').bold = True
-        document.add_paragraph(submission.abstract)
+        try:
+            document.add_paragraph(submission.abstract)
+        except ValueError:
+            p = document.add_paragraph(
+                '[Abstract is hidden because it contains illegal '
+                'characters and can not be processed in DOC-export]')
 
         for i, review in enumerate(Review.objects.filter(paper=submission)):
             user = users[review.reviewer.user_id]
