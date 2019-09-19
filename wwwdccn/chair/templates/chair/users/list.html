@@ -1,8 +1,8 @@
 {###########################################################################}
-{# Submissions list paged view.                                            #}
+{# Users list paged view.                                                  #}
 {#                                                                         #}
 {# CONTEXT:                                                                #}
-{# - `filter_form`: a submissions filter form                              #}
+{# - `filter_form`: a users filter form                                    #}
 {#                                                                         #}
 {# INHERITED CONTEXT:                                                      #}
 {# - `page`: a `Page` object, items passed inside is an iterable of PKs    #}
@@ -10,7 +10,6 @@
 {# - `conference`: conference identifier                                   #}
 {###########################################################################}
 {% extends 'chair/base/list_page.html' %}
-{% load static %}
 {% load widget_tweaks %}
 
 {% block extrahead %}
@@ -21,19 +20,20 @@
 {# Navigation and breadcrumbs                                                #}
 {#---------------------------------------------------------------------------#}
 {% block navigation %}
-  {% include 'chair/components/navigation.html' with active='submissions' %}
+  {% include 'chair/components/navigation.html' with active='users' %}
 {% endblock %}
 
 {% block smallScreenBreadcrumbItems %}
-  <li class="breadcrumb-item active">submissions</li>
+  <li class="breadcrumb-item active">users</li>
 {% endblock %}
 
 {% block largeScreenBreadcrumbItems %}
-  <li class="breadcrumb-item active">submissions</li>
+  <li class="breadcrumb-item active">users</li>
 {% endblock %}
 
+
 {% block toolbar %}
-  <form action="{% url 'chair:submissions' conf_pk=conference.pk %}" method="GET" class="m-2" id="filterForm"></form>
+  <form action="{% url 'chair:users' conf_pk=conference.pk %}" method="GET" class="m-2" id="filterForm"></form>
 
   <div class="d-flex mb-3">
     {% render_field filter_form.term class+="form-control form-control-sm" bound_css_class='' placeholder="Search by title, authors or ID" type="search" form="filterForm" %}
@@ -46,24 +46,10 @@
     <div class="row mb-3">
       <div class="col-sm-3 col-12">
         <div class="btn-group btn-group-sm">
-          <form action="{% url 'chair:submission-create' conf_pk=conference.pk %}" method="POST">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-plus"></i></button>
-          </form>
-          {# Export #}
-          <div class="dropdown">
-            <a href="#" data-toggle="dropdown" class="btn btn-sm btn-secondary ml-1">
-              <i class="fas fa-download"></i>
-            </a>
-            <div class="dropdown-menu">
-              <a href="{% url 'chair:export-submissions' conf_pk=conference.pk %}?next={{ request.get_full_path|urlencode }}" class="dropdown-item">
-                <i class="far fa-file-excel mr-2"></i> Export to CSV
-              </a>
-              <a href="{% url 'chair:export-reviews-doc' conf_pk=conference.pk %}?next={{ request.get_full_path|urlencode }}" class="dropdown-item">
-                <i class="far fa-file-word mr-2"></i> Export reviews to DOC
-              </a>
-            </div>
-          </div>
+          <a href="{% url 'chair:export-users' conf_pk=conference.pk %}?next={{ request.get_full_path|urlencode }}"
+             class="btn btn-sm btn-secondary ml-1">
+            <i class="fas fa-download"></i>
+          </a>
         </div>
       </div>
 
@@ -83,18 +69,21 @@
 {% endblock %}
 
 
-
 {#---------------------------------------------------------------------------#}
-{# List view content                                                         #}
+{# Main content                                                              #}
 {#---------------------------------------------------------------------------#}
 {% block listViewContent %}
-  {% for item in page %}
-    <div class="dccn-feed-item pb-3"
-         data-html-src="{% url 'chair:submission-feed-item' sub_pk=item %}"
-         data-list-view-url="{{ request.get_full_path }}">
-      <div class="d-flex"><div class="mx-auto text-center"><div class="spinner-border"></div><p>Loading</p></div></div>
+{% for item in page %}
+  <div class="dccn-feed-item pb-3" data-html-src="{% url 'chair:user-feed-item' conf_pk=conference.pk user_pk=item %}"
+       data-list-view-url="{{ request.get_full_path }}">
+    <div class="d-flex">
+      <div class="mx-auto text-center">
+        <div class="spinner-border"></div>
+        <p class="Loading"></p>
+      </div>
     </div>
-  {% endfor %}
+  </div>
+{% endfor %}
 {% endblock %}
 
 
@@ -104,26 +93,17 @@
 {#---------------------------------------------------------------------------#}
 {% block filter %}
   <div class="dccn-chair-workspace-filter p-3" id="filterPanel">
-    {% render_field filter_form.completion form="filterForm" %}
-    {% render_field filter_form.types form="filterForm" %}
-    {% render_field filter_form.topics form="filterForm" %}
-    {% render_field filter_form.status form="filterForm" %}
-    {% render_field filter_form.proc_types form="filterForm" %}
-    {% render_field filter_form.volumes form="filterForm" %}
-    {% render_field filter_form.quartiles form="filterForm" %}
-    {% render_field filter_form.countries form="filterForm" %}
-    {% render_field filter_form.affiliations form="filterForm" %}
-    {% render_field filter_form.artifacts form='filterForm' %}
+    {% render_field filter_form.attending_status %}
+    {% render_field filter_form.countries %}
+    {% render_field filter_form.affiliations %}
   </div>
 {% endblock %}
-
 
 
 {#---------------------------------------------------------------------------#}
 {# Script                                                                    #}
 {#---------------------------------------------------------------------------#}
 {% block listPageScript %}
-<script src="{% static 'chair/js/submission-actions.js' %}"></script>
 <script>
 $(document).ready(() => {
   $('[data-html-src]').each(function () {
