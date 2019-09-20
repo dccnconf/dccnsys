@@ -19,19 +19,15 @@ from users.models import Profile
 
 User = get_user_model()
 
-EMPTY_SUBMISSION = 'EMPTY'
-INCOMPLETE_SUBMISSION = 'INCOMPLETE'
-COMPLETE_SUBMISSION = 'COMPLETE'
-
-COMPLETION_STATUS = [
-    (EMPTY_SUBMISSION, 'Empty submissions'),
-    (INCOMPLETE_SUBMISSION, 'Incomplete submissions'),
-    (COMPLETE_SUBMISSION, 'Complete submissions'),
-]
-
 
 def clean_data_to_int(iterable, empty=None):
     return [int(x) if x != '' else None for x in iterable]
+
+
+def q_or(disjuncts, default=True):
+    if disjuncts:
+        return reduce(lambda acc, d: acc | d, disjuncts)
+    return Q(pk__isnull=(not default))  # otherwise, check whether PK is null
 
 
 def search_submissions(submissions, term, sub_profiles=None):
@@ -388,22 +384,65 @@ class FilterSubmissionsForm(forms.ModelForm):
         return self.order_submissions(submissions.distinct())
 
 
-ATTENDING_STATUS = (
-    ('YES', 'Attending'),
-    ('NO', 'Not attending'),
-)
+class FilterProfilesForm(forms.ModelForm):
+    ORDER_COLUMN = '#'
+    ID_COLUMN = 'ID'
+    FULL_NAME_COLUMN = 'FULL_NAME'
+    FULL_NAME_RUS_COLUMN = 'FULL_NAME_RUS'
+    DEGREE_COLUMN = 'DEGREE'
+    COUNTRY_COLUMN = 'COUNTRY'
+    CITY_COLUMN = 'CITY'
+    AFFILIATION_COLUMN = 'AFFILIATION'
+    ROLE_COLUMN = 'ROLE'
+    EMAIL_COLUMN = 'EMAIL'
+    NUM_SUBMITTED_COLUMN = 'NUM_SUBMITTED_PAPERS'
+    NUM_ACCEPTED_COLUMN = 'NUM_ACCEPTED_PAPERS'
+    IEEE_MEMBER_COLUMN = 'IEEE_MEMBER'
+    STUDENT_COLUMN = 'STUDENT'
 
+    # noinspection DuplicatedCode
+    COLUMNS = (
+        (ORDER_COLUMN, ORDER_COLUMN),
+        (ID_COLUMN, ID_COLUMN),
+        (FULL_NAME_COLUMN, FULL_NAME_COLUMN),
+        (FULL_NAME_RUS_COLUMN, FULL_NAME_RUS_COLUMN),
+        (DEGREE_COLUMN, DEGREE_COLUMN),
+        (COUNTRY_COLUMN, COUNTRY_COLUMN),
+        (CITY_COLUMN, CITY_COLUMN),
+        (AFFILIATION_COLUMN, AFFILIATION_COLUMN),
+        (ROLE_COLUMN, ROLE_COLUMN),
+        (EMAIL_COLUMN, EMAIL_COLUMN),
+        (NUM_SUBMITTED_COLUMN, NUM_SUBMITTED_COLUMN),
+        (NUM_ACCEPTED_COLUMN, NUM_ACCEPTED_COLUMN),
+        (IEEE_MEMBER_COLUMN, IEEE_MEMBER_COLUMN),
+        (STUDENT_COLUMN, STUDENT_COLUMN),
+    )
 
-class FilterUsersForm(forms.ModelForm):
+    NOT_AUTHOR = 'NO_PAPERS'
+    AUTHOR = 'AUTHOR'
+    SOLO_AUTHOR = 'SOLO_AUTHOR'
+    AUTHORSHIP_CHOICES = (
+        (NOT_AUTHOR, 'No submissions'),
+        (AUTHOR, 'Has 1 or more submission'),
+        (SOLO_AUTHOR, 'Has submissions where he or she is a single author')
+    )
+
+    STUDENT = 'YES'
+    NOT_STUDENT = 'NO'
+    GRADUATION_CHOICES = (
+        (STUDENT, 'Students'),
+        (NOT_STUDENT, 'Graduated')
+    )
+
     class Meta:
         model = Conference
         fields = []
 
     term = forms.CharField(required=False)
 
-    attending_status = forms.MultipleChoiceField(
+    authorship = forms.MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False,
-        choices=ATTENDING_STATUS,
+        choices=AUTHORSHIP_CHOICES,
     )
 
     countries = forms.MultipleChoiceField(
@@ -414,87 +453,97 @@ class FilterUsersForm(forms.ModelForm):
         widget=CustomCheckboxSelectMultiple, required=False,
     )
 
+    graduation = forms.MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False,
+        choices=GRADUATION_CHOICES,
+    )
+
+    columns = forms.MultipleChoiceField(
+        required=False, choices=COLUMNS,
+        widget=CustomCheckboxSelectMultiple
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert isinstance(self.instance, Conference)
+        countries_dict = dict(countries)
 
-        # Getting profiles of all participants:
-        profiles = Profile.objects.filter(
-            user__authorship__submission__conference__pk=self.instance.pk
-        ).distinct()
-
-        # Extracting all the different countries:
-        countries = list(set(p.country for p in profiles))
-        countries.sort(key=lambda cnt: cnt.name)
         self.fields['countries'].choices = [
-            (cnt.code, cnt.name) for cnt in countries
-        ]
+            (code, countries_dict[code]) for code in
+            Profile.objects.filter(country__isnull=False).values_list(
+                'country', flat=True).order_by('country').distinct()]
 
-        # Extracting all the different affiliations:
-        affs = [item['affiliation'] for item in profiles.values('affiliation')]
-        affs.sort()
-        self.fields['affiliations'].choices = [(item, item) for item in affs]
+        self.fields['affiliations'].choices = [
+            (aff, aff) for aff in
+            Profile.objects.values_list('affiliation', flat=True).order_by(
+                'affiliation').distinct() if aff]
 
-    def apply(self, users):
+    def apply_term(self, profiles):
         term = self.cleaned_data['term']
-        attending_status = self.cleaned_data['attending_status']
-        countries = self.cleaned_data['countries']
-        affiliations = self.cleaned_data['affiliations']
+        for word in term.lower().split():
+            profiles = profiles.filter(
+                Q(pk__icontains=word) | Q(first_name__icontains=word) |
+                Q(last_name__icontains=word) |
+                Q(first_name_rus__icontains=word) |
+                Q(last_name_rus__icontains=word) |
+                Q(middle_name_rus__icontains=word))
+        return profiles
 
-        #
-        # Here we map users list to profiles, then work with profiles and
-        # finally map filtered profiles back to users.
-        #
-        # This is done for performance reasons to avoid huge number of
-        # duplicated SQL queries when requesting foreign key object via
-        # `user.profile` call.
-        #
-        # This optimization allowed to increase the filter speed more than
-        # 10 times.
-        #
-        profiles = list(Profile.objects.filter(user__in=users))
+    def apply_countries(self, profiles):
+        data = self.cleaned_data['countries']
+        if data:
+            profiles = profiles.filter(country__in=data)
+        return profiles
 
-        if term:
-            words = term.lower().split()
-            profiles = [
-                profile for profile in profiles
-                if all(any(word in string for string in [
-                    profile.get_full_name().lower(),
-                    profile.get_full_name_rus().lower(),
-                    profile.affiliation.lower(),
-                    profile.get_country_display().lower()
-                ]) for word in words)
-            ]
+    def apply_affiliations(self, profiles):
+        data = self.cleaned_data['affiliations']
+        if data:
+            profiles = profiles.filter(affiliation__in=data)
+        return profiles
 
-        if attending_status:
-            _show_attending = 'YES' in attending_status
-            _show_not_attending = 'NO' in attending_status
+    def apply_authorship(self, profiles):
+        data = self.cleaned_data['authorship']
+        if not data:
+            return profiles
 
-            attending_profiles = Profile.objects.filter(
+        disjuncts = []  # <-- we store conditions as Q-expressions here
+        profiles = profiles.annotate(
+            num_submissions=Count('user__authorship', filter=Q(
                 user__authorship__submission__conference=self.instance
-            ).distinct()
+            ), distinct=True),
+        )
 
-            profiles = [
-                profile for profile in profiles
-                if (profile in attending_profiles and _show_attending or
-                    profile not in attending_profiles and _show_not_attending)
-            ]
+        if self.NOT_AUTHOR in data:
+            disjuncts.append(Q(num_submissions=0))
+        if self.AUTHOR in data:
+            disjuncts.append(Q(num_submissions__gt=0))
+        if self.SOLO_AUTHOR in data:
+            disjuncts.append(Q(
+                user__authorship__submission__in=Submission.objects.annotate(
+                    num_authors=Count('authors__pk')
+                ).filter(num_authors=1, title__gt='')))
 
-        if countries:
-            profiles = [
-                profile for profile in profiles
-                if profile.country.code in countries
-            ]
+        return profiles.filter(q_or(disjuncts)).distinct()
 
-        if affiliations:
-            profiles = [
-                profile for profile in profiles
-                if profile.affiliation in affiliations
-            ]
+    def apply_graduation(self, profiles):
+        data = self.cleaned_data['graduation']
+        if not data:
+            return profiles
+        disjuncts = []
+        if self.STUDENT in data:
+            disjuncts.append(Q(role__in=Profile.STUDENT_ROLES))
+        if self.NOT_STUDENT in data:
+            disjuncts.append(~Q(role__in=Profile.STUDENT_ROLES))
+        return profiles.filter(q_or(disjuncts))
 
-        users = User.objects.filter(profile__in=profiles)
-
-        return users
+    def apply(self, profiles):
+        profiles = self.apply_countries(profiles)
+        profiles = self.apply_affiliations(profiles)
+        profiles = self.apply_authorship(profiles)
+        profiles = self.apply_graduation(profiles)
+        profiles = self.apply_term(profiles)
+        profiles = profiles.order_by('pk')
+        return profiles
 
 
 class ChairUploadReviewManuscriptForm(forms.ModelForm):
@@ -853,125 +902,6 @@ class ExportSubmissionsForm(Form):
                 record[self.VOLUME_COLUMN] = (
                     decision.volume.name if (decision and decision.volume)
                     else '')
-
-            result.append(record)
-        return result
-
-
-class ExportUsersForm(Form):
-    ORDER_COLUMN = '#'
-    ID_COLUMN = 'ID'
-    FULL_NAME_COLUMN = 'FULL_NAME'
-    FULL_NAME_RUS_COLUMN = 'FULL_NAME_RUS'
-    DEGREE_COLUMN = 'DEGREE'
-    COUNTRY_COLUMN = 'COUNTRY'
-    CITY_COLUMN = 'CITY'
-    AFFILIATION_COLUMN = 'AFFILIATION'
-    ROLE_COLUMN = 'ROLE'
-    EMAIL_COLUMN = 'EMAIL'
-    NUM_SUBMITTED_COLUMN = 'NUM_SUBMITTED_PAPERS'
-    NUM_ACCEPTED_COLUMN = 'NUM_ACCEPTED_PAPERS'
-
-    # noinspection DuplicatedCode
-    COLUMNS = (
-        (ORDER_COLUMN, ORDER_COLUMN),
-        (ID_COLUMN, ID_COLUMN),
-        (FULL_NAME_COLUMN, FULL_NAME_COLUMN),
-        (FULL_NAME_RUS_COLUMN, FULL_NAME_RUS_COLUMN),
-        (DEGREE_COLUMN, DEGREE_COLUMN),
-        (COUNTRY_COLUMN, COUNTRY_COLUMN),
-        (CITY_COLUMN, CITY_COLUMN),
-        (AFFILIATION_COLUMN, AFFILIATION_COLUMN),
-        (ROLE_COLUMN, ROLE_COLUMN),
-        (EMAIL_COLUMN, EMAIL_COLUMN),
-        (NUM_SUBMITTED_COLUMN, NUM_SUBMITTED_COLUMN),
-        (NUM_ACCEPTED_COLUMN, NUM_ACCEPTED_COLUMN),
-    )
-
-    columns = MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple(hide_apply_btn=True),
-        required=False, choices=COLUMNS)
-
-    countries = MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple(hide_apply_btn=True),
-        required=False)
-
-    def __init__(self, *args, conference=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        if conference is None:
-            raise ValueError('conference must be provided')
-        self.conference = conference
-        self.fields['columns'].initial = [
-            self.ORDER_COLUMN, self.ID_COLUMN, self.FULL_NAME_COLUMN]
-        countries_list = list(
-            set(p.country for p in Profile.objects.all() if p.country))
-        countries_list.sort(key=lambda cnt: cnt.name)
-        self.fields['countries'].choices = [
-            (cnt.code, cnt.name) for cnt in countries_list
-        ]
-
-    # noinspection PyUnusedLocal
-    def apply(self, request):
-        profiles = Profile.objects.all()
-        if self.cleaned_data['countries']:
-            profiles = profiles.filter(
-                country__in=self.cleaned_data['countries'])
-        profiles = profiles.order_by('user_id')
-
-        columns = self.cleaned_data['columns']
-        emails = {u.pk: u.email for u in User.objects.all()} \
-            if self.EMAIL_COLUMN in columns else {}
-
-        submissions = Submission.objects.filter(conference=self.conference)
-
-        order = 0
-        result = []
-
-        for pr in profiles:
-            order += 1
-            record = {}
-
-            if self.ORDER_COLUMN in columns:
-                record[self.ORDER_COLUMN] = order
-
-            if self.ID_COLUMN in columns:
-                record[self.ID_COLUMN] = pr.user_id
-
-            if self.FULL_NAME_COLUMN in columns:
-                record[self.FULL_NAME_COLUMN] = \
-                    f'{pr.last_name} {pr.first_name}'
-
-            if self.FULL_NAME_RUS_COLUMN in columns:
-                record[self.FULL_NAME_RUS_COLUMN] = ' '.join((
-                    pr.last_name_rus, pr.first_name_rus, pr.middle_name_rus))
-
-            if self.DEGREE_COLUMN in columns:
-                record[self.DEGREE_COLUMN] = pr.get_degree_display()
-
-            if self.COUNTRY_COLUMN in columns:
-                record[self.COUNTRY_COLUMN] = pr.get_country_display()
-
-            if self.CITY_COLUMN in columns:
-                record[self.CITY_COLUMN] = pr.city
-
-            if self.AFFILIATION_COLUMN in columns:
-                record[self.AFFILIATION_COLUMN] = pr.affiliation
-
-            if self.ROLE_COLUMN in columns:
-                record[self.ROLE_COLUMN] = pr.get_role_display()
-
-            if self.EMAIL_COLUMN in columns:
-                record[self.EMAIL_COLUMN] = emails.get(pr.user_id, '')
-
-            if self.NUM_SUBMITTED_COLUMN in columns:
-                record[self.NUM_SUBMITTED_COLUMN] = submissions.filter(
-                    authors__user=pr.user_id).count()
-
-            if self.NUM_ACCEPTED_COLUMN in columns:
-                record[self.NUM_ACCEPTED_COLUMN] = submissions.filter(
-                    Q(authors__user=pr.user_id) & Q(status__in=[
-                        Submission.ACCEPTED, Submission.IN_PRINT,
-                        Submission.PUBLISHED])).count()
 
             result.append(record)
         return result

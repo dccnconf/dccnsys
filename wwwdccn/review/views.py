@@ -9,10 +9,12 @@ from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
+from conferences.models import Conference
 from conferences.utilities import validate_chair_access
 from review.forms import EditReviewForm, UpdateDecisionForm
-from review.models import Review, Decision
+from review.models import Review, Decision, Reviewer
 from submissions.models import Submission
+from users.models import User
 
 
 def validate_reviewer_access(user, review):
@@ -111,3 +113,26 @@ def commit_decision(request, sub_pk):
         raise JsonResponse(status=404, data={'error': 'no decision exists'})
     decision.commit()
     return JsonResponse(status=200, data={})
+
+
+#
+# API
+#
+@require_POST
+def create_reviewer(request, conf_pk, user_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    user = get_object_or_404(User, pk=user_pk)
+    if user.reviewer_set.count() == 0:
+        Reviewer.objects.create(user=user, conference=conference)
+    return JsonResponse(data={})
+
+
+@require_POST
+def revoke_reviewer(request, conf_pk, user_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+    user = get_object_or_404(User, pk=user_pk)
+    if user.reviewer_set.count() > 0:
+        Reviewer.objects.filter(user=user, conference=conference).delete()
+    return JsonResponse(data={})
