@@ -41,8 +41,6 @@ urlpatterns = [
     path('<int:conf_pk>/users/<int:user_pk>/feed_item/', users.feed_item, name='user-feed-item'),
     path('<int:conf_pk>/users/<int:user_pk>/overview/', users.overview, name='user-overview'),
     path('<int:conf_pk>/users/<int:user_pk>/messages/', users.emails, name='user-messages'),
-    path('<int:conf_pk>/reviewers/invite/<int:user_pk>/', users.create_reviewer, name='invite-reviewer'),
-    path('<int:conf_pk>/reviewers/revoke/<int:user_pk>/', users.revoke_reviewer, name='revoke-reviewer'),
 
     #
     # Exports

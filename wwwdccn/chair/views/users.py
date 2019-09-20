@@ -8,11 +8,10 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
-from chair.forms import FilterUsersForm
+from chair.forms import FilterProfilesForm
 from conferences.utilities import validate_chair_access
 from chair_mail.models import EmailMessage
 from conferences.models import Conference
-from review.models import Reviewer
 from users.models import User, Profile
 
 
@@ -20,10 +19,13 @@ from users.models import User, Profile
 def list_users(request, conf_pk):
     conference = get_object_or_404(Conference, pk=conf_pk)
     validate_chair_access(request.user, conference)
-    form = FilterUsersForm(request.GET, instance=conference)
-    users = User.objects.all()
 
-    pks = users.values_list('pk', flat=True)
+    profiles = Profile.objects.all()
+    form = FilterProfilesForm(request.GET, instance=conference)
+    if form.is_valid():
+        profiles = form.apply(profiles)
+
+    pks = profiles.values_list('user_id', flat=True)
     paginator = Paginator(pks, settings.ITEMS_PER_PAGE)
     page = paginator.page(request.GET.get('page', 1))
 
@@ -111,14 +113,14 @@ def feed_item(request, conf_pk, user_pk):
             When(num_reviewers__gt=0, then=Value(1)),
             default=Value(0), output_field=IntegerField()),
         num_reviews=Count('user__reviewer__reviews__pk', filter=Q(
-            user__reviewer__reviews__paper__conference=conf_pk)),
+            user__reviewer__reviews__paper__conference=conf_pk), distinct=True),
         num_incomplete_reviews=Count('user__reviewer__reviews__pk', filter=Q(
             user__reviewer__reviews__paper__conference=conf_pk,
             user__reviewer__reviews__submitted=False
-        )),
+        ), distinct=True),
         num_submissions=Count('user__authorship', filter=Q(
             user__authorship__submission__conference=conf_pk
-        ))
+        ), distinct=True)
     ).first()
 
     if not profile:
@@ -159,23 +161,3 @@ def emails(request, conf_pk, user_pk):
         'email_messages': email_messages,
         'active_tab': 'messages',
     })
-
-
-@require_POST
-def create_reviewer(request, conf_pk, user_pk):
-    conference = get_object_or_404(Conference, pk=conf_pk)
-    validate_chair_access(request.user, conference)
-    user = get_object_or_404(User, pk=user_pk)
-    if user.reviewer_set.count() == 0:
-        Reviewer.objects.create(user=user, conference=conference)
-    return redirect(request.GET.get('next'))
-
-
-@require_POST
-def revoke_reviewer(request, conf_pk, user_pk):
-    conference = get_object_or_404(Conference, pk=conf_pk)
-    validate_chair_access(request.user, conference)
-    user = get_object_or_404(User, pk=user_pk)
-    if user.reviewer_set.count() > 0:
-        Reviewer.objects.filter(user=user, conference=conference).delete()
-    return redirect(request.GET.get('next'))

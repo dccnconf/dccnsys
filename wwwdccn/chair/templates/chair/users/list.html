@@ -10,6 +10,7 @@
 {# - `conference`: conference identifier                                   #}
 {###########################################################################}
 {% extends 'chair/base/list_page.html' %}
+{% load static %}
 {% load widget_tweaks %}
 
 {% block extrahead %}
@@ -36,7 +37,7 @@
   <form action="{% url 'chair:users' conf_pk=conference.pk %}" method="GET" class="m-2" id="filterForm"></form>
 
   <div class="d-flex mb-3">
-    {% render_field filter_form.term class+="form-control form-control-sm" bound_css_class='' placeholder="Search by title, authors or ID" type="search" form="filterForm" %}
+    {% render_field filter_form.term class+="form-control form-control-sm" bound_css_class='' placeholder="Search by name or ID" type="search" form="filterForm" %}
     <button type="submit" form="filterForm" class="btn btn-sm btn-outline-secondary ml-1" id="searchBtn">
       <i class="fas fa-search"></i>
     </button>
@@ -93,9 +94,9 @@
 {#---------------------------------------------------------------------------#}
 {% block filter %}
   <div class="dccn-chair-workspace-filter p-3" id="filterPanel">
-    {% render_field filter_form.attending_status %}
-    {% render_field filter_form.countries %}
-    {% render_field filter_form.affiliations %}
+    {% render_field filter_form.attending_status form="filterForm" %}
+    {% render_field filter_form.countries form="filterForm" %}
+    {% render_field filter_form.affiliations form="filterForm" %}
   </div>
 {% endblock %}
 
@@ -104,6 +105,7 @@
 {# Script                                                                    #}
 {#---------------------------------------------------------------------------#}
 {% block listPageScript %}
+<script src="{% static 'chair/js/user-action.js' %}"></script>
 <script>
 $(document).ready(() => {
   $('[data-html-src]').each(function () {

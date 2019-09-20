@@ -388,22 +388,25 @@ class FilterSubmissionsForm(forms.ModelForm):
         return self.order_submissions(submissions.distinct())
 
 
-ATTENDING_STATUS = (
-    ('YES', 'Attending'),
-    ('NO', 'Not attending'),
-)
+class FilterProfilesForm(forms.ModelForm):
+    NOT_AUTHOR = 'NO_PAPERS'
+    AUTHOR = 'AUTHOR'
+    SOLO_AUTHOR = 'SOLO_AUTHOR'
+    AUTHORSHIP_CHOICES = (
+        (NOT_AUTHOR, 'No submissions'),
+        (AUTHOR, 'Has 1 or more submission'),
+        (SOLO_AUTHOR, 'Has submissions where he or she is a single author')
+    )
 
-
-class FilterUsersForm(forms.ModelForm):
     class Meta:
         model = Conference
         fields = []
 
     term = forms.CharField(required=False)
 
-    attending_status = forms.MultipleChoiceField(
+    authorship = forms.MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False,
-        choices=ATTENDING_STATUS,
+        choices=AUTHORSHIP_CHOICES,
     )
 
     countries = forms.MultipleChoiceField(
@@ -417,84 +420,35 @@ class FilterUsersForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert isinstance(self.instance, Conference)
+        countries_dict = dict(countries)
 
-        # Getting profiles of all participants:
-        profiles = Profile.objects.filter(
-            user__authorship__submission__conference__pk=self.instance.pk
-        ).distinct()
-
-        # Extracting all the different countries:
-        countries = list(set(p.country for p in profiles))
-        countries.sort(key=lambda cnt: cnt.name)
         self.fields['countries'].choices = [
-            (cnt.code, cnt.name) for cnt in countries
-        ]
+            (code, countries_dict[code]) for code in
+            Profile.objects.filter(country__isnull=False).values_list(
+                'country', flat=True).order_by('country').distinct()]
 
-        # Extracting all the different affiliations:
-        affs = [item['affiliation'] for item in profiles.values('affiliation')]
-        affs.sort()
-        self.fields['affiliations'].choices = [(item, item) for item in affs]
+        self.fields['affiliations'].choices = [
+            (aff, aff) for aff in
+            Profile.objects.values_list('affiliation', flat=True).order_by(
+                'affiliation').distinct() if aff]
 
-    def apply(self, users):
-        term = self.cleaned_data['term']
-        attending_status = self.cleaned_data['attending_status']
-        countries = self.cleaned_data['countries']
-        affiliations = self.cleaned_data['affiliations']
+    def apply_countries(self, profiles):
+        data = self.cleaned_data['countries']
+        if data:
+            profiles = profiles.filter(country__in=data)
+        return profiles
 
-        #
-        # Here we map users list to profiles, then work with profiles and
-        # finally map filtered profiles back to users.
-        #
-        # This is done for performance reasons to avoid huge number of
-        # duplicated SQL queries when requesting foreign key object via
-        # `user.profile` call.
-        #
-        # This optimization allowed to increase the filter speed more than
-        # 10 times.
-        #
-        profiles = list(Profile.objects.filter(user__in=users))
+    def apply_affiliations(self, profiles):
+        data = self.cleaned_data['affiliations']
+        if data:
+            profiles = profiles.filter(affiliation__in=data)
+        return profiles
 
-        if term:
-            words = term.lower().split()
-            profiles = [
-                profile for profile in profiles
-                if all(any(word in string for string in [
-                    profile.get_full_name().lower(),
-                    profile.get_full_name_rus().lower(),
-                    profile.affiliation.lower(),
-                    profile.get_country_display().lower()
-                ]) for word in words)
-            ]
-
-        if attending_status:
-            _show_attending = 'YES' in attending_status
-            _show_not_attending = 'NO' in attending_status
-
-            attending_profiles = Profile.objects.filter(
-                user__authorship__submission__conference=self.instance
-            ).distinct()
-
-            profiles = [
-                profile for profile in profiles
-                if (profile in attending_profiles and _show_attending or
-                    profile not in attending_profiles and _show_not_attending)
-            ]
-
-        if countries:
-            profiles = [
-                profile for profile in profiles
-                if profile.country.code in countries
-            ]
-
-        if affiliations:
-            profiles = [
-                profile for profile in profiles
-                if profile.affiliation in affiliations
-            ]
-
-        users = User.objects.filter(profile__in=profiles)
-
-        return users
+    def apply(self, profiles):
+        profiles = self.apply_countries(profiles)
+        profiles = self.apply_affiliations(profiles)
+        profiles = profiles.order_by('pk')
+        return profiles
 
 
 class ChairUploadReviewManuscriptForm(forms.ModelForm):
