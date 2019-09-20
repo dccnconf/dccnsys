@@ -385,6 +385,39 @@ class FilterSubmissionsForm(forms.ModelForm):
 
 
 class FilterProfilesForm(forms.ModelForm):
+    ORDER_COLUMN = '#'
+    ID_COLUMN = 'ID'
+    FULL_NAME_COLUMN = 'FULL_NAME'
+    FULL_NAME_RUS_COLUMN = 'FULL_NAME_RUS'
+    DEGREE_COLUMN = 'DEGREE'
+    COUNTRY_COLUMN = 'COUNTRY'
+    CITY_COLUMN = 'CITY'
+    AFFILIATION_COLUMN = 'AFFILIATION'
+    ROLE_COLUMN = 'ROLE'
+    EMAIL_COLUMN = 'EMAIL'
+    NUM_SUBMITTED_COLUMN = 'NUM_SUBMITTED_PAPERS'
+    NUM_ACCEPTED_COLUMN = 'NUM_ACCEPTED_PAPERS'
+    IEEE_MEMBER_COLUMN = 'IEEE_MEMBER'
+    STUDENT_COLUMN = 'STUDENT'
+
+    # noinspection DuplicatedCode
+    COLUMNS = (
+        (ORDER_COLUMN, ORDER_COLUMN),
+        (ID_COLUMN, ID_COLUMN),
+        (FULL_NAME_COLUMN, FULL_NAME_COLUMN),
+        (FULL_NAME_RUS_COLUMN, FULL_NAME_RUS_COLUMN),
+        (DEGREE_COLUMN, DEGREE_COLUMN),
+        (COUNTRY_COLUMN, COUNTRY_COLUMN),
+        (CITY_COLUMN, CITY_COLUMN),
+        (AFFILIATION_COLUMN, AFFILIATION_COLUMN),
+        (ROLE_COLUMN, ROLE_COLUMN),
+        (EMAIL_COLUMN, EMAIL_COLUMN),
+        (NUM_SUBMITTED_COLUMN, NUM_SUBMITTED_COLUMN),
+        (NUM_ACCEPTED_COLUMN, NUM_ACCEPTED_COLUMN),
+        (IEEE_MEMBER_COLUMN, IEEE_MEMBER_COLUMN),
+        (STUDENT_COLUMN, STUDENT_COLUMN),
+    )
+
     NOT_AUTHOR = 'NO_PAPERS'
     AUTHOR = 'AUTHOR'
     SOLO_AUTHOR = 'SOLO_AUTHOR'
@@ -392,6 +425,13 @@ class FilterProfilesForm(forms.ModelForm):
         (NOT_AUTHOR, 'No submissions'),
         (AUTHOR, 'Has 1 or more submission'),
         (SOLO_AUTHOR, 'Has submissions where he or she is a single author')
+    )
+
+    STUDENT = 'YES'
+    NOT_STUDENT = 'NO'
+    GRADUATION_CHOICES = (
+        (STUDENT, 'Students'),
+        (NOT_STUDENT, 'Graduated')
     )
 
     class Meta:
@@ -413,6 +453,16 @@ class FilterProfilesForm(forms.ModelForm):
         widget=CustomCheckboxSelectMultiple, required=False,
     )
 
+    graduation = forms.MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False,
+        choices=GRADUATION_CHOICES,
+    )
+
+    columns = forms.MultipleChoiceField(
+        required=False, choices=COLUMNS,
+        widget=CustomCheckboxSelectMultiple
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert isinstance(self.instance, Conference)
@@ -428,6 +478,17 @@ class FilterProfilesForm(forms.ModelForm):
             Profile.objects.values_list('affiliation', flat=True).order_by(
                 'affiliation').distinct() if aff]
 
+    def apply_term(self, profiles):
+        term = self.cleaned_data['term']
+        for word in term.lower().split():
+            profiles = profiles.filter(
+                Q(pk__icontains=word) | Q(first_name__icontains=word) |
+                Q(last_name__icontains=word) |
+                Q(first_name_rus__icontains=word) |
+                Q(last_name_rus__icontains=word) |
+                Q(middle_name_rus__icontains=word))
+        return profiles
+
     def apply_countries(self, profiles):
         data = self.cleaned_data['countries']
         if data:
@@ -438,17 +499,6 @@ class FilterProfilesForm(forms.ModelForm):
         data = self.cleaned_data['affiliations']
         if data:
             profiles = profiles.filter(affiliation__in=data)
-        return profiles
-
-    def apply_term(self, profiles):
-        term = self.cleaned_data['term']
-        for word in term.lower().split():
-            profiles = profiles.filter(
-                Q(pk__icontains=word) | Q(first_name__icontains=word) |
-                Q(last_name__icontains=word) |
-                Q(first_name_rus__icontains=word) |
-                Q(last_name_rus__icontains=word) |
-                Q(middle_name_rus__icontains=word))
         return profiles
 
     def apply_authorship(self, profiles):
@@ -475,10 +525,22 @@ class FilterProfilesForm(forms.ModelForm):
 
         return profiles.filter(q_or(disjuncts)).distinct()
 
+    def apply_graduation(self, profiles):
+        data = self.cleaned_data['graduation']
+        if not data:
+            return profiles
+        disjuncts = []
+        if self.STUDENT in data:
+            disjuncts.append(Q(role__in=Profile.STUDENT_ROLES))
+        if self.NOT_STUDENT in data:
+            disjuncts.append(~Q(role__in=Profile.STUDENT_ROLES))
+        return profiles.filter(q_or(disjuncts))
+
     def apply(self, profiles):
         profiles = self.apply_countries(profiles)
         profiles = self.apply_affiliations(profiles)
         profiles = self.apply_authorship(profiles)
+        profiles = self.apply_graduation(profiles)
         profiles = self.apply_term(profiles)
         profiles = profiles.order_by('pk')
         return profiles
@@ -840,125 +902,6 @@ class ExportSubmissionsForm(Form):
                 record[self.VOLUME_COLUMN] = (
                     decision.volume.name if (decision and decision.volume)
                     else '')
-
-            result.append(record)
-        return result
-
-
-class ExportUsersForm(Form):
-    ORDER_COLUMN = '#'
-    ID_COLUMN = 'ID'
-    FULL_NAME_COLUMN = 'FULL_NAME'
-    FULL_NAME_RUS_COLUMN = 'FULL_NAME_RUS'
-    DEGREE_COLUMN = 'DEGREE'
-    COUNTRY_COLUMN = 'COUNTRY'
-    CITY_COLUMN = 'CITY'
-    AFFILIATION_COLUMN = 'AFFILIATION'
-    ROLE_COLUMN = 'ROLE'
-    EMAIL_COLUMN = 'EMAIL'
-    NUM_SUBMITTED_COLUMN = 'NUM_SUBMITTED_PAPERS'
-    NUM_ACCEPTED_COLUMN = 'NUM_ACCEPTED_PAPERS'
-
-    # noinspection DuplicatedCode
-    COLUMNS = (
-        (ORDER_COLUMN, ORDER_COLUMN),
-        (ID_COLUMN, ID_COLUMN),
-        (FULL_NAME_COLUMN, FULL_NAME_COLUMN),
-        (FULL_NAME_RUS_COLUMN, FULL_NAME_RUS_COLUMN),
-        (DEGREE_COLUMN, DEGREE_COLUMN),
-        (COUNTRY_COLUMN, COUNTRY_COLUMN),
-        (CITY_COLUMN, CITY_COLUMN),
-        (AFFILIATION_COLUMN, AFFILIATION_COLUMN),
-        (ROLE_COLUMN, ROLE_COLUMN),
-        (EMAIL_COLUMN, EMAIL_COLUMN),
-        (NUM_SUBMITTED_COLUMN, NUM_SUBMITTED_COLUMN),
-        (NUM_ACCEPTED_COLUMN, NUM_ACCEPTED_COLUMN),
-    )
-
-    columns = MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple(hide_apply_btn=True),
-        required=False, choices=COLUMNS)
-
-    countries = MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple(hide_apply_btn=True),
-        required=False)
-
-    def __init__(self, *args, conference=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        if conference is None:
-            raise ValueError('conference must be provided')
-        self.conference = conference
-        self.fields['columns'].initial = [
-            self.ORDER_COLUMN, self.ID_COLUMN, self.FULL_NAME_COLUMN]
-        countries_list = list(
-            set(p.country for p in Profile.objects.all() if p.country))
-        countries_list.sort(key=lambda cnt: cnt.name)
-        self.fields['countries'].choices = [
-            (cnt.code, cnt.name) for cnt in countries_list
-        ]
-
-    # noinspection PyUnusedLocal
-    def apply(self, request):
-        profiles = Profile.objects.all()
-        if self.cleaned_data['countries']:
-            profiles = profiles.filter(
-                country__in=self.cleaned_data['countries'])
-        profiles = profiles.order_by('user_id')
-
-        columns = self.cleaned_data['columns']
-        emails = {u.pk: u.email for u in User.objects.all()} \
-            if self.EMAIL_COLUMN in columns else {}
-
-        submissions = Submission.objects.filter(conference=self.conference)
-
-        order = 0
-        result = []
-
-        for pr in profiles:
-            order += 1
-            record = {}
-
-            if self.ORDER_COLUMN in columns:
-                record[self.ORDER_COLUMN] = order
-
-            if self.ID_COLUMN in columns:
-                record[self.ID_COLUMN] = pr.user_id
-
-            if self.FULL_NAME_COLUMN in columns:
-                record[self.FULL_NAME_COLUMN] = \
-                    f'{pr.last_name} {pr.first_name}'
-
-            if self.FULL_NAME_RUS_COLUMN in columns:
-                record[self.FULL_NAME_RUS_COLUMN] = ' '.join((
-                    pr.last_name_rus, pr.first_name_rus, pr.middle_name_rus))
-
-            if self.DEGREE_COLUMN in columns:
-                record[self.DEGREE_COLUMN] = pr.get_degree_display()
-
-            if self.COUNTRY_COLUMN in columns:
-                record[self.COUNTRY_COLUMN] = pr.get_country_display()
-
-            if self.CITY_COLUMN in columns:
-                record[self.CITY_COLUMN] = pr.city
-
-            if self.AFFILIATION_COLUMN in columns:
-                record[self.AFFILIATION_COLUMN] = pr.affiliation
-
-            if self.ROLE_COLUMN in columns:
-                record[self.ROLE_COLUMN] = pr.get_role_display()
-
-            if self.EMAIL_COLUMN in columns:
-                record[self.EMAIL_COLUMN] = emails.get(pr.user_id, '')
-
-            if self.NUM_SUBMITTED_COLUMN in columns:
-                record[self.NUM_SUBMITTED_COLUMN] = submissions.filter(
-                    authors__user=pr.user_id).count()
-
-            if self.NUM_ACCEPTED_COLUMN in columns:
-                record[self.NUM_ACCEPTED_COLUMN] = submissions.filter(
-                    Q(authors__user=pr.user_id) & Q(status__in=[
-                        Submission.ACCEPTED, Submission.IN_PRINT,
-                        Submission.PUBLISHED])).count()
 
             result.append(record)
         return result

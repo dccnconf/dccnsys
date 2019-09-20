@@ -47,8 +47,7 @@
     <div class="row mb-3">
       <div class="col-sm-3 col-12">
         <div class="btn-group btn-group-sm">
-          <a href="{% url 'chair:export-users' conf_pk=conference.pk %}?next={{ request.get_full_path|urlencode }}"
-             class="btn btn-sm btn-secondary ml-1">
+          <a href="#exportDialog" data-toggle="modal" class="btn btn-sm btn-secondary ml-1">
             <i class="fas fa-download"></i>
           </a>
         </div>
@@ -63,6 +62,35 @@
             {% render_field filter_form.direction class+="form-control form-control-sm active-form-control" form="filterForm" %}
           </div>
           <a href="{% url 'chair:users' conf_pk=conference.pk %}" class="btn btn-link dccn-link dccn-text-small ml-3">Clear filter</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {#########################}
+  {# MODALS                #}
+  {#########################}
+  <div class="modal" tabindex="-1" role="dialog" id="exportDialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Export users</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          {% render_field filter_form.columns form="filterForm" %}
+        </div>
+        <div class="modal-footer d-flex align-items-center">
+          <p class="dccn-text-smaller pr-3">
+            <span class="font-weight-bold">{{ page.paginator.count }}</span>
+            user{{ page.paginator.count|pluralize }} matching filters will be exported
+          </p>
+          <div class="ml-auto"></div>
+          <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary" form="filterForm"
+                  formaction="{% url 'chair:users-export-csv' conf_pk=conference.pk%}">Export</button>
         </div>
       </div>
     </div>
@@ -97,6 +125,7 @@
     {% render_field filter_form.authorship form="filterForm" %}
     {% render_field filter_form.countries form="filterForm" %}
     {% render_field filter_form.affiliations form="filterForm" %}
+    {% render_field filter_form.graduation form="filterForm" %}
   </div>
 {% endblock %}
 

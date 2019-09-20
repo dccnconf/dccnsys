@@ -91,6 +91,8 @@ class Profile(models.Model):
         ('Other', _('Other')),
     )
 
+    STUDENT_ROLES = ('Student', 'PhD Student')
+
     DEGREE = (
         (None, _('Select your degree')),
         ('Undergraduate', _('Undergraduate')),
@@ -174,6 +176,9 @@ class Profile(models.Model):
         born = self.birthday
         rest = 1 if (today.month, today.day) < (born.month, born.day) else 0
         return today.year - born.year - rest
+
+    def is_student(self):
+        return self.role in self.STUDENT_ROLES
 
     def __str__(self):
         return self.get_full_name()

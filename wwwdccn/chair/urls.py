@@ -41,11 +41,11 @@ urlpatterns = [
     path('<int:conf_pk>/users/<int:user_pk>/feed_item/', users.feed_item, name='user-feed-item'),
     path('<int:conf_pk>/users/<int:user_pk>/overview/', users.overview, name='user-overview'),
     path('<int:conf_pk>/users/<int:user_pk>/messages/', users.emails, name='user-messages'),
+    path('<int:conf_pk>/users/export/csv/', users.export_csv, name='users-export-csv'),
 
     #
     # Exports
     #
     path('<int:conf_pk>/export/submissions/', export.export_submissions, name='export-submissions'),
     path('<int:conf_pk>/export/reviews_doc/', export.export_reviews_doc, name='export-reviews-doc'),
-    path('<int:conf_pk>/export/users/', export.export_users, name='export-users'),
 ]

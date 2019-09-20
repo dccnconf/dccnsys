@@ -60,7 +60,7 @@
         <p class="dccn-text-smaller text-muted">{{ profile.full_name_rus }}</p>
       {% endif %}
       <p class="dccn-text-smallest mt-1">{{ profile.get_country_display }}, {{ profile.city }}, {{ profile.affiliation }}</p>
-      <p class="dccn-text-smallest mt-0 text-muted">{{ profile.degree }}, {{ profile.role }}</p>
+      <p class="dccn-text-smallest mt-0 text-muted">{{ profile.degree }}, {{ profile.role }}{% if profile.ieee_member %}, IEEE member{% endif %}</p>
     </div>
   </div>
 </div>

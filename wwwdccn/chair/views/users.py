@@ -1,17 +1,21 @@
+import csv
+from datetime import datetime
+
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import Value, CharField, Case, When, IntegerField, \
     Count, Q
 from django.db.models.functions import Concat
-from django.http import Http404
-from django.shortcuts import get_object_or_404, render, redirect
+from django.http import Http404, HttpResponseServerError, HttpResponse
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET
 
 from chair.forms import FilterProfilesForm
 from conferences.utilities import validate_chair_access
 from chair_mail.models import EmailMessage
 from conferences.models import Conference
+from submissions.models import Submission
 from users.models import User, Profile
 
 
@@ -35,67 +39,6 @@ def list_users(request, conf_pk):
         'page': page,
     }
     return render(request, 'chair/users/list.html', context=context)
-
-    # TODO: unlock this:
-    # if form.is_valid():
-    #     users = form.apply(users)
-
-    # TODO: cut this:
-    # profiles = {user: user.profile for user in users}
-    # authors = {
-    #     user: list(user.authorship.filter(submission__conference=conference))
-    #     for user in users
-    # }
-    #
-    # reviewers = {
-    #     user: list(user.reviewer_set.filter(conference=conference))
-    #     for user in users
-    # }
-    # num_reviews = {
-    #     user: len(reviewers[user][0].reviews.all()) if reviewers[user] else 0
-    #     for user in users
-    # }
-    # num_submitted_reviews = {
-    #     user: (
-    #         len(reviewers[user][0].reviews.filter(submitted=True))
-    #         if reviewers[user] else 0
-    #     ) for user in users
-    # }
-    # num_incomplete_reviews = {
-    #     user: (
-    #         len(reviewers[user][0].reviews.filter(submitted=False))
-    #         if reviewers[user] else 0
-    #     ) for user in users
-    # }
-    #
-    # items = [{
-    #     'pk': user.pk,
-    #     'name': profile.get_full_name(),
-    #     'name_rus': profile.get_full_name_rus(),
-    #     'avatar': profile.avatar,
-    #     'country': profile.get_country_display(),
-    #     'city': profile.city,
-    #     'affiliation': profile.affiliation,
-    #     'degree': profile.degree,
-    #     'role': profile.role,
-    #     'num_submissions': len(authors[user]),
-    #     'is_participant': len(authors[user]) > 0,
-    #     'num_reviews': num_reviews[user],
-    #     'num_submitted_reviews': num_submitted_reviews[user],
-    #     'num_incomplete_reviews': num_incomplete_reviews[user],
-    #     'is_reviewer': len(reviewers[user]) > 0,
-    # } for user, profile in profiles.items()]
-    #
-    # items.sort(key=lambda x: x['pk'])
-    # paginator = Paginator(items, settings.ITEMS_PER_PAGE)
-    # page = paginator.page(request.GET.get('page', 1))
-    #
-    # context = {
-    #     'conference': conference,
-    #     'filter_form': form,
-    #     'page': page,
-    # }
-    # return render(request, 'chair/users/list.html', context=context)
 
 
 @require_GET
@@ -161,3 +104,59 @@ def emails(request, conf_pk, user_pk):
         'email_messages': email_messages,
         'active_tab': 'messages',
     })
+
+
+@require_GET
+def export_csv(request, conf_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+
+    form = FilterProfilesForm(request.GET, instance=conference)
+    if not form.is_valid():
+        return HttpResponseServerError()
+
+    # Prepare additional columns:
+    profiles = form.apply(Profile.objects.all()).annotate(
+        num_submissions=Count('user__authorship', filter=Q(
+            user__authorship__submission__conference=conference
+        ), distinct=True)).annotate(
+        num_accepted_submissions=Count('user__authorship', filter=Q(
+            user__authorship__submission__conference=conference,
+            user__authorship__submission__status=Submission.ACCEPTED
+        ), distinct=True)).distinct()
+
+    # Create the HttpResponse object with the appropriate header.
+    response = HttpResponse(content_type='text/csv')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+    response['Content-Disposition'] = \
+        f'attachment; filename="users-{timestamp}.csv"'
+    writer = csv.writer(response)
+
+    # import sys
+    # writer = csv.writer(sys.stdout)
+    writer.writerow(form.cleaned_data['columns'])
+
+    for order, pr in enumerate(list(profiles)):
+        record = {
+            form.ORDER_COLUMN: order + 1,
+            form.ID_COLUMN: pr.user_id,
+            form.FULL_NAME_COLUMN: f'{pr.last_name} {pr.first_name}',
+            form.FULL_NAME_RUS_COLUMN: ' '.join((
+                pr.last_name_rus, pr.first_name_rus, pr.middle_name_rus)),
+            form.DEGREE_COLUMN: pr.get_degree_display(),
+            form.COUNTRY_COLUMN: pr.get_country_display(),
+            form.CITY_COLUMN: pr.city,
+            form.AFFILIATION_COLUMN: pr.affiliation,
+            form.ROLE_COLUMN: pr.get_role_display(),
+            form.EMAIL_COLUMN: pr.email,
+            form.NUM_SUBMITTED_COLUMN: pr.num_submissions,
+            form.NUM_ACCEPTED_COLUMN: pr.num_accepted_submissions,
+            form.IEEE_MEMBER_COLUMN: 'IEEE Member' if pr.ieee_member else '',
+            form.STUDENT_COLUMN: 'Student' if pr.is_student() else '',
+        }
+        row = []
+        for col in form.cleaned_data['columns']:
+            row.append(record[col])
+        writer.writerow(row)
+
+    return response

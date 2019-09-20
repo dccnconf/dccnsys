@@ -12,7 +12,7 @@ from docx import Document
 from docx.enum.table import WD_ROW_HEIGHT_RULE
 from docx.shared import Cm
 
-from chair.forms import ExportSubmissionsForm, ExportUsersForm
+from chair.forms import ExportSubmissionsForm
 from conferences.utilities import validate_chair_access
 from conferences.models import Conference
 from review.models import ReviewStats, Review
@@ -66,8 +66,6 @@ def create_export_view(form_class, file_name_prefix, title):
 
 export_submissions = create_export_view(
     ExportSubmissionsForm, 'papers', 'Export submissions')
-
-export_users = create_export_view(ExportUsersForm, 'users', 'Export users')
 
 
 @require_GET
