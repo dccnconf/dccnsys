@@ -50,8 +50,8 @@ def feed_item(request, conf_pk, user_pk):
             user__reviewer__conference=conf_pk))
     ).annotate(
         full_name_rus=Concat(
-            'first_name_rus', Value(' '), 'middle_name_rus', Value(' '),
-            'last_name_rus', output_field=CharField()),
+            'last_name_rus', Value(' '), 'first_name_rus', Value(' '),
+            'middle_name_rus', output_field=CharField()),
         is_reviewer=Case(
             When(num_reviewers__gt=0, then=Value(1)),
             default=Value(0), output_field=IntegerField()),
