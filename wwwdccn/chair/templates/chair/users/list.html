@@ -62,7 +62,7 @@
           <div class="ml-1">
             {% render_field filter_form.direction class+="form-control form-control-sm active-form-control" form="filterForm" %}
           </div>
-          <a href="{% url 'chair:submissions' conf_pk=conference.pk %}" class="btn btn-link dccn-link dccn-text-small ml-3">Clear filter</a>
+          <a href="{% url 'chair:users' conf_pk=conference.pk %}" class="btn btn-link dccn-link dccn-text-small ml-3">Clear filter</a>
         </div>
       </div>
     </div>
@@ -94,7 +94,7 @@
 {#---------------------------------------------------------------------------#}
 {% block filter %}
   <div class="dccn-chair-workspace-filter p-3" id="filterPanel">
-    {% render_field filter_form.attending_status form="filterForm" %}
+    {% render_field filter_form.authorship form="filterForm" %}
     {% render_field filter_form.countries form="filterForm" %}
     {% render_field filter_form.affiliations form="filterForm" %}
   </div>

@@ -19,19 +19,15 @@ from users.models import Profile
 
 User = get_user_model()
 
-EMPTY_SUBMISSION = 'EMPTY'
-INCOMPLETE_SUBMISSION = 'INCOMPLETE'
-COMPLETE_SUBMISSION = 'COMPLETE'
-
-COMPLETION_STATUS = [
-    (EMPTY_SUBMISSION, 'Empty submissions'),
-    (INCOMPLETE_SUBMISSION, 'Incomplete submissions'),
-    (COMPLETE_SUBMISSION, 'Complete submissions'),
-]
-
 
 def clean_data_to_int(iterable, empty=None):
     return [int(x) if x != '' else None for x in iterable]
+
+
+def q_or(disjuncts, default=True):
+    if disjuncts:
+        return reduce(lambda acc, d: acc | d, disjuncts)
+    return Q(pk__isnull=(not default))  # otherwise, check whether PK is null
 
 
 def search_submissions(submissions, term, sub_profiles=None):
@@ -455,9 +451,34 @@ class FilterProfilesForm(forms.ModelForm):
                 Q(middle_name_rus__icontains=word))
         return profiles
 
+    def apply_authorship(self, profiles):
+        data = self.cleaned_data['authorship']
+        if not data:
+            return profiles
+
+        disjuncts = []  # <-- we store conditions as Q-expressions here
+        profiles = profiles.annotate(
+            num_submissions=Count('user__authorship', filter=Q(
+                user__authorship__submission__conference=self.instance
+            ), distinct=True),
+        )
+
+        if self.NOT_AUTHOR in data:
+            disjuncts.append(Q(num_submissions=0))
+        if self.AUTHOR in data:
+            disjuncts.append(Q(num_submissions__gt=0))
+        if self.SOLO_AUTHOR in data:
+            disjuncts.append(Q(
+                user__authorship__submission__in=Submission.objects.annotate(
+                    num_authors=Count('authors__pk')
+                ).filter(num_authors=1, title__gt='')))
+
+        return profiles.filter(q_or(disjuncts)).distinct()
+
     def apply(self, profiles):
         profiles = self.apply_countries(profiles)
         profiles = self.apply_affiliations(profiles)
+        profiles = self.apply_authorship(profiles)
         profiles = self.apply_term(profiles)
         profiles = profiles.order_by('pk')
         return profiles
