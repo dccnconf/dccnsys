@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import Q, F, Count, Max, Subquery, OuterRef, Value
 from django.db.models.functions import Concat
-from django.forms import Form, MultipleChoiceField, CharField, ChoiceField
+from django.forms import MultipleChoiceField, ChoiceField, Form, CharField
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
@@ -22,6 +22,7 @@ from users.models import Profile
 User = get_user_model()
 
 
+# noinspection PyUnusedLocal
 def clean_data_to_int(iterable, empty=None):
     return [int(x) if x != '' else None for x in iterable]
 
