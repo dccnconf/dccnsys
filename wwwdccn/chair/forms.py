@@ -444,9 +444,21 @@ class FilterProfilesForm(forms.ModelForm):
             profiles = profiles.filter(affiliation__in=data)
         return profiles
 
+    def apply_term(self, profiles):
+        term = self.cleaned_data['term']
+        for word in term.lower().split():
+            profiles = profiles.filter(
+                Q(pk__icontains=word) | Q(first_name__icontains=word) |
+                Q(last_name__icontains=word) |
+                Q(first_name_rus__icontains=word) |
+                Q(last_name_rus__icontains=word) |
+                Q(middle_name_rus__icontains=word))
+        return profiles
+
     def apply(self, profiles):
         profiles = self.apply_countries(profiles)
         profiles = self.apply_affiliations(profiles)
+        profiles = self.apply_term(profiles)
         profiles = profiles.order_by('pk')
         return profiles
 
