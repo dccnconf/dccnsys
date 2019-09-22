@@ -437,6 +437,13 @@ class FilterProfilesForm(forms.ModelForm):
         (NOT_STUDENT, 'Graduated')
     )
 
+    MEMBERSHIP_NONE = 'NONE'
+    MEMBERSHIP_IEEE = 'IEEE'
+    MEMBERSHIP_CHOICES = (
+        (MEMBERSHIP_NONE, 'No memberships'),
+        (MEMBERSHIP_IEEE, 'IEEE member'),
+    )
+
     ORDER_BY_ID = 'ID'
     ORDER_BY_NAME = 'NAME'
     ORDER_CHOICES = (
@@ -468,6 +475,11 @@ class FilterProfilesForm(forms.ModelForm):
     graduation = forms.MultipleChoiceField(
         widget=CustomCheckboxSelectMultiple, required=False,
         choices=GRADUATION_CHOICES,
+    )
+
+    membership = forms.MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False,
+        choices=MEMBERSHIP_CHOICES,
     )
 
     order = ChoiceField(required=False, choices=ORDER_CHOICES)
@@ -566,11 +578,23 @@ class FilterProfilesForm(forms.ModelForm):
             disjuncts.append(~Q(role__in=Profile.STUDENT_ROLES))
         return profiles.filter(q_or(disjuncts))
 
+    def apply_membership(self, profiles):
+        data = self.cleaned_data['membership']
+        if not data:
+            return profiles
+        disjuncts = []
+        if self.MEMBERSHIP_NONE in data:
+            disjuncts.append(Q(ieee_member=False))
+        if self.MEMBERSHIP_IEEE in data:
+            disjuncts.append(Q(ieee_member=True))
+        return profiles.filter(q_or(disjuncts))
+
     def apply(self, profiles):
         profiles = self.apply_countries(profiles)
         profiles = self.apply_affiliations(profiles)
         profiles = self.apply_authorship(profiles)
         profiles = self.apply_graduation(profiles)
+        profiles = self.apply_membership(profiles)
         profiles = self.apply_term(profiles)
         profiles = self.order_profiles(profiles)
         return profiles
