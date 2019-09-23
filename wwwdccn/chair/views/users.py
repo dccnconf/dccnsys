@@ -1,5 +1,6 @@
 import csv
 from datetime import datetime
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.core.paginator import Paginator
@@ -7,7 +8,7 @@ from django.db.models import Value, CharField, Case, When, IntegerField, \
     Count, Q
 from django.db.models.functions import Concat
 from django.http import Http404, HttpResponseServerError, HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 
@@ -160,3 +161,22 @@ def export_csv(request, conf_pk):
         writer.writerow(row)
 
     return response
+
+
+def compose_redirect(request, conf_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+
+    form = FilterProfilesForm(request.GET, instance=conference)
+    if not form.is_valid():
+        return HttpResponseServerError()
+
+    users = form.apply(Profile.objects.all()).values_list('user_id', flat=True)
+    base_url = reverse('chair_mail:compose-user', kwargs={'conf_pk': conf_pk})
+    query_string = urlencode({
+        'objects': ','.join(str(pk) for pk in users),
+        'next': request.GET.get('next', reverse(
+            'chair:users', kwargs={'conf_pk': conf_pk}))
+    })
+    url = f'{base_url}?{query_string}'
+    return redirect(url)

@@ -1,10 +1,12 @@
 import functools
 import mimetypes
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.http import Http404, JsonResponse, HttpResponse
+from django.http import Http404, JsonResponse, HttpResponse, \
+    HttpResponseServerError
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
@@ -398,6 +400,27 @@ def artifact_download(request, art_pk):
         response['Content-Disposition'] = f'filename={filename}'
         return response
     raise Http404
+
+
+@require_GET
+def compose_redirect(request, conf_pk):
+    conference = get_object_or_404(Conference, pk=conf_pk)
+    validate_chair_access(request.user, conference)
+
+    form = FilterSubmissionsForm(request.GET, instance=conference)
+    if not form.is_valid():
+        return HttpResponseServerError()
+
+    submissions = form.apply(Submission.objects.all())
+    base_url = reverse('chair_mail:compose-submission',
+                       kwargs={'conf_pk': conf_pk})
+    query_string = urlencode({
+        'objects': ','.join(str(sub.pk) for sub in submissions),
+        'next': request.GET.get('next', reverse(
+            'chair:submissions', kwargs={'conf_pk': conf_pk}))
+    })
+    url = f'{base_url}?{query_string}'
+    return redirect(url)
 
 
 #
