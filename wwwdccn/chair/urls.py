@@ -14,6 +14,7 @@ urlpatterns = [
     #
     path('<int:conf_pk>/submissions/', submissions.list_submissions, name='submissions'),
     path('<int:conf_pk>/submissions/create/', submissions.create_submission, name='submission-create'),
+    path('<int:conf_pk>/submissions/compose_redirect/', submissions.compose_redirect, name='submissions-compose-redirect'),
     path('submissions/<int:sub_pk>/feed_item/', submissions.feed_item, name='submission-feed-item'),
     path('submissions/<int:sub_pk>/overview/', submissions.overview, name='submission-overview'),
     path('submissions/<int:sub_pk>/metadata/', submissions.metadata, name='submission-metadata'),
@@ -38,11 +39,11 @@ urlpatterns = [
     # Users
     #
     path('<int:conf_pk>/users/', users.list_users, name='users'),
+    path('<int:conf_pk>/users/compose_redirect/', users.compose_redirect, name='users-compose-redirect'),
     path('<int:conf_pk>/users/<int:user_pk>/feed_item/', users.feed_item, name='user-feed-item'),
     path('<int:conf_pk>/users/<int:user_pk>/overview/', users.overview, name='user-overview'),
     path('<int:conf_pk>/users/<int:user_pk>/messages/', users.emails, name='user-messages'),
     path('<int:conf_pk>/users/export/csv/', users.export_csv, name='users-export-csv'),
-    path('<int:conf_pk>/users/compose_redirect/', users.compose_redirect, name='compose-redirect'),
 
     #
     # Exports

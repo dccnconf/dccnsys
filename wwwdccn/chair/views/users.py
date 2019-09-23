@@ -179,5 +179,4 @@ def compose_redirect(request, conf_pk):
             'chair:users', kwargs={'conf_pk': conf_pk}))
     })
     url = f'{base_url}?{query_string}'
-    print(url)
     return redirect(url)

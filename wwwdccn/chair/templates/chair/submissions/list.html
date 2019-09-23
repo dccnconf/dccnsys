@@ -33,7 +33,9 @@
 {% endblock %}
 
 {% block toolbar %}
-  <form action="{% url 'chair:submissions' conf_pk=conference.pk %}" method="GET" class="m-2" id="filterForm"></form>
+  <form action="{% url 'chair:submissions' conf_pk=conference.pk %}" method="GET" class="m-2" id="filterForm">
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  </form>
 
   <div class="d-flex mb-3">
     {% render_field filter_form.term class+="form-control form-control-sm" bound_css_class='' placeholder="Search by title, authors or ID" type="search" form="filterForm" %}
@@ -64,6 +66,10 @@
               </a>
             </div>
           </div>
+          <button type="submit" class="btn btn-primary ml-1" form="filterForm"
+                  formaction="{% url 'chair:submissions-compose-redirect' conf_pk=conference.pk%}">
+            <i class="far fa-paper-plane"></i>
+          </button>
         </div>
       </div>
 
