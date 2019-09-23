@@ -42,6 +42,7 @@ urlpatterns = [
     path('<int:conf_pk>/users/<int:user_pk>/overview/', users.overview, name='user-overview'),
     path('<int:conf_pk>/users/<int:user_pk>/messages/', users.emails, name='user-messages'),
     path('<int:conf_pk>/users/export/csv/', users.export_csv, name='users-export-csv'),
+    path('<int:conf_pk>/users/compose_redirect/', users.compose_redirect, name='compose-redirect'),
 
     #
     # Exports

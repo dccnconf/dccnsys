@@ -54,15 +54,12 @@ urlpatterns = [
          views.update_notification_state, name='update-notification-state'),
 
     #########################################################################
-    path('<int:conf_pk>/api/mailing_lists/',
-         api.list_mailing_lists,
+    path('<int:conf_pk>/api/mailing_lists/', api.list_mailing_lists,
          name='list-mailing-lists'),
     path('<int:conf_pk>/api/mailing_lists/<str:name>/',
-         api.mailing_list_details,
-         name='mailing-list-details'),
+         api.mailing_list_details, name='mailing-list-details'),
     path('<int:conf_pk>/api/users/', api.list_users, name='list-users'),
-    path('<int:conf_pk>/api/submissions/',
-         api.list_submissions,
+    path('<int:conf_pk>/api/submissions/', api.list_submissions,
          name='list-submissions'),
     path('<int:conf_pk>/api/preview/user/',
          api.create_preview_view(forms.PreviewUserMessageForm),
