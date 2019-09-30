@@ -20,7 +20,6 @@ def get_score(review):
 def insert_review_stage(apps, schema_editor):
     Submission = apps.get_model('submissions', 'Submission')
     ReviewStage = apps.get_model('review', 'ReviewStage')
-    ReviewStage.__str__ = lambda self: f'(ReviewStage | sub={self.submission_id}, num_reviews_required={self.num_reviews_required}, locked={self.locked}, score={self.score})'
     Review = apps.get_model('review', 'Review')
     submissions = Submission.objects.annotate(
         num_reviews_required=F('stype__num_reviews'))
@@ -34,9 +33,6 @@ def insert_review_stage(apps, schema_editor):
             submission=sub, num_reviews_required=sub.num_reviews_required,
             score=average(scores),
             locked=(sub.status not in ['REVIEW', 'SUBMIT'])))
-    print('* creating stages: ')
-    for stage in stages:
-        print('-- ', stage)
     ReviewStage.objects.bulk_create(stages)
 
     # After review stages were created, we also update reviews:
@@ -45,8 +41,9 @@ def insert_review_stage(apps, schema_editor):
         stage = rev.paper.reviewstage_set.first()
         if stage is None:
             print(f'broken paper is #{rev.paper.id}')
-        rev.stage = stage
-        rev.locked = stage.locked
+        else:
+            rev.stage = stage
+            rev.locked = stage.locked
     Review.objects.bulk_update(reviews, ['stage', 'locked'])
 
 
