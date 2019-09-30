@@ -313,7 +313,7 @@ def get_submission_context(submission):
     reviews = submission.reviews.filter(submitted=True)
     avg_score = '-' if reviews.count() == 0 else \
         f'{sum(r.average_score() for r in reviews) / reviews.count():.1f}'
-    decision = submission.review_decision.first()
+    decision = submission.old_decision.first()
 
     review_lines = []
     for n, r in enumerate(reviews):

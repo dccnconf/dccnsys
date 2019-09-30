@@ -2,7 +2,7 @@ from django import forms
 from django.forms import Form, HiddenInput, CharField, ChoiceField
 
 from conferences.models import ProceedingType, ProceedingVolume
-from review.models import Review, check_review_details, Decision
+from review.models import Review, check_review_details, DecisionOLD
 
 
 class EditReviewForm(forms.ModelForm):
@@ -45,7 +45,7 @@ class EditReviewForm(forms.ModelForm):
 
 class UpdateDecisionForm(Form):
     decision = ChoiceField(
-        widget=HiddenInput(), choices=Decision.DECISION_CHOICES, required=True)
+        widget=HiddenInput(), choices=DecisionOLD.DECISION_CHOICES, required=True)
     proc_type = CharField(widget=HiddenInput(), required=False)
     volume = CharField(widget=HiddenInput(), required=False)
 
@@ -89,7 +89,7 @@ class UpdateDecisionForm(Form):
         decision.decision = self.cleaned_data['decision']
         decision.proc_type = None
         decision.volume = None
-        if self.cleaned_data['decision'] != Decision.UNDEFINED:
+        if self.cleaned_data['decision'] != DecisionOLD.UNDEFINED:
             # Validate proc type is possible:
             allowed_ptypes = decision.submission.stype.possible_proceedings
             if self.proc_type and allowed_ptypes.filter(pk=self.proc_type.pk):

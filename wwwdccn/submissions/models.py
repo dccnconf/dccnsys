@@ -226,7 +226,7 @@ class Artifact(Model):
 
     @property
     def is_active(self):
-        decision = self.submission.review_decision.first()
+        decision = self.submission.old_decision.first()
         valid_statuses = {Submission.ACCEPTED, Submission.IN_PRINT,
                           Submission.PUBLISHED}
         if (decision and self.submission.status in valid_statuses

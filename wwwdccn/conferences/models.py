@@ -248,7 +248,7 @@ def update_submissions_artifacts(sender, instance, **kwargs):
     assert isinstance(instance, ArtifactDescriptor)
     from submissions.models import Submission
     submissions = Submission.objects.filter(
-        review_decision__proc_type=instance.proc_type)
+        old_decision__proc_type=instance.proc_type)
     for submission in submissions:
         art, created = submission.artifacts.get_or_create(
             submission=submission, descriptor=instance)

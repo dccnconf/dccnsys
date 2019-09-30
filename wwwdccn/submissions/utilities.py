@@ -7,7 +7,7 @@ from submissions.models import Submission
 
 
 def camera_editable(submission):
-    decision = submission.review_decision.first()
+    decision = submission.old_decision.first()
     proc_type = getattr(decision, 'proc_type', None)
     end_date = getattr(proc_type, 'final_manuscript_deadline', None)
     too_late = end_date and timezone.now() > end_date
@@ -96,7 +96,7 @@ def get_proc_type(submission):
     :return: `ProcType` instance, or `None`
     """
     status = submission.status
-    decision = submission.review_decision.first()
+    decision = submission.old_decision.first()
     if decision and status in {Submission.ACCEPTED, Submission.IN_PRINT,
                                Submission.PUBLISHED}:
         return decision.proc_type
@@ -111,7 +111,7 @@ def get_volume(submission):
     :return: `Volume` instance, or `None`
     """
     status = submission.status
-    decision = submission.review_decision.first()
+    decision = submission.old_decision.first()
     if (decision and decision.proc_type and
             status in {Submission.ACCEPTED, Submission.IN_PRINT,
                        Submission.PUBLISHED}):

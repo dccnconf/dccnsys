@@ -1,7 +1,7 @@
 from django import template
 from django.db.models import Q
 
-from review.models import Review, Decision, ReviewStats
+from review.models import Review, DecisionOLD, ReviewStats
 from review.utilities import get_quality, get_average_score
 
 register = template.Library()
@@ -20,11 +20,11 @@ def count_incomplete_reviews(user):
 
 @register.filter
 def decision_color_class(string):
-    if string == Decision.ACCEPT:
+    if string == DecisionOLD.ACCEPT:
         return 'success-17'
-    elif string == Decision.REJECT:
+    elif string == DecisionOLD.REJECT:
         return 'danger-17'
-    elif string == Decision.UNDEFINED or string == '':
+    elif string == DecisionOLD.UNDEFINED or string == '':
         return 'warning-17'
     else:
         return 'secondary'

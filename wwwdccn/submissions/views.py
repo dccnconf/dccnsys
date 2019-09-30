@@ -183,7 +183,7 @@ def download_manuscript(request, pk):
 @login_required
 def submission_overview(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
-    decision = submission.review_decision.first()
+    decision = submission.old_decision.first()
     if submission.status == 'SUBMIT':
         deadline = submission.conference.submission_stage.end_date
     elif submission.status == 'REVIEW':
@@ -380,7 +380,7 @@ def update_status(request, pk):
     if form.is_valid():
         form.save()
 
-        decision = submission.review_decision.first()
+        decision = submission.old_decision.first()
         if decision and submission.status == Submission.UNDER_REVIEW:
             decision.committed = False
             decision.save()

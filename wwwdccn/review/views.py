@@ -12,7 +12,7 @@ from django.views.decorators.http import require_POST
 from conferences.models import Conference
 from conferences.utilities import validate_chair_access
 from review.forms import EditReviewForm, UpdateDecisionForm
-from review.models import Review, Decision, Reviewer
+from review.models import Review, DecisionOLD, Reviewer
 from submissions.models import Submission
 from users.models import User
 
@@ -88,9 +88,9 @@ def update_decision(request, sub_pk):
     """
     submission = get_object_or_404(Submission, pk=sub_pk)
     validate_chair_access(request.user, submission.conference)
-    decision = submission.review_decision.first()
+    decision = submission.old_decision.first()
     if not decision:
-        decision = Decision.objects.create(submission=submission)
+        decision = DecisionOLD.objects.create(submission=submission)
     form = UpdateDecisionForm(request.POST, instance=decision)
     if form.is_valid():
         form.save()
@@ -108,7 +108,7 @@ def commit_decision(request, sub_pk):
     """
     submission = get_object_or_404(Submission, pk=sub_pk)
     validate_chair_access(request.user, submission.conference)
-    decision = submission.review_decision.first()
+    decision = submission.old_decision.first()
     if not decision:
         raise JsonResponse(status=404, data={'error': 'no decision exists'})
     decision.commit()

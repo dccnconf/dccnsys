@@ -16,7 +16,7 @@ from chair.forms import FilterSubmissionsForm, \
     ChairUploadReviewManuscriptForm, AssignReviewerForm
 from conferences.utilities import validate_chair_access
 from conferences.models import Conference
-from review.models import Review, ReviewStats, Decision
+from review.models import Review, ReviewStats, DecisionOLD
 from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
     AuthorDeleteForm, AuthorsReorderForm, InviteAuthorForm
 from submissions.models import Submission, Artifact
@@ -108,7 +108,7 @@ def feed_item(request, submission, conference):
     if submission.status == Submission.UNDER_REVIEW:
         context['form_data'] = _build_decision_form_data(submission)
     elif submission.status == Submission.ACCEPTED:
-        context['decision'] = submission.review_decision.first()
+        context['decision'] = submission.old_decision.first()
         context['form_data'] = _build_decision_form_data(
             submission, hide_decision=True, hide_proc_type=True)
     return render(request, template_names[submission.status], context)
@@ -116,24 +116,24 @@ def feed_item(request, submission, conference):
 
 def _build_decision_form_data(submission, hide_decision=False,
                               hide_proc_type=False, hide_volume=False):
-    decision = submission.review_decision.first()
+    decision = submission.old_decision.first()
     proc_type = decision.proc_type if decision else None
     volume = decision.volume if decision else None
     default_option = [('', 'Not selected')]
 
     # 1) Filling data_decision value and display:
-    decision_value = Decision.UNDEFINED if not decision else decision.decision
+    decision_value = DecisionOLD.UNDEFINED if not decision else decision.decision
     data_decision = {
         'hidden': hide_decision,
-        'options': Decision.DECISION_CHOICES,
+        'options': DecisionOLD.DECISION_CHOICES,
         'value': decision_value,
-        'display': [opt[1] for opt in Decision.DECISION_CHOICES
+        'display': [opt[1] for opt in DecisionOLD.DECISION_CHOICES
                     if opt[0] == decision_value][0]
     }
 
     # 2) Fill proceedings type if needed and possible:
     data_proc_type = {
-        'hidden': hide_proc_type or decision_value != Decision.ACCEPT,
+        'hidden': hide_proc_type or decision_value != DecisionOLD.ACCEPT,
         'value': proc_type.pk if proc_type else '',
         'display': proc_type.name if proc_type else default_option[0][-1],
         'options': default_option + [
@@ -434,7 +434,7 @@ def start_review(request, submission):
                              Submission.REJECTED]:
         submission.status = Submission.UNDER_REVIEW
         submission.save()
-        decision = submission.review_decision.first()
+        decision = submission.old_decision.first()
         if decision:
             decision.committed = False
             decision.save()

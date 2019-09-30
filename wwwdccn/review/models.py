@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Model, CharField, ForeignKey, CASCADE, SET_NULL, \
-    BooleanField, IntegerField, FloatField, OneToOneField
+    BooleanField, IntegerField, FloatField, OneToOneField, ManyToManyField
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.template.loader import render_to_string
@@ -12,14 +12,23 @@ from django.utils.translation import ugettext_lazy as _
 
 from conferences.models import Conference, ProceedingType, ProceedingVolume, \
     ArtifactDescriptor
-from review.utilities import get_average_score
 from submissions.models import Submission
 from users.models import User
 
 
+class ReviewStage(Model):
+    submission = models.ForeignKey(Submission, on_delete=SET_NULL, null=True)
+    num_reviews_required = models.IntegerField()
+    score = models.FloatField(null=True, blank=True, default=None)
+    locked = models.BooleanField(default=False)
+
+    def get_num_missing_reviews(self):
+        return max(0, self.num_reviews_required - self.review_set.count())
+
+
 # Create your models here.
 class Reviewer(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
 
 
@@ -56,6 +65,11 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews',
     )
+
+    stage = models.ForeignKey(
+        ReviewStage, blank=True, default=None, on_delete=SET_NULL, null=True)
+
+    locked = models.BooleanField(default=False)
 
     paper = models.ForeignKey(
         Submission,
@@ -186,7 +200,24 @@ def delete_review(sender, instance, **kwargs):
         template_plain='review/email/cancel_review.txt')
 
 
-class Decision(Model):
+class ReviewDecisionType(Model):
+    ACCEPT = 'ACCEPT'
+    REJECT = 'REJECT'
+    CHOICES = ((ACCEPT, 'Accept submission'), (REJECT, 'Reject submission'))
+
+    decision = CharField(choices=CHOICES, default=ACCEPT, max_length=6)
+    allowed_proceedings = ManyToManyField(
+        ProceedingType, related_name='decision_types')
+    description = CharField(blank=True, default='', max_length=1024)
+
+
+class ReviewDecision:
+    decision_type = ForeignKey(
+        ReviewDecisionType, on_delete=SET_NULL, related_name='decisions')
+    stage = OneToOneField(ReviewStage, on_delete=CASCADE, to_field='decision')
+
+
+class DecisionOLD(Model):
     UNDEFINED = 'UNDEFINED'
     ACCEPT = 'ACCEPT'
     REJECT = 'REJECT'
@@ -200,7 +231,7 @@ class Decision(Model):
     decision = CharField(choices=DECISION_CHOICES, default=UNDEFINED,
                          max_length=10)
     submission = ForeignKey(Submission, on_delete=CASCADE,
-                            related_name='review_decision')
+                            related_name='old_decision')
     proc_type = ForeignKey(ProceedingType, on_delete=SET_NULL, null=True,
                            blank=True)
     volume = ForeignKey(ProceedingVolume, on_delete=SET_NULL, null=True,
@@ -221,9 +252,9 @@ class Decision(Model):
         status = self.submission.status
         # Update submission status if needed
         decision_status = {
-            Decision.UNDEFINED: Submission.UNDER_REVIEW,
-            Decision.ACCEPT: Submission.ACCEPTED,
-            Decision.REJECT: Submission.REJECTED,
+            DecisionOLD.UNDEFINED: Submission.UNDER_REVIEW,
+            DecisionOLD.ACCEPT: Submission.ACCEPTED,
+            DecisionOLD.REJECT: Submission.REJECTED,
         }
         if status != Submission.IN_PRINT:
             new_status = decision_status[self.decision]
@@ -238,7 +269,7 @@ class Decision(Model):
                 for ad in artifact_descriptors:
                     art, created = self.submission.artifacts.get_or_create(
                         descriptor=ad)
-            if update_status and self.decision != Decision.UNDEFINED:
+            if update_status and self.decision != DecisionOLD.UNDEFINED:
                 # TODO: inform user about proc_type or volume change
                 # (we are here if status didn't change, so Submission.save()
                 # will not emit an email due to status change; so we need to
@@ -249,7 +280,7 @@ class Decision(Model):
         self.save()
 
     def save(self, *args, **kwargs):
-        old = Decision.objects.filter(pk=self.pk).first()
+        old = DecisionOLD.objects.filter(pk=self.pk).first()
         if old:
             fields = ['decision', 'volume', 'proc_type']
             for field in fields:

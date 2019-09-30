@@ -13,7 +13,7 @@ from django_countries import countries
 
 from conferences.models import Conference, ProceedingVolume, ArtifactDescriptor
 from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput
-from review.models import Reviewer, Review, Decision, ReviewStats
+from review.models import Reviewer, Review, DecisionOLD, ReviewStats
 from review.utilities import get_average_score, count_required_reviews, \
     review_finished
 from submissions.models import Submission, Artifact
@@ -271,9 +271,9 @@ class FilterSubmissionsForm(forms.ModelForm):
         disjuncts = []
         proc_types = [int(x) for x in data if x]
         if proc_types:
-            disjuncts.append(Q(review_decision__proc_type__in=proc_types))
+            disjuncts.append(Q(old_decision__proc_type__in=proc_types))
         if '' in data:
-            disjuncts.append(Q(review_decision__proc_type=None))
+            disjuncts.append(Q(old_decision__proc_type=None))
         if disjuncts:
             self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
         return data
@@ -284,9 +284,9 @@ class FilterSubmissionsForm(forms.ModelForm):
         disjuncts = []
         volumes = [int(x) for x in data if x]
         if volumes:
-            disjuncts.append(Q(review_decision__volume__in=volumes))
+            disjuncts.append(Q(old_decision__volume__in=volumes))
         if '' in data:
-            disjuncts.append(Q(review_decision__volume=None))
+            disjuncts.append(Q(old_decision__volume=None))
         if disjuncts:
             self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
         return data
@@ -340,7 +340,7 @@ class FilterSubmissionsForm(forms.ModelForm):
                 Artifact.objects.filter(
                     descriptor=desc_pk, submission=OuterRef('pk')
                 ).exclude(file='').values('pk')),
-                review_decision__proc_type__artifacts=desc_pk))
+                old_decision__proc_type__artifacts=desc_pk))
         if disjuncts:
             self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
         return data
@@ -372,11 +372,11 @@ class FilterSubmissionsForm(forms.ModelForm):
             num_missing_mandatory_artifacts=Count('artifacts', filter=Q(
                 artifacts__file='', artifacts__descriptor__mandatory=True,
                 artifacts__descriptor__proc_type=F(
-                    'review_decision__proc_type')), distinct=True),
+                    'old_decision__proc_type')), distinct=True),
             num_missing_optional_artifacts=Count('artifacts', filter=Q(
                 artifacts__file='', artifacts__descriptor__mandatory=False,
                 artifacts__descriptor__proc_type=F(
-                    'review_decision__proc_type')), distinct=True),
+                    'old_decision__proc_type')), distinct=True),
         )
 
         # Secondly, we build the query from conjuncts and apply the filter:
@@ -673,7 +673,7 @@ class FilterReviewsForm(Form):
         required=False)
 
     decisions = MultipleChoiceField(
-        choices=Decision.DECISION_CHOICES, widget=CustomCheckboxSelectMultiple,
+        choices=DecisionOLD.DECISION_CHOICES, widget=CustomCheckboxSelectMultiple,
         required=False)
 
     completion = MultipleChoiceField(
@@ -738,10 +738,10 @@ class FilterReviewsForm(Form):
         selected = self.cleaned_data['decisions']
         if selected:
             decisions = {
-                sub: getattr(sub.review_decision.first(), 'decision', None)
+                sub: getattr(sub.old_decision.first(), 'decision', None)
                 for sub in submissions
             }
-            allow_undefined = Decision.UNDEFINED in selected
+            allow_undefined = DecisionOLD.UNDEFINED in selected
             submissions = [sub for sub in submissions
                            if ((not decisions[sub] and allow_undefined) or
                                (decisions[sub] in selected))]
@@ -776,7 +776,7 @@ class FilterReviewsForm(Form):
         selected = clean_data_to_int(self.cleaned_data['proc_types'])
         if selected:
             proc_types = {
-                sub: getattr(sub.review_decision.first(), 'proc_type_id', None)
+                sub: getattr(sub.old_decision.first(), 'proc_type_id', None)
                 for sub in submissions
             }
             submissions = [sub for sub in submissions
@@ -794,7 +794,7 @@ class FilterReviewsForm(Form):
         selected = clean_data_to_int(self.cleaned_data['volumes'])
         if selected:
             volumes = {
-                sub: getattr(sub.review_decision.first(), 'volume_id', None)
+                sub: getattr(sub.old_decision.first(), 'volume_id', None)
                 for sub in submissions
             }
             submissions = [sub for sub in submissions
@@ -905,7 +905,7 @@ class ExportSubmissionsForm(Form):
             order += 1
             record = {}
             authors = sub.authors.all().order_by('order')
-            decision = sub.review_decision.first()
+            decision = sub.old_decision.first()
 
             if self.ORDER_COLUMN in columns:
                 record[self.ORDER_COLUMN] = order
