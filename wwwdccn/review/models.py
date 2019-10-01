@@ -52,12 +52,12 @@ class Review(models.Model):
     EXCELLENT = 5
 
     SCORE_CHOICES = (
-        ('', _('Choose your score')),
-        (str(POOR), _('1 - Very Poor')),
-        (str(BELOW_AVERAGE), _('2 - Below Average')),
-        (str(AVERAGE), _('3 - Average')),
-        (str(GOOD), _('4 - Good')),
-        (str(EXCELLENT), _('5 - Excellent'))
+        (None, _('Choose your score')),
+        (POOR, _('1 - Very Poor')),
+        (BELOW_AVERAGE, _('2 - Below Average')),
+        (AVERAGE, _('3 - Average')),
+        (GOOD, _('4 - Good')),
+        (EXCELLENT, _('5 - Excellent'))
     )
 
     reviewer = models.ForeignKey(
@@ -77,29 +77,14 @@ class Review(models.Model):
         related_name='reviews',
     )
 
-    technical_merit = models.CharField(
-        choices=SCORE_CHOICES,
-        max_length=1,
-        blank=True,
-    )
-
-    clarity = models.CharField(
-        choices=SCORE_CHOICES,
-        max_length=1,
-        blank=True,
-    )
-
-    relevance = models.CharField(
-        choices=SCORE_CHOICES,
-        max_length=1,
-        blank=True,
-    )
-
-    originality = models.CharField(
-        choices=SCORE_CHOICES,
-        max_length=1,
-        blank=True,
-    )
+    technical_merit = models.IntegerField(
+        choices=SCORE_CHOICES, default=None, blank=True, null=True)
+    clarity = models.IntegerField(
+        choices=SCORE_CHOICES, default=None, blank=True, null=True)
+    relevance = models.IntegerField(
+        choices=SCORE_CHOICES, default=None, blank=True, null=True)
+    originality = models.IntegerField(
+        choices=SCORE_CHOICES, default=None, blank=True, null=True)
 
     details = models.TextField()
 
