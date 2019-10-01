@@ -71,12 +71,6 @@ class Review(models.Model):
 
     locked = models.BooleanField(default=False)
 
-    paper = models.ForeignKey(
-        Submission,
-        on_delete=models.CASCADE,
-        related_name='reviews',
-    )
-
     technical_merit = models.IntegerField(
         choices=SCORE_CHOICES, default=None, blank=True, null=True)
     clarity = models.IntegerField(
@@ -89,6 +83,10 @@ class Review(models.Model):
     details = models.TextField()
 
     submitted = models.BooleanField(default=False)
+
+    @property
+    def paper(self):
+        return self.stage.submission
 
     def __str__(self):
         name = self.reviewer.user.profile.get_full_name()
