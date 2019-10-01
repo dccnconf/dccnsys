@@ -16,7 +16,7 @@ from chair.forms import FilterSubmissionsForm, \
     ChairUploadReviewManuscriptForm, AssignReviewerForm
 from conferences.utilities import validate_chair_access
 from conferences.models import Conference
-from review.models import Review, ReviewStats, DecisionOLD
+from review.models import Review, ReviewStats
 from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
     AuthorDeleteForm, AuthorsReorderForm, InviteAuthorForm
 from submissions.models import Submission, Artifact
@@ -105,58 +105,58 @@ def feed_item(request, submission, conference):
         Submission.IN_PRINT: 'chair/submissions/feed/card_inprint.html',
         Submission.PUBLISHED: 'chair/submissions/feed/card_published.html',
     }
-    if submission.status == Submission.UNDER_REVIEW:
-        context['form_data'] = _build_decision_form_data(submission)
-    elif submission.status == Submission.ACCEPTED:
+    # if submission.status == Submission.UNDER_REVIEW:
+    #     context['form_data'] = _build_decision_form_data(submission)
+    if submission.status == Submission.ACCEPTED:
         context['decision'] = submission.old_decision.first()
-        context['form_data'] = _build_decision_form_data(
-            submission, hide_decision=True, hide_proc_type=True)
+        # context['form_data'] = _build_decision_form_data(
+        #     submission, hide_decision=True, hide_proc_type=True)
     return render(request, template_names[submission.status], context)
 
 
-def _build_decision_form_data(submission, hide_decision=False,
-                              hide_proc_type=False, hide_volume=False):
-    decision = submission.old_decision.first()
-    proc_type = decision.proc_type if decision else None
-    volume = decision.volume if decision else None
-    default_option = [('', 'Not selected')]
-
-    # 1) Filling data_decision value and display:
-    decision_value = DecisionOLD.UNDEFINED if not decision else decision.decision
-    data_decision = {
-        'hidden': hide_decision,
-        'options': DecisionOLD.DECISION_CHOICES,
-        'value': decision_value,
-        'display': [opt[1] for opt in DecisionOLD.DECISION_CHOICES
-                    if opt[0] == decision_value][0]
-    }
-
-    # 2) Fill proceedings type if needed and possible:
-    data_proc_type = {
-        'hidden': hide_proc_type or decision_value != DecisionOLD.ACCEPT,
-        'value': proc_type.pk if proc_type else '',
-        'display': proc_type.name if proc_type else default_option[0][-1],
-        'options': default_option + [
-            (t.pk, t.name) for t in submission.stype.possible_proceedings.all()]
-    }
-
-    # 3) Fill volumes if possible:
-    data_volume = {
-        'hidden': hide_volume or not data_proc_type['value'],
-        'value': volume.pk if volume else '',
-        'display': volume.name if volume else default_option[0][-1],
-        'options': default_option + [
-            (vol.pk, vol.name) for vol in
-            (proc_type.volumes.all() if proc_type else [])]
-    }
-
-    # 4) Collect everything and output:
-    return {
-        'decision': data_decision,
-        'proc_type': data_proc_type,
-        'volume': data_volume,
-        'committed': decision.committed if decision else True
-    }
+# def _build_decision_form_data(submission, hide_decision=False,
+#                               hide_proc_type=False, hide_volume=False):
+#     decision = submission.old_decision.first()
+#     proc_type = decision.proc_type if decision else None
+#     volume = decision.volume if decision else None
+#     default_option = [('', 'Not selected')]
+#
+#     # 1) Filling data_decision value and display:
+#     decision_value = DecisionOLD.UNDEFINED if not decision else decision.decision
+#     data_decision = {
+#         'hidden': hide_decision,
+#         'options': DecisionOLD.DECISION_CHOICES,
+#         'value': decision_value,
+#         'display': [opt[1] for opt in DecisionOLD.DECISION_CHOICES
+#                     if opt[0] == decision_value][0]
+#     }
+#
+#     # 2) Fill proceedings type if needed and possible:
+#     data_proc_type = {
+#         'hidden': hide_proc_type or decision_value != DecisionOLD.ACCEPT,
+#         'value': proc_type.pk if proc_type else '',
+#         'display': proc_type.name if proc_type else default_option[0][-1],
+#         'options': default_option + [
+#             (t.pk, t.name) for t in submission.stype.possible_proceedings.all()]
+#     }
+#
+#     # 3) Fill volumes if possible:
+#     data_volume = {
+#         'hidden': hide_volume or not data_proc_type['value'],
+#         'value': volume.pk if volume else '',
+#         'display': volume.name if volume else default_option[0][-1],
+#         'options': default_option + [
+#             (vol.pk, vol.name) for vol in
+#             (proc_type.volumes.all() if proc_type else [])]
+#     }
+#
+#     # 4) Collect everything and output:
+#     return {
+#         'decision': data_decision,
+#         'proc_type': data_proc_type,
+#         'volume': data_volume,
+#         'committed': decision.committed if decision else True
+#     }
 
 
 #############################################################################
@@ -183,13 +183,13 @@ def overview(request, submission, conference):
     stats = ReviewStats.objects.filter(conference=conference).first()
 
     # Build decision form data if we should have it:
-    if submission.status == Submission.UNDER_REVIEW:
-        decision_form_data = _build_decision_form_data(submission)
-    elif submission.status == Submission.ACCEPTED:
-        decision_form_data = _build_decision_form_data(
-            submission, hide_decision=True, hide_proc_type=True)
-    else:
-        decision_form_data = None
+    # if submission.status == Submission.UNDER_REVIEW:
+    #     decision_form_data = _build_decision_form_data(submission)
+    # elif submission.status == Submission.ACCEPTED:
+    #     decision_form_data = _build_decision_form_data(
+    #         submission, hide_decision=True, hide_proc_type=True)
+    # else:
+    decision_form_data = None
 
     return render(request, 'chair/submissions/tabs/overview.html', {
         'submission': submission,

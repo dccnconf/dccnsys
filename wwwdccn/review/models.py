@@ -132,10 +132,9 @@ class Review(models.Model):
         return warnings
 
     def average_score(self):
-        if self.all_scores_filled():
-            fields = self.score_fields()
-            return sum(int(x) for x in fields.values()) / len(fields)
-        return 0
+        fields = self.score_fields()
+        values = [x for x in fields.values()]
+        return sum(values) / len(values) if values else 0
 
 
 def check_review_details(value, submission_type):
@@ -161,26 +160,26 @@ def _send_email(user, review, subject, template_html, template_plain):
               from_email=settings.DEFAULT_FROM_EMAIL, fail_silently=False)
 
 
-# noinspection PyUnusedLocal
-@receiver(post_save, sender=Review)
-def create_review(sender, instance, created, **kwargs):
-    if created:
-        assert isinstance(instance, Review)
-        _send_email(
-            instance.reviewer.user, instance,
-            f"[DCCN2019] Review assignment for submission #{instance.paper.pk}",
-            template_html='review/email/start_review.html',
-            template_plain='review/email/start_review.txt')
+# # noinspection PyUnusedLocal
+# @receiver(post_save, sender=Review)
+# def create_review(sender, instance, created, **kwargs):
+#     if created:
+#         assert isinstance(instance, Review)
+#         _send_email(
+#             instance.reviewer.user, instance,
+#             f"[DCCN2019] Review assignment for submission #{instance.paper.pk}",
+#             template_html='review/email/start_review.html',
+#             template_plain='review/email/start_review.txt')
 
 
-# noinspection PyUnusedLocal
-@receiver(post_delete, sender=Review)
-def delete_review(sender, instance, **kwargs):
-    _send_email(
-        instance.reviewer.user, instance,
-        f"[DCCN2019] Review cancelled for submission #{instance.paper.pk}",
-        template_html='review/email/cancel_review.html',
-        template_plain='review/email/cancel_review.txt')
+# # noinspection PyUnusedLocal
+# @receiver(post_delete, sender=Review)
+# def delete_review(sender, instance, **kwargs):
+#     _send_email(
+#         instance.reviewer.user, instance,
+#         f"[DCCN2019] Review cancelled for submission #{instance.paper.pk}",
+#         template_html='review/email/cancel_review.html',
+#         template_plain='review/email/cancel_review.txt')
 
 
 class ReviewDecisionType(Model):
@@ -194,83 +193,24 @@ class ReviewDecisionType(Model):
     description = CharField(blank=True, default='', max_length=1024)
 
 
-class ReviewDecision:
+class ReviewDecision(Model):
     decision_type = ForeignKey(
-        ReviewDecisionType, on_delete=SET_NULL, related_name='decisions')
-    stage = OneToOneField(ReviewStage, on_delete=CASCADE, to_field='decision')
+        ReviewDecisionType, on_delete=SET_NULL, related_name='decisions',
+        null=True, blank=True, default=None)
+    stage = OneToOneField(ReviewStage, on_delete=CASCADE,
+                          related_name='decision')
 
 
-class DecisionOLD(Model):
-    UNDEFINED = 'UNDEFINED'
-    ACCEPT = 'ACCEPT'
-    REJECT = 'REJECT'
-
-    DECISION_CHOICES = (
-        (UNDEFINED, 'No decision'),
-        (ACCEPT, 'Accept submission'),
-        (REJECT, 'Reject submission')
-    )
-
-    decision = CharField(choices=DECISION_CHOICES, default=UNDEFINED,
-                         max_length=10)
-    submission = ForeignKey(Submission, on_delete=CASCADE,
-                            related_name='old_decision')
-    proc_type = ForeignKey(ProceedingType, on_delete=SET_NULL, null=True,
-                           blank=True)
-    volume = ForeignKey(ProceedingVolume, on_delete=SET_NULL, null=True,
-                        blank=True)
-    committed = BooleanField(default=False)
-
-    def commit(self, silent=False):
-        """Change submission status depending on decision.
-
-        - if decision is UNDEFINED, submission will go to REVIEW state;
-        - if decision is ACCEPT, submission will go to ACCEPTED state;
-        - if decision is REJECT, submission will go to REJECTED state.
-
-        If submission status was already IN_PRINT, it won't be changed.
-        """
-        if self.committed:
-            return   # do nothing if already committed
-        status = self.submission.status
-        # Update submission status if needed
-        decision_status = {
-            DecisionOLD.UNDEFINED: Submission.UNDER_REVIEW,
-            DecisionOLD.ACCEPT: Submission.ACCEPTED,
-            DecisionOLD.REJECT: Submission.REJECTED,
-        }
-        if status != Submission.IN_PRINT:
-            new_status = decision_status[self.decision]
-            update_status = status != new_status
-            if not (new_status == Submission.ACCEPTED and not self.proc_type):
-                self.submission.status = new_status
-            self.submission.save()
-            # Adding artifacts:
-            if new_status == Submission.ACCEPTED and self.proc_type:
-                artifact_descriptors = ArtifactDescriptor.objects.filter(
-                    proc_type=self.proc_type_id)
-                for ad in artifact_descriptors:
-                    art, created = self.submission.artifacts.get_or_create(
-                        descriptor=ad)
-            if update_status and self.decision != DecisionOLD.UNDEFINED:
-                # TODO: inform user about proc_type or volume change
-                # (we are here if status didn't change, so Submission.save()
-                # will not emit an email due to status change; so we need to
-                # inform user manually)
-                if not silent:
-                    pass
-        self.committed = True
-        self.save()
-
-    def save(self, *args, **kwargs):
-        old = DecisionOLD.objects.filter(pk=self.pk).first()
-        if old:
-            fields = ['decision', 'volume', 'proc_type']
-            for field in fields:
-                if getattr(self, field) != getattr(old, field):
-                    self.committed = False
-                    break
-        super().save(*args, **kwargs)
+@receiver(post_save, sender=Submission)
+def create_artifacts_after_submission_accepted(sender, instance, **kwargs):
+    assert isinstance(instance, Submission)
+    if instance.status == Submission.ACCEPTED:
+        stage = instance.reviewstage_set.first()
+        decision_type = stage.decision.decision_type
+        artifact_descriptors = ArtifactDescriptor.objects.filter(
+            proc_type__in=decision_type.allowed_proceedings)
+        for ad in artifact_descriptors:
+            art, created = instance.artifacts.get_or_create(descriptor=ad)
 
 
 class ReviewStats(Model):

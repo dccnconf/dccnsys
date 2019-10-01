@@ -11,8 +11,8 @@ from django.views.decorators.http import require_POST
 
 from conferences.models import Conference
 from conferences.utilities import validate_chair_access
-from review.forms import EditReviewForm, UpdateDecisionForm
-from review.models import Review, DecisionOLD, Reviewer
+from review.forms import EditReviewForm
+from review.models import Review, Reviewer
 from submissions.models import Submission
 from users.models import User
 
@@ -88,31 +88,15 @@ def update_decision(request, sub_pk):
     """
     submission = get_object_or_404(Submission, pk=sub_pk)
     validate_chair_access(request.user, submission.conference)
-    decision = submission.old_decision.first()
-    if not decision:
-        decision = DecisionOLD.objects.create(submission=submission)
-    form = UpdateDecisionForm(request.POST, instance=decision)
-    if form.is_valid():
-        form.save()
-        return JsonResponse(status=200, data={})
-    return JsonResponse(status=500, data={'errors': form.errors})
-
-
-# noinspection PyUnusedLocal
-@require_POST
-def commit_decision(request, sub_pk):
-    """Call `ReviewDecision.commit()` method.
-
-    This action may cause submission status change, emails sending, etc.
-    See `Decision` and `Submission` models code for more information.
-    """
-    submission = get_object_or_404(Submission, pk=sub_pk)
-    validate_chair_access(request.user, submission.conference)
-    decision = submission.old_decision.first()
-    if not decision:
-        raise JsonResponse(status=404, data={'error': 'no decision exists'})
-    decision.commit()
-    return JsonResponse(status=200, data={})
+    # decision = submission.old_decision.first()
+    # if not decision:
+    #     decision = DecisionOLD.objects.create(submission=submission)
+    # form = UpdateDecisionForm(request.POST, instance=decision)
+    # if form.is_valid():
+    #     form.save()
+    #     return JsonResponse(status=200, data={})
+    # return JsonResponse(status=500, data={'errors': form.errors})
+    return JsonResponse(status=500, data={})
 
 
 #

@@ -5,17 +5,16 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import Q, F, Count, Max, Subquery, OuterRef, Value
 from django.db.models.functions import Concat
-from django.forms import MultipleChoiceField, ChoiceField, Form, CharField
+from django.forms import MultipleChoiceField, ChoiceField, Form
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from django_countries import countries
 
-from conferences.models import Conference, ProceedingVolume, ArtifactDescriptor
+from conferences.models import Conference, ArtifactDescriptor
 from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput
-from review.models import Reviewer, Review, DecisionOLD, ReviewStats
-from review.utilities import get_average_score, count_required_reviews, \
-    review_finished
+from review.models import Reviewer, Review, ReviewStats
+from review.utilities import get_average_score
 from submissions.models import Submission, Artifact
 from users.models import Profile
 
@@ -647,170 +646,170 @@ class AssignReviewerForm(forms.Form):
         return review
 
 
-class FilterReviewsForm(Form):
-    Q1 = 'Q1'
-    Q2 = 'Q2'
-    Q3 = 'Q3'
-    Q4 = 'Q4'
-    QUARTILES_CHOICES = (
-        (Q1, _('Q1 (lowest 25%)')), (Q2, 'Q2'), (Q3, 'Q3'),
-        (Q4, _('Q4 (top 25%)')))
-
-    REVIEW_COMPLETED = 'COMPLETED'
-    REVIEW_ASSIGNED_INCOMPLETE = 'ASSIGNED_INCOMPLETE'
-    REVIEW_NOT_ASSIGNED = 'NOT_ASSIGNED'
-    COMPLETION_CHOICES = (
-        (REVIEW_COMPLETED, _('All reviews assigned and completed')),
-        (REVIEW_ASSIGNED_INCOMPLETE,
-         _('All reviews assigned, but some not finished')),
-        (REVIEW_NOT_ASSIGNED,
-         _('One or more reviewer not assigned')))
-
-    term = CharField(required=False)
-
-    quartiles = MultipleChoiceField(
-        choices=QUARTILES_CHOICES, widget=CustomCheckboxSelectMultiple,
-        required=False)
-
-    decisions = MultipleChoiceField(
-        choices=DecisionOLD.DECISION_CHOICES, widget=CustomCheckboxSelectMultiple,
-        required=False)
-
-    completion = MultipleChoiceField(
-        choices=COMPLETION_CHOICES, widget=CustomCheckboxSelectMultiple,
-        required=False)
-
-    status = MultipleChoiceField(
-        choices=Submission.STATUS_CHOICE, widget=CustomCheckboxSelectMultiple,
-        required=False)
-
-    proc_types = forms.MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False,
-    )
-
-    sub_types = forms.MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False
-    )
-
-    volumes = forms.MultipleChoiceField(
-        widget=CustomCheckboxSelectMultiple, required=False
-    )
-
-    def __init__(self, *args, instance=None, **kwargs):
-        if not isinstance(instance, Conference):
-            raise TypeError(
-                f'expected Conference instance, {type(instance)} found')
-        super().__init__(*args, **kwargs)
-        self.instance = instance
-        self.fields['proc_types'].choices = [('', 'Undefined')] + [
-            (pt.pk, pt.name) for pt in self.instance.proceedingtype_set.all()
-        ]
-        self.fields['sub_types'].choices = [('', 'Undefined')] + [
-            (st.pk, st.name) for st in self.instance.submissiontype_set.all()
-        ]
-        self.fields['volumes'].choices = [('', 'Undefined')] + [
-            (vol.pk, vol.name) for vol in
-            ProceedingVolume.objects.filter(type__conference=self.instance)]
-
-    def apply_quartiles(self, submissions):
-        quartiles = self.cleaned_data['quartiles']
-        if quartiles:
-            stats, _ = ReviewStats.objects.get_or_create(
-                conference=self.instance)
-            scores = {sub: get_average_score(sub) for sub in submissions}
-            if self.Q1 not in quartiles:
-                submissions = [
-                    sub for sub in submissions if scores[sub] >= stats.q1_score]
-            if self.Q2 not in quartiles:
-                submissions = [sub for sub in submissions
-                               if scores[sub] < stats.q1_score
-                               or scores[sub] >= stats.median_score]
-            if self.Q3 not in quartiles:
-                submissions = [sub for sub in submissions
-                               if scores[sub] < stats.median_score
-                               or scores[sub] >= stats.q3_score]
-            if self.Q4 not in quartiles:
-                submissions = [sub for sub in submissions
-                               if scores[sub] < stats.q3_score]
-        return submissions
-
-    def apply_decisions(self, submissions):
-        selected = self.cleaned_data['decisions']
-        if selected:
-            decisions = {
-                sub: getattr(sub.old_decision.first(), 'decision', None)
-                for sub in submissions
-            }
-            allow_undefined = DecisionOLD.UNDEFINED in selected
-            submissions = [sub for sub in submissions
-                           if ((not decisions[sub] and allow_undefined) or
-                               (decisions[sub] in selected))]
-        return submissions
-
-    def apply_completion(self, submissions):
-        selected = self.cleaned_data['completion']
-        cached_stypes = {
-            st.pk: st for st in self.instance.submissiontype_set.all()}
-
-        def get_completion(submission):
-            if review_finished(submission, cached_stypes=cached_stypes):
-                return self.REVIEW_COMPLETED
-            nr = count_required_reviews(submission, cached_stypes=cached_stypes)
-            if submission.reviews.count() < nr:
-                return self.REVIEW_NOT_ASSIGNED
-            return self.REVIEW_ASSIGNED_INCOMPLETE
-
-        if selected:
-            submissions = [sub for sub in submissions
-                           if get_completion(sub) in selected]
-        return submissions
-
-    def apply_status(self, submissions):
-        selected = self.cleaned_data['status']
-        if selected:
-            submissions = [sub for sub in submissions
-                           if sub.status in selected]
-        return submissions
-
-    def apply_proc_types(self, submissions):
-        selected = clean_data_to_int(self.cleaned_data['proc_types'])
-        if selected:
-            proc_types = {
-                sub: getattr(sub.old_decision.first(), 'proc_type_id', None)
-                for sub in submissions
-            }
-            submissions = [sub for sub in submissions
-                           if proc_types[sub] in selected]
-        return submissions
-
-    def apply_sub_types(self, submissions):
-        selected = clean_data_to_int(self.cleaned_data['sub_types'])
-        if selected:
-            submissions = [sub for sub in submissions
-                           if sub.stype_id in selected]
-        return submissions
-
-    def apply_volumes(self, submissions):
-        selected = clean_data_to_int(self.cleaned_data['volumes'])
-        if selected:
-            volumes = {
-                sub: getattr(sub.old_decision.first(), 'volume_id', None)
-                for sub in submissions
-            }
-            submissions = [sub for sub in submissions
-                           if volumes[sub] in selected]
-        return submissions
-
-    def apply(self, submissions):
-        submissions = search_submissions(submissions, self.cleaned_data['term'])
-        submissions = self.apply_quartiles(submissions)
-        submissions = self.apply_decisions(submissions)
-        submissions = self.apply_completion(submissions)
-        submissions = self.apply_status(submissions)
-        submissions = self.apply_proc_types(submissions)
-        submissions = self.apply_sub_types(submissions)
-        submissions = self.apply_volumes(submissions)
-        return submissions
+# class FilterReviewsForm(Form):
+#     Q1 = 'Q1'
+#     Q2 = 'Q2'
+#     Q3 = 'Q3'
+#     Q4 = 'Q4'
+#     QUARTILES_CHOICES = (
+#         (Q1, _('Q1 (lowest 25%)')), (Q2, 'Q2'), (Q3, 'Q3'),
+#         (Q4, _('Q4 (top 25%)')))
+#
+#     REVIEW_COMPLETED = 'COMPLETED'
+#     REVIEW_ASSIGNED_INCOMPLETE = 'ASSIGNED_INCOMPLETE'
+#     REVIEW_NOT_ASSIGNED = 'NOT_ASSIGNED'
+#     COMPLETION_CHOICES = (
+#         (REVIEW_COMPLETED, _('All reviews assigned and completed')),
+#         (REVIEW_ASSIGNED_INCOMPLETE,
+#          _('All reviews assigned, but some not finished')),
+#         (REVIEW_NOT_ASSIGNED,
+#          _('One or more reviewer not assigned')))
+#
+#     term = CharField(required=False)
+#
+#     quartiles = MultipleChoiceField(
+#         choices=QUARTILES_CHOICES, widget=CustomCheckboxSelectMultiple,
+#         required=False)
+#
+#     decisions = MultipleChoiceField(
+#         choices=ReviewDecisionType.CHOICES, widget=CustomCheckboxSelectMultiple,
+#         required=False)
+#
+#     completion = MultipleChoiceField(
+#         choices=COMPLETION_CHOICES, widget=CustomCheckboxSelectMultiple,
+#         required=False)
+#
+#     status = MultipleChoiceField(
+#         choices=Submission.STATUS_CHOICE, widget=CustomCheckboxSelectMultiple,
+#         required=False)
+#
+#     proc_types = forms.MultipleChoiceField(
+#         widget=CustomCheckboxSelectMultiple, required=False,
+#     )
+#
+#     sub_types = forms.MultipleChoiceField(
+#         widget=CustomCheckboxSelectMultiple, required=False
+#     )
+#
+#     volumes = forms.MultipleChoiceField(
+#         widget=CustomCheckboxSelectMultiple, required=False
+#     )
+#
+#     def __init__(self, *args, instance=None, **kwargs):
+#         if not isinstance(instance, Conference):
+#             raise TypeError(
+#                 f'expected Conference instance, {type(instance)} found')
+#         super().__init__(*args, **kwargs)
+#         self.instance = instance
+#         self.fields['proc_types'].choices = [('', 'Undefined')] + [
+#             (pt.pk, pt.name) for pt in self.instance.proceedingtype_set.all()
+#         ]
+#         self.fields['sub_types'].choices = [('', 'Undefined')] + [
+#             (st.pk, st.name) for st in self.instance.submissiontype_set.all()
+#         ]
+#         self.fields['volumes'].choices = [('', 'Undefined')] + [
+#             (vol.pk, vol.name) for vol in
+#             ProceedingVolume.objects.filter(type__conference=self.instance)]
+#
+#     def apply_quartiles(self, submissions):
+#         quartiles = self.cleaned_data['quartiles']
+#         if quartiles:
+#             stats, _ = ReviewStats.objects.get_or_create(
+#                 conference=self.instance)
+#             scores = {sub: get_average_score(sub) for sub in submissions}
+#             if self.Q1 not in quartiles:
+#                 submissions = [
+#                     sub for sub in submissions if scores[sub] >= stats.q1_score]
+#             if self.Q2 not in quartiles:
+#                 submissions = [sub for sub in submissions
+#                                if scores[sub] < stats.q1_score
+#                                or scores[sub] >= stats.median_score]
+#             if self.Q3 not in quartiles:
+#                 submissions = [sub for sub in submissions
+#                                if scores[sub] < stats.median_score
+#                                or scores[sub] >= stats.q3_score]
+#             if self.Q4 not in quartiles:
+#                 submissions = [sub for sub in submissions
+#                                if scores[sub] < stats.q3_score]
+#         return submissions
+#
+#     def apply_decisions(self, submissions):
+#         selected = self.cleaned_data['decisions']
+#         if selected:
+#             decisions = {
+#                 sub: getattr(sub.old_decision.first(), 'decision', None)
+#                 for sub in submissions
+#             }
+#             allow_undefined = DecisionOLD.UNDEFINED in selected
+#             submissions = [sub for sub in submissions
+#                            if ((not decisions[sub] and allow_undefined) or
+#                                (decisions[sub] in selected))]
+#         return submissions
+#
+#     def apply_completion(self, submissions):
+#         selected = self.cleaned_data['completion']
+#         cached_stypes = {
+#             st.pk: st for st in self.instance.submissiontype_set.all()}
+#
+#         def get_completion(submission):
+#             if review_finished(submission, cached_stypes=cached_stypes):
+#                 return self.REVIEW_COMPLETED
+#             nr = count_required_reviews(submission, cached_stypes=cached_stypes)
+#             if submission.reviews.count() < nr:
+#                 return self.REVIEW_NOT_ASSIGNED
+#             return self.REVIEW_ASSIGNED_INCOMPLETE
+#
+#         if selected:
+#             submissions = [sub for sub in submissions
+#                            if get_completion(sub) in selected]
+#         return submissions
+#
+#     def apply_status(self, submissions):
+#         selected = self.cleaned_data['status']
+#         if selected:
+#             submissions = [sub for sub in submissions
+#                            if sub.status in selected]
+#         return submissions
+#
+#     def apply_proc_types(self, submissions):
+#         selected = clean_data_to_int(self.cleaned_data['proc_types'])
+#         if selected:
+#             proc_types = {
+#                 sub: getattr(sub.old_decision.first(), 'proc_type_id', None)
+#                 for sub in submissions
+#             }
+#             submissions = [sub for sub in submissions
+#                            if proc_types[sub] in selected]
+#         return submissions
+#
+#     def apply_sub_types(self, submissions):
+#         selected = clean_data_to_int(self.cleaned_data['sub_types'])
+#         if selected:
+#             submissions = [sub for sub in submissions
+#                            if sub.stype_id in selected]
+#         return submissions
+#
+#     def apply_volumes(self, submissions):
+#         selected = clean_data_to_int(self.cleaned_data['volumes'])
+#         if selected:
+#             volumes = {
+#                 sub: getattr(sub.old_decision.first(), 'volume_id', None)
+#                 for sub in submissions
+#             }
+#             submissions = [sub for sub in submissions
+#                            if volumes[sub] in selected]
+#         return submissions
+#
+#     def apply(self, submissions):
+#         submissions = search_submissions(submissions, self.cleaned_data['term'])
+#         submissions = self.apply_quartiles(submissions)
+#         submissions = self.apply_decisions(submissions)
+#         submissions = self.apply_completion(submissions)
+#         submissions = self.apply_status(submissions)
+#         submissions = self.apply_proc_types(submissions)
+#         submissions = self.apply_sub_types(submissions)
+#         submissions = self.apply_volumes(submissions)
+#         return submissions
 
 
 class ExportSubmissionsForm(Form):
