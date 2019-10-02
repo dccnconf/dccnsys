@@ -15,7 +15,7 @@ from conferences.models import Conference, ArtifactDescriptor
 from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput
 from review.models import Reviewer, Review, ReviewStats
 from review.utilities import get_average_score
-from submissions.models import Submission, Artifact
+from submissions.models import Submission, Attachment
 from users.models import Profile
 
 User = get_user_model()
@@ -336,7 +336,7 @@ class FilterSubmissionsForm(forms.ModelForm):
         descriptors = [int(x) for x in data if x]
         for desc_pk in descriptors:
             disjuncts.append(Q(artifacts__in=Subquery(
-                Artifact.objects.filter(
+                Attachment.objects.filter(
                     descriptor=desc_pk, submission=OuterRef('pk')
                 ).exclude(file='').values('pk')),
                 old_decision__proc_type__artifacts=desc_pk))

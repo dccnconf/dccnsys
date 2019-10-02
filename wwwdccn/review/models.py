@@ -180,6 +180,11 @@ class ReviewDecision(Model):
     stage = OneToOneField(ReviewStage, on_delete=CASCADE,
                           related_name='decision')
 
+    # def save(self, *args, **kwargs):
+    #     super().save(*args, **kwargs)
+    #     status = self.stage.submission.status
+    #     # if status ==
+
 
 @receiver(post_save, sender=Submission)
 def create_artifacts_after_submission_accepted(sender, instance, **kwargs):

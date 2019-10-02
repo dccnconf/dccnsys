@@ -6,8 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from conferences.models import Topic, SubmissionType, Conference, \
-    ArtifactDescriptor
+from conferences.models import Topic, SubmissionType, Conference
 
 User = get_user_model()
 
@@ -201,65 +200,63 @@ class Author(models.Model):
                f'submission={self.submission.pk}, order={self.order}'
 
 
-def get_artifact_full_path(instance, filename):
+def get_attachment_full_path(instance, filename):
     ext = filename.split('.')[-1]
     root = settings.MEDIA_PRIVATE_ROOT
     cpk = instance.submission.conference_id if \
         instance.submission and instance.submission.conference \
         else 'unknown_conf'
-    code = instance.descriptor.code if \
-        instance.descriptor and instance.descriptor.code else 'final'
+    code = instance.code if instance.code else 'final'
     path = f'{root}/{cpk}/submissions'
     name = f'SID{instance.pk:05d}_{code}'
     ret = f'{path}/{name}.{ext}'
     return ret
 
 
-class Artifact(Model):
-    class Meta:
-        ordering = ['descriptor_id']
+class Attachment(Model):
+    INACTIVE = 'NO'
+    READONLY = 'RO'
+    READWRITE = 'RW'
+    ACCESS_CHOICES = (
+        (INACTIVE, 'Inactive (no access)'),
+        (READONLY, 'Read only'),
+        (READWRITE, 'Read and write'),
+    )
 
-    submission = ForeignKey(Submission, related_name='artifacts',
+    class Meta:
+        ordering = ['id']
+
+    submission = ForeignKey(Submission, related_name='attachments',
                             on_delete=CASCADE)
-    descriptor = ForeignKey(ArtifactDescriptor, related_name='instances',
-                            on_delete=CASCADE)
-    file = models.FileField(upload_to=get_artifact_full_path, blank=True)
+
+    file = models.FileField(upload_to=get_attachment_full_path, blank=True)
+
+    access = models.CharField(choices=ACCESS_CHOICES, max_length=2,
+                              default=READWRITE)
+
+    code = models.CharField(max_length=32, blank=True, default='')
+
+    name = models.CharField(max_length=256, blank=True, default='')
+
+    label = models.CharField(max_length=256, blank=True, default='')
 
     @property
     def is_active(self):
-        proc_type = self.descriptor.proc_type
-        rev_stage = self.submission.reviewstage_set.first()
-        decision_type = rev_stage.decision_type if rev_stage else None
-
-        # If there is not actual decision, or artifact proceedings doesn't
-        # match the allowed by the review decision, artifact is inactive:
-        if not decision_type or (
-                proc_type not in decision_type.allowed_proceedings.all()):
-            return False
-
-        # If review decision exists and artifact proceedings type is one of
-        # allowed by the decision, then activity of the artifact depends
-        # solely on the submission status:
-        return self.submission.status in {
-            Submission.ACCEPTED, Submission.IN_PRINT, Submission.PUBLISHED}
-
-    @property
-    def name(self):
-        return self.descriptor.name if self.descriptor else ''
+        return self.access != self.INACTIVE
 
     def get_file_name(self):
         if self.file:
             return os.path.basename(self.file.file.name)
         return ''
 
+    def __str__(self):
+        return f'Attachment "{self.name}" of submission #{self.submission_id}'
+
     def get_chair_download_name(self):
         if self.file:
             original_filename = self.get_file_name()
             ext = original_filename.split('.')[-1]
-            code = self.descriptor.code
+            code = self.code
             name = f'FIN{self.submission_id:05d}_{code}.{ext}'
             return name
         return ''
-
-    def __str__(self):
-        return f'Artifact "{self.name}" of submission #{self.submission_id}'

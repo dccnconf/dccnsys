@@ -1,8 +1,6 @@
 from django.db import migrations
 from django.db.models import F
 
-from review.utilities import get_average_score
-
 
 def average(values):
     values = [value for value in values if value is not None]
@@ -16,7 +14,7 @@ def get_score(review):
     return average(scores)
 
 
-# noinspection PyPep8Naming
+# noinspection PyPep8Naming,PyUnusedLocal
 def insert_review_stage(apps, schema_editor):
     Submission = apps.get_model('submissions', 'Submission')
     ReviewStage = apps.get_model('review', 'ReviewStage')

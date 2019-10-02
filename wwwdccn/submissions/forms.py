@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 
 from gears.widgets import CustomFileInput
-from .models import Submission, Author, Artifact
+from .models import Submission, Author, Attachment
 
 User = get_user_model()
 
@@ -258,7 +258,7 @@ class InviteAuthorForm(forms.Form):
 
 class UploadArtifactForm(ModelForm):
     class Meta:
-        model = Artifact
+        model = Attachment
         fields = ['file']
 
     def has_file(self):

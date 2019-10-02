@@ -14,7 +14,7 @@ from submissions.forms import CreateSubmissionForm, SubmissionDetailsForm, \
     AuthorCreateForm, AuthorsReorderForm, AuthorDeleteForm, \
     UploadReviewManuscriptForm, InviteAuthorForm, UploadArtifactForm, \
     UpdateSubmissionStatusForm
-from submissions.models import Submission, Author, Artifact
+from submissions.models import Submission, Author, Attachment
 from submissions.utilities import is_authorized_edit, \
     is_authorized_view_artifact
 
@@ -292,7 +292,7 @@ def camera_ready(request, pk):
 @require_GET
 def artifact_download(request, pk, art_pk):
     submission = get_object_or_404(Submission, pk=pk)
-    artifact = Artifact.objects.get(pk=art_pk)
+    artifact = Attachment.objects.get(pk=art_pk)
     if not is_authorized_view_artifact(request.user, submission):
         return HttpResponseForbidden()
     if artifact.file:
@@ -309,7 +309,7 @@ def artifact_download(request, pk, art_pk):
 @require_POST
 def artifact_upload(request, pk, art_pk):
     submission = get_object_or_404(Submission, pk=pk)
-    artifact = get_object_or_404(Artifact, pk=art_pk)
+    artifact = get_object_or_404(Attachment, pk=art_pk)
     if not is_authorized_edit(request.user, submission):
         return HttpResponseForbidden()
     form = UploadArtifactForm(request.POST, request.FILES, instance=artifact)
@@ -350,7 +350,7 @@ def artifact_upload(request, pk, art_pk):
 @require_POST
 def artifact_delete(request, pk, art_pk):
     submission = get_object_or_404(Submission, pk=pk)
-    artifact = get_object_or_404(Artifact, pk=art_pk)
+    artifact = get_object_or_404(Attachment, pk=art_pk)
     if not is_authorized_edit(request.user, submission):
         return HttpResponseForbidden()
     file_name = artifact.get_file_name()

@@ -19,7 +19,7 @@ from conferences.models import Conference
 from review.models import Review, ReviewStats
 from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
     AuthorDeleteForm, AuthorsReorderForm, InviteAuthorForm
-from submissions.models import Submission, Artifact
+from submissions.models import Submission, Attachment
 
 
 def submission_view(params='submission'):
@@ -391,7 +391,7 @@ def delete_review(request, submission, rev_pk):
 #
 @require_GET
 def artifact_download(request, art_pk):
-    artifact = get_object_or_404(Artifact, pk=art_pk)
+    artifact = get_object_or_404(Attachment, pk=art_pk)
     validate_chair_access(request.user, artifact.submission.conference)
     if artifact.file:
         filename = artifact.get_chair_download_name()
