@@ -183,16 +183,7 @@ def download_manuscript(request, pk):
 @login_required
 def submission_overview(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
-    decision = submission.old_decision.first()
-    if submission.status == 'SUBMIT':
-        deadline = submission.conference.submission_stage.end_date
-    elif submission.status == 'REVIEW':
-        deadline = submission.conference.review_stage.end_date
-    elif (submission.status == Submission.ACCEPTED and
-          decision and decision.proc_type):
-        deadline = decision.proc_type.final_manuscript_deadline
-    else:
-        deadline = ''
+    deadline = ''
 
     # If the overview page is visited for the first time, we display finish
     # flag. For the following visits, show close:

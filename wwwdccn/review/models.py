@@ -1,13 +1,10 @@
 import statistics
 
-from django.conf import settings
-from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Model, CharField, ForeignKey, CASCADE, SET_NULL, \
-    BooleanField, IntegerField, FloatField, OneToOneField, ManyToManyField
+    IntegerField, FloatField, OneToOneField, ManyToManyField
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 
 from conferences.models import Conference, ProceedingType, ProceedingVolume, \
@@ -24,6 +21,21 @@ class ReviewStage(Model):
 
     def get_num_missing_reviews(self):
         return max(0, self.num_reviews_required - self.review_set.count())
+
+    def update_score(self, commit=True):
+        scores = [review.average_score() for review in self.review_set.all()]
+        scores = [x for x in scores if x]
+        prev_score = self.score
+        new_score = sum(scores) / len(scores) if scores else None
+        self.score = new_score
+        if commit and prev_score != new_score:
+            self.save()
+
+    @property
+    def decision_type(self):
+        if not hasattr(self, 'decision'):
+            return None
+        return self.decision.decision_type
 
 
 # Create your models here.
@@ -104,7 +116,7 @@ class Review(models.Model):
         }
 
     def missing_score_fields(self):
-        return tuple(k for k, v in self.score_fields().items() if v == '')
+        return tuple(k for k, v in self.score_fields().items() if v is None)
 
     def all_scores_filled(self):
         return self.num_scores_missing() == 0
@@ -137,49 +149,17 @@ class Review(models.Model):
         return sum(values) / len(values) if values else 0
 
 
+@receiver([post_save, post_delete], sender=Review)
+def update_average_score_after_review_save(sender, instance, **kwargs):
+    """Whenever a Review is updated or deleted, its owner should
+    recompute the average score.
+    """
+    instance.stage.update_score(commit=True)
+
+
 def check_review_details(value, submission_type):
     num_words = len(value.split())
     return num_words >= submission_type.min_num_words_in_review
-
-
-def _send_email(user, review, subject, template_html, template_plain):
-    profile = user.profile
-    context = {
-        'email': user.email,
-        'first_name': profile.first_name,
-        'last_name': profile.last_name,
-        'review': review,
-        'protocol': settings.SITE_PROTOCOL,
-        'domain': settings.SITE_DOMAIN,
-        'deadline': review.paper.conference.review_stage.end_date,
-    }
-    html = render_to_string(template_html, context)
-    text = render_to_string(template_plain, context)
-    send_mail(subject, message=text, html_message=html,
-              recipient_list=[user.email],
-              from_email=settings.DEFAULT_FROM_EMAIL, fail_silently=False)
-
-
-# # noinspection PyUnusedLocal
-# @receiver(post_save, sender=Review)
-# def create_review(sender, instance, created, **kwargs):
-#     if created:
-#         assert isinstance(instance, Review)
-#         _send_email(
-#             instance.reviewer.user, instance,
-#             f"[DCCN2019] Review assignment for submission #{instance.paper.pk}",
-#             template_html='review/email/start_review.html',
-#             template_plain='review/email/start_review.txt')
-
-
-# # noinspection PyUnusedLocal
-# @receiver(post_delete, sender=Review)
-# def delete_review(sender, instance, **kwargs):
-#     _send_email(
-#         instance.reviewer.user, instance,
-#         f"[DCCN2019] Review cancelled for submission #{instance.paper.pk}",
-#         template_html='review/email/cancel_review.html',
-#         template_plain='review/email/cancel_review.txt')
 
 
 class ReviewDecisionType(Model):
@@ -320,3 +300,45 @@ def update_statistics(sender, instance, **kwargs):
     conference = instance.paper.conference
     stats, _ = ReviewStats.objects.get_or_create(conference=conference)
     stats.update_stats()
+
+
+# def _send_email(user, review, subject, template_html, template_plain):
+#     profile = user.profile
+#     context = {
+#         'email': user.email,
+#         'first_name': profile.first_name,
+#         'last_name': profile.last_name,
+#         'review': review,
+#         'protocol': settings.SITE_PROTOCOL,
+#         'domain': settings.SITE_DOMAIN,
+#         'deadline': review.paper.conference.review_stage.end_date,
+#     }
+#     html = render_to_string(template_html, context)
+#     text = render_to_string(template_plain, context)
+#     send_mail(subject, message=text, html_message=html,
+#               recipient_list=[user.email],
+#               from_email=settings.DEFAULT_FROM_EMAIL, fail_silently=False)
+
+
+# # noinspection PyUnusedLocal
+# @receiver(post_save, sender=Review)
+# def create_review(sender, instance, created, **kwargs):
+#     if created:
+#         assert isinstance(instance, Review)
+#         _send_email(
+#             instance.reviewer.user, instance,
+#             f"[DCCN2019] Review assignment for submission #{instance.paper.pk}",
+#             template_html='review/email/start_review.html',
+#             template_plain='review/email/start_review.txt')
+
+
+# # noinspection PyUnusedLocal
+# @receiver(post_delete, sender=Review)
+# def delete_review(sender, instance, **kwargs):
+#     _send_email(
+#         instance.reviewer.user, instance,
+#         f"[DCCN2019] Review cancelled for submission #{instance.paper.pk}",
+#         template_html='review/email/cancel_review.html',
+#         template_plain='review/email/cancel_review.txt')
+
+

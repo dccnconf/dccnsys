@@ -67,13 +67,49 @@ def quality_color(quality):
 @register.filter
 def average_score(obj):
     score = get_average_score(obj)
-    if score == 0:
+    if score == 0 or score is None:
         return ''
     return '{:.1f}'.format(score)
 
 
 @register.filter
 def missing_reviews(submission):
-    num_required = submission.stype.num_reviews if submission.stype else 0
-    num_existing = submission.reviews.count()
-    return ['-' for _ in range(max(num_required - num_existing, 0))]
+    stage = submission.reviewstage_set.first()
+    num_missing = stage.get_num_missing_reviews() if stage else 0
+    return ['-' for _ in range(num_missing)]
+
+
+@register.filter
+def review_decision_of(submission):
+    stage = submission.reviewstage_set.first()
+    return getattr(stage, 'decision', None)
+
+
+@register.filter
+def reviews_of(submission):
+    stage = submission.reviewstage_set.first()
+    if stage:
+        return stage.review_set.all()
+    return []
+
+
+@register.filter
+def review_decision_is(decision, accept_or_reject):
+    if not decision:
+        return False
+    d = decision.decision_type.decision
+    query = accept_or_reject.lower()
+    return (('accept' in query and d == ReviewDecisionType.ACCEPT)
+            or ('reject' in query and d == ReviewDecisionType.REJECT))
+
+
+@register.filter
+def review_decision_color(decision):
+    if not decision:
+        return 'secondary'
+    d = decision.decision_type.decision
+    if d == ReviewDecisionType.ACCEPT:
+        return 'success'
+    elif d == ReviewDecisionType.REJECT:
+        return 'danger'
+    return 'warning'

@@ -7,6 +7,8 @@ from submissions.models import Submission
 
 
 def camera_editable(submission):
+    stage = submission.reviewstage_set.first()
+    end_dates = []
     decision = submission.old_decision.first()
     proc_type = getattr(decision, 'proc_type', None)
     end_date = getattr(proc_type, 'final_manuscript_deadline', None)
@@ -96,10 +98,11 @@ def get_proc_type(submission):
     :return: `ProcType` instance, or `None`
     """
     status = submission.status
-    decision = submission.old_decision.first()
-    if decision and status in {Submission.ACCEPTED, Submission.IN_PRINT,
-                               Submission.PUBLISHED}:
-        return decision.proc_type
+    rev_stage = submission.reviewstage_set.first()
+    decision_type = rev_stage.decision.decision_type if rev_stage else None
+    if decision_type and status in {Submission.ACCEPTED, Submission.IN_PRINT,
+                                    Submission.PUBLISHED}:
+        return decision_type.description
     return None
 
 

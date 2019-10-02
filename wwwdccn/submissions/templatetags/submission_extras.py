@@ -35,9 +35,9 @@ def countries(submission):
     return get_countries_of(submission)
 
 
-@register.filter
-def camera_editable(submission):
-    return utilities.camera_editable(submission)
+# @register.filter
+# def camera_editable(submission):
+#     return utilities.camera_editable(submission)
 
 
 @register.filter

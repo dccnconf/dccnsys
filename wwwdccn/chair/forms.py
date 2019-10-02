@@ -171,7 +171,7 @@ class FilterSubmissionsForm(forms.ModelForm):
             return submissions.order_by(f'{direction}title')
 
         elif order == self.ORDER_BY_SCORE:
-            #FIXME: refactor this to use pure SQL instead of Python:
+            # FIXME: refactor this to use pure SQL instead of Python:
             max_pk = max(submissions.aggregate(Max('pk'))['pk__max'], 1)
 
             def order_key(sub):
@@ -823,8 +823,8 @@ class ExportSubmissionsForm(Form):
     REVIEW_SCORE_COLUMN = 'REVIEW_SCORE'
     STATUS_COLUMN = 'STATUS'
     TOPICS_COLUMN = 'TOPICS'
-    PTYPE_COLUMN = 'PROCEEDINGS'
-    VOLUME_COLUMN = 'VOLUME'
+    # PTYPE_COLUMN = 'PROCEEDINGS'
+    # VOLUME_COLUMN = 'VOLUME'
 
     # noinspection DuplicatedCode
     COLUMNS = (
@@ -838,8 +838,8 @@ class ExportSubmissionsForm(Form):
         (REVIEW_SCORE_COLUMN, REVIEW_SCORE_COLUMN),
         (STATUS_COLUMN, STATUS_COLUMN),
         (TOPICS_COLUMN, TOPICS_COLUMN),
-        (PTYPE_COLUMN, PTYPE_COLUMN),
-        (VOLUME_COLUMN, VOLUME_COLUMN),
+        # (PTYPE_COLUMN, PTYPE_COLUMN),
+        # (VOLUME_COLUMN, VOLUME_COLUMN),
     )
 
     columns = MultipleChoiceField(
@@ -881,8 +881,8 @@ class ExportSubmissionsForm(Form):
                 status__in=self.cleaned_data['status'])
         if self.cleaned_data['countries']:
             submissions = submissions.filter(
-                authors__user__profile__country__in=
-                self.cleaned_data['countries'])
+                authors__user__profile__country__in=self.cleaned_data[
+                    'countries'])
         if self.cleaned_data['topics']:
             submissions = submissions.filter(
                 topics__in=[int(t) for t in self.cleaned_data['topics']])
@@ -904,7 +904,7 @@ class ExportSubmissionsForm(Form):
             order += 1
             record = {}
             authors = sub.authors.all().order_by('order')
-            decision = sub.old_decision.first()
+            # decision = sub.old_decision.first()
 
             if self.ORDER_COLUMN in columns:
                 record[self.ORDER_COLUMN] = order
@@ -946,15 +946,15 @@ class ExportSubmissionsForm(Form):
                 record[self.TOPICS_COLUMN] = '; '.join(sub.topics.values_list(
                     'name', flat=True))
 
-            if self.PTYPE_COLUMN in columns:
-                record[self.PTYPE_COLUMN] = (
-                    decision.proc_type.name if (decision and decision.proc_type)
-                    else '')
-
-            if self.VOLUME_COLUMN in columns:
-                record[self.VOLUME_COLUMN] = (
-                    decision.volume.name if (decision and decision.volume)
-                    else '')
+            # if self.PTYPE_COLUMN in columns:
+            #     record[self.PTYPE_COLUMN] = (
+            #         decision.proc_type.name if (decision and decision.proc_type)
+            #         else '')
+            #
+            # if self.VOLUME_COLUMN in columns:
+            #     record[self.VOLUME_COLUMN] = (
+            #         decision.volume.name if (decision and decision.volume)
+            #         else '')
 
             result.append(record)
         return result

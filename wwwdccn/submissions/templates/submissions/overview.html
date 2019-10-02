@@ -2,6 +2,7 @@
 {% load bootstrap4 %}
 {% load submission_extras %}
 {% load review_extras %}
+{% load proceedings %}
 
 {% block title %}
   Submission #{{ submission.pk }} | DCCN
@@ -12,7 +13,6 @@
 {% endblock %}
 
 {% block body %}
-{% with decision=submission.review_decision.first %}
 <main class="container py-3">
   <div class="dccn-layout-row">
 
@@ -103,118 +103,135 @@
           {% endif %}
         </div>
 
-        {% with reviews=submission.reviews.all status=submission.status %}
-        {% if decision %}
-        {% with score=submission|average_score %}
-        {% if status != submission.SUBMITTED and status != submission.UNDER_REVIEW %}
-          {###########################}
-          {# REVIEW RESULT           #}
-          {###########################}
-          <h2 class="h1 border-bottom my-3">Review Result</h2>
-          {% if reviews %}
-            <p class="dccn-text-normal-light">
-              Based on {{ reviews|length }} review{{ reviews|length|pluralize }}, your submission received score {{ score }} and was
-              <strong class="font-weight-bold {% if decision.decision == decision.ACCEPT %}text-success{% else %}text-danger{% endif %}">
-                {% if decision.decision == decision.ACCEPT %}accepted{% else %}rejected{% endif %}
-              </strong>.
-            </p>
-
-            {% if decision.decision == decision.ACCEPT %}
-              {% with proc_type=decision.proc_type %}
-                <p class="dccn-text-normal-light mt-2">
-                  You are invited to publish your manuscript in
-                  <span class="font-weight-normal">{{ proc_type.description }}</span>{% if decision.volume %},
-                  <span class="font-weight-normal">{{ decision.volume.name }}</span>{% endif %}.
-                  You need to <a href="{% url 'submissions:camera-ready' pk=submission.pk %}" class="dccn-link">upload your camera-ready version</a> before
-                  <span class="font-weight-normal">{{ proc_type.final_manuscript_deadline|date:"j F Y G:i" }}</span>.
-                </p>
-                <p class="dccn-text-normal-light mt-2">
-                  Your final manuscript must be prepared in LaTeX
-                  {% if proc_type.final_latex_template %}(<a href="{{ proc_type.final_latex_template.url }}">download template <i class="fas fa-file-download"></i></a>){% endif %}
-                  and have {{ decision.proc_type.min_num_pages }}-{{ decision.proc_type.max_num_pages }} pages.
-                </p>
-              {% endwith %}
-            {% endif %}
-
-          {% elif decision.decision == decision.REJECT and not submission.review_manuscript %}
-            <p class="dccn-text-normal-light">Your paper was <strong class="text-danger">rejected</strong> due to missing review manuscript.</p>
-          {% endif %}
-
-          {########################}
-          {# CAMERA-READY         #}
-          {########################}
-          {% if decision.decision == decision.ACCEPT %}
-            {% with artifacts=submission|artifacts_of %}
-              <h2 class="h1 border-bottom my-3">Camera-ready</h2>
-
-              <p class="my-3 dccn-text-normal-light">
-                To finish your submission, please provide the following file{{ artifacts|length|pluralize }}.
-                Note that files marked <span class="badge badge-light border border-dark text-dark">mandatory</span>
-                <span class="font-weight-normal">must be provided</span>, otherwise your paper will not be published.
-              </p>
-
-              {% for artifact in artifacts %}
-                {% with ad=artifact.descriptor %}
-                  <div class="d-flex align-items-center">
-                    <h3 class="h3">{% if artifacts|length > 1 %}{{ forloop.counter }}. {% endif %}{{ artifact.name }}</h3>
-                    <div class="ml-auto badge badge-dark text-light">{% if ad.mandatory %}mandatory{% else %}optional{% endif %}</div>
-                  </div>
-                  <p class="dccn-text-small font-italic">
-                    {{ ad.description }} ({{ ad.get_file_type_display }}, up to {{ ad.max_size_mb }} MB).
-                    {% if ad.materials_url %}Additional materials available at: <a href="{{ ad.materials_url }}" class="dccn-link">{{ ad.materials_url }}</a>{% endif %}
+        {% with reviews=submission|reviews_of status=submission.status decision=submission|review_decision_of %}
+          {% if decision %}
+            {% with score=submission|average_score accepted=decision|review_decision_is:"accept" rejected=decision|review_decision_is:"reject" %}
+              {% if status != submission.SUBMITTED and status != submission.UNDER_REVIEW %}
+                {###########################}
+                {# REVIEW RESULT           #}
+                {###########################}
+                <h2 class="h1 border-bottom my-3">Review Result</h2>
+                {% if not rejected or submission.review_manuscript %}
+                  <p class="dccn-text-normal-light">
+                    {% if reviews %}
+                      <span>Based on {{ reviews|length }} review{{ reviews|length|pluralize }}, your submission received score {{ score }} and</span>
+                    {% else %}
+                      <span>Your submission</span>
+                    {% endif %}
+                    was
+                    <strong class="font-weight-bold text-{{ decision|review_decision_color }}">
+                      {% if accepted %}accepted{% else %}{% if rejected %}rejected{% else %}(undefined){% endif %}{% endif %}
+                    </strong>.
                   </p>
 
-                  {% if artifact.file %}
-                    <p class="my-3 dccn-text-0">
-                      <a href="{% url 'submissions:artifact-download' pk=submission.pk art_pk=artifact.pk %}"
-                         class="dccn-link" target="_blank">
-                        <i class="{{ artifact|file_icon_class }}"></i> {{ artifact.get_file_name }}
-                      </a>
-                    </p>
-                  {% else %}
-                    <p class="my-3 dccn-text-0 text-{% if ad.mandatory %}danger{% else %}warning-13{% endif %}">
-                      <i class="fas fa-exclamation-circle"></i> No file uploaded
-                    </p>
+                  {% if accepted %}
+                    {% with volume_assignments=submission|volume_assignments_of %}
+                      <p class="dccn-text-normal-light mt-2">You are invited to publish your manuscript in:</p>
+                      <ul>
+                        {% for va in volume_assignments %}
+                          {% with proc_type=va.proc_type volume=va.volume %}
+                          <li>
+                            <p>
+                              <span class="font-weight-normal">{{ proc_type.description }}</span>
+                              {% if volume %}
+                                <span class="font-weight-normal">{{ volume.name }}</span>
+                              {% endif %}
+                              (<a href="{% url 'submissions:camera-ready' pk=submission.pk %}" class="dccn-link">upload your camera-ready version</a>
+                              before {{ proc_type.final_manuscript_deadline|date:"j F Y G:i" }})
+                            </p>
+                            <p class="dccn-text-normal-light mt-2">
+                              Your final manuscript must be prepared in LaTeX
+                              {% if proc_type.final_latex_template %}
+                                (<a href="{{ proc_type.final_latex_template.url }}">download template <i class="fas fa-file-download"></i></a>)
+                              {% endif %}
+                              and have {{ proc_type.min_num_pages }}-{{ proc_type.max_num_pages }} pages.
+                            </p>
+                          </li>
+                          {% endwith %}
+                        {% endfor %}
+                      </ul>
+                    {% endwith %}
                   {% endif %}
 
-                  <div class="mt-3 mb-4 d-flex flex-sm-row flex-column">
-                    {% if submission|camera_editable %}
-                      <a href="{% url 'submissions:camera-ready' pk=submission.pk %}" class="dccn-link d-inline-block mr-sm-3">
-                        <i class="far fa-edit"></i> Edit
-                      </a>
-                    {% endif %}
-                  </div>
-                {% endwith %}
-              {% endfor %}
+                {% else %}
+                  <p class="dccn-text-normal-light">Your paper was <strong class="text-danger">rejected</strong> due to missing review manuscript.</p>
+                {% endif %}
+
+                {########################}
+                {# CAMERA-READY         #}
+                {########################}
+                {% if accepted %}
+                  {% with artifacts=submission|artifacts_of %}
+                    <h2 class="h1 border-bottom my-3">Camera-ready</h2>
+
+                    <p class="my-3 dccn-text-normal-light">
+                      To finish your submission, please provide the following file{{ artifacts|length|pluralize }}.
+                      Note that files marked <span class="badge badge-light border border-dark text-dark">mandatory</span>
+                      <span class="font-weight-normal">must be provided</span>, otherwise your paper will not be published.
+                    </p>
+
+                    {% for artifact in artifacts %}
+                      {% with ad=artifact.descriptor %}
+                        <div class="d-flex align-items-center">
+                          <h3 class="h3">{% if artifacts|length > 1 %}{{ forloop.counter }}. {% endif %}{{ artifact.name }}</h3>
+                          <div class="ml-auto badge badge-dark text-light">{% if ad.mandatory %}mandatory{% else %}optional{% endif %}</div>
+                        </div>
+                        <p class="dccn-text-small font-italic">
+                          {{ ad.description }} ({{ ad.get_file_type_display }}, up to {{ ad.max_size_mb }} MB).
+                          {% if ad.materials_url %}Additional materials available at: <a href="{{ ad.materials_url }}" class="dccn-link">{{ ad.materials_url }}</a>{% endif %}
+                        </p>
+
+                        {% if artifact.file %}
+                          <p class="my-3 dccn-text-0">
+                            <a href="{% url 'submissions:artifact-download' pk=submission.pk art_pk=artifact.pk %}"
+                               class="dccn-link" target="_blank">
+                              <i class="{{ artifact|file_icon_class }}"></i> {{ artifact.get_file_name }}
+                            </a>
+                          </p>
+                        {% else %}
+                          <p class="my-3 dccn-text-0 text-{% if ad.mandatory %}danger{% else %}warning-13{% endif %}">
+                            <i class="fas fa-exclamation-circle"></i> No file uploaded
+                          </p>
+                        {% endif %}
+
+                        <div class="mt-3 mb-4 d-flex flex-sm-row flex-column">
+                          {% if submission|any_proceedings_editable %}
+                            <a href="{% url 'submissions:camera-ready' pk=submission.pk %}" class="dccn-link d-inline-block mr-sm-3">
+                              <i class="far fa-edit"></i> Edit
+                            </a>
+                          {% endif %}
+                        </div>
+                      {% endwith %}
+                    {% endfor %}
+                  {% endwith %}
+                {% endif %}
+
+                {########################}
+                {# REVIEWS              #}
+                {########################}
+                <h2 class="h1 border-bottom my-3">Reviews</h2>
+                <p class="h3 font-weight-normal">Your review score: {{ score }}</p>
+
+                <canvas class="dccn-scores-bar-chart my-4 mx-auto"
+                        data-scores="{% for r in reviews %}{{ r.technical_merit }},{{ r.clarity }},{{ r.relevance }},{{ r.originality }}{% if not forloop.last %};{% endif %}{% endfor %}">
+                </canvas>
+
+                {% for review in reviews %}
+                  <h3 class="h3 mt-4 mb-2 border-bottom">Review #{{ forloop.counter }}</h3>
+                  <table class="table table-sm table-borderless">
+                    <tbody>
+                      <tr><td>Technical Merit</td><td>{{ review.technical_merit }}</td></tr>
+                      <tr><td>Clarity</td><td>{{ review.clarity }}</td></tr>
+                      <tr><td>Relevance</td><td>{{ review.relevance }}</td></tr>
+                      <tr><td>Originality</td><td>{{ review.originality }}</td></tr>
+                    </tbody>
+                  </table>
+                  <p class="dccn-text-small-light">{{ review.details }}</p>
+                {% endfor %}
+
+              {% endif %}
             {% endwith %}
           {% endif %}
-
-          {########################}
-          {# REVIEWS              #}
-          {########################}
-          <h2 class="h1 border-bottom my-3">Reviews</h2>
-          <p class="h3 font-weight-normal">Your review score: {{ score }}</p>
-
-          <canvas class="dccn-scores-bar-chart my-4 mx-auto"
-                  data-scores="{% for r in reviews %}{{ r.technical_merit }},{{ r.clarity }},{{ r.relevance }},{{ r.originality }}{% if not forloop.last %};{% endif %}{% endfor %}">
-          </canvas>
-
-          {% for review in reviews %}
-            <h3 class="h3 mt-4 mb-2 border-bottom">Review #{{ forloop.counter }}</h3>
-            <table class="table table-sm table-borderless">
-              <tbody>
-                <tr><td>Technical Merit</td><td>{{ review.technical_merit }}</td></tr>
-                <tr><td>Clarity</td><td>{{ review.clarity }}</td></tr>
-                <tr><td>Relevance</td><td>{{ review.relevance }}</td></tr>
-                <tr><td>Originality</td><td>{{ review.originality }}</td></tr>
-              </tbody>
-            </table>
-            <p class="dccn-text-small-light">{{ review.details }}</p>
-          {% endfor %}
-
-        {% endif %}
-        {% endwith %}
-        {% endif %}
         {% endwith %}
 
         <hr>
@@ -244,7 +261,6 @@
 
   </div>
 </main>
-{% endwith %}
 {% endblock %}
 
 

@@ -1,3 +1,6 @@
+from submissions.models import Submission
+
+
 def count_required_reviews(submission, cached_stypes=None):
     """Return the number of required reviews for the submission.
     If `cached_stypes` provided, it should contain a `stype.pk -> stype`
@@ -50,21 +53,21 @@ def get_average_score(obj):
 
     :return: average score or `0` if score can not be estimated.
     """
+    if isinstance(obj, Submission):
+        stage = obj.reviewstage_set.first()
+        return stage.score if stage else 0
+
     try:
         # If obj is a Review instance, just use its model method:
         return obj.average_score()
     except AttributeError:
         try:
-            # If obj is not a Review, assume that it is Submission:
-            scores = [get_average_score(rev) for rev in obj.reviews.all()]
-        except AttributeError:
-            try:
-                # If obj is not Review or Submission, assume it is
-                # a collection of either objects:
-                scores = [get_average_score(item) for item in obj]
-            except TypeError:
-                # If iterating over the object failed, treat it as a score:
-                return float(obj)
+            # If obj is not Review or Submission, assume it is
+            # a collection of either objects:
+            scores = [get_average_score(item) for item in obj]
+        except TypeError:
+            # If iterating over the object failed, treat it as a score:
+            return float(obj)
         # Finally, filter correct scores (which must be greater then zero)
         # and estimate average score on the scores of parts
         scores = [score for score in scores if score > 0]

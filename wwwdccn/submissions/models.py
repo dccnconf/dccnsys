@@ -11,7 +11,6 @@ from conferences.models import Topic, SubmissionType, Conference, \
 
 User = get_user_model()
 
-
 TITLE_MAX_LENGTH = 250
 ABSTRACT_MAX_LENGTH = 2500  # 250 words
 
@@ -135,7 +134,7 @@ class Submission(models.Model):
 
     def details_editable_by(self, user):
         return self.is_chaired_by(user) or (
-            self.is_author(user) and self.status in {'SUBMIT', 'ACCEPT'}
+                self.is_author(user) and self.status in {'SUBMIT', 'ACCEPT'}
         )
 
     def authors_editable_by(self, user):
@@ -143,15 +142,16 @@ class Submission(models.Model):
 
     def review_manuscript_editable_by(self, user):
         return self.is_chaired_by(user) or (
-            self.is_author(user) and self.status == 'SUBMIT'
+                self.is_author(user) and self.status == 'SUBMIT'
         )
 
     def is_viewable_by(self, user):
         return self.is_chaired_by(user) or self.is_author(user)
 
     def is_manuscript_viewable_by(self, user):
-        return (self.is_viewable_by(user) or
-                (self.reviews.filter(reviewer__user=user).count() > 0))
+        rev_s = self.reviewstage_set.first()
+        return self.is_viewable_by(user) or (
+                rev_s and rev_s.review_set.filter(reviewer__user=user).count())
 
     def is_deletable_by(self, user):
         return ((self.is_chaired_by(user) or self.is_author(user))
@@ -196,8 +196,9 @@ class Author(models.Model):
     )
 
     def __str__(self):
+        # noinspection PyUnresolvedReferences
         return f'Author #{self.pk}: {self.user.profile.get_full_name()}, ' \
-            f'submission={self.submission.pk}, order={self.order}'
+               f'submission={self.submission.pk}, order={self.order}'
 
 
 def get_artifact_full_path(instance, filename):
@@ -226,13 +227,21 @@ class Artifact(Model):
 
     @property
     def is_active(self):
-        decision = self.submission.old_decision.first()
-        valid_statuses = {Submission.ACCEPTED, Submission.IN_PRINT,
-                          Submission.PUBLISHED}
-        if (decision and self.submission.status in valid_statuses
-                and decision.decision == decision.ACCEPT):
-            return decision.proc_type == self.descriptor.proc_type
-        return False
+        proc_type = self.descriptor.proc_type
+        rev_stage = self.submission.reviewstage_set.first()
+        decision_type = rev_stage.decision_type if rev_stage else None
+
+        # If there is not actual decision, or artifact proceedings doesn't
+        # match the allowed by the review decision, artifact is inactive:
+        if not decision_type or (
+                proc_type not in decision_type.allowed_proceedings.all()):
+            return False
+
+        # If review decision exists and artifact proceedings type is one of
+        # allowed by the decision, then activity of the artifact depends
+        # solely on the submission status:
+        return self.submission.status in {
+            Submission.ACCEPTED, Submission.IN_PRINT, Submission.PUBLISHED}
 
     @property
     def name(self):

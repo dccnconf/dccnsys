@@ -5,7 +5,7 @@
 {######################################}
 {% load review_extras %}
 {% load submission_extras %}
-{% with decision=submission.review_decision.first quality=review_stats|quality_of:submission warnings=submission|warnings_of %}
+{% with decision=submission.reviewstage_set.first.decision quality=review_stats|quality_of:submission warnings=submission|warnings_of %}
 <div class="dccn-feed-item">
   <div class="dccn-feed-item-top">
     <div class="dccn-feed-item-label dccn-feed-item-conf mr-3">{{ submission.conference.short_name }}</div>
