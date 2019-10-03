@@ -123,7 +123,6 @@ class UploadReviewManuscriptForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        print(self.instance.review_manuscript)
         if self.instance is not None and self.instance.review_manuscript:
             self.fields['confirm_blind'].initial = 'True'
             self.fields['understand_blind_review'].initial = True

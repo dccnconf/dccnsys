@@ -372,11 +372,5 @@ def update_status(request, pk):
     form = UpdateSubmissionStatusForm(request.POST, instance=submission)
     if form.is_valid():
         form.save()
-
-        decision = submission.old_decision.first()
-        if decision and submission.status == Submission.UNDER_REVIEW:
-            decision.committed = False
-            decision.save()
-
         return JsonResponse({}, status=200)
     return JsonResponse({}, status=500)
