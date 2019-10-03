@@ -3,7 +3,7 @@
 {# * submission    #}
 {######################################}
 {% load submission_extras %}
-{% with warnings=submission|warnings_of %}
+{% with warnings=submission|submission_warnings %}
 <div class="dccn-feed-item">
   <div class="dccn-feed-item-top">
     <div class="dccn-feed-item-label dccn-feed-item-conf">{{ submission.conference.short_name }}</div>
@@ -16,7 +16,7 @@
       </div>
     {% endif %}
     <div class="dccn-feed-item-label dccn-feed-item-status">
-      Submitted <i class="fas fa-circle {{ submission|status_class }}"></i>
+      Submitted <i class="fas fa-circle text-{{ submission|submission_status_color_class }}"></i>
     </div>
   </div>
   <p class="dccn-feed-item-title">

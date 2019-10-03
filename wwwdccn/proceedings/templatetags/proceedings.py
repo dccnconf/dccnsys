@@ -7,8 +7,8 @@ register = template.Library()
 
 
 @register.filter
-def volume_assignments_of(submission):
-    return CameraReady.objects.filter(submission=submission)
+def camera_ready_set_of(submission):
+    return CameraReady.objects.filter(submission=submission, active=True)
 
 
 @register.filter

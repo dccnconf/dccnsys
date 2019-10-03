@@ -256,7 +256,7 @@ class InviteAuthorForm(forms.Form):
         )
 
 
-class UploadArtifactForm(ModelForm):
+class UploadAttachmentForm(ModelForm):
     class Meta:
         model = Attachment
         fields = ['file']

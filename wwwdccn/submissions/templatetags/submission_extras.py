@@ -1,7 +1,6 @@
 from django import template
 
 from conferences.models import ArtifactDescriptor
-from submissions import utilities
 from submissions.helpers import get_affiliations_of, get_countries_of
 from submissions.models import Submission
 from submissions.utilities import list_warnings, get_proc_type, get_volume
@@ -9,41 +8,36 @@ from submissions.utilities import list_warnings, get_proc_type, get_volume
 register = template.Library()
 
 
-@register.filter('status_class')
-def status_class(submission):
+@register.filter
+def submission_status_color_class(submission):
     status = submission.status
     if status == Submission.SUBMITTED:
-        return 'text-success-4'
+        return 'success-4'
     elif status == Submission.UNDER_REVIEW:
-        return 'text-info'
+        return 'info'
     elif status == Submission.ACCEPTED:
-        return 'text-success-12'
+        return 'success-12'
     elif status == Submission.REJECTED:
-        return 'text-danger'
+        return 'danger'
     elif status == Submission.IN_PRINT:
-        return 'text-dark-5'
+        return 'dark-5'
     return ''
 
 
 @register.filter
-def affiliations(submission):
+def submission_affiliations(submission):
     return get_affiliations_of(submission)
 
 
 @register.filter
-def countries(submission):
+def submission_countries(submission):
     return get_countries_of(submission)
 
 
-# @register.filter
-# def camera_editable(submission):
-#     return utilities.camera_editable(submission)
-
-
 @register.filter
-def artifacts_of(submission):
-    return [artifact for artifact in submission.artifacts.all()
-            if artifact.is_active]
+def submission_attachments(submission):
+    return [attachment for attachment in submission.attachments.all()
+            if attachment.is_active]
 
 
 @register.filter
@@ -72,32 +66,17 @@ def file_icon_class(artifact):
 
 
 @register.filter
-def warnings_of(submission, role='author'):
+def submission_warnings(submission, role='author'):
     """List all warnings for the submission.
 
     :param submission:
     :param role: 'author' or 'chair'
     :return:
     """
-    from submissions.models import Submission
     warnings = list_warnings(submission)
-    # if submission.status == Submission.ACCEPTED:
-    #     for artifact in artifacts_of(submission):
-    #         if artifact.descriptor.mandatory and not artifact.file:
-    #             warnings.append(f'{artifact.name} missing')
     return [w for w in warnings if role in w.visible_by]
 
 
 @register.filter
-def count_warnings(submission, role='author'):
-    return len(warnings_of(submission, role))
-
-
-@register.filter
-def proc_type_of(submission):
-    return get_proc_type(submission)
-
-
-@register.filter
-def volume_of(submission):
-    return get_volume(submission)
+def count_submission_warnings(submission, role='author'):
+    return len(submission_warnings(submission, role))

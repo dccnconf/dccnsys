@@ -12,11 +12,11 @@ from conferences.models import Conference
 from conferences.utilities import validate_chair_access
 from submissions.forms import CreateSubmissionForm, SubmissionDetailsForm, \
     AuthorCreateForm, AuthorsReorderForm, AuthorDeleteForm, \
-    UploadReviewManuscriptForm, InviteAuthorForm, UploadArtifactForm, \
+    UploadReviewManuscriptForm, InviteAuthorForm, UploadAttachmentForm, \
     UpdateSubmissionStatusForm
 from submissions.models import Submission, Author, Attachment
 from submissions.utilities import is_authorized_edit, \
-    is_authorized_view_artifact
+    is_authorized_view_attachment
 
 
 def _create_submission(request, form):
@@ -285,21 +285,22 @@ def camera_ready(request, pk):
         raise Http404
     return render(request, 'submissions/camera_ready.html', context={
         'submission': submission,
+        'editable': True,
     })
 
 
 @login_required
 @require_GET
-def artifact_download(request, pk, art_pk):
+def download_attachment(request, pk, att_pk):
     submission = get_object_or_404(Submission, pk=pk)
-    artifact = Attachment.objects.get(pk=art_pk)
-    if not is_authorized_view_artifact(request.user, submission):
+    attachment = Attachment.objects.get(pk=att_pk)
+    if not is_authorized_view_attachment(request.user, submission):
         return HttpResponseForbidden()
-    if artifact.file:
-        filename = artifact.get_file_name()
+    if attachment.file:
+        filename = attachment.get_file_name()
         mtype = mimetypes.guess_type(filename)[0]
         # TODO: add mime-type checking
-        response = HttpResponse(artifact.file.file, content_type=mtype)
+        response = HttpResponse(attachment.file.file, content_type=mtype)
         response['Content-Disposition'] = f'filename={filename}'
         return response
     raise Http404
@@ -307,28 +308,29 @@ def artifact_download(request, pk, art_pk):
 
 @login_required
 @require_POST
-def artifact_upload(request, pk, art_pk):
+def upload_attachment(request, pk, att_pk):
     submission = get_object_or_404(Submission, pk=pk)
-    artifact = get_object_or_404(Attachment, pk=art_pk)
+    attachment = get_object_or_404(Attachment, pk=att_pk)
     if not is_authorized_edit(request.user, submission):
         return HttpResponseForbidden()
-    form = UploadArtifactForm(request.POST, request.FILES, instance=artifact)
+    form = UploadAttachmentForm(
+        request.POST, request.FILES, instance=attachment)
     # We save current file (if any) for two reasons:
     # 1) if this file is not empty and user uploaded a new file, we
     #    are going to delete this old file (in case of valid form);
     #    and
     # 2) it is going to be assigned instead of TemporaryUploadedFile
     #    object in case of form validation error.
-    old_file = artifact.file.file if artifact.file else None
+    old_file = attachment.file.file if attachment.file else None
     if form.is_valid():
         # If the form is valid and user provided a new file, we
         # delete original file first. Otherwise Django will add a
         # random suffix which will break our storage strategy.
         if old_file and request.FILES:
-            artifact.file.storage.delete(old_file.name)
+            attachment.file.storage.delete(old_file.name)
         form.save()
-        messages.success(request, f'Uploaded {artifact.name} file '
-                                  f'{artifact.get_file_name()}')
+        messages.success(request, f'Uploaded {attachment.name} file '
+                                  f'{attachment.get_file_name()}')
     else:
         # If the form is invalid (e.g. title is not provided),
         # but the user tried to upload a file, a new
@@ -339,7 +341,7 @@ def artifact_upload(request, pk, art_pk):
         # is not re-written. To do it we assign the `old_file`
         # value to both cleaned_data and note.document:
         form.cleaned_data['file'] = old_file
-        artifact.file.document = old_file
+        attachment.file.document = old_file
     next_url = request.GET.get('next')
     if next_url:
         return HttpResponseRedirect(next_url)
@@ -348,15 +350,15 @@ def artifact_upload(request, pk, art_pk):
 
 @login_required
 @require_POST
-def artifact_delete(request, pk, art_pk):
+def delete_attachment(request, pk, att_pk):
     submission = get_object_or_404(Submission, pk=pk)
-    artifact = get_object_or_404(Attachment, pk=art_pk)
+    attachment = get_object_or_404(Attachment, pk=att_pk)
     if not is_authorized_edit(request.user, submission):
         return HttpResponseForbidden()
-    file_name = artifact.get_file_name()
-    if artifact.file:
-        artifact.file.delete()
-    messages.warning(request, f'Deleted {artifact.name} file {file_name}')
+    file_name = attachment.get_file_name()
+    if attachment.file:
+        attachment.file.delete()
+    messages.warning(request, f'Deleted {attachment.name} file {file_name}')
     next_url = request.GET.get('next')
     if next_url:
         return HttpResponseRedirect(next_url)

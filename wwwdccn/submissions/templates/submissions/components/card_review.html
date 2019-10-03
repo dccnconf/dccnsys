@@ -10,7 +10,7 @@
       <i class="far fa-clock"></i> <span class="font-weight-lighter">{{ submission.conference.review_stage.end_date }}</span>
     </div>
     <div class="dccn-feed-item-label dccn-feed-item-status">
-      Review <i class="fas fa-circle {{ submission|status_class }}"></i>
+      Review <i class="fas fa-circle text-{{ submission|submission_status_color_class }}"></i>
     </div>
   </div>
   <p class="dccn-feed-item-title">
