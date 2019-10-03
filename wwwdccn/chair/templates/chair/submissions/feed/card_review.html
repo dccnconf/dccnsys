@@ -14,7 +14,7 @@
 
 
 {% block rightBodyColumn %}
-  {% with reviews=submission.reviews.all %}
+  {% with reviews=submission|reviews_of %}
     <div class="ml-3 d-flex align-items-center mt-0 pt-0 mb-2">
       <div class="dccn-text-large">
         {% with score=submission|average_score quality=review_stats|quality_of:submission %}
@@ -46,9 +46,9 @@
         {% endspaceless %}
       </div>
     </div>
-    <div class="review-feed-item-controls ml-3 my-3">
-      {% include 'chair/submissions/components/_decision_control.html' with form_data=form_data sub_pk=submission.pk %}
-    </div>
+{#    <div class="review-feed-item-controls ml-3 my-3">#}
+{#      {% include 'chair/submissions/components/_decision_control.html' with form_data=form_data sub_pk=submission.pk %}#}
+{#    </div>#}
 
   {# Add modal dialogs for review preview: #}
   {% for review in reviews %}
@@ -116,7 +116,7 @@
 
 {% block footerRowItems %}
   {% if submission.stype %}
-    {% with num_required=submission.stype.num_reviews num_reviews=submission.reviews.count %}
+    {% with num_required=submission.stype.num_reviews num_reviews=submission|reviews_of %}
         <a href="{% url 'chair:submission-reviewers' sub_pk=submission.pk %}" class="dccn-feed-item-link">
           <i class="fas fa-glasses"></i> Reviewers
           (<span class="{% if num_reviews < num_required %}text-danger-12{% endif %}">{{ num_reviews }}/{{ num_required }}</span>)

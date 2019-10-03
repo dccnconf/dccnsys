@@ -108,7 +108,8 @@ def feed_item(request, submission, conference):
     # if submission.status == Submission.UNDER_REVIEW:
     #     context['form_data'] = _build_decision_form_data(submission)
     if submission.status == Submission.ACCEPTED:
-        context['decision'] = submission.old_decision.first()
+        stage = submission.reviewstage_set.first()
+        context['decision'] = stage.decision if stage else None
         # context['form_data'] = _build_decision_form_data(
         #     submission, hide_decision=True, hide_proc_type=True)
     return render(request, template_names[submission.status], context)
@@ -390,13 +391,13 @@ def delete_review(request, submission, rev_pk):
 # Overridden user methods:
 #
 @require_GET
-def artifact_download(request, art_pk):
-    artifact = get_object_or_404(Attachment, pk=art_pk)
-    validate_chair_access(request.user, artifact.submission.conference)
-    if artifact.file:
-        filename = artifact.get_chair_download_name()
+def download_attachment(request, att_pk):
+    attachment = get_object_or_404(Attachment, pk=att_pk)
+    validate_chair_access(request.user, attachment.submission.conference)
+    if attachment.file:
+        filename = attachment.get_chair_download_name()
         mtype = mimetypes.guess_type(filename)[0]
-        response = HttpResponse(artifact.file.file, content_type=mtype)
+        response = HttpResponse(attachment.file.file, content_type=mtype)
         response['Content-Disposition'] = f'filename={filename}'
         return response
     raise Http404
@@ -421,21 +422,3 @@ def compose_redirect(request, conf_pk):
     })
     url = f'{base_url}?{query_string}'
     return redirect(url)
-
-
-#
-# API
-#
-# noinspection PyUnusedLocal
-@require_POST
-@submission_view('submission')
-def start_review(request, submission):
-    if submission.status in [Submission.SUBMITTED, Submission.ACCEPTED,
-                             Submission.REJECTED]:
-        submission.status = Submission.UNDER_REVIEW
-        submission.save()
-        decision = submission.old_decision.first()
-        if decision:
-            decision.committed = False
-            decision.save()
-    return JsonResponse(data={})

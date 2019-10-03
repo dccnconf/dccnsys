@@ -3,7 +3,7 @@ from django import template
 from conferences.models import ArtifactDescriptor
 from submissions.helpers import get_affiliations_of, get_countries_of
 from submissions.models import Submission
-from submissions.utilities import list_warnings, get_proc_type, get_volume
+from submissions.utilities import list_warnings
 
 register = template.Library()
 

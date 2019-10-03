@@ -20,16 +20,16 @@
   </div>
   {# Display proceedings at the right corner: #}
   <div class="dccn-feed-item-label ml-auto badge badge-secondary p-1">
-    {{ decision.proc_type.name }}
+    {{ decision.decision_type.description }}
   </div>
 {% endblock %}
 
 
 {% block rightBodyColumn %}
   {% include 'chair/submissions/feed/_artifacts.html' with submission=submission hide_missing=False mark_mandatory=True  %}
-  <div class="ml-3 mt-3 review-feed-item-controls">
-    {% include 'chair/submissions/components/_decision_control.html' with form_data=form_data sub_pk=submission.pk %}
-  </div>
+{#  <div class="ml-3 mt-3 review-feed-item-controls">#}
+{#    {% include 'chair/submissions/components/_decision_control.html' with form_data=form_data sub_pk=submission.pk %}#}
+{#  </div>#}
 {% endblock %}
 
 

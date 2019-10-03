@@ -13,9 +13,10 @@ from django_countries import countries
 
 from conferences.models import Conference, ArtifactDescriptor
 from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput
+from proceedings.models import Artifact
 from review.models import Reviewer, Review, ReviewStats
 from review.utilities import get_average_score
-from submissions.models import Submission, Attachment
+from submissions.models import Submission
 from users.models import Profile
 
 User = get_user_model()
@@ -57,16 +58,16 @@ class FilterSubmissionsForm(forms.ModelForm):
     NO_REVIEW_MANUSCRIPT = 'NO_REVIEW_PDF'
     INCOMPLETE_REVIEWS = 'INCOMPLETE_REVIEWS'
     UNASSIGNED_REVIEWERS = 'UNASSIGNED_REVIEWERS'
-    MISSING_ARTIFACT = 'MISSING_MANDATORY_ART'
-    MISSING_OPT_ARTIFACT = 'MISSING_OPT_ART'
+    # MISSING_ARTIFACT = 'MISSING_MANDATORY_ART'
+    # MISSING_OPT_ARTIFACT = 'MISSING_OPT_ART'
     COMPLETION_CHOICES = (
         (COMPLETE_SUBMISSION, 'Everything complete'),
         (MISSING_TITLE, 'Empty submissions'),
         (NO_REVIEW_MANUSCRIPT, 'Missing review PDF'),
         (INCOMPLETE_REVIEWS, 'Incomplete reviews'),
         (UNASSIGNED_REVIEWERS, 'Unassigned reviewers'),
-        (MISSING_ARTIFACT, 'Missing mandatory artifacts'),
-        (MISSING_OPT_ARTIFACT, 'Missing optional artifacts'),
+        # (MISSING_ARTIFACT, 'Missing mandatory artifacts'),
+        # (MISSING_OPT_ARTIFACT, 'Missing optional artifacts'),
     )
 
     Q1 = 'Q1'
@@ -202,12 +203,12 @@ class FilterSubmissionsForm(forms.ModelForm):
             self.INCOMPLETE_REVIEWS:
                 Q(num_reviews_submitted__lt=F('num_reviews_assigned')) &
                 Q(status=Submission.UNDER_REVIEW),
-            self.MISSING_ARTIFACT:
-                Q(num_missing_mandatory_artifacts__gt=0) &
-                Q(status=Submission.ACCEPTED),
-            self.MISSING_OPT_ARTIFACT:
-                Q(num_missing_optional_artifacts__gt=0) &
-                Q(status=Submission.ACCEPTED),
+            # self.MISSING_ARTIFACT:
+            #     Q(num_missing_mandatory_artifacts__gt=0) &
+            #     Q(status=Submission.ACCEPTED),
+            # self.MISSING_OPT_ARTIFACT:
+            #     Q(num_missing_optional_artifacts__gt=0) &
+            #     Q(status=Submission.ACCEPTED),
         }
 
         empty = Q(title='')  # we use this often below
@@ -270,9 +271,11 @@ class FilterSubmissionsForm(forms.ModelForm):
         disjuncts = []
         proc_types = [int(x) for x in data if x]
         if proc_types:
-            disjuncts.append(Q(old_decision__proc_type__in=proc_types))
+            disjuncts.append(Q(cameraready__proc_type__in=proc_types,
+                               cameraready__active=True))
         if '' in data:
-            disjuncts.append(Q(old_decision__proc_type=None))
+            disjuncts.append(Q(cameraready__proc_type=None,
+                               cameraready__active=True))
         if disjuncts:
             self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
         return data
@@ -283,9 +286,11 @@ class FilterSubmissionsForm(forms.ModelForm):
         disjuncts = []
         volumes = [int(x) for x in data if x]
         if volumes:
-            disjuncts.append(Q(old_decision__volume__in=volumes))
+            disjuncts.append(Q(cameraready__volume__in=volumes,
+                               cameraready__active=True))
         if '' in data:
-            disjuncts.append(Q(old_decision__volume=None))
+            disjuncts.append(Q(cameraready__volume=None,
+                               cameraready__active=True))
         if disjuncts:
             self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
         return data
@@ -336,10 +341,10 @@ class FilterSubmissionsForm(forms.ModelForm):
         descriptors = [int(x) for x in data if x]
         for desc_pk in descriptors:
             disjuncts.append(Q(artifacts__in=Subquery(
-                Attachment.objects.filter(
-                    descriptor=desc_pk, submission=OuterRef('pk')
-                ).exclude(file='').values('pk')),
-                old_decision__proc_type__artifacts=desc_pk))
+                Artifact.objects.filter(
+                    descriptor=desc_pk, attachment__submission=OuterRef('pk')
+                ).exclude(attachment__file='').values('pk')),
+                cameraready__proc_type__artifacts=desc_pk))
         if disjuncts:
             self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
         return data
@@ -365,17 +370,17 @@ class FilterSubmissionsForm(forms.ModelForm):
         # - num_missing_optional_artifacts
         submissions = submissions.annotate(
             num_reviews_required=F('stype__num_reviews'),
-            num_reviews_assigned=Count('reviews', distinct=True),
-            num_reviews_submitted=Count('reviews', filter=Q(
-                reviews__submitted=True), distinct=True),
-            num_missing_mandatory_artifacts=Count('artifacts', filter=Q(
-                artifacts__file='', artifacts__descriptor__mandatory=True,
-                artifacts__descriptor__proc_type=F(
-                    'old_decision__proc_type')), distinct=True),
-            num_missing_optional_artifacts=Count('artifacts', filter=Q(
-                artifacts__file='', artifacts__descriptor__mandatory=False,
-                artifacts__descriptor__proc_type=F(
-                    'old_decision__proc_type')), distinct=True),
+            num_reviews_assigned=Count('reviewstage__review', distinct=True),
+            num_reviews_submitted=Count('reviewstage__review', filter=Q(
+                reviewstage__review__submitted=True), distinct=True),
+            # num_missing_mandatory_artifacts=Count('artifacts', filter=Q(
+            #     artifacts__file='', artifacts__descriptor__mandatory=True,
+            #     artifacts__descriptor__proc_type=F(
+            #         'old_decision__proc_type')), distinct=True),
+            # num_missing_optional_artifacts=Count('artifacts', filter=Q(
+            #     artifacts__file='', artifacts__descriptor__mandatory=False,
+            #     artifacts__descriptor__proc_type=F(
+            #         'old_decision__proc_type')), distinct=True),
         )
 
         # Secondly, we build the query from conjuncts and apply the filter:
@@ -619,9 +624,11 @@ class AssignReviewerForm(forms.Form):
     def __init__(self, *args, submission=None):
         super().__init__(*args)
         self.submission = submission
+        stage = submission.reviewstage_set.first()
+        assert stage is not None
 
         # Fill available reviewers - neither already assigned, nor authors:
-        reviews = submission.reviews.all()
+        reviews = stage.review_set.all()
         assigned_reviewers = reviews.values_list('reviewer', flat=True)
         authors_users = submission.authors.values_list('user', flat=True)
         available_reviewers = Reviewer.objects.exclude(
