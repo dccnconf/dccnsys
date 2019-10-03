@@ -105,13 +105,8 @@ def feed_item(request, submission, conference):
         Submission.IN_PRINT: 'chair/submissions/feed/card_inprint.html',
         Submission.PUBLISHED: 'chair/submissions/feed/card_published.html',
     }
-    # if submission.status == Submission.UNDER_REVIEW:
-    #     context['form_data'] = _build_decision_form_data(submission)
-    if submission.status == Submission.ACCEPTED:
-        stage = submission.reviewstage_set.first()
-        context['decision'] = stage.decision if stage else None
-        # context['form_data'] = _build_decision_form_data(
-        #     submission, hide_decision=True, hide_proc_type=True)
+    stage = submission.reviewstage_set.first()
+    context['decision'] = stage.decision if stage else None
     return render(request, template_names[submission.status], context)
 
 

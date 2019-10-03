@@ -15,6 +15,10 @@
   <div class="dccn-feed-item-label ml-2 text-{{ review_stats|quality_of:submission|quality_color }}">
     <i class="far fa-star"></i> {{ submission|average_score }}
   </div>
+  {# Display proceedings at the right corner: #}
+  <div class="dccn-feed-item-label ml-auto badge badge-secondary p-1">
+    {{ decision.decision_type.description }}
+  </div>
 {% endblock %}
 
 
