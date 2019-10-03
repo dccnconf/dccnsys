@@ -26,6 +26,19 @@ class CameraReady(Model):
                f' volume ({self.volume_id}){is_active}'
 
 
+# TODO: comment before deploy
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=Submission)
+def create_cameras_on_submission_accept(sender, instance, **kwargs):
+    assert isinstance(instance, Submission)
+    stage = instance.reviewstage_set.first()
+    decision_type = stage.decision.decision_type if stage else None
+    if decision_type and instance.status == Submission.ACCEPTED:
+        for proc_type in decision_type.allowed_proceedings:
+            instance.cameraready_set.get_or_create(
+                submission=instance, proc_type=proc_type)
+
+
 class Artifact(Model):
     camera_ready = ForeignKey(CameraReady, on_delete=SET_NULL, null=True,
                               blank=True)
@@ -42,76 +55,111 @@ class Artifact(Model):
                f"({self.descriptor_id})"
 
 
-# TODO: uncomment after deploy
-# # noinspection PyUnusedLocal
-# @receiver(post_save, sender=Artifact)
-# def create_attachment_on_new_artifact(sender, instance, created, **kwargs):
-#     assert isinstance(instance, Artifact)
-#     if created:
-#         camera = instance.camera_ready
-#         access = Attachment.INACTIVE if not camera.active else (
-#             Attachment.READWRITE if instance.descriptor.editable else
-#             Attachment.READONLY
-#         )
-#         descriptor = instance.descriptor
-#         attachment = Attachment.objects.create(
-#             submission=camera.submission_id,
-#             access=access,
-#             code=descriptor.code,
-#             name=descriptor.name,
-#             label=descriptor.description,
-#         )
-#         instance.attachment = attachment
-#         instance.save()
+# TODO: comment before deploy
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=Artifact)
+def create_attachment_on_new_artifact(sender, instance, created, **kwargs):
+    assert isinstance(instance, Artifact)
+    if created:
+        camera = instance.camera_ready
+        access = Attachment.INACTIVE if not camera.active else (
+            Attachment.READWRITE if instance.descriptor.editable else
+            Attachment.READONLY
+        )
+        descriptor = instance.descriptor
+        attachment = Attachment.objects.create(
+            submission=camera.submission_id,
+            access=access,
+            code=descriptor.code,
+            name=descriptor.name,
+            label=descriptor.description,
+        )
+        instance.attachment = attachment
+        instance.save()
 
 
-# TODO: uncomment after deploy
-# # noinspection PyUnusedLocal
-# @receiver(post_save, sender=ArtifactDescriptor)
-# def create_artifacts_on_artifact_descriptor_create(
-#         sender, instance, created, **kwargs):
-#     assert isinstance(instance, ArtifactDescriptor)
-#     if created:
-#         pt = instance.proc_type_id
-#         cameras = CameraReady.objects.filter(proc_type=instance.proc_type_id)
-#         for camera in cameras:
-#             art, created = camera.artifact_set.get_or_create(
-#                 camera_ready=camera, descriptor=instance)
+# TODO: comment before deploy
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=CameraReady)
+def create_artifacts_on_new_camera(sender, instance, created, **kwargs):
+    assert isinstance(instance, CameraReady)
+    if created:
+        descriptors = ArtifactDescriptor.objects.filter(
+            proc_type=instance.proc_type_id)
+        for descriptor in descriptors:
+            instance.artifact_set.get_or_create(
+                camera_ready=instance, descriptor=descriptor)
+
+
+# TODO: comment before deploy
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=ArtifactDescriptor)
+def create_artifacts_on_artifact_descriptor_create(
+        sender, instance, created, **kwargs):
+    assert isinstance(instance, ArtifactDescriptor)
+    if created:
+        pt = instance.proc_type_id
+        cameras = CameraReady.objects.filter(proc_type=instance.proc_type_id)
+        for camera in cameras:
+            camera.artifact_set.get_or_create(
+                camera_ready=camera, descriptor=instance)
+
+
+def _update_attachment_access(attachment, descriptor, camera):
+    access = Attachment.INACTIVE
+    if camera and camera.active:
+        access = Attachment.READWRITE if descriptor.editable else \
+            Attachment.READONLY
+    if attachment.access != access:
+        attachment.access = access
+        return True
+    return False
 
 
 # noinspection PyUnusedLocal
 @receiver(post_save, sender=ArtifactDescriptor)
-def update_attachment_on_artifact_descriptor_update(
-        sender, instance, created, **kwargs):
+def update_attachment_on_descriptor_update(sender, instance, created, **kwargs):
     assert isinstance(instance, ArtifactDescriptor)
     if not created:
         artifacts = Artifact.objects.filter(descriptor=instance)
         na = Attachment.READWRITE if instance.editable else Attachment.READONLY
         updated = []
         for art in artifacts:
-            camera = art.camera_ready
-            access = Attachment.INACTIVE
-            if camera and art.camera_ready.active:
-                access = na
-            attachment = art.attachment
-            if attachment.access != access:
-                attachment.access = access
+            attachment, camera = art.attachment, art.camera_ready
+            if _update_attachment_access(
+                    attachment=attachment, descriptor=instance, camera=camera):
                 updated.append(attachment)
         if updated:
             Attachment.objects.bulk_update(updated, ['access'])
 
 
-# TODO: uncomment after deploy
-# # noinspection PyUnusedLocal
-# @receiver(pre_delete, sender=ArtifactDescriptor)
-# def delete_artifacts_on_artifact_descriptor_delete(sender, instance, **kwargs):
-#     assert isinstance(instance, ArtifactDescriptor)
-#     updated = []
-#     for att in Attachment.objects.filter(artifact__descriptor=instance):
-#         if att.access != Attachment.INACTIVE:
-#             att.access = Attachment.INACTIVE
-#             updated.append(att)
-#     if updated:
-#         Attachment.objects.bulk_update(updated, ['access'])
-#     for art in Artifact.objects.filter(descriptor=instance):
-#         art.delete()
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=CameraReady)
+def update_attachment_on_camera_update(sender, instance, created, **kwargs):
+    assert isinstance(instance, CameraReady)
+    if not created:
+        updated = []
+        for art in instance.artifact_set.all():
+            attachment, descriptor = art.attachment, art.descriptor
+            if _update_attachment_access(
+                    attachment=attachment, descriptor=descriptor,
+                    camera=instance):
+                updated.append(attachment)
+        if updated:
+            Attachment.objects.bulk_update(updated, ['access'])
+
+
+# TODO: comment before deploy
+# noinspection PyUnusedLocal
+@receiver(pre_delete, sender=ArtifactDescriptor)
+def delete_artifacts_on_artifact_descriptor_delete(sender, instance, **kwargs):
+    assert isinstance(instance, ArtifactDescriptor)
+    updated = []
+    for att in Attachment.objects.filter(artifact__descriptor=instance):
+        if att.access != Attachment.INACTIVE:
+            att.access = Attachment.INACTIVE
+            updated.append(att)
+    if updated:
+        Attachment.objects.bulk_update(updated, ['access'])
+    for art in Artifact.objects.filter(descriptor=instance):
+        art.delete()

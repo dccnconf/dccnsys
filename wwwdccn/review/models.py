@@ -38,17 +38,18 @@ class ReviewStage(Model):
         return self.decision.decision_type
 
 
-# TODO: uncomment after deploy
-# @receiver([post_save, post_delete], sender=Submission)
-# def create_review_stage(sender, instance, **kwargs):
-#     assert isinstance(instance, Submission)
-#     if (instance.status == Submission.UNDER_REVIEW and
-#             instance.reviewstage_set.count() == 0):
-#         sub_type = instance.stype
-#         num_reviews_required = sub_type.num_reviews if sub_type else 0
-#         ReviewStage.objects.create(
-#             submission=instance, num_reviews_required=num_reviews_required,
-#             locked=False)
+# TODO: comment before deploy
+# noinspection PyUnusedLocal
+@receiver([post_save, post_delete], sender=Submission)
+def create_review_stage(sender, instance, **kwargs):
+    assert isinstance(instance, Submission)
+    if (instance.status == Submission.UNDER_REVIEW and
+            instance.reviewstage_set.count() == 0):
+        sub_type = instance.stype
+        num_reviews_required = sub_type.num_reviews if sub_type else 0
+        ReviewStage.objects.create(
+            submission=instance, num_reviews_required=num_reviews_required,
+            locked=False)
 
 
 # Create your models here.
@@ -193,31 +194,14 @@ class ReviewDecision(Model):
     stage = OneToOneField(ReviewStage, on_delete=CASCADE,
                           related_name='decision')
 
-    # def save(self, *args, **kwargs):
-    #     super().save(*args, **kwargs)
-    #     status = self.stage.submission.status
-    #     # if status ==
 
-
-# TODO: uncomment after deploy
-# # noinspection PyUnusedLocal
-# @receiver(post_save, sender=ReviewStage)
-# def create_decision_after_stage_created(sender, instance, created, **kwargs):
-#     assert isinstance(instance, ReviewStage)
-#     if created:
-#         ReviewDecision.objects.create(stage=instance)
-
-
-# @receiver(post_save, sender=Submission)
-# def create_artifacts_after_submission_accepted(sender, instance, **kwargs):
-#     assert isinstance(instance, Submission)
-#     if instance.status == Submission.ACCEPTED:
-#         stage = instance.reviewstage_set.first()
-#         decision_type = stage.decision.decision_type
-#         artifact_descriptors = ArtifactDescriptor.objects.filter(
-#             proc_type__in=decision_type.allowed_proceedings)
-#         for ad in artifact_descriptors:
-#             art, created = instance.artifacts.get_or_create(descriptor=ad)
+# TODO: comment before deploy
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=ReviewStage)
+def create_decision_after_stage_created(sender, instance, created, **kwargs):
+    assert isinstance(instance, ReviewStage)
+    if created:
+        ReviewDecision.objects.create(stage=instance)
 
 
 class ReviewStats(Model):

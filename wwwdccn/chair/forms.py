@@ -58,16 +58,16 @@ class FilterSubmissionsForm(forms.ModelForm):
     NO_REVIEW_MANUSCRIPT = 'NO_REVIEW_PDF'
     INCOMPLETE_REVIEWS = 'INCOMPLETE_REVIEWS'
     UNASSIGNED_REVIEWERS = 'UNASSIGNED_REVIEWERS'
-    # MISSING_ARTIFACT = 'MISSING_MANDATORY_ART'
-    # MISSING_OPT_ARTIFACT = 'MISSING_OPT_ART'
+    MISSING_ARTIFACT = 'MISSING_MANDATORY_ART'
+    MISSING_OPT_ARTIFACT = 'MISSING_OPT_ART'
     COMPLETION_CHOICES = (
         (COMPLETE_SUBMISSION, 'Everything complete'),
         (MISSING_TITLE, 'Empty submissions'),
         (NO_REVIEW_MANUSCRIPT, 'Missing review PDF'),
         (INCOMPLETE_REVIEWS, 'Incomplete reviews'),
         (UNASSIGNED_REVIEWERS, 'Unassigned reviewers'),
-        # (MISSING_ARTIFACT, 'Missing mandatory artifacts'),
-        # (MISSING_OPT_ARTIFACT, 'Missing optional artifacts'),
+        (MISSING_ARTIFACT, 'Missing mandatory artifacts'),
+        (MISSING_OPT_ARTIFACT, 'Missing optional artifacts'),
     )
 
     Q1 = 'Q1'
@@ -160,35 +160,39 @@ class FilterSubmissionsForm(forms.ModelForm):
             (x, x) for x in profiles_data.values_list(
                 'affiliation', flat=True).distinct().order_by('affiliation')]
 
-        self.conjuncts = []
-
     def order_submissions(self, submissions):
         order = self.cleaned_data['order']
         direction = '' if self.cleaned_data['direction'] == 'ASC' else '-'
         if order == self.ORDER_BY_PK:
             return submissions.order_by(f'{direction}pk')
-
         elif order == self.ORDER_BY_TITLE:
             return submissions.order_by(f'{direction}title')
-
         elif order == self.ORDER_BY_SCORE:
-            # FIXME: refactor this to use pure SQL instead of Python:
-            max_pk = max(submissions.aggregate(Max('pk'))['pk__max'], 1)
-
-            def order_key(sub):
-                score = get_average_score(sub)
-                v = (-score, sub.pk / max_pk)
-                return sum(x * 10**(len(v)-1-i) for i, x in enumerate(v))
-
-            ordered_submissions = list(submissions)
-            ordered_submissions.sort(key=order_key, reverse=(direction == '-'))
-            return ordered_submissions
-
+            return submissions.order_by(f'{direction}reviewstage__score')
         return submissions
 
-    def clean_completion(self):
+    def apply_completion(self, submissions):
         data = self.cleaned_data['completion']
         disjuncts = []
+
+        submissions = submissions.annotate(
+            num_missing_mandatory_artifacts=Count(
+                'attachments', filter=Q(
+                    attachments__file='',
+                    attachments__artifact__descriptor__mandatory=True,
+                    attachments__artifact__camera_ready__active=True),
+                distinct=True),
+            num_missing_optional_artifacts=Count(
+                'attachments', filter=Q(
+                    attachments__file='',
+                    attachments__artifact__descriptor__mandatory=False,
+                    attachments__artifact__camera_ready__active=True),
+                distinct=True),
+            num_reviews_required=F('reviewstage__num_reviews_required'),
+            num_reviews_assigned=Count('reviewstage__review', distinct=True),
+            num_reviews_submitted=Count('reviewstage__review', filter=Q(
+                reviewstage__review__submitted=True), distinct=True),
+        )
 
         # Below we define various queries for _non-empty_ submissions those
         # may be issued within 'completion' choice. Negation of these
@@ -203,12 +207,12 @@ class FilterSubmissionsForm(forms.ModelForm):
             self.INCOMPLETE_REVIEWS:
                 Q(num_reviews_submitted__lt=F('num_reviews_assigned')) &
                 Q(status=Submission.UNDER_REVIEW),
-            # self.MISSING_ARTIFACT:
-            #     Q(num_missing_mandatory_artifacts__gt=0) &
-            #     Q(status=Submission.ACCEPTED),
-            # self.MISSING_OPT_ARTIFACT:
-            #     Q(num_missing_optional_artifacts__gt=0) &
-            #     Q(status=Submission.ACCEPTED),
+            self.MISSING_ARTIFACT:
+                Q(num_missing_mandatory_artifacts__gt=0) &
+                Q(status=Submission.ACCEPTED),
+            self.MISSING_OPT_ARTIFACT:
+                Q(num_missing_optional_artifacts__gt=0) &
+                Q(status=Submission.ACCEPTED),
         }
 
         empty = Q(title='')  # we use this often below
@@ -223,85 +227,80 @@ class FilterSubmissionsForm(forms.ModelForm):
             if opt in data:
                 non_empty_disjuncts.append(query)
         if non_empty_disjuncts:
-            disjuncts.append(
-                ~empty & reduce(lambda q, acc: acc | q, non_empty_disjuncts))
+            disjuncts.append(~empty & q_or(non_empty_disjuncts))
 
-        # If we are also interested in completed submissions, disjuct all
+        # If we are also interested in completed submissions, disjunct all
         # queries defined above (regardless of whether they are presented
         # in completion choices!), conjunct with non-emptiness and put to
         # 'disjuncts' list:
         if self.COMPLETE_SUBMISSION in data:
-            disjuncts.append(
-                ~empty & ~reduce(lambda q, acc: acc | q, queries.values()))
+            disjuncts.append(~empty & ~q_or(queries.values()))
 
         if disjuncts:
-            self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
+            submissions = submissions.filter(q_or(disjuncts))
 
-        return data
+        return submissions
 
-    def clean_topics(self):
-        data = self.cleaned_data['types']
+    def apply_topics(self, submissions):
+        data = self.cleaned_data['topics']
         items = [int(topic) for topic in data if topic]
         if items:
-            self.conjuncts.append(Q(stype__in=items))
-        return data
+            submissions = submissions.filter(topics__in=items)
+        return submissions
 
-    def clean_status(self):
+    def apply_status(self, submissions):
         data = self.cleaned_data['status']
         if data:
-            self.conjuncts.append(Q(status__in=data))
-        return data
+            submissions = submissions.filter(status__in=data)
+        return submissions
 
-    def clean_countries(self):
+    def apply_countries(self, submissions):
         data = self.cleaned_data['countries']
         if data:
-            self.conjuncts.append(Q(authors__user__profile__country__in=data))
-        return data
+            submissions = submissions.filter(
+                authors__user__profile__country__in=data)
+        return submissions
 
-    def clean_affiliations(self):
+    def apply_affiliations(self, submissions):
         data = self.cleaned_data['affiliations']
         if data:
-            self.conjuncts.append(
-                Q(authors__user__profile__affiliation__in=data))
-        return data
+            submissions = submissions.filter(
+                authors__user__profile__affiliation__in=data)
+        return submissions
 
-    # noinspection DuplicatedCode
-    def clean_proc_types(self):
+    def apply_proc_types(self, submissions):
         data = self.cleaned_data['proc_types']
         disjuncts = []
         proc_types = [int(x) for x in data if x]
         if proc_types:
-            disjuncts.append(Q(cameraready__proc_type__in=proc_types,
-                               cameraready__active=True))
+            disjuncts.append(Q(cameraready__proc_type__in=proc_types))
         if '' in data:
-            disjuncts.append(Q(cameraready__proc_type=None,
-                               cameraready__active=True))
+            disjuncts.append(Q(cameraready__proc_type=None))
         if disjuncts:
-            self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
-        return data
+            submissions = submissions.filter(
+                Q(cameraready__active=True) & q_or(disjuncts))
+        return submissions
 
-    # noinspection DuplicatedCode
-    def clean_volumes(self):
+    def apply_volumes(self, submissions):
         data = self.cleaned_data['volumes']
         disjuncts = []
         volumes = [int(x) for x in data if x]
         if volumes:
-            disjuncts.append(Q(cameraready__volume__in=volumes,
-                               cameraready__active=True))
+            disjuncts.append(Q(cameraready__volume__in=volumes))
         if '' in data:
-            disjuncts.append(Q(cameraready__volume=None,
-                               cameraready__active=True))
+            disjuncts.append(Q(cameraready__volume=None))
         if disjuncts:
-            self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
-        return data
+            submissions = submissions.filter(
+                Q(cameraready__active=True) & q_or(disjuncts))
+        return submissions
 
-    def clean_quartiles(self):
+    def apply_quartiles(self, submissions):
         data = self.cleaned_data['quartiles']
         # Since the following computations are expensive, do them only when
         # we need them. Also skip if no review stats are available:
         stats_query = ReviewStats.objects.filter(conference=self.instance)
         if not data or not stats_query.count():
-            return data
+            return submissions
 
         stats = stats_query.first()
         q1, q2, q3 = stats.q1_score, stats.median_score, stats.q3_score
@@ -313,14 +312,16 @@ class FilterSubmissionsForm(forms.ModelForm):
             # TODO: maybe add Q(pk__isnull=True) to conjuncts:
             # this will make result always empty -- if there is no median
             # (so Q1 and Q2), checking any quartile will result in empty set.
-            return data
+            return submissions
 
-        submissions = Submission.objects.filter(status__in=[
+        submissions = submissions.filter(status__in=[
             Submission.UNDER_REVIEW, Submission.ACCEPTED, Submission.REJECTED,
             Submission.IN_PRINT, Submission.PUBLISHED])
         scores = {sub: get_average_score(sub) for sub in submissions}
+        _scored = [sub for sub, val in scores.items() if val]
         # Skip all submissions without average score:
-        submissions = [sub for sub in submissions if scores[sub]]
+        submissions = submissions.filter(pk__in=[s.pk for s in _scored])
+
         disjuncts = []
         if self.Q1 in data:
             disjuncts.append(lambda sub: scores[sub] < q1)
@@ -330,12 +331,12 @@ class FilterSubmissionsForm(forms.ModelForm):
             disjuncts.append(lambda sub: q2 <= scores[sub] < q3)
         if self.Q4 in data:
             disjuncts.append(lambda sub: q3 <= scores[sub])
-        submissions = [sub for sub in submissions
-                       if any(predicate(sub) for predicate in disjuncts)]
-        self.conjuncts.append(Q(pk__in=[sub.pk for sub in submissions]))
-        return data
+        _valid = [sub for sub in submissions if
+                  any(predicate(sub) for predicate in disjuncts)]
+        submissions = submissions.filter(pk__in=[sub.pk for sub in _valid])
+        return submissions
 
-    def clean_artifacts(self):
+    def apply_artifacts(self, submissions):
         data = self.cleaned_data['artifacts']
         disjuncts = []
         descriptors = [int(x) for x in data if x]
@@ -346,13 +347,13 @@ class FilterSubmissionsForm(forms.ModelForm):
                 ).exclude(attachment__file='').values('pk')),
                 cameraready__proc_type__artifacts=desc_pk))
         if disjuncts:
-            self.conjuncts.append(reduce(lambda q, acc: acc | q, disjuncts))
-        return data
+            submissions = submissions.filter(q_or(disjuncts))
+        return submissions
 
-    def clean_term(self):
+    def apply_term(self, submissions):
         term = self.cleaned_data['term']
         for word in term.lower().split():
-            self.conjuncts.append(
+            submissions = submissions.filter(
                 Q(title__icontains=word) | Q(pk__icontains=word) |
                 Q(authors__user__profile__first_name__icontains=word) |
                 Q(authors__user__profile__last_name__icontains=word) |
@@ -360,35 +361,20 @@ class FilterSubmissionsForm(forms.ModelForm):
                 Q(authors__user__profile__middle_name_rus__icontains=word) |
                 Q(authors__user__profile__last_name_rus__icontains=word)
             )
+        return submissions
 
     def apply(self, submissions):
-        # First, we prepare submissions by annotating them with:
-        # - num_reviews_required
-        # - num_reviews_assigned
-        # - num_reviews_submitted
-        # - num_missing_mandatory_artifacts
-        # - num_missing_optional_artifacts
-        submissions = submissions.annotate(
-            num_reviews_required=F('stype__num_reviews'),
-            num_reviews_assigned=Count('reviewstage__review', distinct=True),
-            num_reviews_submitted=Count('reviewstage__review', filter=Q(
-                reviewstage__review__submitted=True), distinct=True),
-            # num_missing_mandatory_artifacts=Count('artifacts', filter=Q(
-            #     artifacts__file='', artifacts__descriptor__mandatory=True,
-            #     artifacts__descriptor__proc_type=F(
-            #         'old_decision__proc_type')), distinct=True),
-            # num_missing_optional_artifacts=Count('artifacts', filter=Q(
-            #     artifacts__file='', artifacts__descriptor__mandatory=False,
-            #     artifacts__descriptor__proc_type=F(
-            #         'old_decision__proc_type')), distinct=True),
-        )
-
-        # Secondly, we build the query from conjuncts and apply the filter:
-        for q in self.conjuncts:
-            submissions = submissions.filter(q)
-
-        # Finally, distinct results and order them:
-        return self.order_submissions(submissions.distinct())
+        submissions = self.apply_completion(submissions)
+        submissions = self.apply_topics(submissions)
+        submissions = self.apply_status(submissions)
+        submissions = self.apply_countries(submissions)
+        submissions = self.apply_affiliations(submissions)
+        submissions = self.apply_proc_types(submissions)
+        submissions = self.apply_volumes(submissions)
+        submissions = self.apply_quartiles(submissions)
+        submissions = self.apply_artifacts(submissions)
+        submissions = self.apply_term(submissions)
+        return self.order_submissions(submissions.distinct()).distinct()
 
 
 class FilterProfilesForm(forms.ModelForm):
