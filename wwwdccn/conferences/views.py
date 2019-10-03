@@ -382,6 +382,17 @@ def artifact_delete(request, pk, art_pk):
 
 
 @chair_required
+@require_POST
+def artifact_toggle_editable(request, pk, art_pk):
+    artifact = get_object_or_404(ArtifactDescriptor, pk=art_pk)
+    artifact.editable = not artifact.editable
+    artifact.save()
+    messages.success(request, 'Updated artifact')
+    return redirect('conferences:proceedings-update', pk=pk,
+                    proc_pk=artifact.proc_type_id)
+
+
+@chair_required
 def submission_type_create(request, pk):
     conference = get_object_or_404(Conference, pk=pk)
     if request.method == 'POST':

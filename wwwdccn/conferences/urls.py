@@ -48,4 +48,6 @@ urlpatterns = [
          views.artifact_delete, name='artifact-delete'),
     path('<int:pk>/proceedings/artifacts/<int:art_pk>/',
          views.artifact_details, name='artifact-details'),
+    path('<int:pk>/proceedings/artifacts/<int:art_pk>/toggle_editable/',
+         views.artifact_toggle_editable, name='artifact-toggle-editable'),
 ]

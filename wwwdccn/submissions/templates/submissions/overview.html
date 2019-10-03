@@ -173,25 +173,26 @@
                             {% if ad.materials_url %}Additional materials available at: <a href="{{ ad.materials_url }}" class="dccn-link">{{ ad.materials_url }}</a>{% endif %}
                           </p>
 
-                          {% if attachment.file %}
-                            <p class="my-3 dccn-text-0">
-                              <a href="{% url 'submissions:download-attachment' pk=submission.pk att_pk=attachment.pk %}"
-                                 class="dccn-link" target="_blank">
-                                <i class="{{ artifact|file_icon_class }}"></i> {{ attachment.get_file_name }}
-                              </a>
+                          <div class="d-flex my-3">
+                            <p class="dccn-text-0">
+                              {% if attachment.file %}
+                                <a href="{% url 'submissions:download-attachment' pk=submission.pk att_pk=attachment.pk %}"
+                                   class="dccn-link" target="_blank">
+                                  <i class="{{ artifact|file_icon_class }}"></i> {{ attachment.get_file_name }}
+                                </a>
+                              {% else %}
+                                <span class="text-{% if ad.mandatory and ad.editable %}danger{% else %}{% if ad.editable %}warning-13{% else %}secondary{% endif %}{% endif %}">
+                                  <i class="fas fa-exclamation-circle"></i> No file uploaded
+                                </span>
+                              {% endif %}
                             </p>
-                          {% else %}
-                            <p class="my-3 dccn-text-0 text-{% if ad.mandatory %}danger{% else %}warning-13{% endif %}">
-                              <i class="fas fa-exclamation-circle"></i> No file uploaded
-                            </p>
-                          {% endif %}
-
-                          <div class="mt-3 mb-4 d-flex flex-sm-row flex-column">
-                            {% if submission|any_proceedings_editable %}
-                              <a href="{% url 'submissions:camera-ready' pk=submission.pk %}" class="dccn-link d-inline-block mr-sm-3">
+                            {% if ad.editable %}
+                              <a href="{% url 'submissions:camera-ready' pk=submission.pk %}" class="dccn-link d-inline-block ml-auto">
                                 <i class="far fa-edit"></i> Edit
                               </a>
                             {% endif %}
+                          </div>
+                          <div class="mt-3 mb-4 d-flex flex-sm-row flex-column">
                           </div>
                         {% endwith %}
                       {% endfor %}

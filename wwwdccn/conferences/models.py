@@ -162,6 +162,8 @@ class ArtifactDescriptor(Model):
 
     mandatory = BooleanField(verbose_name='Artifact is mandatory', default=True)
 
+    editable = BooleanField(default=True)
+
 
 class SubmissionType(models.Model):
     LANGUAGES = (
@@ -240,16 +242,3 @@ def create_conference_stages(sender, instance, created, **kwargs):
 def save_conference_stages(sender, instance, **kwargs):
     instance.submission_stage.save()
     instance.review_stage.save()
-
-
-# noinspection PyUnusedLocal
-@receiver(post_save, sender=ArtifactDescriptor)
-def update_submissions_artifacts(sender, instance, **kwargs):
-    assert isinstance(instance, ArtifactDescriptor)
-    from submissions.models import Submission
-    submissions = Submission.objects.filter(
-        old_decision__proc_type=instance.proc_type)
-    for submission in submissions:
-        art, created = submission.artifacts.get_or_create(
-            submission=submission, descriptor=instance)
-        print(f'{"created" if created else "updated"} {art}')
