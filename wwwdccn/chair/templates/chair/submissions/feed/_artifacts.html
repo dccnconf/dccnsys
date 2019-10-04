@@ -31,6 +31,7 @@
                   </a>
                 {% else %}
                   <i class="fas fa-question-circle text-{% if descriptor.mandatory %}danger{% else %}warning{% endif %} "></i>
+                  <a href="{% url 'chair:submission-camera-ready' sub_pk=submission.pk %}" class="dccn-link dccn-text-small ml-3">Upload...</a>
                 {% endif %}
               </div>
             </div>

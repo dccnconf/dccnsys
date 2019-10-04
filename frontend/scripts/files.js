@@ -18,9 +18,9 @@
   // </div>
   //
   $.fn.dccnFileInput = function () {
-    var label = this.find('.dccn-file-name');
-    var input = this.find('input[type="file"]');
+    const input = this.find('input[type="file"]');
     input.on('change', function () {
+      const label = $(this).parents('.dccn-file').find('.dccn-file-name');
       if (this.files && this.files[0]) {
         label.text(this.files[0].name);
       }

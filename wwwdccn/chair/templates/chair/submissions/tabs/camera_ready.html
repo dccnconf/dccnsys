@@ -9,74 +9,81 @@
 {% extends 'chair/submissions/_base.html' %}
 {% load bootstrap4 %}
 {% load submission_extras %}
+{% load proceedings %}
 
 {% block tabViewContent %}
   {% with next_url=request.get_full_path|urlencode %}
-    {% for artifact in submission|artifacts_of %}
-      {% with ad=artifact.descriptor %}
-        <div class="border rounded my-3 py-2 px-3">
-          <div class="d-flex align-items-center">
-            <h4>{{ artifact.name }}</h4>
-            <div class="ml-auto badge badge-dark text-light">{% if ad.mandatory %}mandatory{% else %}optional{% endif %}</div>
-          </div>
+    {% for camera in submission|camera_ready_set_of %}
+      <h2 class="h2 mt-5">{{ camera.proc_type.name }}</h2>
+      {% for artifact in camera.artifact_set.all %}
+        {% with descriptor=artifact.descriptor attachment=artifact.attachment %}
+          <div class="border rounded my-3 py-2 px-3">
+            <div class="d-flex align-items-center">
+              <h4>{{ artifact.name }}</h4>
+              <div class="ml-auto badge badge-dark text-light">{% if descriptor.mandatory %}mandatory{% else %}optional{% endif %}</div>
+            </div>
 
-          <p class="mb-1 dccn-text-0">{{ ad.description }}</p>
-          {% if ad.materials_url %}
-            <p class="my-0 dccn-text-small">
-              <span class="font-weight-bold">Additional materials: </span> <a href="{{ ad.materials_url }}">{{ ad.materials_url }}</a>
-            </p>
-          {% endif %}
-          <p class="my-0 dccn-text-small">
-            <span class="font-weight-bold">Max. size (MB): </span> {{ ad.max_size_mb }}
-          </p>
-          <p class="my-0 dccn-text-small">
-            <span class="font-weight-bold">Required file types: </span> {{ ad.get_file_type_display }}
-          </p>
-
-          {% if artifact.file %}
-            <div class="d-flex mt-3">
-              <p class="dccn-text-small">
-                Current document:
-                <a href="{% url 'submissions:artifact-download' pk=submission.pk art_pk=artifact.pk %}" target="_blank">
-                  <i class="{{ artifact|file_icon_class }}"></i> {{ artifact.get_chair_download_name }}
-                </a>
+            <p class="mb-1 dccn-text-0">{{ descriptor.description }}</p>
+            {% if descriptor.materials_url %}
+              <p class="my-0 dccn-text-small">
+                <span class="font-weight-bold">
+                  Additional materials:
+                </span>
+                <a href="{{ descriptor.materials_url }}">{{ descriptor.materials_url }}</a>
               </p>
-              <div class="ml-auto">
-                <form action="{% url 'submissions:artifact-delete' pk=submission.pk art_pk=artifact.pk %}?next={{ next_url }}"
-                      method="POST">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-link dccn-text-small text-danger">
-                    <i class="fas fa-times"></i> Delete
-                  </button>
-                </form>
-              </div>
-            </div>
-          {% else %}
-            {% if ad.mandatory %}
-              <p class="mt-3 text-danger dccn-text-small"><i class="fas fa-exclamation-circle"></i> File not uploaded yet</p>
-            {% else %}
-              <p class="mt-3 text-info dccn-text-small">No file uploaded</p>
             {% endif %}
-          {% endif %}
+            <p class="my-0 dccn-text-small">
+              <span class="font-weight-bold">Max. size (MB): </span> {{ descriptor.max_size_mb }}
+            </p>
+            <p class="my-0 dccn-text-small">
+              <span class="font-weight-bold">Required file types: </span> {{ descriptor.get_file_type_display }}
+            </p>
 
-          <form action="{% url 'submissions:artifact-upload' pk=submission.pk art_pk=artifact.pk %}?next={{ next_url }}"
-                method="POST" class="mt-3 d-flex align-items-start" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="dccn-file d-flex align-items-center">
-              <button type="button" class="btn btn-outline-secondary btn-sm dccn-file-input mt-2 mt-sm-0">
-                <input type="file" value="Choose file..." accept="{{ artifact|accepted_input }}"
-                       name="file" id="id_file_{{ artifact.pk }}"><i class="far fa-file-image mr-1"></i> Choose file
-              </button>
-              <p class="small text-info dccn-file-name ml-2 py-0 my-0">{{ artifact.get_file_name }}</p>
-            </div>
-            <button class="btn btn-primary btn-sm ml-auto">Upload</button>
-          </form>
-        </div>
-      {% endwith %}
-    {% empty %}
-      <p class="text-center text-info dccn-text-small-light">
-        No artifacts available for this submission.
-      </p>
+            {% if attachment.file %}
+              <div class="d-flex mt-3">
+                <p class="dccn-text-small">
+                  Current document:
+                  <a href="{% url 'chair:download-attachment' att_pk=attachment.pk %}" target="_blank">
+                    <i class="{{ artifact|file_icon_class }}"></i> {{ attachment.get_chair_download_name }}
+                  </a>
+                </p>
+                <div class="ml-auto">
+                  <form action="{% url 'submissions:delete-attachment' pk=submission.pk att_pk=attachment.pk %}?next={{ next_url }}"
+                        method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link dccn-text-small text-danger">
+                      <i class="fas fa-times"></i> Delete
+                    </button>
+                  </form>
+                </div>
+              </div>
+            {% else %}
+              {% if descriptor.mandatory %}
+                <p class="mt-3 text-danger dccn-text-small"><i class="fas fa-exclamation-circle"></i> File not uploaded yet</p>
+              {% else %}
+                <p class="mt-3 text-info dccn-text-small">No file uploaded</p>
+              {% endif %}
+            {% endif %}
+
+            <form action="{% url 'submissions:upload-attachment' pk=submission.pk att_pk=attachment.pk %}?next={{ next_url }}"
+                  method="POST" class="mt-3 d-flex align-items-start" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="dccn-file d-flex align-items-center">
+                <button type="button" class="btn btn-outline-secondary btn-sm dccn-file-input mt-2 mt-sm-0">
+                  <input type="file" value="Choose file..." accept="{{ artifact|accepted_input }}"
+                         name="file" id="id_file_{{ artifact.pk }}"><i class="far fa-file-image mr-1"></i> Choose file
+                </button>
+                <p class="small text-info dccn-file-name ml-2 py-0 my-0">{{ attachment.get_chair_download_name }}</p>
+              </div>
+              <button class="btn btn-primary btn-sm ml-auto">Upload</button>
+            </form>
+          </div>
+        {% endwith %}
+      {% empty %}
+        <p class="text-center text-info dccn-text-small-light">
+          No artifacts available for this submission.
+        </p>
+      {% endfor %}
     {% endfor %}
   {% endwith %}
 {% endblock %}
