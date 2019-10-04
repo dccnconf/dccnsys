@@ -1,4 +1,4 @@
-from django.db import migrations
+from django.db import migrations, models
 
 
 # noinspection PyPep8Naming,PyUnusedLocal
@@ -49,5 +49,22 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AddField(
+            model_name='attachment',
+            name='code',
+            field=models.CharField(blank=True, default='', max_length=32),
+        ),
+        migrations.AddField(
+            model_name='attachment',
+            name='name',
+            field=models.CharField(blank=True, default='', max_length=256),
+        ),
+        migrations.AlterField(
+            model_name='attachment',
+            name='submission',
+            field=models.ForeignKey(on_delete=models.deletion.CASCADE,
+                                    related_name='attachments',
+                                    to='submissions.Submission'),
+        ),
         migrations.RunPython(create_artifacts),
     ]

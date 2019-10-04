@@ -20,19 +20,4 @@ class Migration(migrations.Migration):
             model_name='attachment',
             name='descriptor',
         ),
-        migrations.AddField(
-            model_name='attachment',
-            name='code',
-            field=models.CharField(blank=True, default='', max_length=32),
-        ),
-        migrations.AddField(
-            model_name='attachment',
-            name='name',
-            field=models.CharField(blank=True, default='', max_length=256),
-        ),
-        migrations.AlterField(
-            model_name='attachment',
-            name='submission',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='attachments', to='submissions.Submission'),
-        ),
     ]
