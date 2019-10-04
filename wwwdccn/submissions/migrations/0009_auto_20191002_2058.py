@@ -7,6 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('proceedings', '0004_create_artifacts_for_existing_attachments'),
         ('submissions', '0008_add_access_and_label_fields_to_attachment'),
     ]
 
