@@ -40,7 +40,7 @@ class ReviewStage(Model):
 
 # TODO: comment before deploy
 # noinspection PyUnusedLocal
-@receiver([post_save, post_delete], sender=Submission)
+@receiver(post_save, sender=Submission)
 def create_review_stage(sender, instance, **kwargs):
     assert isinstance(instance, Submission)
     if (instance.status == Submission.UNDER_REVIEW and
@@ -50,6 +50,20 @@ def create_review_stage(sender, instance, **kwargs):
         ReviewStage.objects.create(
             submission=instance, num_reviews_required=num_reviews_required,
             locked=False)
+
+
+@receiver(post_save, sender=Submission)
+def update_review_stage_lock(**kwargs):
+    submission = kwargs.get('instance')
+    stage = submission.reviewstage_set.first()
+    if submission.status in [Submission.ACCEPTED, Submission.REJECTED]:
+        if stage and not stage.locked:
+            stage.locked = True
+            stage.save()
+    elif submission.status == Submission.UNDER_REVIEW:
+        if stage and stage.locked:
+            stage.locked = False
+            stage.save()
 
 
 # Create your models here.
@@ -159,7 +173,7 @@ class Review(models.Model):
 
     def average_score(self):
         fields = self.score_fields()
-        values = [x for x in fields.values()]
+        values = [x for x in fields.values() if x]
         return sum(values) / len(values) if values else 0
 
 
@@ -169,6 +183,18 @@ def update_average_score_after_review_save(sender, instance, **kwargs):
     recompute the average score.
     """
     instance.stage.update_score(commit=True)
+
+
+@receiver(post_save, sender=ReviewStage)
+def update_reviews_lock(**kwargs):
+    stage = kwargs.get('instance')
+    updated_reviews = []
+    for review in stage.review_set.all():
+        if review.locked != stage.locked:
+            review.locked = stage.locked
+            updated_reviews.append(review)
+    if updated_reviews:
+        Review.objects.bulk_update(updated_reviews, ['locked'])
 
 
 def check_review_details(value, submission_type):
@@ -256,8 +282,8 @@ class ReviewStats(Model):
             if review_finished(submission, stype_cache):
                 self.num_submissions_reviewed += 1
             else:
-                num_required = count_required_reviews(submission, stype_cache)
-                if submission.reviews.count() < num_required:
+                stage = submission.reviewstage_set.first()
+                if stage.get_num_missing_reviews() > 0:
                     self.num_submissions_with_missing_reviewers += 1
                 self.num_submissions_with_incomplete_reviews += 1
 
@@ -267,7 +293,7 @@ class ReviewStats(Model):
         self.q1_score = 0.0
         self.q3_score = 0.0
         scores = [get_average_score(submission) for submission in submissions]
-        scores = [score for score in scores if score > 0]
+        scores = [score for score in scores if score is not None and score > 0]
         if scores:
             self.median_score = statistics.median(scores)
             under_median_scores = [

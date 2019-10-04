@@ -20,7 +20,7 @@
 {% block tabViewContent %}
   {% with warnings=submission|submission_warnings:"chair" %}
   {% with status=submission.status %}
-  {% with decision=submission|review_decision_of %}
+  {% with decision=submission|review_decision_of decision_type=decision.decision_type %}
     <div class="d-flex align-items-center">
       {# 1.1 Display submission status: #}
       <p class="dccn-text">
@@ -50,7 +50,7 @@
       <div class="ml-auto"></div>
 
       {# 1.4 Review decision, if valueable #}
-      {% if decision %}
+      {% if decision_type and status != submission.UNDER_REVIEW and status != submission.SUBMITTED %}
         <div class="badge badge-dark text-light">{{ decision.decision_type.description }}</div>
       {% endif %}
     </div>

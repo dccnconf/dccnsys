@@ -5,6 +5,7 @@
 {# - `submission`                                                          #}
 {# - `active`: a string indicating which tab is currently active.          #}
 {###########################################################################}
+{% load review_extras %}
 <ul class="nav nav-pills justify-content-start">
   <li class="nav-item">
     <a href="{% url 'chair:submission-overview' sub_pk=submission.pk %}"
@@ -31,10 +32,12 @@
     </a>
   </li>
   <li class="nav-item">
+    {% with stage=submission|review_stage_of %}
     <a href="{% url 'chair:submission-reviewers' sub_pk=submission.pk %}"
        class="nav-link {% if active == 'reviews' %}active{% endif %} {% if submission.status == 'SUBMIT' %}disabled text-dark-2{% endif %}">
-      Reviews {% if submission.status != 'SUBMIT' %}({{ submission.reviews.count }}/{{ submission.stype.num_reviews }}){% endif %}
+      Reviews {% if submission.status != 'SUBMIT' %}({{ stage.review_set.count }}/{{ stage.num_reviews_required }}){% endif %}
     </a>
+    {% endwith %}
   </li>
   <li class="nav-item">
     <a href="{% url 'chair:submission-messages' sub_pk=submission.pk %}"

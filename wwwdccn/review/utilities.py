@@ -26,7 +26,8 @@ def review_finished(submission, cached_stypes=None):
     :param cached_stypes: optional mapping `stype.pk -> stype`
     :return `True` if the number of submitted reviews is equal to the required
     """
-    return (submission.reviews.filter(submitted=True).count() >=
+    stage = submission.reviewstage_set.first()
+    return (stage.review_set.filter(submitted=True).count() >=
             count_required_reviews(submission, cached_stypes))
 
 
@@ -37,8 +38,9 @@ def count_missing_reviews(submission, cached_stypes=None):
     :param cached_stypes: optional mapping `stype.pk -> stype`
     :return number of missing reviews.
     """
+    stage = submission.reviewstage_set.first()
     n = (count_required_reviews(submission, cached_stypes) -
-         submission.reviews.filter(submitted=True).count())
+         stage.review_set.filter(submitted=True).count())
     return max(n, 0)
 
 
@@ -70,7 +72,7 @@ def get_average_score(obj):
             return float(obj)
         # Finally, filter correct scores (which must be greater then zero)
         # and estimate average score on the scores of parts
-        scores = [score for score in scores if score > 0]
+        scores = [score for score in scores if score]
         return sum(scores) / len(scores) if scores else 0.0
 
 

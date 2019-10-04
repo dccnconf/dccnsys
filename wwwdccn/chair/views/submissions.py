@@ -207,7 +207,7 @@ def metadata(request, submission, conference):
             messages.success(request, f'Submission #{submission.pk} updated')
     else:
         form = SubmissionDetailsForm(instance=submission)
-    return render(request, 'chair/submissions/submission_metadata.html', {
+    return render(request, 'chair/submissions/tabs/metadata.html', {
         'submission': submission,
         'conference': conference,
         'form': form,
@@ -218,7 +218,7 @@ def metadata(request, submission, conference):
 @require_GET
 @submission_view('submission,conference')
 def authors(request, submission, conference):
-    return render(request, 'chair/submissions/submission_authors.html', {
+    return render(request, 'chair/submissions/tabs/authors.html', {
         'submission': submission,
         'conference': conference,
         'active_tab': 'authors',
@@ -309,7 +309,7 @@ def review_manuscript(request, submission, conference):
 
     return render(
         request,
-        'chair/submissions/submission_review_manuscript.html', {
+        'chair/submissions/tabs/manuscript.html', {
             'submission': submission, 'conference': conference, 'form': form,
             'active_tab': 'review-manuscript'}
     )
@@ -336,10 +336,12 @@ def revoke_review(request, submission):
 @require_GET
 @submission_view('submission,conference')
 def reviews(request, submission, conference):
-    return render(request, 'chair/submissions/submission_reviews.html', {
+    review_stage = submission.reviewstage_set.first()
+    return render(request, 'chair/submissions/tabs/reviews.html', {
         'submission': submission,
         'conference': conference,
-        'assign_reviewer_form': AssignReviewerForm(submission=submission),
+        'assign_reviewer_form': AssignReviewerForm(review_stage=review_stage),
+        'active_tab': 'reviews',
     })
 
 
@@ -365,7 +367,8 @@ def camera_ready(request, submission, conference):
 @require_POST
 @submission_view('submission')
 def assign_reviewer(request, submission):
-    form = AssignReviewerForm(request.POST, submission=submission)
+    review_stage = submission.reviewstage_set.first()
+    form = AssignReviewerForm(request.POST, review_stage=review_stage)
     if form.is_valid():
         form.save()
     return redirect('chair:submission-reviewers', sub_pk=submission.pk)

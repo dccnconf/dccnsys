@@ -80,14 +80,18 @@ def missing_reviews(submission):
 
 
 @register.filter
+def review_stage_of(submission):
+    return submission.reviewstage_set.first()
+
+
+@register.filter
 def review_decision_of(submission):
-    stage = submission.reviewstage_set.first()
-    return getattr(stage, 'decision', None)
+    return getattr(review_stage_of(submission), 'decision', None)
 
 
 @register.filter
 def reviews_of(submission):
-    stage = submission.reviewstage_set.first()
+    stage = review_stage_of(submission)
     if stage:
         return stage.review_set.all()
     return []

@@ -116,7 +116,7 @@
 
 {% block footerRowItems %}
   {% if submission.stype %}
-    {% with num_required=submission.stype.num_reviews num_reviews=submission|reviews_of %}
+    {% with num_required=submission.stype.num_reviews num_reviews=submission|reviews_of|length %}
         <a href="{% url 'chair:submission-reviewers' sub_pk=submission.pk %}" class="dccn-feed-item-link">
           <i class="fas fa-glasses"></i> Reviewers
           (<span class="{% if num_reviews < num_required %}text-danger-12{% endif %}">{{ num_reviews }}/{{ num_required }}</span>)

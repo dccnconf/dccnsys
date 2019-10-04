@@ -607,14 +607,14 @@ class ChairUploadReviewManuscriptForm(forms.ModelForm):
 class AssignReviewerForm(forms.Form):
     reviewer = forms.ChoiceField(required=True, label=_('Assign reviewer'))
 
-    def __init__(self, *args, submission=None):
+    def __init__(self, *args, review_stage=None):
         super().__init__(*args)
-        self.submission = submission
-        stage = submission.reviewstage_set.first()
-        assert stage is not None
+        assert review_stage is not None
+        self.review_stage = review_stage
+        submission = self.review_stage.submission
 
         # Fill available reviewers - neither already assigned, nor authors:
-        reviews = stage.review_set.all()
+        reviews = review_stage.review_set.all()
         assigned_reviewers = reviews.values_list('reviewer', flat=True)
         authors_users = submission.authors.values_list('user', flat=True)
         available_reviewers = Reviewer.objects.exclude(
@@ -635,7 +635,8 @@ class AssignReviewerForm(forms.Form):
 
     def save(self):
         reviewer = Reviewer.objects.get(pk=self.cleaned_data['reviewer'])
-        review = Review.objects.create(reviewer=reviewer, paper=self.submission)
+        review = Review.objects.create(
+            reviewer=reviewer, stage=self.review_stage)
         return review
 
 
