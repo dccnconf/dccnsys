@@ -7,7 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('conferences', '0014_artifactdescriptor_mandatory'),
-        ('submissions', '0008_add_access_and_label_fields_to_attachment'),
+        ('submissions', '0008_add_fields_to_attachment'),
         ('proceedings', '0001_initial'),
     ]
 

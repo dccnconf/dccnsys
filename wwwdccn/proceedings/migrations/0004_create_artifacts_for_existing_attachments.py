@@ -44,27 +44,9 @@ def create_artifacts(apps, schema_editor):
 class Migration(migrations.Migration):
     dependencies = [
         ('proceedings', '0003_artifact'),
-        ('submissions', '0008_add_access_and_label_fields_to_attachment'),
         ('review', '0011_create_new_decisions_and_types')
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='attachment',
-            name='code',
-            field=models.CharField(blank=True, default='', max_length=32),
-        ),
-        migrations.AddField(
-            model_name='attachment',
-            name='name',
-            field=models.CharField(blank=True, default='', max_length=256),
-        ),
-        migrations.AlterField(
-            model_name='attachment',
-            name='submission',
-            field=models.ForeignKey(on_delete=models.deletion.CASCADE,
-                                    related_name='attachments',
-                                    to='submissions.Submission'),
-        ),
         migrations.RunPython(create_artifacts),
     ]
