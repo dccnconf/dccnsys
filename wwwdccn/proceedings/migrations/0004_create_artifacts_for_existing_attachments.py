@@ -37,7 +37,8 @@ def create_artifacts(apps, schema_editor):
         updated_attachments.append(at)
 
     Artifact.objects.bulk_create(artifacts)
-    Attachment.objects.bulk_update(updated_attachments, ['access', 'label'])
+    Attachment.objects.bulk_update(
+        updated_attachments, ['access', 'label', 'name', 'code'])
 
 
 class Migration(migrations.Migration):
