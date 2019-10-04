@@ -43,7 +43,8 @@ def create_artifacts(apps, schema_editor):
 class Migration(migrations.Migration):
     dependencies = [
         ('proceedings', '0003_artifact'),
-        ('submissions', '0008_add_access_and_label_fields_to_attachment')
+        ('submissions', '0008_add_access_and_label_fields_to_attachment'),
+        ('review', '0011_create_new_decisions_and_types')
     ]
 
     operations = [
