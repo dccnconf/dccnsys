@@ -6,30 +6,38 @@
 {# - `hide_missing`: whether display or not missing artifacts              #}
 {# - `mark_mandatory`: whether higlight mandatory artifacts                #}
 {###########################################################################}
-
+{% load proceedings %}
 {% load submission_extras %}
 
-{% for art in submission.artifacts.all %}
-  {% if art.is_active %}
-    {% if not hide_missing or art.file %}
-      {% with descriptor=art.descriptor %}
-        <div class="dccn-text-small mb-2 d-flex align-items-center justify-content-between ml-3">
-          <div class="mr-2 {% if mark_mandatory and descriptor.mandatory %}font-weight-normal{% else %}font-weight-light{% endif %}">
-            {% if mark_mandatory and descriptor.mandatory %}<span class="dccn-text-smallest"><i class="fas fa-star-of-life"></i></span>{% endif %}
-            {{ descriptor.name }}:
-          </div>
-          <div>
-            {% if art.file %}
-              <a href="{% url 'chair:artifact-download' art_pk=art.pk %}" target="_blank"
-                 class="dccn-link dccn-text-smallest-light">
-                {{ art.get_chair_download_name }} <i class="{{ art|file_icon_class }}"></i>
-              </a>
-            {% else %}
-              <i class="fas fa-question-circle text-{% if descriptor.mandatory %}danger{% else %}warning{% endif %} "></i>
-            {% endif %}
-          </div>
-        </div>
-      {% endwith %}
-    {% endif %}
-  {% endif %}
+{% for camera in submission|camera_ready_set_of %}
+  <p class="dccn-text-small font-weight-normal mb-1 {% if not forloop.first %}mt-3{% endif %}">{{ camera.proc_type.name }}:</p>
+  {% for art in camera.artifact_set.all %}
+    {% with attachment=art.attachment %}
+      {% if attachment.access != 'NO' %}
+        {% if not hide_missing or attachment.file %}
+          {% with descriptor=art.descriptor %}
+            <div class="dccn-text-small mb-2 d-flex align-items-center justify-content-between ml-3">
+              <div class="mr-2 {% if mark_mandatory and descriptor.mandatory %}font-weight-normal{% else %}font-weight-light{% endif %}">
+                {% if mark_mandatory and descriptor.mandatory %}
+                  <span class="dccn-text-smallest align-top"><i class="fas fa-xs fa-star-of-life"></i></span>
+                {% endif %}
+                {{ descriptor.name }}:
+              </div>
+              <div>
+                {% if attachment.file %}
+                  <a href="{% url 'chair:download-attachment' att_pk=attachment.pk %}" target="_blank"
+                     class="dccn-link dccn-text-smallest-light">
+                    {{ attachment.get_chair_download_name }} <i class="{{ art|file_icon_class }}"></i>
+                  </a>
+                {% else %}
+                  <i class="fas fa-question-circle text-{% if descriptor.mandatory %}danger{% else %}warning{% endif %} "></i>
+                  <a href="{% url 'chair:submission-camera-ready' sub_pk=submission.pk %}" class="dccn-link dccn-text-small ml-3">Upload...</a>
+                {% endif %}
+              </div>
+            </div>
+          {% endwith %}
+        {% endif %}
+      {% endif %}
+    {% endwith %}
+  {% endfor %}
 {% endfor %}

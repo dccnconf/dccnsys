@@ -4,7 +4,7 @@
 {# CONTEXT:                                                                #}
 {# - `submission`: a submission dictionary object                          #}
 {# - `list_view_url`: a URL of the list view that renders this card        #}
-{# - `decision_data`: form data for decision pseudo-form                   #}
+{# - `decision`                                                            #}
 {###########################################################################}
 {% extends 'chair/submissions/feed/_card_base.html' %}
 {#{% load submission_extras %}#}
@@ -14,6 +14,10 @@
   {# Show average score in the status row: #}
   <div class="dccn-feed-item-label ml-2 text-{{ review_stats|quality_of:submission|quality_color }}">
     <i class="far fa-star"></i> {{ submission|average_score }}
+  </div>
+  {# Display proceedings at the right corner: #}
+  <div class="dccn-feed-item-label ml-auto badge badge-secondary p-1">
+    {{ decision.decision_type.description }}
   </div>
 {% endblock %}
 

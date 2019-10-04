@@ -15,18 +15,21 @@
 {% load gears_extras %}
 {% load submission_extras %}
 {% load review_extras %}
+{% load proceedings %}
 
 {% block tabViewContent %}
-  {% with warnings=submission|warnings_of status=submission.status proc_type=submission|proc_type_of volume=submission|volume_of %}
+  {% with warnings=submission|submission_warnings:"chair" %}
+  {% with status=submission.status %}
+  {% with decision=submission|review_decision_of decision_type=decision.decision_type %}
     <div class="d-flex align-items-center">
       {# 1.1 Display submission status: #}
       <p class="dccn-text">
-        <i class="fas fa-circle {{ submission|status_class }}"></i>
+        <i class="fas fa-circle text-{{ submission|submission_status_color_class }}"></i>
         <span class="border-bottom font-weight-normal">{{ submission.get_status_display }}</span>
       </p>
 
       {# 1.2 Display number of warnings next to submission status: #}
-      {% with num_warnings=submission|count_warnings %}
+      {% with num_warnings=warnings|length %}
         {% if num_warnings %}
           <div class="dccn-text mx-2">
             <i class="fas fa-exclamation-triangle text-warning"></i> {{ num_warnings }}
@@ -46,9 +49,9 @@
       {# 1.3 Separator #}
       <div class="ml-auto"></div>
 
-      {# 1.4 Proceedings type, if valueable #}
-      {% if proc_type %}
-        <div class="badge badge-dark text-light">{{ proc_type.name }}</div>
+      {# 1.4 Review decision, if valueable #}
+      {% if decision_type and status != submission.UNDER_REVIEW and status != submission.SUBMITTED %}
+        <div class="badge badge-dark text-light">{{ decision.decision_type.description }}</div>
       {% endif %}
     </div>
 
@@ -105,28 +108,34 @@
           </div>
         </div>
       {% endif %}
-      {% for art in submission|artifacts_of %}
-        <div class="row">
-          <div class="col-6 col-md-5 col-lg-4">
-            <p class="dccn-text-small">{{ art.descriptor.name }}:</p>
-          </div>
-          <div class="col-6 col-md-7 col-lg-8">
-            <p class="dccn-text-small">
-              {% if art.file %}
-                <a href="{% url 'chair:artifact-download' art_pk=art.pk %}"
-                   class="dccn-link dccn-text-small" target="_blank">
-                  <i class="{{ art|file_icon_class }}"></i> {{ art.get_chair_download_name }}
-                </a>
-              {% else %}
-                <span class="text-{% if art.descriptor.mandatory %}danger{% else %}warning{% endif %}-13">
-                  no file uploaded
-                </span>
-                (<a href="{% url 'chair:submission-camera-ready' sub_pk=submission.pk %}"
-                    class="dccn-link dccn-text-small">upload...</a>)
-              {% endif %}
-            </p>
-          </div>
-        </div>
+
+      {% for camera in submission|camera_ready_set_of %}
+        <h3 class="h3 mt-3">{{ camera.proc_type.name }}</h3>
+        {% for art in camera.artifact_set.all %}
+          {% with attachment=art.attachment descriptor=art.descriptor %}
+            <div class="row">
+              <div class="col-6 col-md-5 col-lg-4">
+                <p class="dccn-text-small">{{ descriptor.name }}:</p>
+              </div>
+              <div class="col-6 col-md-7 col-lg-8">
+                <p class="dccn-text-small">
+                  {% if attachment.file %}
+                    <a href="{% url 'chair:download-attachment' att_pk=attachment.pk %}"
+                       class="dccn-link dccn-text-small" target="_blank">
+                      <i class="{{ art|file_icon_class }}"></i> {{ attachment.get_chair_download_name }}
+                    </a>
+                  {% else %}
+                    <span class="text-{% if descriptor.mandatory %}danger{% else %}warning{% endif %}-13">
+                      no file uploaded
+                    </span>
+                    (<a href="{% url 'chair:submission-camera-ready' sub_pk=submission.pk %}"
+                        class="dccn-link dccn-text-small">upload...</a>)
+                  {% endif %}
+                </p>
+              </div>
+            </div>
+          {% endwith %}
+        {% endfor %}
       {% endfor %}
     </div>
 
@@ -191,5 +200,7 @@
 
     {# CONFIRM DELETE MODAL DIALOG #}
     {% include 'chair/submissions/components/_delete_modal.html' with submission=submission %}
+  {% endwith %}
+  {% endwith %}
   {% endwith %}
 {% endblock %}

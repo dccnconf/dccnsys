@@ -28,7 +28,6 @@ $(document).ready(function () {
           formData[csrf.attr('name')] = csrf.val();
           $.post(target, formData, function () {
             const reloadableParent = btn.parents('[data-html-src]');
-            console.log('reloadable parents: ', reloadableParent);
             if (reloadableParent.length > 0) {
               const htmlURL = reloadableParent.attr('data-html-src');
               $.get(htmlURL, function (html) {

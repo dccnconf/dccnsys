@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             name='Artifact',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('file', models.FileField(blank=True, upload_to=submissions.models.get_artifact_full_path)),
+                ('file', models.FileField(blank=True, upload_to=submissions.models.get_attachment_full_path)),
                 ('descriptor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='instances', to='conferences.ArtifactDescriptor')),
                 ('submission', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='artifacts', to='submissions.Submission')),
             ],

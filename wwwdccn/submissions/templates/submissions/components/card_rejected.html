@@ -4,7 +4,12 @@
 {# * review_stats                     #}
 {######################################}
 {% load review_extras %}
-{% with decision=submission.review_decision.first quality=review_stats|quality_of:submission %}
+{% load submission_extras %}
+
+{% with decision=submission|review_decision_of  %}
+{% with decision_type=decision.decision_type %}
+{% with quality=review_stats|quality_of:submission %}
+
 <div class="dccn-feed-item">
   <div class="dccn-feed-item-top">
     <div class="dccn-feed-item-label dccn-feed-item-conf">{{ submission.conference.short_name }}</div>
@@ -13,7 +18,7 @@
       <i class="far fa-star"></i> <span class="font-weight-lighter">{{ submission|average_score }}</span>
     </div>
     <div class="dccn-feed-item-label dccn-feed-item-status">
-      Rejected <i class="fas fa-circle {{ submission|status_class }}"></i>
+      Rejected <i class="fas fa-circle text-{{ submission|submission_status_color_class }}"></i>
     </div>
   </div>
   <p class="dccn-feed-item-title">
@@ -26,16 +31,15 @@
       {{ submission.get_authors_display }}
     </div>
   </div>
-  <div class="dccn-feed-item-messages">
-{#    {% if not submission.review_manuscript %}#}
-{#    <div class="dccn-feed-item-row">#}
-{#      <div class="dccn-feed-item-message-text">#}
-{#        <i class="fas fa-exclamation-triangle text-warning"></i> Manuscript not uploaded yet#}
-{#        (<a href="{% url 'submissions:edit-manuscript' pk=submission.pk %}" class="dccn-feed-item-message-link">upload...</a>)#}
-{#      </div>#}
-{#    </div>#}
-{#    {% endif %}#}
-  </div>
+  {% if decision_type %}
+    <div class="dccn-feed-item-messages">
+      <div class="dccn-feed-item-row">
+        <div class="dccn-feed-item-message-text">
+          {{ decision_type.description }}
+        </div>
+      </div>
+    </div>
+  {% endif %}
   <div class="dccn-feed-item-footer">
     <a href="{% url 'submissions:overview' pk=submission.pk %}" class="dccn-feed-item-link"><i class="fas fa-align-justify"></i> View</a>
 {#    <button class="btn btn-link dccn-feed-item-link" data-toggle="modal" data-target="#deleteDialog-{{ submission.pk }}">#}
@@ -46,4 +50,7 @@
 
   {% include 'submissions/components/delete_dialog.html' with submission=submission %}
 </div>
+
+{% endwith %}
+{% endwith %}
 {% endwith %}

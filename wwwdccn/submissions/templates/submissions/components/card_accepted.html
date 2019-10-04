@@ -5,7 +5,12 @@
 {######################################}
 {% load review_extras %}
 {% load submission_extras %}
-{% with decision=submission.review_decision.first quality=review_stats|quality_of:submission warnings=submission|warnings_of %}
+
+{% with decision=submission|review_decision_of  %}
+{% with decision_type=decision.decision_type %}
+{% with quality=review_stats|quality_of:submission %}
+{% with warnings=submission|submission_warnings %}
+
 <div class="dccn-feed-item">
   <div class="dccn-feed-item-top">
     <div class="dccn-feed-item-label dccn-feed-item-conf mr-3">{{ submission.conference.short_name }}</div>
@@ -21,15 +26,13 @@
         <i class="fas fa-exclamation-triangle text-warning"></i> {{ warnings|length }}
       </div>
     {% endif %}
-    {% with proc_type=submission|proc_type_of %}
-      {% if proc_type %}
-        <div class="border bg-light border-secondary text-dark rounded d-inline-block mr-2">
-          <div class="dccn-text-smaller mx-2 my-0">{{ proc_type.name }}</div>
-        </div>
-      {% endif %}
-    {% endwith %}
+    {% if decision_type %}
+      <div class="border bg-light border-secondary text-dark rounded d-inline-block mr-2">
+        <div class="dccn-text-smaller mx-2 my-0">{{ decision_type.name }}</div>
+      </div>
+    {% endif %}
     <div class="dccn-feed-item-label dccn-feed-item-status">
-      {{ submission.get_status_display }} <i class="fas fa-circle {{ submission|status_class }}"></i>
+      {{ submission.get_status_display }} <i class="fas fa-circle text-{{ submission|submission_status_color_class }}"></i>
     </div>
   </div>
   <p class="dccn-feed-item-title">
@@ -63,4 +66,8 @@
 
   {% include 'submissions/components/delete_dialog.html' with submission=submission %}
 </div>
+
+{% endwith %}
+{% endwith %}
+{% endwith %}
 {% endwith %}

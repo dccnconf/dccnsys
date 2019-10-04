@@ -16,10 +16,10 @@ from chair.forms import FilterSubmissionsForm, \
     ChairUploadReviewManuscriptForm, AssignReviewerForm
 from conferences.utilities import validate_chair_access
 from conferences.models import Conference
-from review.models import Review, ReviewStats, Decision
+from review.models import Review, ReviewStats
 from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
     AuthorDeleteForm, AuthorsReorderForm, InviteAuthorForm
-from submissions.models import Submission, Artifact
+from submissions.models import Submission, Attachment
 
 
 def submission_view(params='submission'):
@@ -105,58 +105,54 @@ def feed_item(request, submission, conference):
         Submission.IN_PRINT: 'chair/submissions/feed/card_inprint.html',
         Submission.PUBLISHED: 'chair/submissions/feed/card_published.html',
     }
-    if submission.status == Submission.UNDER_REVIEW:
-        context['form_data'] = _build_decision_form_data(submission)
-    elif submission.status == Submission.ACCEPTED:
-        context['decision'] = submission.review_decision.first()
-        context['form_data'] = _build_decision_form_data(
-            submission, hide_decision=True, hide_proc_type=True)
+    stage = submission.reviewstage_set.first()
+    context['decision'] = stage.decision if stage else None
     return render(request, template_names[submission.status], context)
 
 
-def _build_decision_form_data(submission, hide_decision=False,
-                              hide_proc_type=False, hide_volume=False):
-    decision = submission.review_decision.first()
-    proc_type = decision.proc_type if decision else None
-    volume = decision.volume if decision else None
-    default_option = [('', 'Not selected')]
-
-    # 1) Filling data_decision value and display:
-    decision_value = Decision.UNDEFINED if not decision else decision.decision
-    data_decision = {
-        'hidden': hide_decision,
-        'options': Decision.DECISION_CHOICES,
-        'value': decision_value,
-        'display': [opt[1] for opt in Decision.DECISION_CHOICES
-                    if opt[0] == decision_value][0]
-    }
-
-    # 2) Fill proceedings type if needed and possible:
-    data_proc_type = {
-        'hidden': hide_proc_type or decision_value != Decision.ACCEPT,
-        'value': proc_type.pk if proc_type else '',
-        'display': proc_type.name if proc_type else default_option[0][-1],
-        'options': default_option + [
-            (t.pk, t.name) for t in submission.stype.possible_proceedings.all()]
-    }
-
-    # 3) Fill volumes if possible:
-    data_volume = {
-        'hidden': hide_volume or not data_proc_type['value'],
-        'value': volume.pk if volume else '',
-        'display': volume.name if volume else default_option[0][-1],
-        'options': default_option + [
-            (vol.pk, vol.name) for vol in
-            (proc_type.volumes.all() if proc_type else [])]
-    }
-
-    # 4) Collect everything and output:
-    return {
-        'decision': data_decision,
-        'proc_type': data_proc_type,
-        'volume': data_volume,
-        'committed': decision.committed if decision else True
-    }
+# def _build_decision_form_data(submission, hide_decision=False,
+#                               hide_proc_type=False, hide_volume=False):
+#     decision = submission.old_decision.first()
+#     proc_type = decision.proc_type if decision else None
+#     volume = decision.volume if decision else None
+#     default_option = [('', 'Not selected')]
+#
+#     # 1) Filling data_decision value and display:
+#     decision_value = DecisionOLD.UNDEFINED if not decision else decision.decision
+#     data_decision = {
+#         'hidden': hide_decision,
+#         'options': DecisionOLD.DECISION_CHOICES,
+#         'value': decision_value,
+#         'display': [opt[1] for opt in DecisionOLD.DECISION_CHOICES
+#                     if opt[0] == decision_value][0]
+#     }
+#
+#     # 2) Fill proceedings type if needed and possible:
+#     data_proc_type = {
+#         'hidden': hide_proc_type or decision_value != DecisionOLD.ACCEPT,
+#         'value': proc_type.pk if proc_type else '',
+#         'display': proc_type.name if proc_type else default_option[0][-1],
+#         'options': default_option + [
+#             (t.pk, t.name) for t in submission.stype.possible_proceedings.all()]
+#     }
+#
+#     # 3) Fill volumes if possible:
+#     data_volume = {
+#         'hidden': hide_volume or not data_proc_type['value'],
+#         'value': volume.pk if volume else '',
+#         'display': volume.name if volume else default_option[0][-1],
+#         'options': default_option + [
+#             (vol.pk, vol.name) for vol in
+#             (proc_type.volumes.all() if proc_type else [])]
+#     }
+#
+#     # 4) Collect everything and output:
+#     return {
+#         'decision': data_decision,
+#         'proc_type': data_proc_type,
+#         'volume': data_volume,
+#         'committed': decision.committed if decision else True
+#     }
 
 
 #############################################################################
@@ -183,13 +179,13 @@ def overview(request, submission, conference):
     stats = ReviewStats.objects.filter(conference=conference).first()
 
     # Build decision form data if we should have it:
-    if submission.status == Submission.UNDER_REVIEW:
-        decision_form_data = _build_decision_form_data(submission)
-    elif submission.status == Submission.ACCEPTED:
-        decision_form_data = _build_decision_form_data(
-            submission, hide_decision=True, hide_proc_type=True)
-    else:
-        decision_form_data = None
+    # if submission.status == Submission.UNDER_REVIEW:
+    #     decision_form_data = _build_decision_form_data(submission)
+    # elif submission.status == Submission.ACCEPTED:
+    #     decision_form_data = _build_decision_form_data(
+    #         submission, hide_decision=True, hide_proc_type=True)
+    # else:
+    decision_form_data = None
 
     return render(request, 'chair/submissions/tabs/overview.html', {
         'submission': submission,
@@ -211,7 +207,7 @@ def metadata(request, submission, conference):
             messages.success(request, f'Submission #{submission.pk} updated')
     else:
         form = SubmissionDetailsForm(instance=submission)
-    return render(request, 'chair/submissions/submission_metadata.html', {
+    return render(request, 'chair/submissions/tabs/metadata.html', {
         'submission': submission,
         'conference': conference,
         'form': form,
@@ -222,7 +218,7 @@ def metadata(request, submission, conference):
 @require_GET
 @submission_view('submission,conference')
 def authors(request, submission, conference):
-    return render(request, 'chair/submissions/submission_authors.html', {
+    return render(request, 'chair/submissions/tabs/authors.html', {
         'submission': submission,
         'conference': conference,
         'active_tab': 'authors',
@@ -313,7 +309,7 @@ def review_manuscript(request, submission, conference):
 
     return render(
         request,
-        'chair/submissions/submission_review_manuscript.html', {
+        'chair/submissions/tabs/manuscript.html', {
             'submission': submission, 'conference': conference, 'form': form,
             'active_tab': 'review-manuscript'}
     )
@@ -340,10 +336,12 @@ def revoke_review(request, submission):
 @require_GET
 @submission_view('submission,conference')
 def reviews(request, submission, conference):
-    return render(request, 'chair/submissions/submission_reviews.html', {
+    review_stage = submission.reviewstage_set.first()
+    return render(request, 'chair/submissions/tabs/reviews.html', {
         'submission': submission,
         'conference': conference,
-        'assign_reviewer_form': AssignReviewerForm(submission=submission),
+        'assign_reviewer_form': AssignReviewerForm(review_stage=review_stage),
+        'active_tab': 'reviews',
     })
 
 
@@ -369,7 +367,8 @@ def camera_ready(request, submission, conference):
 @require_POST
 @submission_view('submission')
 def assign_reviewer(request, submission):
-    form = AssignReviewerForm(request.POST, submission=submission)
+    review_stage = submission.reviewstage_set.first()
+    form = AssignReviewerForm(request.POST, review_stage=review_stage)
     if form.is_valid():
         form.save()
     return redirect('chair:submission-reviewers', sub_pk=submission.pk)
@@ -390,13 +389,13 @@ def delete_review(request, submission, rev_pk):
 # Overridden user methods:
 #
 @require_GET
-def artifact_download(request, art_pk):
-    artifact = get_object_or_404(Artifact, pk=art_pk)
-    validate_chair_access(request.user, artifact.submission.conference)
-    if artifact.file:
-        filename = artifact.get_chair_download_name()
+def download_attachment(request, att_pk):
+    attachment = get_object_or_404(Attachment, pk=att_pk)
+    validate_chair_access(request.user, attachment.submission.conference)
+    if attachment.file:
+        filename = attachment.get_chair_download_name()
         mtype = mimetypes.guess_type(filename)[0]
-        response = HttpResponse(artifact.file.file, content_type=mtype)
+        response = HttpResponse(attachment.file.file, content_type=mtype)
         response['Content-Disposition'] = f'filename={filename}'
         return response
     raise Http404
@@ -421,21 +420,3 @@ def compose_redirect(request, conf_pk):
     })
     url = f'{base_url}?{query_string}'
     return redirect(url)
-
-
-#
-# API
-#
-# noinspection PyUnusedLocal
-@require_POST
-@submission_view('submission')
-def start_review(request, submission):
-    if submission.status in [Submission.SUBMITTED, Submission.ACCEPTED,
-                             Submission.REJECTED]:
-        submission.status = Submission.UNDER_REVIEW
-        submission.save()
-        decision = submission.review_decision.first()
-        if decision:
-            decision.committed = False
-            decision.save()
-    return JsonResponse(data={})

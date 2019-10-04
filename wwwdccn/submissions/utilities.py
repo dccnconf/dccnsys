@@ -1,24 +1,16 @@
 from collections import namedtuple
 
 from django.urls import reverse
-from django.utils import timezone
 
+from proceedings.models import Artifact
 from submissions.models import Submission
-
-
-def camera_editable(submission):
-    decision = submission.review_decision.first()
-    proc_type = getattr(decision, 'proc_type', None)
-    end_date = getattr(proc_type, 'final_manuscript_deadline', None)
-    too_late = end_date and timezone.now() > end_date
-    return submission.status == submission.ACCEPTED and not too_late
 
 
 def is_authorized_edit(user, submission):
     return submission.is_author(user) or submission.is_chaired_by(user)
 
 
-def is_authorized_view_artifact(user, submission):
+def is_authorized_view_attachment(user, submission):
     return submission.is_author(user) or submission.is_chaired_by(user)
 
 
@@ -61,28 +53,29 @@ def list_warnings(submission):
                    link_label='upload...'))
 
     if submission.status == Submission.UNDER_REVIEW:
-        if submission.stype:
-            num_assigned = submission.reviews.count()
-            num_finished = submission.reviews.filter(submitted=True).count()
-            num_required = submission.stype.num_reviews
-            if num_assigned < num_required:
+        stage = submission.reviewstage_set.first()
+        if submission.stype and stage:
+            num_not_finished = stage.review_set.filter(submitted=False).count()
+            num_missing = stage.get_num_missing_reviews()
+            if num_missing > 0:
                 warnings.append(wc(
-                    f'{num_required - num_assigned} reviewers not assigned',
+                    f'{num_missing} reviewers not assigned',
                     '', chair_link=url_assign_reviewers, visible_by=_CHAIR_ONLY,
                     link_label='assign...'
                 ))
-            if num_finished < num_assigned:
+            if num_not_finished > 0:
                 warnings.append(wc(
-                    f'{num_assigned - num_finished} reviews not finished',
+                    f'{num_not_finished} reviews not finished',
                     '', chair_link=url_assign_reviewers, visible_by=_CHAIR_ONLY,
                 ))
 
     if submission.status == Submission.ACCEPTED:
-        for artifact in [artifact for artifact in submission.artifacts.all()
-                         if artifact.is_active]:
-            if artifact.descriptor.mandatory and not artifact.file:
+        artifacts = Artifact.objects.filter(
+            camera_ready__submission=submission, camera_ready__active=True)
+        for artifact in artifacts:
+            if artifact.descriptor.mandatory and not artifact.attachment.file:
                 warnings.append(wc(
-                    f'{artifact.name} missing', url_camera_ready,
+                    f'{artifact.attachment.name} missing', url_camera_ready,
                     link_label='upload...'))
 
     return warnings
@@ -96,10 +89,11 @@ def get_proc_type(submission):
     :return: `ProcType` instance, or `None`
     """
     status = submission.status
-    decision = submission.review_decision.first()
-    if decision and status in {Submission.ACCEPTED, Submission.IN_PRINT,
-                               Submission.PUBLISHED}:
-        return decision.proc_type
+    rev_stage = submission.reviewstage_set.first()
+    decision_type = rev_stage.decision.decision_type if rev_stage else None
+    if decision_type and status in {Submission.ACCEPTED, Submission.IN_PRINT,
+                                    Submission.PUBLISHED}:
+        return decision_type.description
     return None
 
 
@@ -111,7 +105,7 @@ def get_volume(submission):
     :return: `Volume` instance, or `None`
     """
     status = submission.status
-    decision = submission.review_decision.first()
+    decision = submission.old_decision.first()
     if (decision and decision.proc_type and
             status in {Submission.ACCEPTED, Submission.IN_PRINT,
                        Submission.PUBLISHED}):

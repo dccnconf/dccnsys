@@ -56,12 +56,15 @@ def feed_item(request, conf_pk, user_pk):
         is_reviewer=Case(
             When(num_reviewers__gt=0, then=Value(1)),
             default=Value(0), output_field=IntegerField()),
-        num_reviews=Count('user__reviewer__reviews__pk', filter=Q(
-            user__reviewer__reviews__paper__conference=conf_pk), distinct=True),
-        num_incomplete_reviews=Count('user__reviewer__reviews__pk', filter=Q(
-            user__reviewer__reviews__paper__conference=conf_pk,
-            user__reviewer__reviews__submitted=False
-        ), distinct=True),
+        num_reviews=Count(
+            'user__reviewer__reviews__pk', filter=Q(
+                user__reviewer__reviews__stage__submission__conference=conf_pk),
+            distinct=True),
+        num_incomplete_reviews=Count(
+            'user__reviewer__reviews__pk', filter=Q(
+                user__reviewer__reviews__stage__submission__conference=conf_pk,
+                user__reviewer__reviews__submitted=False),
+            distinct=True),
         num_submissions=Count('user__authorship', filter=Q(
             user__authorship__submission__conference=conf_pk
         ), distinct=True)

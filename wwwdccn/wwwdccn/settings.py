@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     'chair',
     'chair_mail',
     'review',
+    'proceedings',
 ]
 
 MIDDLEWARE = [

@@ -6,11 +6,9 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from conferences.models import Topic, SubmissionType, Conference, \
-    ArtifactDescriptor
+from conferences.models import Topic, SubmissionType, Conference
 
 User = get_user_model()
-
 
 TITLE_MAX_LENGTH = 250
 ABSTRACT_MAX_LENGTH = 2500  # 250 words
@@ -105,9 +103,10 @@ class Submission(models.Model):
             send_submission_status_notification_message
         old = Submission.objects.filter(pk=self.pk).first()
         status_updated = old is None or old.status != self.status
-        super().save(*args, **kwargs)
+        ret = super().save(*args, **kwargs)
         if status_updated:
             send_submission_status_notification_message(self)
+        return ret
 
     def __str__(self):
         if not self.title:
@@ -135,7 +134,7 @@ class Submission(models.Model):
 
     def details_editable_by(self, user):
         return self.is_chaired_by(user) or (
-            self.is_author(user) and self.status in {'SUBMIT', 'ACCEPT'}
+                self.is_author(user) and self.status in {'SUBMIT', 'ACCEPT'}
         )
 
     def authors_editable_by(self, user):
@@ -143,15 +142,16 @@ class Submission(models.Model):
 
     def review_manuscript_editable_by(self, user):
         return self.is_chaired_by(user) or (
-            self.is_author(user) and self.status == 'SUBMIT'
+                self.is_author(user) and self.status == 'SUBMIT'
         )
 
     def is_viewable_by(self, user):
         return self.is_chaired_by(user) or self.is_author(user)
 
     def is_manuscript_viewable_by(self, user):
-        return (self.is_viewable_by(user) or
-                (self.reviews.filter(reviewer__user=user).count() > 0))
+        rev_s = self.reviewstage_set.first()
+        return self.is_viewable_by(user) or (
+                rev_s and rev_s.review_set.filter(reviewer__user=user).count())
 
     def is_deletable_by(self, user):
         return ((self.is_chaired_by(user) or self.is_author(user))
@@ -196,61 +196,68 @@ class Author(models.Model):
     )
 
     def __str__(self):
+        # noinspection PyUnresolvedReferences
         return f'Author #{self.pk}: {self.user.profile.get_full_name()}, ' \
-            f'submission={self.submission.pk}, order={self.order}'
+               f'submission={self.submission.pk}, order={self.order}'
 
 
-def get_artifact_full_path(instance, filename):
+def get_attachment_full_path(instance, filename):
     ext = filename.split('.')[-1]
     root = settings.MEDIA_PRIVATE_ROOT
     cpk = instance.submission.conference_id if \
         instance.submission and instance.submission.conference \
         else 'unknown_conf'
-    code = instance.descriptor.code if \
-        instance.descriptor and instance.descriptor.code else 'final'
+    code = instance.code if instance.code else 'final'
     path = f'{root}/{cpk}/submissions'
     name = f'SID{instance.pk:05d}_{code}'
     ret = f'{path}/{name}.{ext}'
     return ret
 
 
-class Artifact(Model):
-    class Meta:
-        ordering = ['descriptor_id']
+class Attachment(Model):
+    INACTIVE = 'NO'
+    READONLY = 'RO'
+    READWRITE = 'RW'
+    ACCESS_CHOICES = (
+        (INACTIVE, 'Inactive (no access)'),
+        (READONLY, 'Read only'),
+        (READWRITE, 'Read and write'),
+    )
 
-    submission = ForeignKey(Submission, related_name='artifacts',
+    class Meta:
+        ordering = ['id']
+
+    submission = ForeignKey(Submission, related_name='attachments',
                             on_delete=CASCADE)
-    descriptor = ForeignKey(ArtifactDescriptor, related_name='instances',
-                            on_delete=CASCADE)
-    file = models.FileField(upload_to=get_artifact_full_path, blank=True)
+
+    file = models.FileField(upload_to=get_attachment_full_path, blank=True)
+
+    access = models.CharField(choices=ACCESS_CHOICES, max_length=2,
+                              default=READWRITE)
+
+    code = models.CharField(max_length=32, blank=True, default='')
+
+    name = models.CharField(max_length=256, blank=True, default='')
+
+    label = models.CharField(max_length=256, blank=True, default='')
 
     @property
     def is_active(self):
-        decision = self.submission.review_decision.first()
-        valid_statuses = {Submission.ACCEPTED, Submission.IN_PRINT,
-                          Submission.PUBLISHED}
-        if (decision and self.submission.status in valid_statuses
-                and decision.decision == decision.ACCEPT):
-            return decision.proc_type == self.descriptor.proc_type
-        return False
-
-    @property
-    def name(self):
-        return self.descriptor.name if self.descriptor else ''
+        return self.access != self.INACTIVE
 
     def get_file_name(self):
         if self.file:
             return os.path.basename(self.file.file.name)
         return ''
 
+    def __str__(self):
+        return f'Attachment "{self.name}" of submission #{self.submission_id}'
+
     def get_chair_download_name(self):
         if self.file:
             original_filename = self.get_file_name()
             ext = original_filename.split('.')[-1]
-            code = self.descriptor.code
+            code = self.code
             name = f'FIN{self.submission_id:05d}_{code}.{ext}'
             return name
         return ''
-
-    def __str__(self):
-        return f'Artifact "{self.name}" of submission #{self.submission_id}'

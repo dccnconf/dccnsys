@@ -17,9 +17,9 @@ urlpatterns = [
     path('<int:pk>', views.submission_overview, name='overview'),
     path('<int:pk>/delete/', views.submission_delete, name='delete'),
     path('<int:pk>/camera_ready/', views.camera_ready, name='camera-ready'),
-    path('<int:pk>/artifacts/<int:art_pk>/upload/', views.artifact_upload, name='artifact-upload'),
-    path('<int:pk>/artifacts/<int:art_pk>/download/', views.artifact_download, name='artifact-download'),
-    path('<int:pk>/artifacts/<int:art_pk>/delete/', views.artifact_delete, name='artifact-delete'),
+    path('<int:pk>/attachments/<int:att_pk>/upload/', views.upload_attachment, name='upload-attachment'),
+    path('<int:pk>/attachments/<int:att_pk>/download/', views.download_attachment, name='download-attachment'),
+    path('<int:pk>/attachments/<int:att_pk>/delete/', views.delete_attachment, name='delete-attachment'),
 
     path('<int:pk>/authors/delete/', views.delete_author, name='delete-author'),
     path('<int:pk>/authors/create/', views.create_author, name='create-author'),

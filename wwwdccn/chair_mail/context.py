@@ -249,7 +249,7 @@ def _get_user_review_context(user, conference):
     """Get context dictionary regarding user reviews.
     """
     reviews = (Review.objects
-               .filter(paper__conference=conference)
+               .filter(stage__submission__conference=conference)
                .filter(reviewer__user=user))
     complete_reviews_ids = [rev.pk for rev in reviews if not rev.warnings()]
     complete_reviews = reviews.filter(pk__in=complete_reviews_ids)
@@ -300,20 +300,22 @@ SUB_URL = Var('paper_url', _('URL of the paper'))
 SUB_REVIEW_SCORE = Var('paper_review_score', _('Paper average score'))
 SUB_REVIEWS_LIST = Var('paper_reviews_list', _('List of reviews with scores'))
 SUB_REVIEW_DECISION = Var('paper_review_decision', _('Review decision'))
-SUB_PROC_TYPE = Var('paper_proc_type', _('Proceedings for accepted papers'))
-SUB_VOLUME = Var('paper_volume', _('Volume for accepted papers'))
+SUB_PROCEEDINGS_LIST = Var('paper_proceedings',
+                           _('Proceedings for accepted papers'))
 
 SUBMISSION_VARS = tuple((var.name, var.description) for var in (
     SUB_ID, SUB_TITLE, SUB_ABSTRACT, SUB_AUTHORS, SUB_URL,
-    SUB_REVIEW_SCORE, SUB_REVIEWS_LIST, SUB_PROC_TYPE, SUB_VOLUME,
+    SUB_REVIEW_SCORE, SUB_REVIEWS_LIST, SUB_PROCEEDINGS_LIST,
 ))
 
 
 def get_submission_context(submission):
-    reviews = submission.reviews.filter(submitted=True)
-    avg_score = '-' if reviews.count() == 0 else \
-        f'{sum(r.average_score() for r in reviews) / reviews.count():.1f}'
-    decision = submission.review_decision.first()
+    stage = submission.reviewstage_set.first()
+    reviews = []
+    decision_type = None
+    if stage:
+        reviews = list(stage.review_set.filter(submitted=True))
+        decision_type = stage.decision.decision_type if stage.decision else None
 
     review_lines = []
     for n, r in enumerate(reviews):
@@ -327,6 +329,13 @@ def get_submission_context(submission):
             f'**Review #{n + 1}**: {", ".join(scores)}\n\n'
             f'{r.details}')
 
+    proceedings = []
+    for camera in submission.cameraready_set.all():
+        proc_type, volume = camera.proc_type, camera.volume
+        if camera.active and proc_type:
+            vol_str = f', {volume.name}' if volume else ''
+            proceedings.append(f'{proc_type.name}{vol_str}')
+
     return {
         SUB_ID.name: submission.pk,
         SUB_TITLE.name: submission.title,
@@ -334,11 +343,10 @@ def get_submission_context(submission):
         SUB_AUTHORS.name: submission.get_authors_display(),
         SUB_URL.name: markdownify_link(get_absolute_url(
             reverse('submissions:overview', kwargs={'pk': submission.pk}))),
-        SUB_REVIEW_SCORE.name: avg_score,
+        SUB_REVIEW_SCORE.name:
+            '-' if not stage or not stage.score else stage.score,
         SUB_REVIEWS_LIST.name: '\n\n'.join(review_lines),
-        SUB_REVIEW_DECISION.name: decision.decision if decision else '',
-        SUB_PROC_TYPE.name:
-            decision.proc_type.name if decision and decision.proc_type else '',
-        SUB_VOLUME.name:
-            decision.volume.name if decision and decision.volume else '',
+        SUB_REVIEW_DECISION.name:
+            decision_type.description if decision_type else '',
+        SUB_PROCEEDINGS_LIST.name: '\n-'.join(proceedings)
     }

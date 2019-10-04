@@ -66,6 +66,13 @@
                 </div>
                 {% endif %}
               </div>
+              <form action="{% url 'conferences:artifact-toggle-editable' pk=conference.pk art_pk=artifact.pk %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-link py-0 text-{% if artifact.editable %}success{% else %}secondary{% endif %}"
+                        data-toggle="tooltip" title="Artifact is {% if not artifact.editable %}not{% endif %} editable">
+                  <i class="fas fa-2x fa-toggle-{% if artifact.editable %}on{% else %}off{% endif %}"></i>
+                </button>
+              </form>
               <a href="{% url 'conferences:artifact-details' pk=conference.pk art_pk=artifact.pk %}"
                  class="btn btn-sm btn-outline-success ml-auto mr-1">
                 <i class="fas fa-edit"></i>

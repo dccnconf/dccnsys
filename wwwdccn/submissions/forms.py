@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 
 from gears.widgets import CustomFileInput
-from .models import Submission, Author, Artifact
+from .models import Submission, Author, Attachment
 
 User = get_user_model()
 
@@ -123,7 +123,6 @@ class UploadReviewManuscriptForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        print(self.instance.review_manuscript)
         if self.instance is not None and self.instance.review_manuscript:
             self.fields['confirm_blind'].initial = 'True'
             self.fields['understand_blind_review'].initial = True
@@ -256,9 +255,9 @@ class InviteAuthorForm(forms.Form):
         )
 
 
-class UploadArtifactForm(ModelForm):
+class UploadAttachmentForm(ModelForm):
     class Meta:
-        model = Artifact
+        model = Attachment
         fields = ['file']
 
     def has_file(self):

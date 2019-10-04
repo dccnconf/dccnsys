@@ -25,7 +25,6 @@ urlpatterns = [
     path('submissions/<int:sub_pk>/authors/reorder/', submissions.reorder_authors, name='submission-authors-reorder'),
     path('submissions/<int:sub_pk>/rev_man/', submissions.review_manuscript, name='submission-review-manuscript'),
     path('submissions/<int:sub_pk>/rev_man/delete/', submissions.delete_review_manuscript, name='submission-review-manuscript-delete'),
-    path('submissions/<int:sub_pk>/start_review/', submissions.start_review, name='start-review'),
     path('submissions/<int:sub_pk>/revoke_review/', submissions.revoke_review, name='revoke-review'),
     path('submissions/<int:sub_pk>/reviews/', submissions.reviews, name='submission-reviewers'),
     path('submissions/<int:sub_pk>/messages/', submissions.emails, name='submission-messages'),
@@ -33,7 +32,7 @@ urlpatterns = [
     path('submissions/<int:sub_pk>/reviews/assign/', submissions.assign_reviewer, name='assign-reviewer'),
     path('submissions/<int:sub_pk>/reviews/<int:rev_pk>/delete/', submissions.delete_review, name='delete-review'),
     path('submissions/<int:sub_pk>/delete/', submissions.delete_submission, name='submission-delete'),
-    path('artifacts/<int:art_pk>/download/', submissions.artifact_download, name='artifact-download'),
+    path('attachments/<int:att_pk>/download/', submissions.download_attachment, name='download-attachment'),
 
     #
     # Users

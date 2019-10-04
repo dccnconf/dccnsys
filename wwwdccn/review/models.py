@@ -1,25 +1,74 @@
 import statistics
 
-from django.conf import settings
-from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Model, CharField, ForeignKey, CASCADE, SET_NULL, \
-    BooleanField, IntegerField, FloatField, OneToOneField
+    IntegerField, FloatField, OneToOneField, ManyToManyField
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 
 from conferences.models import Conference, ProceedingType, ProceedingVolume, \
     ArtifactDescriptor
-from review.utilities import get_average_score
 from submissions.models import Submission
 from users.models import User
 
 
+class ReviewStage(Model):
+    submission = models.ForeignKey(Submission, on_delete=SET_NULL, null=True)
+    num_reviews_required = models.IntegerField()
+    score = models.FloatField(null=True, blank=True, default=None)
+    locked = models.BooleanField(default=False)
+
+    def get_num_missing_reviews(self):
+        return max(0, self.num_reviews_required - self.review_set.count())
+
+    def update_score(self, commit=True):
+        scores = [review.average_score() for review in self.review_set.all()]
+        scores = [x for x in scores if x]
+        prev_score = self.score
+        new_score = sum(scores) / len(scores) if scores else None
+        self.score = new_score
+        if commit and prev_score != new_score:
+            self.save()
+
+    @property
+    def decision_type(self):
+        if not hasattr(self, 'decision'):
+            return None
+        return self.decision.decision_type
+
+
+# TODO: uncomment after deploy
+# # noinspection PyUnusedLocal
+# @receiver(post_save, sender=Submission)
+# def create_review_stage(sender, instance, **kwargs):
+#     assert isinstance(instance, Submission)
+#     if (instance.status == Submission.UNDER_REVIEW and
+#             instance.reviewstage_set.count() == 0):
+#         sub_type = instance.stype
+#         num_reviews_required = sub_type.num_reviews if sub_type else 0
+#         ReviewStage.objects.create(
+#             submission=instance, num_reviews_required=num_reviews_required,
+#             locked=False)
+
+
+@receiver(post_save, sender=Submission)
+def update_review_stage_lock(**kwargs):
+    submission = kwargs.get('instance')
+    stage = submission.reviewstage_set.first()
+    if submission.status in [Submission.ACCEPTED, Submission.REJECTED]:
+        if stage and not stage.locked:
+            stage.locked = True
+            stage.save()
+    elif submission.status == Submission.UNDER_REVIEW:
+        if stage and stage.locked:
+            stage.locked = False
+            stage.save()
+
+
 # Create your models here.
 class Reviewer(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     conference = models.ForeignKey(Conference, on_delete=models.CASCADE)
 
 
@@ -43,12 +92,12 @@ class Review(models.Model):
     EXCELLENT = 5
 
     SCORE_CHOICES = (
-        ('', _('Choose your score')),
-        (str(POOR), _('1 - Very Poor')),
-        (str(BELOW_AVERAGE), _('2 - Below Average')),
-        (str(AVERAGE), _('3 - Average')),
-        (str(GOOD), _('4 - Good')),
-        (str(EXCELLENT), _('5 - Excellent'))
+        (None, _('Choose your score')),
+        (POOR, _('1 - Very Poor')),
+        (BELOW_AVERAGE, _('2 - Below Average')),
+        (AVERAGE, _('3 - Average')),
+        (GOOD, _('4 - Good')),
+        (EXCELLENT, _('5 - Excellent'))
     )
 
     reviewer = models.ForeignKey(
@@ -57,39 +106,27 @@ class Review(models.Model):
         related_name='reviews',
     )
 
-    paper = models.ForeignKey(
-        Submission,
-        on_delete=models.CASCADE,
-        related_name='reviews',
-    )
+    stage = models.ForeignKey(
+        ReviewStage, blank=True, default=None, on_delete=SET_NULL, null=True)
 
-    technical_merit = models.CharField(
-        choices=SCORE_CHOICES,
-        max_length=1,
-        blank=True,
-    )
+    locked = models.BooleanField(default=False)
 
-    clarity = models.CharField(
-        choices=SCORE_CHOICES,
-        max_length=1,
-        blank=True,
-    )
-
-    relevance = models.CharField(
-        choices=SCORE_CHOICES,
-        max_length=1,
-        blank=True,
-    )
-
-    originality = models.CharField(
-        choices=SCORE_CHOICES,
-        max_length=1,
-        blank=True,
-    )
+    technical_merit = models.IntegerField(
+        choices=SCORE_CHOICES, default=None, blank=True, null=True)
+    clarity = models.IntegerField(
+        choices=SCORE_CHOICES, default=None, blank=True, null=True)
+    relevance = models.IntegerField(
+        choices=SCORE_CHOICES, default=None, blank=True, null=True)
+    originality = models.IntegerField(
+        choices=SCORE_CHOICES, default=None, blank=True, null=True)
 
     details = models.TextField()
 
     submitted = models.BooleanField(default=False)
+
+    @property
+    def paper(self):
+        return self.stage.submission
 
     def __str__(self):
         name = self.reviewer.user.profile.get_full_name()
@@ -107,7 +144,7 @@ class Review(models.Model):
         }
 
     def missing_score_fields(self):
-        return tuple(k for k, v in self.score_fields().items() if v == '')
+        return tuple(k for k, v in self.score_fields().items() if v is None)
 
     def all_scores_filled(self):
         return self.num_scores_missing() == 0
@@ -135,10 +172,29 @@ class Review(models.Model):
         return warnings
 
     def average_score(self):
-        if self.all_scores_filled():
-            fields = self.score_fields()
-            return sum(int(x) for x in fields.values()) / len(fields)
-        return 0
+        fields = self.score_fields()
+        values = [x for x in fields.values() if x]
+        return sum(values) / len(values) if values else 0
+
+
+@receiver([post_save, post_delete], sender=Review)
+def update_average_score_after_review_save(sender, instance, **kwargs):
+    """Whenever a Review is updated or deleted, its owner should
+    recompute the average score.
+    """
+    instance.stage.update_score(commit=True)
+
+
+@receiver(post_save, sender=ReviewStage)
+def update_reviews_lock(**kwargs):
+    stage = kwargs.get('instance')
+    updated_reviews = []
+    for review in stage.review_set.all():
+        if review.locked != stage.locked:
+            review.locked = stage.locked
+            updated_reviews.append(review)
+    if updated_reviews:
+        Review.objects.bulk_update(updated_reviews, ['locked'])
 
 
 def check_review_details(value, submission_type):
@@ -146,117 +202,32 @@ def check_review_details(value, submission_type):
     return num_words >= submission_type.min_num_words_in_review
 
 
-def _send_email(user, review, subject, template_html, template_plain):
-    profile = user.profile
-    context = {
-        'email': user.email,
-        'first_name': profile.first_name,
-        'last_name': profile.last_name,
-        'review': review,
-        'protocol': settings.SITE_PROTOCOL,
-        'domain': settings.SITE_DOMAIN,
-        'deadline': review.paper.conference.review_stage.end_date,
-    }
-    html = render_to_string(template_html, context)
-    text = render_to_string(template_plain, context)
-    send_mail(subject, message=text, html_message=html,
-              recipient_list=[user.email],
-              from_email=settings.DEFAULT_FROM_EMAIL, fail_silently=False)
-
-
-# noinspection PyUnusedLocal
-@receiver(post_save, sender=Review)
-def create_review(sender, instance, created, **kwargs):
-    if created:
-        assert isinstance(instance, Review)
-        _send_email(
-            instance.reviewer.user, instance,
-            f"[DCCN2019] Review assignment for submission #{instance.paper.pk}",
-            template_html='review/email/start_review.html',
-            template_plain='review/email/start_review.txt')
-
-
-# noinspection PyUnusedLocal
-@receiver(post_delete, sender=Review)
-def delete_review(sender, instance, **kwargs):
-    _send_email(
-        instance.reviewer.user, instance,
-        f"[DCCN2019] Review cancelled for submission #{instance.paper.pk}",
-        template_html='review/email/cancel_review.html',
-        template_plain='review/email/cancel_review.txt')
-
-
-class Decision(Model):
-    UNDEFINED = 'UNDEFINED'
+class ReviewDecisionType(Model):
     ACCEPT = 'ACCEPT'
     REJECT = 'REJECT'
+    CHOICES = ((ACCEPT, 'Accept submission'), (REJECT, 'Reject submission'))
 
-    DECISION_CHOICES = (
-        (UNDEFINED, 'No decision'),
-        (ACCEPT, 'Accept submission'),
-        (REJECT, 'Reject submission')
-    )
+    decision = CharField(choices=CHOICES, default=ACCEPT, max_length=6)
+    allowed_proceedings = ManyToManyField(
+        ProceedingType, related_name='decision_types')
+    description = CharField(blank=True, default='', max_length=1024)
 
-    decision = CharField(choices=DECISION_CHOICES, default=UNDEFINED,
-                         max_length=10)
-    submission = ForeignKey(Submission, on_delete=CASCADE,
-                            related_name='review_decision')
-    proc_type = ForeignKey(ProceedingType, on_delete=SET_NULL, null=True,
-                           blank=True)
-    volume = ForeignKey(ProceedingVolume, on_delete=SET_NULL, null=True,
-                        blank=True)
-    committed = BooleanField(default=False)
 
-    def commit(self, silent=False):
-        """Change submission status depending on decision.
+class ReviewDecision(Model):
+    decision_type = ForeignKey(
+        ReviewDecisionType, on_delete=SET_NULL, related_name='decisions',
+        null=True, blank=True, default=None)
+    stage = OneToOneField(ReviewStage, on_delete=CASCADE,
+                          related_name='decision')
 
-        - if decision is UNDEFINED, submission will go to REVIEW state;
-        - if decision is ACCEPT, submission will go to ACCEPTED state;
-        - if decision is REJECT, submission will go to REJECTED state.
 
-        If submission status was already IN_PRINT, it won't be changed.
-        """
-        if self.committed:
-            return   # do nothing if already committed
-        status = self.submission.status
-        # Update submission status if needed
-        decision_status = {
-            Decision.UNDEFINED: Submission.UNDER_REVIEW,
-            Decision.ACCEPT: Submission.ACCEPTED,
-            Decision.REJECT: Submission.REJECTED,
-        }
-        if status != Submission.IN_PRINT:
-            new_status = decision_status[self.decision]
-            update_status = status != new_status
-            if not (new_status == Submission.ACCEPTED and not self.proc_type):
-                self.submission.status = new_status
-            self.submission.save()
-            # Adding artifacts:
-            if new_status == Submission.ACCEPTED and self.proc_type:
-                artifact_descriptors = ArtifactDescriptor.objects.filter(
-                    proc_type=self.proc_type_id)
-                for ad in artifact_descriptors:
-                    art, created = self.submission.artifacts.get_or_create(
-                        descriptor=ad)
-            if update_status and self.decision != Decision.UNDEFINED:
-                # TODO: inform user about proc_type or volume change
-                # (we are here if status didn't change, so Submission.save()
-                # will not emit an email due to status change; so we need to
-                # inform user manually)
-                if not silent:
-                    pass
-        self.committed = True
-        self.save()
-
-    def save(self, *args, **kwargs):
-        old = Decision.objects.filter(pk=self.pk).first()
-        if old:
-            fields = ['decision', 'volume', 'proc_type']
-            for field in fields:
-                if getattr(self, field) != getattr(old, field):
-                    self.committed = False
-                    break
-        super().save(*args, **kwargs)
+# TODO: uncomment after deploy
+# # noinspection PyUnusedLocal
+# @receiver(post_save, sender=ReviewStage)
+# def create_decision_after_stage_created(sender, instance, created, **kwargs):
+#     assert isinstance(instance, ReviewStage)
+#     if created:
+#         ReviewDecision.objects.create(stage=instance)
 
 
 class ReviewStats(Model):
@@ -311,8 +282,8 @@ class ReviewStats(Model):
             if review_finished(submission, stype_cache):
                 self.num_submissions_reviewed += 1
             else:
-                num_required = count_required_reviews(submission, stype_cache)
-                if submission.reviews.count() < num_required:
+                stage = submission.reviewstage_set.first()
+                if stage.get_num_missing_reviews() > 0:
                     self.num_submissions_with_missing_reviewers += 1
                 self.num_submissions_with_incomplete_reviews += 1
 
@@ -322,7 +293,7 @@ class ReviewStats(Model):
         self.q1_score = 0.0
         self.q3_score = 0.0
         scores = [get_average_score(submission) for submission in submissions]
-        scores = [score for score in scores if score > 0]
+        scores = [score for score in scores if score is not None and score > 0]
         if scores:
             self.median_score = statistics.median(scores)
             under_median_scores = [
@@ -366,3 +337,45 @@ def update_statistics(sender, instance, **kwargs):
     conference = instance.paper.conference
     stats, _ = ReviewStats.objects.get_or_create(conference=conference)
     stats.update_stats()
+
+
+# def _send_email(user, review, subject, template_html, template_plain):
+#     profile = user.profile
+#     context = {
+#         'email': user.email,
+#         'first_name': profile.first_name,
+#         'last_name': profile.last_name,
+#         'review': review,
+#         'protocol': settings.SITE_PROTOCOL,
+#         'domain': settings.SITE_DOMAIN,
+#         'deadline': review.paper.conference.review_stage.end_date,
+#     }
+#     html = render_to_string(template_html, context)
+#     text = render_to_string(template_plain, context)
+#     send_mail(subject, message=text, html_message=html,
+#               recipient_list=[user.email],
+#               from_email=settings.DEFAULT_FROM_EMAIL, fail_silently=False)
+
+
+# # noinspection PyUnusedLocal
+# @receiver(post_save, sender=Review)
+# def create_review(sender, instance, created, **kwargs):
+#     if created:
+#         assert isinstance(instance, Review)
+#         _send_email(
+#             instance.reviewer.user, instance,
+#             f"[DCCN2019] Review assignment for submission #{instance.paper.pk}",
+#             template_html='review/email/start_review.html',
+#             template_plain='review/email/start_review.txt')
+
+
+# # noinspection PyUnusedLocal
+# @receiver(post_delete, sender=Review)
+# def delete_review(sender, instance, **kwargs):
+#     _send_email(
+#         instance.reviewer.user, instance,
+#         f"[DCCN2019] Review cancelled for submission #{instance.paper.pk}",
+#         template_html='review/email/cancel_review.html',
+#         template_plain='review/email/cancel_review.txt')
+
+
