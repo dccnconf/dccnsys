@@ -14,10 +14,11 @@ from django.utils.translation import ugettext_lazy as _
 
 from chair.forms import FilterSubmissionsForm, \
     ChairUploadReviewManuscriptForm, AssignReviewerForm
+from chair.utility import get_allowed_decision_types
 from conferences.utilities import validate_chair_access
 from conferences.models import Conference
 from proceedings.forms import UpdateVolumeForm
-from review.models import Review, ReviewStats
+from review.models import Review, ReviewStats, ReviewDecisionType
 from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
     AuthorDeleteForm, AuthorsReorderForm, InviteAuthorForm
 from submissions.models import Submission, Attachment
@@ -113,52 +114,12 @@ def feed_item(request, submission, conference):
             camera: UpdateVolumeForm(instance=camera)
             for camera in submission.cameraready_set.filter(active=True)
         }
+    elif submission.status == Submission.UNDER_REVIEW:
+        context['accept_decisions'] = get_allowed_decision_types(
+            submission, ReviewDecisionType.ACCEPT)
+        context['reject_decisions'] = get_allowed_decision_types(
+            submission, ReviewDecisionType.REJECT)
     return render(request, template_names[submission.status], context)
-
-
-# def _build_decision_form_data(submission, hide_decision=False,
-#                               hide_proc_type=False, hide_volume=False):
-#     decision = submission.old_decision.first()
-#     proc_type = decision.proc_type if decision else None
-#     volume = decision.volume if decision else None
-#     default_option = [('', 'Not selected')]
-#
-#     # 1) Filling data_decision value and display:
-#     decision_value = DecisionOLD.UNDEFINED if not decision else decision.decision
-#     data_decision = {
-#         'hidden': hide_decision,
-#         'options': DecisionOLD.DECISION_CHOICES,
-#         'value': decision_value,
-#         'display': [opt[1] for opt in DecisionOLD.DECISION_CHOICES
-#                     if opt[0] == decision_value][0]
-#     }
-#
-#     # 2) Fill proceedings type if needed and possible:
-#     data_proc_type = {
-#         'hidden': hide_proc_type or decision_value != DecisionOLD.ACCEPT,
-#         'value': proc_type.pk if proc_type else '',
-#         'display': proc_type.name if proc_type else default_option[0][-1],
-#         'options': default_option + [
-#             (t.pk, t.name) for t in submission.stype.possible_proceedings.all()]
-#     }
-#
-#     # 3) Fill volumes if possible:
-#     data_volume = {
-#         'hidden': hide_volume or not data_proc_type['value'],
-#         'value': volume.pk if volume else '',
-#         'display': volume.name if volume else default_option[0][-1],
-#         'options': default_option + [
-#             (vol.pk, vol.name) for vol in
-#             (proc_type.volumes.all() if proc_type else [])]
-#     }
-#
-#     # 4) Collect everything and output:
-#     return {
-#         'decision': data_decision,
-#         'proc_type': data_proc_type,
-#         'volume': data_volume,
-#         'committed': decision.committed if decision else True
-#     }
 
 
 #############################################################################
@@ -177,21 +138,16 @@ def overview(request, submission, conference):
     # Otherwise, render separate chair view page:
     status = submission.status
     warnings = submission.warnings()
-    # has_review_manuscript = not (not submission.review_manuscript)
     actions = {
         'review': (status == Submission.SUBMITTED and not warnings),
         'revoke_review': status == Submission.UNDER_REVIEW,
     }
     stats = ReviewStats.objects.filter(conference=conference).first()
 
-    # Build decision form data if we should have it:
-    # if submission.status == Submission.UNDER_REVIEW:
-    #     decision_form_data = _build_decision_form_data(submission)
-    # elif submission.status == Submission.ACCEPTED:
-    #     decision_form_data = _build_decision_form_data(
-    #         submission, hide_decision=True, hide_proc_type=True)
-    # else:
-    decision_form_data = None
+    camera_ready_forms = {
+        camera: UpdateVolumeForm(instance=camera)
+        for camera in submission.cameraready_set.filter(active=True)
+    } if submission.status == Submission.ACCEPTED else {}
 
     return render(request, 'chair/submissions/tabs/overview.html', {
         'submission': submission,
@@ -200,7 +156,7 @@ def overview(request, submission, conference):
         'actions': actions,
         'active_tab': 'overview',
         'review_stats': stats,
-        'decision_form_data': decision_form_data,
+        'camera_forms': camera_ready_forms,
     })
 
 

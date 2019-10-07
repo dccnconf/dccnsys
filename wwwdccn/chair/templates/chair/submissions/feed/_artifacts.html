@@ -12,7 +12,7 @@
 {% load bootstrap4 %}
 
 {% for camera in submission|camera_ready_set_of %}
-  <div class="border rounded py-2 {% if not forloop.first %}mt-3{% endif %}">
+  <div class="border-left py-2 {% if not forloop.first %}mt-3{% endif %}">
   <p class="dccn-text-normal font-weight-normal mb-2 mx-2">
     {{ camera.proc_type.name }}:
   </p>
@@ -46,32 +46,6 @@
     {% endwith %}
   {% endfor %}
 
-  {% if camera_forms %}
-    {% with form=camera_forms|get_item:camera %}
-      {% if form %}
-        <div class="mt-2 border-left py-1 border-{% if camera.volume %}success{% else %}danger{% endif %}">
-          <div class="d-flex mx-2 flex-wrap">
-            <div class="mx-2 dccn-text-small font-weight-normal">Volume: </div>
-            <form action="{% url 'proceedings:update-volume' camera_id=camera.id %}" method="POST">
-              {% csrf_token %}
-              {{ form.volume }}
-            </form>
-          </div>
-        </div>
-      {% else %}
-        {% with volume=camera.volume %}
-          <div class="dccn-text-small font-weight-bold ml-3 {% if not volume %}text-warning-15{% else %}text-secondary{% endif %}">
-            {% if camera.volume %}{{ camera.volume.name }}{% else %}(volume not defined){% endif %}
-          </div>
-        {% endwith %}
-      {% endif %}
-    {% endwith %}
-  {% else %}
-    {% with volume=camera.volume %}
-      <div class="dccn-text-small font-weight-bold ml-3 {% if not volume %}text-warning-15{% else %}text-secondary{% endif %}">
-        {% if camera.volume %}{{ camera.volume.name }}{% else %}(volume not defined){% endif %}
-      </div>
-    {% endwith %}
-  {% endif %}
+  {% include 'chair/submissions/components/_camera_form.html' with camera_forms=camera_forms camera=camera label_ml=3 %}
   </div>
 {% endfor %}

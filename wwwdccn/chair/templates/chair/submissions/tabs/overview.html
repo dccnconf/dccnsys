@@ -16,6 +16,11 @@
 {% load submission_extras %}
 {% load review_extras %}
 {% load proceedings_extras %}
+{% load static %}
+
+{% block extrahead %}
+  <script src="{% static 'gears/js/dropdown_select_submit.js' %}"></script>
+{% endblock %}
 
 {% block tabViewContent %}
   {% with warnings=submission|submission_warnings:"chair" %}
@@ -136,6 +141,7 @@
             </div>
           {% endwith %}
         {% endfor %}
+        {% include 'chair/submissions/components/_camera_form.html' with camera_forms=camera_forms camera=camera %}
       {% endfor %}
     </div>
 

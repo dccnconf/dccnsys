@@ -29,7 +29,7 @@ $(document).ready(function () {
           parentFeedItem.html(data);
         });
       } else {
-        window.location.reload(true);
+        window.location.reload();
       }
     });
     parentFeedItem.html(

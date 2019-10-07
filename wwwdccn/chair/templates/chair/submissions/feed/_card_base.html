@@ -42,6 +42,8 @@
             {% include 'chair/submissions/feed/_warning_list.html' with warnings=warnings %}
           </div>
         {% endif %}
+        {% block cardBodyBottom %}
+        {% endblock %}
       </div>
     {% endblock %}
   </div>

@@ -7,7 +7,7 @@
 {# - `review_stats`: an instance of `ReviewStats` object                   #}
 {# - `form_data`: form data for decision pseudo-form                       #}
 {###########################################################################}
-{% extends 'chair/submissions/feed/_card_base_columed.html' %}
+{% extends 'chair/submissions/feed/_card_base_columed2.html' %}
 {% load submission_extras %}
 {% load review_extras %}
 {% load gears_extras %}
@@ -115,17 +115,45 @@
 
 
 {% block footerRowItems %}
-  {% if submission.stype %}
-    {% with num_required=submission.stype.num_reviews num_reviews=submission|reviews_of|length %}
-        <a href="{% url 'chair:submission-reviewers' sub_pk=submission.pk %}" class="dccn-feed-item-link">
-          <i class="fas fa-glasses"></i> Reviewers
-          (<span class="{% if num_reviews < num_required %}text-danger-12{% endif %}">{{ num_reviews }}/{{ num_required }}</span>)
-        </a>
-    {% endwith %}
-  {% endif %}
   <button class="btn btn-link dccn-feed-item-link" data-toggle="submission-status" data-status="SUBMIT"
           data-target="{% url 'submissions:update-status' pk=submission.pk %}">
     {% csrf_token %}
     <i class="fas fa-backward"></i> Revoke review
   </button>
+  <div class="dropdown ml-2">
+    <button class="btn btn-link dccn-feed-item-link dropdown-toggle text-success-18" data-toggle="dropdown">
+      <i class="far fa-thumbs-up"></i> Accept
+    </button>
+    <div class="dropdown-menu">
+      {% for dt in accept_decisions %}
+        <button class="dropdown-item dccn-text-normal text-success-19 py-2 px-3"
+                data-toggle="submission-review-decision"
+                data-review-decision="{{ dt.description }}"
+                data-decision-value="{{ dt.decision|lower }}"
+                data-decision-type-id="{{ dt.id }}"
+                data-target="{% url 'review:update-decision' decision_id=decision.id %}">
+          {% csrf_token %}
+          {{ dt.description }}
+        </button>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="dropdown ml-2">
+    <button class="btn btn-link dccn-feed-item-link dropdown-toggle text-danger-18" data-toggle="dropdown">
+      <i class="far fa-thumbs-down"></i> Reject
+    </button>
+    <div class="dropdown-menu">
+      {% for dt in reject_decisions %}
+        <button class="dropdown-item dccn-text-normal text-danger-19 mx-3 my-2"
+                data-toggle="submission-review-decision"
+                data-review-decision="{{ dt.description }}"
+                data-decision-value="{{ dt.decision|lower }}"
+                data-decision-type-id="{{ dt.id }}"
+                data-target="{% url 'review:update-decision' decision_id=decision.id %}">
+          {% csrf_token %}
+          {{ dt.description }}
+        </button>
+      {% endfor %}
+    </div>
+  </div>
 {% endblock %}
