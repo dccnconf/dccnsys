@@ -144,20 +144,26 @@ def overview(request, submission, conference):
     }
     stats = ReviewStats.objects.filter(conference=conference).first()
 
-    camera_ready_forms = {
-        camera: UpdateVolumeForm(instance=camera)
-        for camera in submission.cameraready_set.filter(active=True)
-    } if submission.status == Submission.ACCEPTED else {}
-
-    return render(request, 'chair/submissions/tabs/overview.html', {
+    context = {
         'submission': submission,
         'conference': conference,
         'warnings': warnings,
         'actions': actions,
         'active_tab': 'overview',
         'review_stats': stats,
-        'camera_forms': camera_ready_forms,
-    })
+        'camera_forms': {
+            camera: UpdateVolumeForm(instance=camera)
+            for camera in submission.cameraready_set.filter(active=True)
+        } if submission.status == Submission.ACCEPTED else {},
+    }
+
+    if submission.status == Submission.UNDER_REVIEW:
+        context['accept_decisions'] = get_allowed_decision_types(
+            submission, Submission.ACCEPTED)
+        context['reject_decisions'] = get_allowed_decision_types(
+            submission, Submission.REJECTED)
+
+    return render(request, 'chair/submissions/tabs/overview.html', context)
 
 
 @submission_view('submission,conference')

@@ -172,6 +172,7 @@
           {% csrf_token %}
           <i class="fas fa-backward"></i> Revoke review
         </button>
+        {% include 'chair/submissions/components/_review_decision_controls.html' with dropdown_class='btn-sm' accept_dropdown_class='btn-outline-success' reject_dropdown_class='btn-outline-danger' %}
       {% elif status == 'ACCEPT' %}
         <button class="btn btn-sm btn-outline-secondary" data-toggle="submission-status" data-status="REVIEW"
                 data-target="{% url 'submissions:update-status' pk=submission.pk %}">
