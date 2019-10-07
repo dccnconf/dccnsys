@@ -16,6 +16,7 @@ from chair.forms import FilterSubmissionsForm, \
     ChairUploadReviewManuscriptForm, AssignReviewerForm
 from conferences.utilities import validate_chair_access
 from conferences.models import Conference
+from proceedings.forms import UpdateVolumeForm
 from review.models import Review, ReviewStats
 from submissions.forms import SubmissionDetailsForm, AuthorCreateForm, \
     AuthorDeleteForm, AuthorsReorderForm, InviteAuthorForm
@@ -107,6 +108,11 @@ def feed_item(request, submission, conference):
     }
     stage = submission.reviewstage_set.first()
     context['decision'] = stage.decision if stage else None
+    if submission.status == Submission.ACCEPTED:
+        context['camera_forms'] = {
+            camera: UpdateVolumeForm(instance=camera)
+            for camera in submission.cameraready_set.filter(active=True)
+        }
     return render(request, template_names[submission.status], context)
 
 

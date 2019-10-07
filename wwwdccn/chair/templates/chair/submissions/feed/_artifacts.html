@@ -6,42 +6,72 @@
 {# - `hide_missing`: whether display or not missing artifacts              #}
 {# - `mark_mandatory`: whether higlight mandatory artifacts                #}
 {###########################################################################}
-{% load proceedings %}
+{% load proceedings_extras %}
 {% load submission_extras %}
+{% load gears_extras %}
+{% load bootstrap4 %}
 
 {% for camera in submission|camera_ready_set_of %}
-  {% with volume=camera.volume %}
-    <p class="dccn-text-small font-weight-normal mb-1 {% if not forloop.first %}mt-3{% endif %}">
-      {{ camera.proc_type.name }} {% if volume %}(<span class="text-muted">{{ volume.name }}</span>){% endif %}:
-    </p>
-    {% for art in camera.artifact_set.all %}
-      {% with attachment=art.attachment %}
-        {% if attachment.access != 'NO' %}
-          {% if not hide_missing or attachment.file %}
-            {% with descriptor=art.descriptor %}
-              <div class="dccn-text-small mb-2 d-flex align-items-center justify-content-between ml-3">
-                <div class="mr-2 {% if mark_mandatory and descriptor.mandatory %}font-weight-normal{% else %}font-weight-light{% endif %}">
-                  {% if mark_mandatory and descriptor.mandatory %}
-                    <span class="dccn-text-smallest align-top"><i class="fas fa-xs fa-star-of-life"></i></span>
-                  {% endif %}
-                  {{ descriptor.name }}:
-                </div>
-                <div>
-                  {% if attachment.file %}
-                    <a href="{% url 'chair:download-attachment' att_pk=attachment.pk %}" target="_blank"
-                       class="dccn-link dccn-text-smallest-light">
-                      {{ attachment.get_chair_download_name }} <i class="{{ art|file_icon_class }}"></i>
-                    </a>
-                  {% else %}
-                    <i class="fas fa-question-circle text-{% if descriptor.mandatory %}danger{% else %}warning{% endif %} "></i>
-                    <a href="{% url 'chair:submission-camera-ready' sub_pk=submission.pk %}" class="dccn-link dccn-text-small ml-3">Upload...</a>
-                  {% endif %}
-                </div>
+  <div class="border rounded py-2 {% if not forloop.first %}mt-3{% endif %}">
+  <p class="dccn-text-normal font-weight-normal mb-2 mx-2">
+    {{ camera.proc_type.name }}:
+  </p>
+  {% for art in camera.artifact_set.all %}
+    {% with attachment=art.attachment %}
+      {% if attachment.access != 'NO' %}
+        {% if not hide_missing or attachment.file %}
+          {% with descriptor=art.descriptor %}
+            <div class="dccn-text-small-light mb-2 d-flex align-items-center justify-content-between mx-3">
+              <div class="mr-2 font-weight-light">
+                {% if mark_mandatory and descriptor.mandatory %}
+                  <span class="dccn-text-smallest align-top"><i class="fas fa-xs fa-star-of-life"></i></span>
+                {% endif %}
+                {{ descriptor.name }}:
               </div>
-            {% endwith %}
-          {% endif %}
+              <div>
+                {% if attachment.file %}
+                  <a href="{% url 'chair:download-attachment' att_pk=attachment.pk %}" target="_blank"
+                     class="dccn-link dccn-text-smallest-light">
+                    {{ attachment.get_chair_download_name }} <i class="{{ art|file_icon_class }}"></i>
+                  </a>
+                {% else %}
+                  <i class="fas fa-question-circle text-{% if descriptor.mandatory %}danger{% else %}warning{% endif %} "></i>
+                  <a href="{% url 'chair:submission-camera-ready' sub_pk=submission.pk %}" class="dccn-link dccn-text-small ml-3">Upload...</a>
+                {% endif %}
+              </div>
+            </div>
+          {% endwith %}
         {% endif %}
-      {% endwith %}
-    {% endfor %}
-  {% endwith %}
+      {% endif %}
+    {% endwith %}
+  {% endfor %}
+
+  {% if camera_forms %}
+    {% with form=camera_forms|get_item:camera %}
+      {% if form %}
+        <div class="mt-2 border-left py-1 border-{% if camera.volume %}success{% else %}danger{% endif %}">
+          <div class="d-flex mx-2 flex-wrap">
+            <div class="mx-2 dccn-text-small font-weight-normal">Volume: </div>
+            <form action="{% url 'proceedings:update-volume' camera_id=camera.id %}" method="POST">
+              {% csrf_token %}
+              {{ form.volume }}
+            </form>
+          </div>
+        </div>
+      {% else %}
+        {% with volume=camera.volume %}
+          <div class="dccn-text-small font-weight-bold ml-3 {% if not volume %}text-warning-15{% else %}text-secondary{% endif %}">
+            {% if camera.volume %}{{ camera.volume.name }}{% else %}(volume not defined){% endif %}
+          </div>
+        {% endwith %}
+      {% endif %}
+    {% endwith %}
+  {% else %}
+    {% with volume=camera.volume %}
+      <div class="dccn-text-small font-weight-bold ml-3 {% if not volume %}text-warning-15{% else %}text-secondary{% endif %}">
+        {% if camera.volume %}{{ camera.volume.name }}{% else %}(volume not defined){% endif %}
+      </div>
+    {% endwith %}
+  {% endif %}
+  </div>
 {% endfor %}

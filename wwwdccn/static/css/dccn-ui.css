@@ -19122,6 +19122,14 @@ readers do not read off random characters that represent icons */
   color: #28a745 !important;
 }
 
+.border-success-0 {
+  border-color: #d4edda !important;
+}
+
+.border-success-10 {
+  border-color: #28a745 !important;
+}
+
 .bg-success-1 {
   background-color: #c3e6cb !important;
 }
@@ -19136,6 +19144,14 @@ readers do not read off random characters that represent icons */
 
 .text-success-11 {
   color: #259a3f !important;
+}
+
+.border-success-1 {
+  border-color: #c3e6cb !important;
+}
+
+.border-success-11 {
+  border-color: #259a3f !important;
 }
 
 .bg-success-2 {
@@ -19154,6 +19170,14 @@ readers do not read off random characters that represent icons */
   color: #228c3a !important;
 }
 
+.border-success-2 {
+  border-color: #b2dfbc !important;
+}
+
+.border-success-12 {
+  border-color: #228c3a !important;
+}
+
 .bg-success-3 {
   background-color: #a0d8ad !important;
 }
@@ -19168,6 +19192,14 @@ readers do not read off random characters that represent icons */
 
 .text-success-13 {
   color: #1e7f34 !important;
+}
+
+.border-success-3 {
+  border-color: #a0d8ad !important;
+}
+
+.border-success-13 {
+  border-color: #1e7f34 !important;
 }
 
 .bg-success-4 {
@@ -19186,6 +19218,14 @@ readers do not read off random characters that represent icons */
   color: #1b722f !important;
 }
 
+.border-success-4 {
+  border-color: #8fd19e !important;
+}
+
+.border-success-14 {
+  border-color: #1b722f !important;
+}
+
 .bg-success-5 {
   background-color: #7eca8f !important;
 }
@@ -19200,6 +19240,14 @@ readers do not read off random characters that represent icons */
 
 .text-success-15 {
   color: #186429 !important;
+}
+
+.border-success-5 {
+  border-color: #7eca8f !important;
+}
+
+.border-success-15 {
+  border-color: #186429 !important;
 }
 
 .bg-success-6 {
@@ -19218,6 +19266,14 @@ readers do not read off random characters that represent icons */
   color: #155724 !important;
 }
 
+.border-success-6 {
+  border-color: #6dc381 !important;
+}
+
+.border-success-16 {
+  border-color: #155724 !important;
+}
+
 .bg-success-7 {
   background-color: #5cbc72 !important;
 }
@@ -19232,6 +19288,14 @@ readers do not read off random characters that represent icons */
 
 .text-success-17 {
   color: #12491e !important;
+}
+
+.border-success-7 {
+  border-color: #5cbc72 !important;
+}
+
+.border-success-17 {
+  border-color: #12491e !important;
 }
 
 .bg-success-8 {
@@ -19250,6 +19314,14 @@ readers do not read off random characters that represent icons */
   color: #0e3c19 !important;
 }
 
+.border-success-8 {
+  border-color: #4ab563 !important;
+}
+
+.border-success-18 {
+  border-color: #0e3c19 !important;
+}
+
 .bg-success-9 {
   background-color: #39ae54 !important;
 }
@@ -19264,6 +19336,14 @@ readers do not read off random characters that represent icons */
 
 .text-success-19 {
   color: #0b2f13 !important;
+}
+
+.border-success-9 {
+  border-color: #39ae54 !important;
+}
+
+.border-success-19 {
+  border-color: #0b2f13 !important;
 }
 
 .bg-success-20 {
@@ -19290,6 +19370,14 @@ readers do not read off random characters that represent icons */
   color: #007bff !important;
 }
 
+.border-primary-0 {
+  border-color: #cce5ff !important;
+}
+
+.border-primary-10 {
+  border-color: #007bff !important;
+}
+
 .bg-primary-1 {
   background-color: #b8daff !important;
 }
@@ -19304,6 +19392,14 @@ readers do not read off random characters that represent icons */
 
 .text-primary-11 {
   color: #0071eb !important;
+}
+
+.border-primary-1 {
+  border-color: #b8daff !important;
+}
+
+.border-primary-11 {
+  border-color: #0071eb !important;
 }
 
 .bg-primary-2 {
@@ -19322,6 +19418,14 @@ readers do not read off random characters that represent icons */
   color: #0067d6 !important;
 }
 
+.border-primary-2 {
+  border-color: #a3cfff !important;
+}
+
+.border-primary-12 {
+  border-color: #0067d6 !important;
+}
+
 .bg-primary-3 {
   background-color: #8fc5ff !important;
 }
@@ -19336,6 +19440,14 @@ readers do not read off random characters that represent icons */
 
 .text-primary-13 {
   color: #005dc2 !important;
+}
+
+.border-primary-3 {
+  border-color: #8fc5ff !important;
+}
+
+.border-primary-13 {
+  border-color: #005dc2 !important;
 }
 
 .bg-primary-4 {
@@ -19354,6 +19466,14 @@ readers do not read off random characters that represent icons */
   color: #0054ad !important;
 }
 
+.border-primary-4 {
+  border-color: #7abaff !important;
+}
+
+.border-primary-14 {
+  border-color: #0054ad !important;
+}
+
 .bg-primary-5 {
   background-color: #66b0ff !important;
 }
@@ -19368,6 +19488,14 @@ readers do not read off random characters that represent icons */
 
 .text-primary-15 {
   color: #004a99 !important;
+}
+
+.border-primary-5 {
+  border-color: #66b0ff !important;
+}
+
+.border-primary-15 {
+  border-color: #004a99 !important;
 }
 
 .bg-primary-6 {
@@ -19386,6 +19514,14 @@ readers do not read off random characters that represent icons */
   color: #004085 !important;
 }
 
+.border-primary-6 {
+  border-color: #52a5ff !important;
+}
+
+.border-primary-16 {
+  border-color: #004085 !important;
+}
+
 .bg-primary-7 {
   background-color: #3d9bff !important;
 }
@@ -19400,6 +19536,14 @@ readers do not read off random characters that represent icons */
 
 .text-primary-17 {
   color: #003670 !important;
+}
+
+.border-primary-7 {
+  border-color: #3d9bff !important;
+}
+
+.border-primary-17 {
+  border-color: #003670 !important;
 }
 
 .bg-primary-8 {
@@ -19418,6 +19562,14 @@ readers do not read off random characters that represent icons */
   color: #002c5c !important;
 }
 
+.border-primary-8 {
+  border-color: #2990ff !important;
+}
+
+.border-primary-18 {
+  border-color: #002c5c !important;
+}
+
 .bg-primary-9 {
   background-color: #1486ff !important;
 }
@@ -19432,6 +19584,14 @@ readers do not read off random characters that represent icons */
 
 .text-primary-19 {
   color: #002247 !important;
+}
+
+.border-primary-9 {
+  border-color: #1486ff !important;
+}
+
+.border-primary-19 {
+  border-color: #002247 !important;
 }
 
 .bg-primary-20 {
@@ -19458,6 +19618,14 @@ readers do not read off random characters that represent icons */
   color: #17a2b8 !important;
 }
 
+.border-info-0 {
+  border-color: #d1ecf1 !important;
+}
+
+.border-info-10 {
+  border-color: #17a2b8 !important;
+}
+
 .bg-info-1 {
   background-color: #bee5eb !important;
 }
@@ -19472,6 +19640,14 @@ readers do not read off random characters that represent icons */
 
 .text-info-11 {
   color: #1595a9 !important;
+}
+
+.border-info-1 {
+  border-color: #bee5eb !important;
+}
+
+.border-info-11 {
+  border-color: #1595a9 !important;
 }
 
 .bg-info-2 {
@@ -19490,6 +19666,14 @@ readers do not read off random characters that represent icons */
   color: #13889b !important;
 }
 
+.border-info-2 {
+  border-color: #abdee5 !important;
+}
+
+.border-info-12 {
+  border-color: #13889b !important;
+}
+
 .bg-info-3 {
   background-color: #99d6e0 !important;
 }
@@ -19504,6 +19688,14 @@ readers do not read off random characters that represent icons */
 
 .text-info-13 {
   color: #117b8c !important;
+}
+
+.border-info-3 {
+  border-color: #99d6e0 !important;
+}
+
+.border-info-13 {
+  border-color: #117b8c !important;
 }
 
 .bg-info-4 {
@@ -19522,6 +19714,14 @@ readers do not read off random characters that represent icons */
   color: #106e7d !important;
 }
 
+.border-info-4 {
+  border-color: #86cfda !important;
+}
+
+.border-info-14 {
+  border-color: #106e7d !important;
+}
+
 .bg-info-5 {
   background-color: #74c7d4 !important;
 }
@@ -19536,6 +19736,14 @@ readers do not read off random characters that represent icons */
 
 .text-info-15 {
   color: #0e616e !important;
+}
+
+.border-info-5 {
+  border-color: #74c7d4 !important;
+}
+
+.border-info-15 {
+  border-color: #0e616e !important;
 }
 
 .bg-info-6 {
@@ -19554,6 +19762,14 @@ readers do not read off random characters that represent icons */
   color: #0c5460 !important;
 }
 
+.border-info-6 {
+  border-color: #61c0cf !important;
+}
+
+.border-info-16 {
+  border-color: #0c5460 !important;
+}
+
 .bg-info-7 {
   background-color: #4fb8c9 !important;
 }
@@ -19568,6 +19784,14 @@ readers do not read off random characters that represent icons */
 
 .text-info-17 {
   color: #0a4751 !important;
+}
+
+.border-info-7 {
+  border-color: #4fb8c9 !important;
+}
+
+.border-info-17 {
+  border-color: #0a4751 !important;
 }
 
 .bg-info-8 {
@@ -19586,6 +19810,14 @@ readers do not read off random characters that represent icons */
   color: #083a42 !important;
 }
 
+.border-info-8 {
+  border-color: #3cb1c3 !important;
+}
+
+.border-info-18 {
+  border-color: #083a42 !important;
+}
+
 .bg-info-9 {
   background-color: #2aa9be !important;
 }
@@ -19600,6 +19832,14 @@ readers do not read off random characters that represent icons */
 
 .text-info-19 {
   color: #062d34 !important;
+}
+
+.border-info-9 {
+  border-color: #2aa9be !important;
+}
+
+.border-info-19 {
+  border-color: #062d34 !important;
 }
 
 .bg-info-20 {
@@ -19626,6 +19866,14 @@ readers do not read off random characters that represent icons */
   color: #343a40 !important;
 }
 
+.border-dark-0 {
+  border-color: #d6d8d9 !important;
+}
+
+.border-dark-10 {
+  border-color: #343a40 !important;
+}
+
 .bg-dark-1 {
   background-color: #c6c8ca !important;
 }
@@ -19640,6 +19888,14 @@ readers do not read off random characters that represent icons */
 
 .text-dark-11 {
   color: #30353b !important;
+}
+
+.border-dark-1 {
+  border-color: #c6c8ca !important;
+}
+
+.border-dark-11 {
+  border-color: #30353b !important;
 }
 
 .bg-dark-2 {
@@ -19658,6 +19914,14 @@ readers do not read off random characters that represent icons */
   color: #2c3136 !important;
 }
 
+.border-dark-2 {
+  border-color: #b6b8ba !important;
+}
+
+.border-dark-12 {
+  border-color: #2c3136 !important;
+}
+
 .bg-dark-3 {
   background-color: #a6a8ab !important;
 }
@@ -19672,6 +19936,14 @@ readers do not read off random characters that represent icons */
 
 .text-dark-13 {
   color: #282c31 !important;
+}
+
+.border-dark-3 {
+  border-color: #a6a8ab !important;
+}
+
+.border-dark-13 {
+  border-color: #282c31 !important;
 }
 
 .bg-dark-4 {
@@ -19690,6 +19962,14 @@ readers do not read off random characters that represent icons */
   color: #23272c !important;
 }
 
+.border-dark-4 {
+  border-color: #95999c !important;
+}
+
+.border-dark-14 {
+  border-color: #23272c !important;
+}
+
 .bg-dark-5 {
   background-color: #85898c !important;
 }
@@ -19704,6 +19984,14 @@ readers do not read off random characters that represent icons */
 
 .text-dark-15 {
   color: #1f2326 !important;
+}
+
+.border-dark-5 {
+  border-color: #85898c !important;
+}
+
+.border-dark-15 {
+  border-color: #1f2326 !important;
 }
 
 .bg-dark-6 {
@@ -19722,6 +20010,14 @@ readers do not read off random characters that represent icons */
   color: #1b1e21 !important;
 }
 
+.border-dark-6 {
+  border-color: #75797d !important;
+}
+
+.border-dark-16 {
+  border-color: #1b1e21 !important;
+}
+
 .bg-dark-7 {
   background-color: #65696e !important;
 }
@@ -19736,6 +20032,14 @@ readers do not read off random characters that represent icons */
 
 .text-dark-17 {
   color: #171a1c !important;
+}
+
+.border-dark-7 {
+  border-color: #65696e !important;
+}
+
+.border-dark-17 {
+  border-color: #171a1c !important;
 }
 
 .bg-dark-8 {
@@ -19754,6 +20058,14 @@ readers do not read off random characters that represent icons */
   color: #131517 !important;
 }
 
+.border-dark-8 {
+  border-color: #545a5f !important;
+}
+
+.border-dark-18 {
+  border-color: #131517 !important;
+}
+
 .bg-dark-9 {
   background-color: #444a4f !important;
 }
@@ -19768,6 +20080,14 @@ readers do not read off random characters that represent icons */
 
 .text-dark-19 {
   color: #0f1012 !important;
+}
+
+.border-dark-9 {
+  border-color: #444a4f !important;
+}
+
+.border-dark-19 {
+  border-color: #0f1012 !important;
 }
 
 .bg-dark-20 {
@@ -19794,6 +20114,14 @@ readers do not read off random characters that represent icons */
   color: #f8f9fa !important;
 }
 
+.border-light-0 {
+  border-color: #fefefe !important;
+}
+
+.border-light-10 {
+  border-color: #f8f9fa !important;
+}
+
 .bg-light-1 {
   background-color: #fdfdfe !important;
 }
@@ -19808,6 +20136,14 @@ readers do not read off random characters that represent icons */
 
 .text-light-11 {
   color: #e4e5e6 !important;
+}
+
+.border-light-1 {
+  border-color: #fdfdfe !important;
+}
+
+.border-light-11 {
+  border-color: #e4e5e6 !important;
 }
 
 .bg-light-2 {
@@ -19826,6 +20162,14 @@ readers do not read off random characters that represent icons */
   color: #d0d1d2 !important;
 }
 
+.border-light-2 {
+  border-color: #fcfdfd !important;
+}
+
+.border-light-12 {
+  border-color: #d0d1d2 !important;
+}
+
 .bg-light-3 {
   background-color: #fcfcfd !important;
 }
@@ -19840,6 +20184,14 @@ readers do not read off random characters that represent icons */
 
 .text-light-13 {
   color: #bcbdbe !important;
+}
+
+.border-light-3 {
+  border-color: #fcfcfd !important;
+}
+
+.border-light-13 {
+  border-color: #bcbdbe !important;
 }
 
 .bg-light-4 {
@@ -19858,6 +20210,14 @@ readers do not read off random characters that represent icons */
   color: #a9a9aa !important;
 }
 
+.border-light-4 {
+  border-color: #fbfcfc !important;
+}
+
+.border-light-14 {
+  border-color: #a9a9aa !important;
+}
+
 .bg-light-5 {
   background-color: #fbfbfc !important;
 }
@@ -19872,6 +20232,14 @@ readers do not read off random characters that represent icons */
 
 .text-light-15 {
   color: #959596 !important;
+}
+
+.border-light-5 {
+  border-color: #fbfbfc !important;
+}
+
+.border-light-15 {
+  border-color: #959596 !important;
 }
 
 .bg-light-6 {
@@ -19890,6 +20258,14 @@ readers do not read off random characters that represent icons */
   color: #818182 !important;
 }
 
+.border-light-6 {
+  border-color: #fafbfc !important;
+}
+
+.border-light-16 {
+  border-color: #818182 !important;
+}
+
 .bg-light-7 {
   background-color: #fafafb !important;
 }
@@ -19904,6 +20280,14 @@ readers do not read off random characters that represent icons */
 
 .text-light-17 {
   color: #6d6e6e !important;
+}
+
+.border-light-7 {
+  border-color: #fafafb !important;
+}
+
+.border-light-17 {
+  border-color: #6d6e6e !important;
 }
 
 .bg-light-8 {
@@ -19922,6 +20306,14 @@ readers do not read off random characters that represent icons */
   color: #595a5a !important;
 }
 
+.border-light-8 {
+  border-color: #f9fafb !important;
+}
+
+.border-light-18 {
+  border-color: #595a5a !important;
+}
+
 .bg-light-9 {
   background-color: #f9f9fa !important;
 }
@@ -19936,6 +20328,14 @@ readers do not read off random characters that represent icons */
 
 .text-light-19 {
   color: #454646 !important;
+}
+
+.border-light-9 {
+  border-color: #f9f9fa !important;
+}
+
+.border-light-19 {
+  border-color: #454646 !important;
 }
 
 .bg-light-20 {
@@ -19962,6 +20362,14 @@ readers do not read off random characters that represent icons */
   color: #dc3545 !important;
 }
 
+.border-danger-0 {
+  border-color: #f8d7da !important;
+}
+
+.border-danger-10 {
+  border-color: #dc3545 !important;
+}
+
 .bg-danger-1 {
   background-color: #f5c6cb !important;
 }
@@ -19976,6 +20384,14 @@ readers do not read off random characters that represent icons */
 
 .text-danger-11 {
   color: #ca313f !important;
+}
+
+.border-danger-1 {
+  border-color: #f5c6cb !important;
+}
+
+.border-danger-11 {
+  border-color: #ca313f !important;
 }
 
 .bg-danger-2 {
@@ -19994,6 +20410,14 @@ readers do not read off random characters that represent icons */
   color: #b92d3a !important;
 }
 
+.border-danger-2 {
+  border-color: #f2b6bc !important;
+}
+
+.border-danger-12 {
+  border-color: #b92d3a !important;
+}
+
 .bg-danger-3 {
   background-color: #f0a6ad !important;
 }
@@ -20008,6 +20432,14 @@ readers do not read off random characters that represent icons */
 
 .text-danger-13 {
   color: #a72834 !important;
+}
+
+.border-danger-3 {
+  border-color: #f0a6ad !important;
+}
+
+.border-danger-13 {
+  border-color: #a72834 !important;
 }
 
 .bg-danger-4 {
@@ -20026,6 +20458,14 @@ readers do not read off random characters that represent icons */
   color: #96242f !important;
 }
 
+.border-danger-4 {
+  border-color: #ed969e !important;
+}
+
+.border-danger-14 {
+  border-color: #96242f !important;
+}
+
 .bg-danger-5 {
   background-color: #ea868f !important;
 }
@@ -20040,6 +20480,14 @@ readers do not read off random characters that represent icons */
 
 .text-danger-15 {
   color: #842029 !important;
+}
+
+.border-danger-5 {
+  border-color: #ea868f !important;
+}
+
+.border-danger-15 {
+  border-color: #842029 !important;
 }
 
 .bg-danger-6 {
@@ -20058,6 +20506,14 @@ readers do not read off random characters that represent icons */
   color: #721c24 !important;
 }
 
+.border-danger-6 {
+  border-color: #e77681 !important;
+}
+
+.border-danger-16 {
+  border-color: #721c24 !important;
+}
+
 .bg-danger-7 {
   background-color: #e46572 !important;
 }
@@ -20072,6 +20528,14 @@ readers do not read off random characters that represent icons */
 
 .text-danger-17 {
   color: #61171e !important;
+}
+
+.border-danger-7 {
+  border-color: #e46572 !important;
+}
+
+.border-danger-17 {
+  border-color: #61171e !important;
 }
 
 .bg-danger-8 {
@@ -20090,6 +20554,14 @@ readers do not read off random characters that represent icons */
   color: #4f1319 !important;
 }
 
+.border-danger-8 {
+  border-color: #e25563 !important;
+}
+
+.border-danger-18 {
+  border-color: #4f1319 !important;
+}
+
 .bg-danger-9 {
   background-color: #df4554 !important;
 }
@@ -20104,6 +20576,14 @@ readers do not read off random characters that represent icons */
 
 .text-danger-19 {
   color: #3e0f13 !important;
+}
+
+.border-danger-9 {
+  border-color: #df4554 !important;
+}
+
+.border-danger-19 {
+  border-color: #3e0f13 !important;
 }
 
 .bg-danger-20 {
@@ -20130,6 +20610,14 @@ readers do not read off random characters that represent icons */
   color: #ffc107 !important;
 }
 
+.border-warning-0 {
+  border-color: #fff3cd !important;
+}
+
+.border-warning-10 {
+  border-color: #ffc107 !important;
+}
+
 .bg-warning-1 {
   background-color: #ffeeba !important;
 }
@@ -20144,6 +20632,14 @@ readers do not read off random characters that represent icons */
 
 .text-warning-11 {
   color: #ebb206 !important;
+}
+
+.border-warning-1 {
+  border-color: #ffeeba !important;
+}
+
+.border-warning-11 {
+  border-color: #ebb206 !important;
 }
 
 .bg-warning-2 {
@@ -20162,6 +20658,14 @@ readers do not read off random characters that represent icons */
   color: #d6a206 !important;
 }
 
+.border-warning-2 {
+  border-color: #ffe9a6 !important;
+}
+
+.border-warning-12 {
+  border-color: #d6a206 !important;
+}
+
 .bg-warning-3 {
   background-color: #ffe492 !important;
 }
@@ -20176,6 +20680,14 @@ readers do not read off random characters that represent icons */
 
 .text-warning-13 {
   color: #c29305 !important;
+}
+
+.border-warning-3 {
+  border-color: #ffe492 !important;
+}
+
+.border-warning-13 {
+  border-color: #c29305 !important;
 }
 
 .bg-warning-4 {
@@ -20194,6 +20706,14 @@ readers do not read off random characters that represent icons */
   color: #ad8305 !important;
 }
 
+.border-warning-4 {
+  border-color: #ffdf7e !important;
+}
+
+.border-warning-14 {
+  border-color: #ad8305 !important;
+}
+
 .bg-warning-5 {
   background-color: #ffda6a !important;
 }
@@ -20208,6 +20728,14 @@ readers do not read off random characters that represent icons */
 
 .text-warning-15 {
   color: #997404 !important;
+}
+
+.border-warning-5 {
+  border-color: #ffda6a !important;
+}
+
+.border-warning-15 {
+  border-color: #997404 !important;
 }
 
 .bg-warning-6 {
@@ -20226,6 +20754,14 @@ readers do not read off random characters that represent icons */
   color: #856404 !important;
 }
 
+.border-warning-6 {
+  border-color: #ffd556 !important;
+}
+
+.border-warning-16 {
+  border-color: #856404 !important;
+}
+
 .bg-warning-7 {
   background-color: #ffd043 !important;
 }
@@ -20240,6 +20776,14 @@ readers do not read off random characters that represent icons */
 
 .text-warning-17 {
   color: #705503 !important;
+}
+
+.border-warning-7 {
+  border-color: #ffd043 !important;
+}
+
+.border-warning-17 {
+  border-color: #705503 !important;
 }
 
 .bg-warning-8 {
@@ -20258,6 +20802,14 @@ readers do not read off random characters that represent icons */
   color: #5c4503 !important;
 }
 
+.border-warning-8 {
+  border-color: #ffcb2f !important;
+}
+
+.border-warning-18 {
+  border-color: #5c4503 !important;
+}
+
 .bg-warning-9 {
   background-color: #ffc61b !important;
 }
@@ -20272,6 +20824,14 @@ readers do not read off random characters that represent icons */
 
 .text-warning-19 {
   color: #473602 !important;
+}
+
+.border-warning-9 {
+  border-color: #ffc61b !important;
+}
+
+.border-warning-19 {
+  border-color: #473602 !important;
 }
 
 .bg-warning-20 {

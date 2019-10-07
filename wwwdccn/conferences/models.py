@@ -129,6 +129,9 @@ class ProceedingVolume(Model):
     name = CharField(max_length=256, verbose_name=_('Short name'))
     description = TextField(verbose_name=_('Description'))
 
+    def __str__(self):
+        return self.name
+
 
 class ArtifactDescriptor(Model):
     TYPE_ANY = 'ANY'

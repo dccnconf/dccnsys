@@ -12,6 +12,12 @@
     .text-#{$klass}-#{$i+10} {
       color: theme-color-level($klass, $i) !important;
     }
+    .border-#{$klass}-#{$i} {
+      border-color: theme-color-level($klass, $i - 10) !important;
+    }
+    .border-#{$klass}-#{$i+10} {
+      border-color: theme-color-level($klass, $i) !important;
+    }
   }
   .bg-#{$klass}-20 {
     background-color: theme-color-level($klass, 10) !important;

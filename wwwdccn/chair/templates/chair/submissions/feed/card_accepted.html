@@ -12,6 +12,7 @@
 
 {% load submission_extras %}
 {% load review_extras %}
+{% load bootstrap4 %}
 
 {% block statusRowItems %}
   {# Show average score in the status row: #}
@@ -27,9 +28,6 @@
 
 {% block rightBodyColumn %}
   {% include 'chair/submissions/feed/_artifacts.html' with submission=submission hide_missing=False mark_mandatory=True  %}
-{#  <div class="ml-3 mt-3 review-feed-item-controls">#}
-{#    {% include 'chair/submissions/components/_decision_control.html' with form_data=form_data sub_pk=submission.pk %}#}
-{#  </div>#}
 {% endblock %}
 
 

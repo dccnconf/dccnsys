@@ -31,14 +31,14 @@
   </div>
 
   {#------------------------------------------ #}
-  {# 2 Card top row: status, indications, etc. #}
+  {# 2 Card body                               #}
   {#------------------------------------------ #}
   <div class="row">
     {% block cardBodyColumns %}
       <div class="col-12">
         {% include 'chair/submissions/feed/_title_authors.html' with submission=submission %}
         {% if warnings %}
-          <div class="dccn-feed-item-messages">
+          <div class="dccn-feed-item-messages mt-3">
             {% include 'chair/submissions/feed/_warning_list.html' with warnings=warnings %}
           </div>
         {% endif %}

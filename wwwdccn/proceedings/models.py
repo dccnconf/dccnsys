@@ -19,6 +19,9 @@ class CameraReady(Model):
 
     active = BooleanField(default=False)
 
+    class Meta:
+        ordering = ['id']
+
     def __str__(self):
         is_active = " [INACTIVE]" if not self.active else ""
         return f'{self.id}: camera-ready of submission ({self.submission_id})' \
