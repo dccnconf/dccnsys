@@ -15,9 +15,14 @@ class CameraReady(Model):
         ProceedingType, on_delete=SET_NULL, null=True, blank=True)
 
     volume = ForeignKey(
-        ProceedingVolume, on_delete=SET_NULL, null=True, blank=True)
+        ProceedingVolume, on_delete=SET_NULL, null=True, blank=True,
+        default=None)
 
     active = BooleanField(default=False)
+
+    class Meta:
+        ordering = ['id']
+        unique_together = ['submission', 'proc_type']
 
     def __str__(self):
         is_active = " [INACTIVE]" if not self.active else ""
@@ -26,16 +31,30 @@ class CameraReady(Model):
                f' volume ({self.volume_id}){is_active}'
 
 
-# noinspection PyUnusedLocal
 @receiver(post_save, sender=Submission)
-def create_cameras_on_submission_accept(sender, instance, **kwargs):
-    assert isinstance(instance, Submission)
-    stage = instance.reviewstage_set.first()
+def create_cameras_on_submission_accept(**kwargs):
+    """When a submission is accepted, create cameras for allowed proceeding
+    types and mark them active. Cameras for all other proceeding types
+    (those were possible due to submission type) mark as inactive.
+
+    In all other cases except submission being printed or published,
+    mark all existing cameras as inactive.
+    """
+    submission = kwargs['instance']
+    stage = submission.reviewstage_set.first()
     decision_type = stage.decision.decision_type if stage else None
-    if decision_type and instance.status == Submission.ACCEPTED:
-        for proc_type in decision_type.allowed_proceedings:
-            instance.cameraready_set.get_or_create(
-                submission=instance, proc_type=proc_type)
+    if decision_type is not None and submission.status == Submission.ACCEPTED:
+        allowed_proc_types = list(decision_type.allowed_proceedings.all())
+        all_proc_types = list(submission.stype.possible_proceedings.all())
+        for proc_type in all_proc_types:
+            camera, _ = CameraReady.objects.get_or_create(
+                submission=submission, proc_type=proc_type)
+            camera.active = proc_type in allowed_proc_types
+            camera.save()
+    elif submission not in {Submission.IN_PRINT, Submission.PUBLISHED}:
+        for camera in submission.cameraready_set.all():
+            camera.active = False
+            camera.save()
 
 
 class Artifact(Model):
@@ -66,11 +85,11 @@ def create_attachment_on_new_artifact(sender, instance, created, **kwargs):
         )
         descriptor = instance.descriptor
         attachment = Attachment.objects.create(
-            submission=camera.submission_id,
+            submission=camera.submission,
             access=access,
             code=descriptor.code,
             name=descriptor.name,
-            label=descriptor.description,
+            label=descriptor.name,
         )
         instance.attachment = attachment
         instance.save()
@@ -84,7 +103,7 @@ def create_artifacts_on_new_camera(sender, instance, created, **kwargs):
         descriptors = ArtifactDescriptor.objects.filter(
             proc_type=instance.proc_type_id)
         for descriptor in descriptors:
-            instance.artifact_set.get_or_create(
+            Artifact.objects.get_or_create(
                 camera_ready=instance, descriptor=descriptor)
 
 

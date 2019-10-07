@@ -30,3 +30,8 @@ def update_param(request, clear_keys='', **kwargs):
                  key not in request.GET and key not in keys_to_remove]:
         items.append(f'{name}={kwargs[name]}')
     return '&'.join(items)
+
+
+@register.filter
+def get_item(d, key):
+    return d.get(key)

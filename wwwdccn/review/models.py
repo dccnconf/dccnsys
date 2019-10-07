@@ -38,16 +38,17 @@ class ReviewStage(Model):
         return self.decision.decision_type
 
 
-# noinspection PyUnusedLocal
 @receiver(post_save, sender=Submission)
-def create_review_stage(sender, instance, **kwargs):
-    assert isinstance(instance, Submission)
-    if (instance.status == Submission.UNDER_REVIEW and
-            instance.reviewstage_set.count() == 0):
-        sub_type = instance.stype
+def create_review_stage(**kwargs):
+    """When submission status is UNDER_REVIEW, we create a ReviewStage for it.
+    """
+    submission = kwargs.get('instance')
+    if (submission.status == Submission.UNDER_REVIEW and
+            submission.reviewstage_set.count() == 0):
+        sub_type = submission.stype
         num_reviews_required = sub_type.num_reviews if sub_type else 0
         ReviewStage.objects.create(
-            submission=instance, num_reviews_required=num_reviews_required,
+            submission=submission, num_reviews_required=num_reviews_required,
             locked=False)
 
 
@@ -219,13 +220,27 @@ class ReviewDecision(Model):
     stage = OneToOneField(ReviewStage, on_delete=CASCADE,
                           related_name='decision')
 
+    def save(self, *args, **kwargs):
+        ret = super().save(*args, **kwargs)
+        decision = self.decision_type.decision if self.decision_type else None
+        if decision:
+            submission = self.stage.submission
+            if decision == ReviewDecisionType.ACCEPT:
+                submission.status = Submission.ACCEPTED
+                submission.save()
+            elif decision == ReviewDecisionType.REJECT:
+                submission.status = Submission.REJECTED
+                submission.save()
+        return ret
 
-# noinspection PyUnusedLocal
+
 @receiver(post_save, sender=ReviewStage)
-def create_decision_after_stage_created(sender, instance, created, **kwargs):
-    assert isinstance(instance, ReviewStage)
-    if created:
-        ReviewDecision.objects.create(stage=instance)
+def create_decision_after_stage_created(**kwargs):
+    """When ReviewStage is created, a OneToOne field ReviewDecision should
+    be also created."""
+    review_stage = kwargs['instance']
+    if kwargs['created']:
+        ReviewDecision.objects.get_or_create(stage=review_stage)
 
 
 class ReviewStats(Model):

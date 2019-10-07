@@ -7,7 +7,7 @@
 {# - `review_stats`: an instance of `ReviewStats` object                   #}
 {# - `form_data`: form data for decision pseudo-form                       #}
 {###########################################################################}
-{% extends 'chair/submissions/feed/_card_base_columed.html' %}
+{% extends 'chair/submissions/feed/_card_base_columed2.html' %}
 {% load submission_extras %}
 {% load review_extras %}
 {% load gears_extras %}
@@ -115,17 +115,10 @@
 
 
 {% block footerRowItems %}
-  {% if submission.stype %}
-    {% with num_required=submission.stype.num_reviews num_reviews=submission|reviews_of|length %}
-        <a href="{% url 'chair:submission-reviewers' sub_pk=submission.pk %}" class="dccn-feed-item-link">
-          <i class="fas fa-glasses"></i> Reviewers
-          (<span class="{% if num_reviews < num_required %}text-danger-12{% endif %}">{{ num_reviews }}/{{ num_required }}</span>)
-        </a>
-    {% endwith %}
-  {% endif %}
   <button class="btn btn-link dccn-feed-item-link" data-toggle="submission-status" data-status="SUBMIT"
           data-target="{% url 'submissions:update-status' pk=submission.pk %}">
     {% csrf_token %}
     <i class="fas fa-backward"></i> Revoke review
   </button>
+  {% include 'chair/submissions/components/_review_decision_controls.html' with dropdown_class="dccn-feed-item-link btn-link" accept_dropdown_class='text-success-18' reject_dropdown_class='text-danger-18' %}
 {% endblock %}

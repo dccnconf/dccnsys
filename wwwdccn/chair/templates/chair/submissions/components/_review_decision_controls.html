@@ -1,0 +1,56 @@
+{########################################################################}
+{# Review decision selection controls implemented as dropdowns.         #}
+{# Pressing at any button (in the dropdown menu) causes a modal dialog, #}
+{# after accepting which review decision is written and submission      #}
+{# status is changed.                                                   #}
+{#                                                                      #}
+{# CONTEXT:                                                             #}
+{# - decision: ReviewDecision model instance                            #}
+{# - accept_decisions: an iterable with possible decision types with    #}
+{#                     `decision=ACCEPT`                                #}
+{# - reject_decisions: an iterable with possible decision types with    #}
+{#                     `decision=REJECT`                                #}
+{# - dropdown_class: a string with space-separated classes              #}
+{#                     attached to the dropdown togglers.               #}
+{# - accept_dropdown_class, reject_dropdown_class                       #}
+{# - accept_class, reject_class: classes attached to menus.             #}
+{#                                                                      #}
+{# REQUIRES SCRIPTS:                                                    #}
+{# - 'chair/js/submission-action.js'                                    #}
+{########################################################################}
+<div class="dropdown ml-2">
+  <button class="btn {{ dropdown_class }} dropdown-toggle {{ accept_dropdown_class }}" data-toggle="dropdown">
+    <i class="far fa-thumbs-up"></i> Accept
+  </button>
+  <div class="dropdown-menu">
+    {% for dt in accept_decisions %}
+      <button class="dropdown-item dccn-text-normal {{ accept_class|default:'text-success-16' }} py-2 px-3"
+              data-toggle="submission-review-decision"
+              data-review-decision="{{ dt.description }}"
+              data-decision-value="{{ dt.decision|lower }}"
+              data-decision-type-id="{{ dt.id }}"
+              data-target="{% url 'review:update-decision' decision_id=decision.id %}">
+        {% csrf_token %}
+        {{ dt.description }}
+      </button>
+    {% endfor %}
+  </div>
+</div>
+<div class="dropdown ml-2">
+  <button class="btn {{ dropdown_class }} dropdown-toggle {{ reject_dropdown_class }}" data-toggle="dropdown">
+    <i class="far fa-thumbs-down"></i> Reject
+  </button>
+  <div class="dropdown-menu">
+    {% for dt in reject_decisions %}
+      <button class="dropdown-item dccn-text-normal {{ reject_class|default:'text-danger-16' }} mx-3 my-2"
+              data-toggle="submission-review-decision"
+              data-review-decision="{{ dt.description }}"
+              data-decision-value="{{ dt.decision|lower }}"
+              data-decision-type-id="{{ dt.id }}"
+              data-target="{% url 'review:update-decision' decision_id=decision.id %}">
+        {% csrf_token %}
+        {{ dt.description }}
+      </button>
+    {% endfor %}
+  </div>
+</div>

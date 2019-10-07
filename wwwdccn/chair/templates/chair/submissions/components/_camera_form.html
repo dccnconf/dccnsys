@@ -1,0 +1,38 @@
+{#############################################################################################################}
+{# Here we assume that a dictionary `camera-ready => form` is passed along with current camera-ready object. #}
+{# We output a form if it is available, otherwise put a div with volume name.                                #}
+{#                                                                                                           #}
+{# CONTEXT:                                                                                                  #}
+{# - camera_forms: a dicionary `CameraReady -> Form`                                                         #}
+{# - camera: a camera to output form for                                                                     #}
+{# - label_ml: a margin-left bootstrap value for rendered volume name                                        #}
+{#############################################################################################################}
+{% load gears_extras %}
+
+{% if camera_forms %}
+  {% with form=camera_forms|get_item:camera %}
+    {% if form %}
+      <div class="mt-2 border-left py-1 border-{% if camera.volume %}success{% else %}danger{% endif %}">
+        <div class="d-flex mx-2 flex-wrap align-items-center">
+          <div class="mx-2 dccn-text-small font-weight-normal">Volume: </div>
+          <form action="{% url 'proceedings:update-volume' camera_id=camera.id %}" method="POST">
+            {% csrf_token %}
+            {{ form.volume }}
+          </form>
+        </div>
+      </div>
+    {% else %}
+      {% with volume=camera.volume %}
+        <div class="dccn-text-small font-weight-bold mt-2 ml-{{ label_ml|default:0 }} {% if not volume %}text-warning-15{% else %}text-secondary{% endif %}">
+          {% if camera.volume %}{{ camera.volume.name }}{% else %}(volume not defined){% endif %}
+        </div>
+      {% endwith %}
+    {% endif %}
+  {% endwith %}
+{% else %}
+  {% with volume=camera.volume %}
+    <div class="dccn-text-small font-weight-bold mt-2 ml-{{ label_ml|default:0 }} {% if not volume %}text-warning-15{% else %}text-secondary{% endif %}">
+      {% if camera.volume %}{{ camera.volume.name }}{% else %}(volume not defined){% endif %}
+    </div>
+  {% endwith %}
+{% endif %}
