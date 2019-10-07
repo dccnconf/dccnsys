@@ -116,11 +116,12 @@ WSGI_APPLICATION = 'wwwdccn.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
-if os.environ.get('DATABASE_PROVIDER', '') == 'postgresql':
-    DB_NAME = os.environ['DB_NAME']
-    DB_USERNAME = os.environ['DB_USERNAME']
-    DB_PASSWORD = os.environ['DB_PASSWORD']
-    DB_HOST = os.environ['DB_HOST']
+DATABASE_PROVIDER = os.environ.get('DATABASE_PROVIDER', 'postgresql')
+if DATABASE_PROVIDER == 'postgresql':
+    DB_NAME = os.environ.get('DB_NAME', 'dccndb')
+    DB_USERNAME = os.environ.get('DB_USERNAME', 'dccndbadm')
+    DB_PASSWORD = os.environ.get('DB_PASSWORD', 'qwerty')  # just for dev
+    DB_HOST = os.environ.get('DB_HOST', 'localhost')
     DB_PORT = os.environ.get('DB_PORT', '')
 
     DATABASES = {
@@ -133,13 +134,15 @@ if os.environ.get('DATABASE_PROVIDER', '') == 'postgresql':
             'PORT': DB_PORT,
         }
     }
-else:
+elif DATABASE_PROVIDER == 'sqlite' or DATABASE_PROVIDER == 'sqlite3':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         },
     }
+else:
+    raise ValueError(f'unsupported DB provider "{DATABASE_PROVIDER}"')
 
 
 # Password validation

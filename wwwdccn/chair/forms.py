@@ -13,10 +13,9 @@ from django_countries import countries
 
 from conferences.models import Conference, ArtifactDescriptor
 from gears.widgets import CustomCheckboxSelectMultiple, CustomFileInput
-from proceedings.models import Artifact
 from review.models import Reviewer, Review, ReviewStats
 from review.utilities import get_average_score
-from submissions.models import Submission
+from submissions.models import Submission, Attachment
 from users.models import Profile
 
 User = get_user_model()
@@ -341,10 +340,10 @@ class FilterSubmissionsForm(forms.ModelForm):
         disjuncts = []
         descriptors = [int(x) for x in data if x]
         for desc_pk in descriptors:
-            disjuncts.append(Q(artifacts__in=Subquery(
-                Artifact.objects.filter(
-                    descriptor=desc_pk, attachment__submission=OuterRef('pk')
-                ).exclude(attachment__file='').values('pk')),
+            disjuncts.append(Q(attachments__in=Subquery(
+                Attachment.objects.filter(
+                    artifact__descriptor=desc_pk, submission=OuterRef('pk')
+                ).exclude(file='').values('pk')),
                 cameraready__proc_type__artifacts=desc_pk))
         if disjuncts:
             submissions = submissions.filter(q_or(disjuncts))
