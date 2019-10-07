@@ -38,18 +38,17 @@ class ReviewStage(Model):
         return self.decision.decision_type
 
 
-# TODO: uncomment after deploy
-# # noinspection PyUnusedLocal
-# @receiver(post_save, sender=Submission)
-# def create_review_stage(sender, instance, **kwargs):
-#     assert isinstance(instance, Submission)
-#     if (instance.status == Submission.UNDER_REVIEW and
-#             instance.reviewstage_set.count() == 0):
-#         sub_type = instance.stype
-#         num_reviews_required = sub_type.num_reviews if sub_type else 0
-#         ReviewStage.objects.create(
-#             submission=instance, num_reviews_required=num_reviews_required,
-#             locked=False)
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=Submission)
+def create_review_stage(sender, instance, **kwargs):
+    assert isinstance(instance, Submission)
+    if (instance.status == Submission.UNDER_REVIEW and
+            instance.reviewstage_set.count() == 0):
+        sub_type = instance.stype
+        num_reviews_required = sub_type.num_reviews if sub_type else 0
+        ReviewStage.objects.create(
+            submission=instance, num_reviews_required=num_reviews_required,
+            locked=False)
 
 
 @receiver(post_save, sender=Submission)
@@ -221,13 +220,12 @@ class ReviewDecision(Model):
                           related_name='decision')
 
 
-# TODO: uncomment after deploy
-# # noinspection PyUnusedLocal
-# @receiver(post_save, sender=ReviewStage)
-# def create_decision_after_stage_created(sender, instance, created, **kwargs):
-#     assert isinstance(instance, ReviewStage)
-#     if created:
-#         ReviewDecision.objects.create(stage=instance)
+# noinspection PyUnusedLocal
+@receiver(post_save, sender=ReviewStage)
+def create_decision_after_stage_created(sender, instance, created, **kwargs):
+    assert isinstance(instance, ReviewStage)
+    if created:
+        ReviewDecision.objects.create(stage=instance)
 
 
 class ReviewStats(Model):
