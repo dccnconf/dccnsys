@@ -9,9 +9,10 @@ from conferences.decorators import chair_required
 from conferences.forms import ConferenceForm, SubmissionStageForm, \
     ReviewStageForm, ProceedingTypeForm, DeleteForm, SubmissionTypeForm, \
     TopicCreateForm, TopicsReorderForm, TopicEditForm, ProceedingVolumeForm, \
-    ArtifactDescriptorForm
+    ArtifactDescriptorForm, ExternalFileForm
 from conferences.models import Conference, ProceedingType, SubmissionType, \
-    Topic, ProceedingVolume, ArtifactDescriptor
+    Topic, ProceedingVolume, ArtifactDescriptor, ArtifactDescriptorLink, \
+    ExternalFile
 from submissions.models import Submission
 
 
@@ -361,8 +362,9 @@ def artifact_details(request, pk, art_pk):
                             art_pk=art_pk)
     else:
         form = ArtifactDescriptorForm(instance=artifact)
-    return render(request, 'conferences/form.html', {
+    return render(request, 'conferences/descriptor_details.html', {
         'conference': ptype.conference,
+        'descriptor': artifact,
         'form': form,
         'subtitle': 'Edit artifact #{}'.format(art_pk),
         'title': f'Conference #{ptype.conference_id}',
@@ -390,6 +392,55 @@ def artifact_toggle_editable(request, pk, art_pk):
     messages.success(request, 'Updated artifact')
     return redirect('conferences:proceedings-update', pk=pk,
                     proc_pk=artifact.proc_type_id)
+
+
+@chair_required
+def descriptor_link_details(request, pk, link_id):
+    descriptor_link = get_object_or_404(ArtifactDescriptorLink, id=link_id)
+    conference = get_object_or_404(Conference, id=pk)
+    ef = descriptor_link.link
+
+    if request.method == 'POST':
+        form = ExternalFileForm(request.POST, instance=ef)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Updated artifact descriptor link')
+        else:
+            messages.error(request, 'Error updating artifact descriptor link')
+    else:
+        form = ExternalFileForm(instance=ef)
+
+    return render(request, 'conferences/form.html', {
+        'conference': conference,
+        'form': form,
+        'subtitle': f'Edit artifact descriptor link #{descriptor_link.id}',
+        'title': f'Conference #{conference.id}',
+        'back_url': reverse('conferences:artifact-details', kwargs={
+            'pk': pk, 'art_pk': descriptor_link.descriptor_id})
+    })
+
+
+@chair_required
+@require_POST
+def descriptor_link_create(request, pk, art_pk):
+    descriptor = get_object_or_404(ArtifactDescriptor, pk=art_pk)
+    file = ExternalFile.objects.create(url='', label='')
+    link = ArtifactDescriptorLink.objects.create(
+        descriptor=descriptor, link=file)
+    messages.success(request, 'Created external link')
+    return redirect('conferences:descriptor-link-details', pk=pk,
+                    link_id=link.id)
+
+
+@chair_required
+@require_POST
+def descriptor_link_delete(request, pk, link_id):
+    descriptor_link = get_object_or_404(ArtifactDescriptorLink, id=link_id)
+    ef, descriptor = descriptor_link.link, descriptor_link.descriptor
+    ef.delete()
+    descriptor_link.delete()
+    messages.warning(request, f'External link deleted')
+    return redirect('conferences:artifact-details', pk=pk, art_pk=descriptor.id)
 
 
 @chair_required
@@ -507,3 +558,5 @@ def topics_reorder(request, pk):
     if form.is_valid():
         form.save()
     return redirect('conferences:topics', pk=pk)
+
+

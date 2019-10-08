@@ -47,7 +47,7 @@
                     <span class="font-italic">{{ artifact.description }}</span>
                   </div>
                 </div>
-                <div class="row">
+                <div class="row mt-2">
                   <div class="col-4 font-weight-bold">File type: </div>
                   <div class="col-8">{{ artifact.get_file_type_display }}</div>
                 </div>
@@ -59,12 +59,23 @@
                   <div class="col-4 font-weight-bold">Code: </div>
                   <div class="col-8">{{ artifact.code }}</div>
                 </div>
-                {% if artifact.materials_url %}
-                <div class="row">
-                  <div class="col-4 font-weight-bold">Materials: </div>
-                  <div class="col-8"><a href="{{ artifact.materials_url }}">{{ artifact.materials_url }}</a></div>
-                </div>
-                {% endif %}
+                {% with links=artifact.links.all %}
+                  {% if links %}
+                    <p class="font-weight-bold">External links:</p>
+                    {% for link in artifact.links.all %}
+                      {% with ef=link.link %}
+                        <div class="row border-left">
+                          <div class="col-12">
+                            <div class="ml-3">
+                              <div>URL: <a class="dccn-link" href="{{ ef.url }}">{{ ef.url }}</a></div>
+                              <p class="dccn-text-small font-italic mt-0">{{ ef.label }}</p>
+                            </div>
+                          </div>
+                        </div>
+                      {% endwith %}
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
               </div>
               <form action="{% url 'conferences:artifact-toggle-editable' pk=conference.pk art_pk=artifact.pk %}" method="POST">
                 {% csrf_token %}

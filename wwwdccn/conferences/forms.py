@@ -5,7 +5,7 @@ from django.forms import ModelForm, HiddenInput
 
 from gears.widgets import CustomFileInput
 from .models import Conference, SubmissionStage, ReviewStage, ProceedingType, \
-    SubmissionType, Topic, ProceedingVolume, ArtifactDescriptor
+    SubmissionType, Topic, ProceedingVolume, ArtifactDescriptor, ExternalFile
 
 
 class ConferenceForm(forms.ModelForm):
@@ -57,6 +57,12 @@ class ArtifactDescriptorForm(ModelForm):
     class Meta:
         model = ArtifactDescriptor
         exclude = ['proc_type']
+
+
+class ExternalFileForm(ModelForm):
+    class Meta:
+        model = ExternalFile
+        fields = ['url', 'label']
 
 
 class SubmissionTypeForm(forms.ModelForm):
