@@ -203,25 +203,27 @@
                 {########################}
                 {# REVIEWS              #}
                 {########################}
-                <h2 class="h1 border-bottom my-3">Reviews</h2>
-                <p class="h3 font-weight-normal">Your review score: {{ score }}</p>
+                {% if reviews %}
+                  <h2 class="h1 border-bottom my-3">Reviews</h2>
+                  <p class="h3 font-weight-normal">Your review score: {{ score }}</p>
 
-                <canvas class="dccn-scores-bar-chart my-4 mx-auto"
-                        data-scores="{% for r in reviews %}{{ r.technical_merit }},{{ r.clarity }},{{ r.relevance }},{{ r.originality }}{% if not forloop.last %};{% endif %}{% endfor %}">
-                </canvas>
+                  <canvas class="dccn-scores-bar-chart my-4 mx-auto"
+                          data-scores="{% for r in reviews %}{{ r.technical_merit }},{{ r.clarity }},{{ r.relevance }},{{ r.originality }}{% if not forloop.last %};{% endif %}{% endfor %}">
+                  </canvas>
 
-                {% for review in reviews %}
-                  <h3 class="h3 mt-4 mb-2 border-bottom">Review #{{ forloop.counter }}</h3>
-                  <table class="table table-sm table-borderless">
-                    <tbody>
-                      <tr><td>Technical Merit</td><td>{{ review.technical_merit }}</td></tr>
-                      <tr><td>Clarity</td><td>{{ review.clarity }}</td></tr>
-                      <tr><td>Relevance</td><td>{{ review.relevance }}</td></tr>
-                      <tr><td>Originality</td><td>{{ review.originality }}</td></tr>
-                    </tbody>
-                  </table>
-                  <p class="dccn-text-small-light">{{ review.details }}</p>
-                {% endfor %}
+                  {% for review in reviews %}
+                    <h3 class="h3 mt-4 mb-2 border-bottom">Review #{{ forloop.counter }}</h3>
+                    <table class="table table-sm table-borderless">
+                      <tbody>
+                        <tr><td>Technical Merit</td><td>{{ review.technical_merit }}</td></tr>
+                        <tr><td>Clarity</td><td>{{ review.clarity }}</td></tr>
+                        <tr><td>Relevance</td><td>{{ review.relevance }}</td></tr>
+                        <tr><td>Originality</td><td>{{ review.originality }}</td></tr>
+                      </tbody>
+                    </table>
+                    <p class="dccn-text-small-light">{{ review.details }}</p>
+                  {% endfor %}
+                {% endif %}
 
               {% endif %}
             {% endwith %}

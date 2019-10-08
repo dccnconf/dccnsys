@@ -114,9 +114,10 @@ def feed_item(request, submission, conference):
             camera: UpdateVolumeForm(instance=camera)
             for camera in submission.cameraready_set.filter(active=True)
         }
-    elif submission.status == Submission.UNDER_REVIEW:
+    if submission.status == Submission.UNDER_REVIEW:
         context['accept_decisions'] = get_allowed_decision_types(
             submission, ReviewDecisionType.ACCEPT)
+    if submission.status in [Submission.UNDER_REVIEW, Submission.SUBMITTED]:
         context['reject_decisions'] = get_allowed_decision_types(
             submission, ReviewDecisionType.REJECT)
     return render(request, template_names[submission.status], context)
@@ -160,6 +161,7 @@ def overview(request, submission, conference):
     if submission.status == Submission.UNDER_REVIEW:
         context['accept_decisions'] = get_allowed_decision_types(
             submission, Submission.ACCEPTED)
+    if submission.status in [Submission.UNDER_REVIEW, Submission.SUBMITTED]:
         context['reject_decisions'] = get_allowed_decision_types(
             submission, Submission.REJECTED)
 

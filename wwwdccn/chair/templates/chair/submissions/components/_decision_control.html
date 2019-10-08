@@ -5,7 +5,7 @@
 {# status is changed.                                                   #}
 {#                                                                      #}
 {# CONTEXT:                                                             #}
-{# - decision: ReviewDecision model instance                            #}
+{# - submission: Submission model instance                              #}
 {# - decision_types: an iterable with possible decision types           #}
 {# - icon_class: class to attach to an icon in the toggler              #}
 {# - label: a label at the toggler                                      #}
@@ -27,7 +27,7 @@
               data-review-decision="{{ dt.description }}"
               data-decision-value="{{ dt.decision|lower }}"
               data-decision-type-id="{{ dt.id }}"
-              data-target="{% url 'review:update-decision' decision_id=decision.id %}">
+              data-target="{% url 'review:update-decision' sub_id=submission.id %}">
         {% csrf_token %}
         {{ dt.description }}
       </button>
