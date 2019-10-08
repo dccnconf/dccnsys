@@ -170,8 +170,12 @@
                           </div>
                           <p class="dccn-text-small font-italic">
                             {{ ad.description }} ({{ ad.get_file_type_display }}, up to {{ ad.max_size_mb }} MB).
-                            {% if ad.materials_url %}Additional materials available at: <a href="{{ ad.materials_url }}" class="dccn-link">{{ ad.materials_url }}</a>{% endif %}
                           </p>
+                          {% for link in ad.links.all %}
+                            {% with ef=link.link %}
+                              <p class="mt-1 dccn-text-small">{{ ef.label }}: <a href="{{ ef.url }}" class="dccn-text-small dccn-link">{{ ef.url }}</a></p>
+                            {% endwith %}
+                          {% endfor %}
 
                           <div class="d-flex my-3">
                             <p class="dccn-text-0">
