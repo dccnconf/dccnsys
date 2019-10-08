@@ -168,6 +168,20 @@ class ArtifactDescriptor(Model):
     editable = BooleanField(default=True)
 
 
+class ExternalFile(Model):
+    url = URLField(default="", blank=True)
+    label = TextField()
+
+
+class ArtifactDescriptorLink(Model):
+    descriptor = ForeignKey(ArtifactDescriptor, on_delete=CASCADE,
+                            related_name='links')
+    link = ForeignKey(ExternalFile, on_delete=CASCADE)
+
+    class Meta:
+        unique_together = ['descriptor', 'link']
+
+
 class SubmissionType(models.Model):
     LANGUAGES = (
         (None, _('Select submission language')),

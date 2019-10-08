@@ -50,4 +50,10 @@ urlpatterns = [
          views.artifact_details, name='artifact-details'),
     path('<int:pk>/proceedings/artifacts/<int:art_pk>/toggle_editable/',
          views.artifact_toggle_editable, name='artifact-toggle-editable'),
+    path('<int:pk>/proceedings/artifacts/links/<int:link_id>/',
+         views.descriptor_link_details, name='descriptor-link-details'),
+    path('<int:pk>/proceedings/artifacts/<int:art_pk>/links/create',
+         views.descriptor_link_create, name='descriptor-link-create'),
+    path('<int:pk>/proceedings/artifacts/links/<int:link_id>/delete/',
+         views.descriptor_link_delete, name='descriptor-link-delete'),
 ]

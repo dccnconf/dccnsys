@@ -22,8 +22,8 @@
         {% if subtitle %}
           <h2 class="dccn-panel-subtitle">{{ subtitle }}</h2>
         {% endif %}
+        {% bootstrap_messages %}
         <form action="" method="POST" novalidate enctype="multipart/form-data" id="editForm">
-          {% bootstrap_messages %}
           {% csrf_token %}
           {% bootstrap_form form %}
           <div class="form-row">

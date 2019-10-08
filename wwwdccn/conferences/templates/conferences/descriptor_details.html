@@ -1,0 +1,40 @@
+{% extends 'conferences/form.html' %}
+
+{% block additionalElements %}
+  <h3>External Links</h3>
+  {% with links=descriptor.links.all %}
+    {% if links %}
+      <ol>
+        {% for link in links %}
+          {% with ef=link.link %}
+            <li class="mt-2">
+              <div class="d-flex align-items-start">
+                <div>
+                  <div>URL: <a class="dccn-link" href="{{ ef.url }}">{{ ef.url }}</a></div>
+                  <p class="dccn-text-small mt-1">{{ ef.label }}</p>
+                </div>
+                <div class="btn-group ml-auto">
+                  <a class="btn btn-sm btn-outline-success" href="{% url 'conferences:descriptor-link-details' pk=conference.pk link_id=link.id %}">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  <form action="{% url 'conferences:descriptor-link-delete' pk=conference.pk link_id=link.id %}" method="POST">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-danger ml-1" type="submit">
+                      <i class="far fa-trash-alt"></i>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </li>
+          {% endwith %}
+        {% endfor %}
+      </ol>
+    {% endif %}
+    <form action="{% url 'conferences:descriptor-link-create' pk=conference.pk art_pk=descriptor.id %}" method="POST" class="mt-3">
+      <button class="btn btn-outline-success btn-sm" type="submit">
+        {% csrf_token %}
+        <i class="fas fa-plus"></i> Add
+      </button>
+    </form>
+  {% endwith %}
+{% endblock %}
