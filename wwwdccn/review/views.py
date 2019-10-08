@@ -12,7 +12,7 @@ from django.views.decorators.http import require_POST
 from conferences.models import Conference
 from conferences.utilities import validate_chair_access
 from review.forms import EditReviewForm, UpdateReviewDecisionForm
-from review.models import Review, Reviewer, ReviewDecision
+from review.models import Review, Reviewer, ReviewDecision, ReviewStage
 from submissions.models import Submission
 from users.models import User
 
@@ -79,15 +79,20 @@ def decline_review(request, pk):
 # API
 #
 @require_POST
-def update_decision(request, decision_id):
-    """Update the `ReviewDecision` object `decision_type` field.
+def update_decision(request, sub_id):
+    """Update the the submission's `ReviewDecision` `decision_type` field.
 
     This view is called only in AJAX and returns a `JsonResponse` with either
     `200 OK`, or `500` with serialized form errors.
     """
-    decision = get_object_or_404(ReviewDecision, id=decision_id)
-    submission = decision.stage.submission
+    submission = get_object_or_404(Submission, id=sub_id)
     validate_chair_access(request.user, submission.conference)
+    stage, _ = ReviewStage.objects.get_or_create(
+        submission=submission,
+        num_reviews_required=(
+            submission.stype.num_reviews if submission.stype else 0),
+        locked=False)
+    decision = stage.decision
     form = UpdateReviewDecisionForm(request.POST, instance=decision)
     if form.is_valid():
         form.save()

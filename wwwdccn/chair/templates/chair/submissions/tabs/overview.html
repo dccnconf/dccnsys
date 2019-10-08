@@ -166,6 +166,7 @@
           {% csrf_token %}
           <i class="fas fa-forward"></i> Start review
         </button>
+        {% include 'chair/submissions/components/_decision_control.html' with decision=decision decision_types=reject_decisions icon_class="far fa-thumbs-down" label="Reject" dropdown_class="btn-sm btn-outline-danger" item_class='text-danger-16' %}
       {% elif status == 'REVIEW' %}
         <button class="btn btn-sm btn-outline-secondary" data-toggle="submission-status" data-status="SUBMIT"
                 data-target="{% url 'submissions:update-status' pk=submission.pk %}">

@@ -13,4 +13,5 @@
     {% csrf_token %}
     <i class="fas fa-forward"></i> Start review
   </button>
+  {% include 'chair/submissions/components/_decision_control.html' with decision=decision decision_types=reject_decisions icon_class="far fa-thumbs-down" label="Reject" dropdown_class="dccn-feed-item-link btn-link text-danger-16" item_class='text-danger-16' %}
 {% endblock %}
