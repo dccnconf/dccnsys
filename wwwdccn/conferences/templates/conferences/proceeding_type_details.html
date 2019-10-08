@@ -61,17 +61,13 @@
                 </div>
                 {% with links=artifact.links.all %}
                   {% if links %}
-                    <p class="font-weight-bold">External links:</p>
+                    <p class="font-weight-bold my-0">External links:</p>
                     {% for link in artifact.links.all %}
                       {% with ef=link.link %}
-                        <div class="row border-left">
-                          <div class="col-12">
-                            <div class="ml-3">
-                              <div>URL: <a class="dccn-link" href="{{ ef.url }}">{{ ef.url }}</a></div>
-                              <p class="dccn-text-small font-italic mt-0">{{ ef.label }}</p>
-                            </div>
+                          <div class="pl-3 mt-2 border-left">
+                            <p class="dccn-text-small font-italic mt-0">{{ ef.label }}:</p>
+                            <div><a class="dccn-text-small dccn-link" href="{{ ef.url }}">{{ ef.url }}</a></div>
                           </div>
-                        </div>
                       {% endwith %}
                     {% endfor %}
                   {% endif %}
