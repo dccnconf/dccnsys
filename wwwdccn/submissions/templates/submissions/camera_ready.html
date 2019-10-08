@@ -29,16 +29,18 @@
             {% with ad=artifact.descriptor attachment=artifact.attachment %}
               <div class="border rounded my-3 py-2 px-3">
                 <div class="d-flex align-items-center">
-                  <h4>{{ artifact.name }}</h4>
+                  <h4 class="h3">{{ ad.name }}</h4>
                   <div class="ml-auto badge badge-dark text-light">{% if ad.mandatory %}mandatory{% else %}optional{% endif %}</div>
                 </div>
 
-                <p class="mb-1 dccn-text-0">{{ ad.description }}</p>
-                {% if ad.materials_url %}
-                  <p class="my-0 dccn-text-small">
-                    <span class="font-weight-bold">Additional materials: </span> <a href="{{ ad.materials_url }}">{{ ad.materials_url }}</a>
+                <p class="mt-3 dccn-text-0">{{ ad.description }}</p>
+                {% for link in ad.links.all %}
+                  {% with ef=link.link %}
+                  <p class="mt-3">
+                    {{ ef.label }}: <a href="{{ ef.url }}" class="dccn-link">{{ ef.url }}</a>
                   </p>
-                {% endif %}
+                  {% endwith %}
+                {% endfor %}
                 <p class="my-0 dccn-text-small">
                   <span class="font-weight-bold">Max. size (MB): </span> {{ ad.max_size_mb }}
                 </p>
@@ -50,7 +52,7 @@
                   <div class="d-flex mt-3">
                     <p class="dccn-text-small">
                       Current document:
-                      <a href="{% url 'submissions:download-attachment' pk=submission.pk att_pk=attachment.pk %}" target="_blank">
+                      <a href="{% url 'submissions:download-attachment' pk=submission.pk att_pk=attachment.pk %}" target="_blank" class="dccn-link">
                         <i class="{{ artifact|file_icon_class }}"></i> {{ attachment.get_file_name }}
                       </a>
                     </p>
