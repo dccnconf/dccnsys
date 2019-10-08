@@ -12,8 +12,6 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('-f', '--fake', action='store_true',
                             help='Do not write changes to the DB')
-        # parser.add_argument('-v', '--verbose', action='store_true',
-        #                     help='Additional details output to screen')
 
     def handle(self, *args, **kwargs):
         fake = kwargs['fake']
