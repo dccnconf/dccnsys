@@ -172,7 +172,8 @@
           {% csrf_token %}
           <i class="fas fa-backward"></i> Revoke review
         </button>
-        {% include 'chair/submissions/components/_review_decision_controls.html' with dropdown_class='btn-sm' accept_dropdown_class='btn-outline-success' reject_dropdown_class='btn-outline-danger' %}
+        {% include 'chair/submissions/components/_decision_control.html' with decision=decision decision_types=accept_decisions icon_class="far fa-thumbs-up" label="Accept" dropdown_class="btn-sm btn-outline-success" item_class='text-success-16' %}
+        {% include 'chair/submissions/components/_decision_control.html' with decision=decision decision_types=reject_decisions icon_class="far fa-thumbs-down" label="Reject" dropdown_class="btn-sm btn-outline-danger" item_class='text-danger-16' %}
       {% elif status == 'ACCEPT' %}
         <button class="btn btn-sm btn-outline-secondary" data-toggle="submission-status" data-status="REVIEW"
                 data-target="{% url 'submissions:update-status' pk=submission.pk %}">

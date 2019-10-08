@@ -211,6 +211,12 @@ class ReviewDecisionType(Model):
     allowed_proceedings = ManyToManyField(
         ProceedingType, related_name='decision_types')
     description = CharField(blank=True, default='', max_length=1024)
+    conference = ForeignKey(Conference, on_delete=CASCADE, null=True,
+                            blank=True, default=None)
+
+    class Meta:
+        unique_together = ['conference', 'decision', 'description']
+        ordering = ['conference_id', 'decision', 'description']
 
 
 class ReviewDecision(Model):
