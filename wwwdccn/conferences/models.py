@@ -159,10 +159,6 @@ class ArtifactDescriptor(Model):
 
     description = TextField(verbose_name=_('Description of the artifact'))
 
-    materials_url = URLField(
-        verbose_name=_('URL with additional materials (templates, forms)'),
-        default="", blank=True,)
-
     mandatory = BooleanField(verbose_name='Artifact is mandatory', default=True)
 
     editable = BooleanField(default=True)
