@@ -5,6 +5,7 @@
 {######################################}
 {% load review_extras %}
 {% load submission_extras %}
+{% load proceedings_extras %}
 
 {% with decision=submission|review_decision_of  %}
 {% with decision_type=decision.decision_type %}
@@ -32,16 +33,77 @@
       {{ submission.get_status_display }} <i class="fas fa-circle text-{{ submission|submission_status_color_class }}"></i>
     </div>
   </div>
-  <p class="dccn-feed-item-title">
-    <a href="{% url 'submissions:overview' pk=submission.pk %}">
-      {{ submission.title }}
-    </a>
-  </p>
-  <div class="dccn-feed-item-row">
-    <div class="dccn-feed-item-authors">
-      {{ submission.get_authors_display }}
+  <div class="container pl-0">
+    <div class="row">
+      <div class="col-12 col-lg-6 col-xl-7">
+        <a href="{% url 'submissions:overview' pk=submission.pk %}" class="dccn-link dccn-text-4 font-weight-normal">
+          {{ submission.title }}
+        </a>
+        <p class="dccn-text-0 mr-3">
+          {% for author in submission.authors.all %}
+            <span>
+              <a href="{% url 'chair:user-overview' conf_pk=submission.conference_id user_pk=author.user_id %}?next={{ request.get_full_path|urlencode }}"
+                 class="dccn-link dccn-text-small font-weight-light">
+                {{ author.user.profile.get_full_name }}</a>{% if not forloop.last %},&nbsp;{% endif %}
+            </span>
+          {% endfor %}
+        </p>
+        <div class="dccn-feed-item-messages">
+          {% for warning in warnings %}
+            <div class="dccn-feed-item-row">
+              <div class="dccn-feed-item-message-text">
+                <i class="fas fa-exclamation-circle text-warning"></i> {{ warning.label }}
+                {% if warning.link %}(<a href="{{ warning.link }}" class="dccn-link dccn-text-small">{{ warning.link_label }}</a>){% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-12 col-lg-6 col-xl-5 mt-3 mt-lg-0">
+        <!-- Proceedings -->
+        {% for camera in submission|camera_ready_set_of %}
+          {% with proc_type=camera.proc_type volume=camera.volume %}
+            <div class="border-left mb-3">
+              <div class="dccn-feed-item-row ml-2">
+                <div class="dccn-text-small pb-0 pt-1">{{ proc_type.name }}</div>
+                {% if volume %}
+                  <div class="ml-auto border-bottom pb-0 pt-1 px-2 rounded bg-light dccn-text-small">{{ volume.name }}</div>
+                {% else %}
+                  <div class="ml-auto border-bottom border-warning text-danger-16 pb-0 pt-1 px-2 rounded bg-warning-1 dccn-text-small">Volume not selected</div>
+                {% endif %}
+              </div>
+
+              {% for artifact in camera.artifact_set.all %}
+                {% with ad=artifact.descriptor attachment=artifact.attachment %}
+                  <div class="dccn-feed-item-row mt-2 ml-2 px-3">
+                    {% if attachment.file %}
+                      <a href="{% url 'submissions:download-attachment' pk=submission.pk att_pk=attachment.pk %}"
+                         class="dccn-link dccn-text-smaller" target="_blank">
+                        <i class="{{ artifact|file_icon_class }}"></i> {{ attachment.get_file_name }}
+                      </a>
+                    {% else %}
+                      <span class="text-{% if ad.mandatory and ad.editable %}danger{% else %}{% if ad.editable %}warning-13{% else %}secondary{% endif %}{% endif %} dccn-text-smaller">
+                        <i class="fas fa-exclamation-circle"></i> No file uploaded
+                      </span>
+                    {% endif %}
+                    {% if ad.editable %}
+                      <a href="{% url 'submissions:camera-ready' pk=submission.pk %}" class="dccn-link d-inline-block ml-auto dccn-text-smaller">
+                        <i class="far fa-edit"></i> Edit
+                      </a>
+                    {% endif %}
+                  </div>
+                {% endwith %}
+              {% endfor %}
+            </div>
+          {% endwith %}
+        {% empty %}
+          <div class="dccn-feed-item-row text-warning-15">No proceedings for this submission</div>
+        {% endfor %}
+        <!-- end of proceedings -->
+      </div>
     </div>
   </div>
+
   <div class="dccn-feed-item-footer">
     <a href="{% url 'submissions:overview' pk=submission.pk %}" class="dccn-feed-item-link"><i class="fas fa-align-justify"></i> View</a>
 {#    <button class="btn btn-link dccn-feed-item-link" data-toggle="modal" data-target="#deleteDialog-{{ submission.pk }}">#}
