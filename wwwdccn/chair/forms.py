@@ -433,6 +433,15 @@ class FilterProfilesForm(forms.ModelForm):
         (MEMBERSHIP_IEEE, 'IEEE member'),
     )
 
+    REVIEWER_NOT = 'NOT'
+    REVIEWER_SELECTED = 'SELECTED'
+    REVIEWER_ASSIGNED = 'ASSIGNED'
+    REVIEWER_CHOICES = (
+        (REVIEWER_NOT, 'Not reviewer'),
+        (REVIEWER_SELECTED, "Selected as a reviewer"),
+        (REVIEWER_ASSIGNED, 'Assigned to 1 or more paper'),
+    )
+
     ORDER_BY_ID = 'ID'
     ORDER_BY_NAME = 'NAME'
     ORDER_CHOICES = (
@@ -470,6 +479,10 @@ class FilterProfilesForm(forms.ModelForm):
         widget=CustomCheckboxSelectMultiple, required=False,
         choices=MEMBERSHIP_CHOICES,
     )
+
+    reviewer = MultipleChoiceField(
+        widget=CustomCheckboxSelectMultiple, required=False,
+        choices=REVIEWER_CHOICES)
 
     order = ChoiceField(required=False, choices=ORDER_CHOICES)
     direction = ChoiceField(required=False, choices=DIRECTION_CHOICES)
@@ -578,12 +591,35 @@ class FilterProfilesForm(forms.ModelForm):
             disjuncts.append(Q(ieee_member=True))
         return profiles.filter(q_or(disjuncts))
 
+    def apply_reviewer(self, profiles):
+        data = self.cleaned_data['reviewer']
+        if not data:
+            return profiles
+        profiles = profiles.annotate(
+            num_reviewers=Count('user__reviewer', filter=Q(
+                user__reviewer__conference=self.instance
+            ))).distinct()
+        profiles = profiles.annotate(
+            num_reviews=Count('user__reviewer__reviews', filter=Q(
+                user__reviewer__conference=self.instance
+            ))).distinct()
+        disjuncts = []
+        if self.REVIEWER_NOT in data:
+            disjuncts.append(Q(num_reviewers=0))
+        if self.REVIEWER_SELECTED in data:
+            disjuncts.append(Q(num_reviewers__gt=0))
+        if self.REVIEWER_ASSIGNED in data:
+            disjuncts.append(Q(num_reviews__gt=0))
+
+        return profiles.filter(q_or(disjuncts))
+
     def apply(self, profiles):
         profiles = self.apply_countries(profiles)
         profiles = self.apply_affiliations(profiles)
         profiles = self.apply_authorship(profiles)
         profiles = self.apply_graduation(profiles)
         profiles = self.apply_membership(profiles)
+        profiles = self.apply_reviewer(profiles)
         profiles = self.apply_term(profiles)
         profiles = self.order_profiles(profiles)
         return profiles
