@@ -11,7 +11,7 @@ Django>=2.2.4
 django-anymail==6.0
 django-bootstrap4==0.0.8
 django-countries==5.3.3
-django-debug-toolbar==1.11
+django-debug-toolbar==1.11.1
 django-storages==1.7.1
 fabric2==2.4.0
 gunicorn==19.9.0
